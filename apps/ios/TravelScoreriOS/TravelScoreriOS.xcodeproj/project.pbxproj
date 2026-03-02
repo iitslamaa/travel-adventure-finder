@@ -105,6 +105,8 @@
 		17744B112F54E366001D3396 /* DiscoveryMapRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B092F54E366001D3396 /* DiscoveryMapRenderer.swift */; };
 		17744B122F54E366001D3396 /* DiscoveryMapCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B082F54E366001D3396 /* DiscoveryMapCoordinator.swift */; };
 		17744B132F54E366001D3396 /* DiscoveryMapRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B0A2F54E366001D3396 /* DiscoveryMapRepresentable.swift */; };
+		17744B152F552DE4001D3396 /* IndexedCountryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B142F552DE4001D3396 /* IndexedCountryListView.swift */; };
+		17744B172F552FC4001D3396 /* IndexedCountryListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B162F552FC4001D3396 /* IndexedCountryListController.swift */; };
 		1776C9632F50FCE800AFC488 /* global_languages.json in Resources */ = {isa = PBXBuildFile; fileRef = 1776C9622F50FCE300AFC488 /* global_languages.json */; };
 		1776C9652F50FD6F00AFC488 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1776C9642F50FD6F00AFC488 /* AppLanguage.swift */; };
 		1776C9672F50FD8800AFC488 /* LanguageRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1776C9662F50FD8800AFC488 /* LanguageRepository.swift */; };
@@ -240,6 +242,9 @@
 		17744B092F54E366001D3396 /* DiscoveryMapRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryMapRenderer.swift; sourceTree = "<group>"; };
 		17744B0A2F54E366001D3396 /* DiscoveryMapRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryMapRepresentable.swift; sourceTree = "<group>"; };
 		17744B0B2F54E366001D3396 /* DiscoveryMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryMapView.swift; sourceTree = "<group>"; };
+		17744B142F552DE4001D3396 /* IndexedCountryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexedCountryListView.swift; sourceTree = "<group>"; };
+		17744B162F552FC4001D3396 /* IndexedCountryListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexedCountryListController.swift; sourceTree = "<group>"; };
+		17744B182F552FD2001D3396 /* Untitled.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Untitled.swift; sourceTree = "<group>"; };
 		1776C9622F50FCE300AFC488 /* global_languages.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = global_languages.json; sourceTree = "<group>"; };
 		1776C9642F50FD6F00AFC488 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 		1776C9662F50FD8800AFC488 /* LanguageRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageRepository.swift; sourceTree = "<group>"; };
@@ -709,12 +714,15 @@
 		170C22722F479DB00090BA78 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				17744B182F552FD2001D3396 /* Untitled.swift */,
 				170C21052F4790E00090BA78 /* DiscoveryView.swift */,
 				170C21012F4790E00090BA78 /* CountryListView.swift */,
 				170C21022F4790E00090BA78 /* CountryPreviewCardMobile.swift */,
 				17EC41EB2F4BBA4B004B80DA /* CustomWeightsView.swift */,
 				1700C6812F5120D300906A35 /* DiscoveryControlsView.swift */,
 				171EC5702F539ED100FCB4AB /* AlphabetIndexView.swift */,
+				17744B142F552DE4001D3396 /* IndexedCountryListView.swift */,
+				17744B162F552FC4001D3396 /* IndexedCountryListController.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -989,6 +997,7 @@
 			files = (
 				17F063852F32734800F1F4F3 /* EmailAuthView.swift in Sources */,
 				170C21272F4790E00090BA78 /* CountryAdvisoryCard.swift in Sources */,
+				17744B172F552FC4001D3396 /* IndexedCountryListController.swift in Sources */,
 				179439CB2F53FCD700993FB2 /* FeedbackService.swift in Sources */,
 				17AE40592F50E9EA00495208 /* CountryMultiSelectView.swift in Sources */,
 				17EC41EC2F4BBA4B004B80DA /* CustomWeightsView.swift in Sources */,
@@ -1062,6 +1071,7 @@
 				179439C92F53FCCA00993FB2 /* FeedbackView.swift in Sources */,
 				170C215D2F4790E00090BA78 /* DataLoader.swift in Sources */,
 				17EC41E82F4BB8B7004B80DA /* ScoreWeights.swift in Sources */,
+				17744B152F552DE4001D3396 /* IndexedCountryListView.swift in Sources */,
 				170C215E2F4790E00090BA78 /* DiscoveryView.swift in Sources */,
 				170C215F2F4790E00090BA78 /* FlagWithTooltip.swift in Sources */,
 				17EC41EA2F4BB90A004B80DA /* ScoreWeightsStore.swift in Sources */,

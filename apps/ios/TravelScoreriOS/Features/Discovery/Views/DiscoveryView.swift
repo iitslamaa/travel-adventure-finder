@@ -98,12 +98,6 @@ struct DiscoveryView: View {
         .safeAreaInset(edge: .bottom) {
             FloatingSearchBar(text: $searchText, isFocused: $isSearchFocused)
         }
-        .contentShape(Rectangle())
-        .simultaneousGesture(
-            TapGesture().onEnded {
-                isSearchFocused = false
-            }
-        )
         .onDisappear {
             isSearchFocused = false
         }
