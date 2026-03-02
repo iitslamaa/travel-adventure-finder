@@ -9,6 +9,7 @@ struct MyTravelsView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @State private var countries: [Country] = []
     @State private var traveledCountryIds: Set<String> = []
+    @State private var isLoading: Bool = true
 
     private var visitedCountries: [Country] {
         countries
@@ -18,7 +19,15 @@ struct MyTravelsView: View {
 
     var body: some View {
         Group {
-            if visitedCountries.isEmpty {
+            if isLoading {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if visitedCountries.isEmpty {
                 ContentUnavailableView(
                     "No trips yet",
                     systemImage: "backpack",
@@ -66,6 +75,7 @@ struct MyTravelsView: View {
             CountryDetailView(country: country)
         }
         .task {
+            isLoading = true
             // 1) Show cached data immediately (fast/offline)
             if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
                 countries = cached
@@ -83,6 +93,7 @@ struct MyTravelsView: View {
                     traveledCountryIds = traveled
                 }
             }
+            isLoading = false
         }
     }
 }
