@@ -121,6 +121,10 @@
 		17AE405D2F50EA0200495208 /* AddLanguageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17AE405C2F50EA0200495208 /* AddLanguageView.swift */; };
 		17AE405F2F50EBB700495208 /* ProfileSettingsSaveCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17AE405E2F50EBB700495208 /* ProfileSettingsSaveCoordinator.swift */; };
 		17AE40612F50EBC300495208 /* ProfileSettingsDeletionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17AE40602F50EBC300495208 /* ProfileSettingsDeletionCoordinator.swift */; };
+		17B478C22F55FF2E002B1865 /* PreReviewModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478C02F55FF2E002B1865 /* PreReviewModalView.swift */; };
+		17B478C32F55FF2E002B1865 /* LowRatingFeedbackSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478BF2F55FF2E002B1865 /* LowRatingFeedbackSheet.swift */; };
+		17B478C52F55FF65002B1865 /* ReviewTriggerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478C42F55FF65002B1865 /* ReviewTriggerService.swift */; };
+		17B478C72F55FFAF002B1865 /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478C62F55FFAF002B1865 /* ReviewManager.swift */; };
 		17E1053D2F4F8A7B00BEED72 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 17E1053C2F4F8A7B00BEED72 /* Nuke */; };
 		17E1053F2F4F8A7B00BEED72 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 17E1053E2F4F8A7B00BEED72 /* NukeUI */; };
 		17EC41DE2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17EC41DD2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift */; };
@@ -257,6 +261,10 @@
 		17AE405E2F50EBB700495208 /* ProfileSettingsSaveCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsSaveCoordinator.swift; sourceTree = "<group>"; };
 		17AE40602F50EBC300495208 /* ProfileSettingsDeletionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsDeletionCoordinator.swift; sourceTree = "<group>"; };
 		17AFEC8A2EC2C3D800B9585B /* Travel Adventure Finder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Travel Adventure Finder.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		17B478BF2F55FF2E002B1865 /* LowRatingFeedbackSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LowRatingFeedbackSheet.swift; sourceTree = "<group>"; };
+		17B478C02F55FF2E002B1865 /* PreReviewModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreReviewModalView.swift; sourceTree = "<group>"; };
+		17B478C42F55FF65002B1865 /* ReviewTriggerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewTriggerService.swift; path = Core/Services/ReviewTriggerService.swift; sourceTree = SOURCE_ROOT; };
+		17B478C62F55FFAF002B1865 /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewManager.swift; path = Core/Services/ReviewManager.swift; sourceTree = SOURCE_ROOT; };
 		17EC41DD2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapRepresentable.swift; sourceTree = "<group>"; };
 		17EC41DF2F4BB213004B80DA /* ScoreWorldMapCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapCoordinator.swift; sourceTree = "<group>"; };
 		17EC41E12F4BB227004B80DA /* ScoreWorldMapRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapRenderer.swift; sourceTree = "<group>"; };
@@ -403,6 +411,7 @@
 		170C224E2F479B3B0090BA78 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				17B478C12F55FF2E002B1865 /* Review */,
 				170C210D2F4790E00090BA78 /* FrostedCard.swift */,
 				170C227E2F47A9880090BA78 /* ScorePill.swift */,
 				170C21162F4790E00090BA78 /* ScoreColor.swift */,
@@ -882,6 +891,17 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		17B478C12F55FF2E002B1865 /* Review */ = {
+			isa = PBXGroup;
+			children = (
+				17B478C62F55FFAF002B1865 /* ReviewManager.swift */,
+				17B478C42F55FF65002B1865 /* ReviewTriggerService.swift */,
+				17B478BF2F55FF2E002B1865 /* LowRatingFeedbackSheet.swift */,
+				17B478C02F55FF2E002B1865 /* PreReviewModalView.swift */,
+			);
+			path = Review;
+			sourceTree = "<group>";
+		};
 		17EC41DC2F4BB1DB004B80DA /* ScoreWorldMap */ = {
 			isa = PBXGroup;
 			children = (
@@ -1011,6 +1031,7 @@
 				170C21322F4790E00090BA78 /* MetaDTO.swift in Sources */,
 				170C21332F4790E00090BA78 /* Profile.swift in Sources */,
 				170C21342F4790E00090BA78 /* CollapsibleCountrySection.swift in Sources */,
+				17B478C52F55FF65002B1865 /* ReviewTriggerService.swift in Sources */,
 				170C21352F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift in Sources */,
 				170C21362F4790E00090BA78 /* StatCard.swift in Sources */,
 				170C21372F4790E00090BA78 /* ProfileHeaderView.swift in Sources */,
@@ -1051,6 +1072,8 @@
 				170C21502F4790E00090BA78 /* AuthLandingView.swift in Sources */,
 				170C21512F4790E00090BA78 /* AuthRequiredView.swift in Sources */,
 				170C21522F4790E00090BA78 /* AuthSheetView.swift in Sources */,
+				17B478C22F55FF2E002B1865 /* PreReviewModalView.swift in Sources */,
+				17B478C32F55FF2E002B1865 /* LowRatingFeedbackSheet.swift in Sources */,
 				170C21532F4790E00090BA78 /* BucketListView.swift in Sources */,
 				170C21542F4790E00090BA78 /* BucketToggleButton.swift in Sources */,
 				170C21562F4790E00090BA78 /* Country.swift in Sources */,
@@ -1107,6 +1130,7 @@
 				170F3EC02F218C6C0083E900 /* APIConfig.swift in Sources */,
 				172A74C92F357340003EF4DF /* SessionManager.swift in Sources */,
 				17F063812F32730600F1F4F3 /* SupabaseClient.swift in Sources */,
+				17B478C72F55FFAF002B1865 /* ReviewManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
