@@ -12,23 +12,6 @@ import PostgREST
 
 extension ProfileViewModel {
 
-    // MARK: - Friend Count
-
-    func loadFriendCount() async {
-        let userId = self.userId
-        print("👥 loadFriendCount for:", userId)
-        
-        do {
-            let friends = try await friendService.fetchFriends(for: userId)
-            print("   👥 fetched friends count:", friends.count)
-            friendCount = friends.count
-            print("   👥 assigned friendCount:", friendCount)
-        } catch {
-            print("❌ failed to load friend count:", error)
-            friendCount = 0
-        }
-    }
-
     // MARK: - Pending Friend Request Count
 
     func loadPendingRequestCount() async {

@@ -127,15 +127,23 @@ extension ProfileViewModel {
                     myUserId: currentUserId,
                     from: profileId
                 )
-                try await refreshRelationshipState()
+
+                // Small delay to ensure DB trigger commit is visible
+                try await Task.sleep(nanoseconds: 200_000_000) // 0.2s
+
+                // Reload full profile (includes updated friend_count)
+                await reloadProfile()
+
                 print("   ✅ Friend request accepted:", profileId)
                 
             case .friends:
                 print("   ➖ Attempting to remove friend...")
                 guard let currentUserId = supabase.currentUserId else { return }
                 try await friendService.removeFriend(myUserId: currentUserId, otherUserId: profileId)
-                try await refreshRelationshipState()
-                // logPublishedState("after removeFriend refresh")
+
+                // Reload full profile (includes updated friend_count)
+                await reloadProfile()
+
                 print("➖ Removed friend:", profileId)
                 
             case .requestSent:

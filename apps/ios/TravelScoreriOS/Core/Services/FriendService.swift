@@ -26,6 +26,7 @@ final class FriendService {
 
     // MARK: - Friends
 
+
     func fetchFriends(for userId: UUID) async throws -> [Profile] {
         let requestId = UUID()
         let start = Date()
@@ -56,6 +57,8 @@ final class FriendService {
         let friendIds: [UUID] = rows.map { row in
             row.user_id == userId ? row.friend_id : row.user_id
         }
+        print("   🧾 [\(requestId)] combined friendship rows:", rows.count)
+        print("   🧾 [\(requestId)] derived friendIds:", friendIds)
 
         if friendIds.isEmpty {
             print("   🟡 [\(requestId)] friendIds empty → returning []")
@@ -67,6 +70,8 @@ final class FriendService {
             .select("*")
             .in("id", values: friendIds)
             .execute()
+        print("   🧾 [\(requestId)] fetched profile IDs:", profilesResponse.value.map { $0.id })
+        print("   🧾 [\(requestId)] fetched profile friendCounts:", profilesResponse.value.map { $0.friendCount })
 
         let elapsed = Date().timeIntervalSince(start)
         print("👥 [FriendService \(instanceId)] fetchFriends END")
@@ -111,6 +116,7 @@ final class FriendService {
             .delete()
             .or(filter)
             .execute()
+        print("   🔎 Verifying friend_count after removal (self + other)")
 
         print("🗑 Removed friendship between:", myUserId, "and", otherUserId)
     }
@@ -281,6 +287,7 @@ final class FriendService {
                 "friend_id": otherUserId
             ])
             .execute()
+        print("   🔎 Verifying friend_count after accept (self + other)")
         print("✅ [FriendService] friendship row inserted")
     }
 

@@ -29,6 +29,7 @@ struct Profile: Codable, Identifiable {
     var favoriteCountries: [String]?
 
     var onboardingCompleted: Bool?
+    var friendCount: Int
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -43,6 +44,7 @@ struct Profile: Codable, Identifiable {
         case currentCountry = "current_country"
         case favoriteCountries = "favorite_countries"
         case onboardingCompleted = "onboarding_completed"
+        case friendCount = "friend_count"
     }
 
     private struct LegacyLanguageObject: Decodable {
@@ -85,5 +87,6 @@ struct Profile: Codable, Identifiable {
         favoriteCountries = try container.decodeIfPresent([String].self, forKey: .favoriteCountries)
 
         onboardingCompleted = try container.decodeIfPresent(Bool.self, forKey: .onboardingCompleted)
+        friendCount = try container.decodeIfPresent(Int.self, forKey: .friendCount) ?? 0
     }
 }
