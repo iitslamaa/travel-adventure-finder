@@ -109,7 +109,10 @@ struct ProfileHeaderView: View {
                        !country.isEmpty {
                         Text(formattedCountry(country))
                             .font(.title3.weight(.semibold))
-                            .lineLimit(1)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.6)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
                     } else {
                         Text("Not set")
                             .font(.subheadline)
@@ -127,7 +130,10 @@ struct ProfileHeaderView: View {
                        !destination.isEmpty {
                         Text(formattedCountry(destination))
                             .font(.title3.weight(.semibold))
-                            .lineLimit(1)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.6)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
                     } else {
                         Text("Not set")
                             .font(.subheadline)
