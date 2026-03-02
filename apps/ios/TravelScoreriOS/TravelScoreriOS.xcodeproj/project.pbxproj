@@ -97,7 +97,6 @@
 		171EC56C2F5358A700FCB4AB /* travelaf.world.full.geo.json in Resources */ = {isa = PBXBuildFile; fileRef = 171EC56A2F5358A700FCB4AB /* travelaf.world.full.geo.json */; };
 		171EC56D2F5358A700FCB4AB /* travelaf.world.simplified.geo.json in Resources */ = {isa = PBXBuildFile; fileRef = 171EC56B2F5358A700FCB4AB /* travelaf.world.simplified.geo.json */; };
 		171EC56F2F53590600FCB4AB /* GeoJsonLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EC56E2F53590600FCB4AB /* GeoJsonLoader.swift */; };
-		171EC5712F539ED100FCB4AB /* AlphabetIndexView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EC5702F539ED100FCB4AB /* AlphabetIndexView.swift */; };
 		172A74C92F357340003EF4DF /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172A74C82F357340003EF4DF /* SessionManager.swift */; };
 		176796142F4CF4BC0011EC0E /* CountryAffordabilityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176796132F4CF4BC0011EC0E /* CountryAffordabilityCard.swift */; };
 		176968BB2F4E6B3C0011661A /* OAuthPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176968BA2F4E6B3C0011661A /* OAuthPresenter.swift */; };
@@ -236,7 +235,6 @@
 		171EC56A2F5358A700FCB4AB /* travelaf.world.full.geo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = travelaf.world.full.geo.json; path = "/Users/lamayassine/travel-af/apps/mobile/assets/geo/travelaf.world.full.geo.json"; sourceTree = "<absolute>"; };
 		171EC56B2F5358A700FCB4AB /* travelaf.world.simplified.geo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = travelaf.world.simplified.geo.json; path = "/Users/lamayassine/travel-af/apps/mobile/assets/geo/travelaf.world.simplified.geo.json"; sourceTree = "<absolute>"; };
 		171EC56E2F53590600FCB4AB /* GeoJsonLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoJsonLoader.swift; sourceTree = "<group>"; };
-		171EC5702F539ED100FCB4AB /* AlphabetIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlphabetIndexView.swift; sourceTree = "<group>"; };
 		172A74C82F357340003EF4DF /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		176796132F4CF4BC0011EC0E /* CountryAffordabilityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryAffordabilityCard.swift; sourceTree = "<group>"; };
 		176968BA2F4E6B3C0011661A /* OAuthPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthPresenter.swift; sourceTree = "<group>"; };
@@ -723,7 +721,6 @@
 				170C21022F4790E00090BA78 /* CountryPreviewCardMobile.swift */,
 				17EC41EB2F4BBA4B004B80DA /* CustomWeightsView.swift */,
 				1700C6812F5120D300906A35 /* DiscoveryControlsView.swift */,
-				171EC5702F539ED100FCB4AB /* AlphabetIndexView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -1022,7 +1019,6 @@
 				170C212C2F4790E00090BA78 /* CountrySeasonalityHelpers.swift in Sources */,
 				170C212D2F4790E00090BA78 /* CountryTextHelpers.swift in Sources */,
 				170C212E2F4790E00090BA78 /* CountryTravelSafeCard.swift in Sources */,
-				171EC5712F539ED100FCB4AB /* AlphabetIndexView.swift in Sources */,
 				170C212F2F4790E00090BA78 /* CountryTravelSafeHelpers.swift in Sources */,
 				170C21302F4790E00090BA78 /* CountryVisaCard.swift in Sources */,
 				171EC56F2F53590600FCB4AB /* GeoJsonLoader.swift in Sources */,

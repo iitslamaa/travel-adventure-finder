@@ -15,7 +15,6 @@ struct TravelScoreriOSApp: App {
     @StateObject private var traveledStore = TraveledStore()
     @StateObject private var sessionManager: SessionManager
     @StateObject private var scoreWeightsStore: ScoreWeightsStore
-    @StateObject private var reviewTriggerService = ReviewTriggerService.shared
 
     init() {
         print("🚀 TravelScoreriOSApp INIT")
@@ -49,9 +48,6 @@ struct TravelScoreriOSApp: App {
         config.dataCache = dataCache
 
         ImagePipeline.shared = ImagePipeline(configuration: config)
-
-        // Initialize review trigger service (tracks launches)
-        _ = ReviewTriggerService.shared
     }
 
     var body: some Scene {
@@ -69,29 +65,7 @@ struct TravelScoreriOSApp: App {
                     .environmentObject(bucketListStore)
                     .environmentObject(traveledStore)
                     .environmentObject(scoreWeightsStore)
-                    .environmentObject(reviewTriggerService)
-
-                if reviewTriggerService.shouldShowPreReviewModal {
-                    PreReviewModalView(
-                        onHighRating: {
-                            reviewTriggerService.shouldShowPreReviewModal = false
-                            reviewTriggerService.markPromptCompleted()
-                            reviewTriggerService.requestAppStoreReview()
-                        },
-                        onLowRating: {
-                            reviewTriggerService.shouldShowPreReviewModal = false
-                            reviewTriggerService.markPromptDeclined()
-                        },
-                        onDismiss: {
-                            reviewTriggerService.shouldShowPreReviewModal = false
-                            reviewTriggerService.markPromptDeclined()
-                        }
-                    )
-                    .frame(maxWidth: 360)
-                    .transition(.scale.combined(with: .opacity))
-                }
             }
-            .animation(.easeInOut(duration: 0.2), value: reviewTriggerService.shouldShowPreReviewModal)
         }
     }
 }

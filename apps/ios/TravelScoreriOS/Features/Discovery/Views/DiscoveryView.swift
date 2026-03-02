@@ -98,12 +98,13 @@ struct DiscoveryView: View {
         .safeAreaInset(edge: .bottom) {
             FloatingSearchBar(text: $searchText, isFocused: $isSearchFocused)
         }
-        .contentShape(Rectangle())
-        .simultaneousGesture(
-            TapGesture().onEnded {
-                isSearchFocused = false
+        .navigationDestination(for: String.self) { countryId in
+            if let country = countries.first(where: { $0.id == countryId }) {
+                CountryDetailView(country: country)
+            } else {
+                Text("Country not found")
             }
-        )
+        }
         .onDisappear {
             isSearchFocused = false
         }

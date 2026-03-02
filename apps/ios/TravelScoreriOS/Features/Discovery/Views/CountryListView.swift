@@ -47,16 +47,9 @@ struct CountryListView: View {
     @EnvironmentObject private var profileVM: ProfileViewModel
 
     @State private var visibleCountries: [Country] = []
-    @State private var selectedCountry: Country?
 
     // Keep a handle to the latest recompute task so we can cancel stale work
     @State private var recomputeTask: Task<Void, Never>?
-
-    private var groupedCountries: [String: [Country]] {
-        Dictionary(grouping: visibleCountries) { country in
-            String(country.name.prefix(1)).uppercased()
-        }
-    }
 
     // MARK: - Quick swipe confirmation (brief checkmark)
 
@@ -161,50 +154,29 @@ struct CountryListView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollViewReader { proxy in
-                List {
-                    ForEach(groupedCountries.keys.sorted(), id: \.self) { letter in
-                        Section(header: Text(letter)) {
-                            ForEach(groupedCountries[letter] ?? [], id: \.id) { country in
-                                CountryRow(
-                                    country: country,
-                                    isBucketed: profileVM.viewedBucketListCountries.contains(country.id),
-                                    isVisited: profileVM.viewedTraveledCountries.contains(country.id),
-                                    showConfirm: quickConfirmByCountryId[country.id] != nil,
-                                    onOpen: {
-                                        selectedCountry = nil
-                                        DispatchQueue.main.async {
-                                            selectedCountry = country
-                                        }
-                                    },
-                                    onBucket: {
-                                        Task {
-                                            await profileVM.toggleBucket(country.id)
-                                            flashConfirm(.bucket, for: country.id)
-                                        }
-                                    },
-                                    onVisited: {
-                                        Task {
-                                            await profileVM.toggleTraveled(country.id)
-                                            flashConfirm(.visited, for: country.id)
-                                        }
-                                    }
-                                )
-                            }
+        List {
+            ForEach(visibleCountries, id: \.id) { country in
+                CountryRow(
+                    country: country,
+                    isBucketed: profileVM.viewedBucketListCountries.contains(country.id),
+                    isVisited: profileVM.viewedTraveledCountries.contains(country.id),
+                    showConfirm: quickConfirmByCountryId[country.id] != nil,
+                    onBucket: {
+                        Task {
+                            await profileVM.toggleBucket(country.id)
+                            flashConfirm(.bucket, for: country.id)
                         }
-                        .id(letter)
+                    },
+                    onVisited: {
+                        Task {
+                            await profileVM.toggleTraveled(country.id)
+                            flashConfirm(.visited, for: country.id)
+                        }
                     }
-                }
-                .listStyle(.plain)
-            }
-            .navigationDestination(item: $selectedCountry) { country in
-                CountryDetailView(country: country)
-            }
-            .onAppear {
-                selectedCountry = nil
+                )
             }
         }
+        .listStyle(.plain)
         .onChange(of: searchText) { _, _ in
             scheduleRecomputeVisible()
         }
@@ -231,12 +203,11 @@ private struct CountryRow: View {
     let isBucketed: Bool
     let isVisited: Bool
     let showConfirm: Bool
-    let onOpen: () -> Void
     let onBucket: () -> Void
     let onVisited: () -> Void
 
     var body: some View {
-        Button(action: onOpen) {
+        NavigationLink(value: country.id) {
             HStack(spacing: 12) {
                 Text(country.flagEmoji)
                     .font(.largeTitle)
@@ -281,6 +252,7 @@ private struct CountryRow: View {
                 }
             }
             .padding(.vertical, 6)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
