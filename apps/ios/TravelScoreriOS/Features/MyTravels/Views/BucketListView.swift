@@ -9,6 +9,7 @@ struct BucketListView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @State private var countries: [Country] = []
     @State private var bucketCountryIds: Set<String> = []
+    @State private var isLoading: Bool = true
 
     private var bucketedCountries: [Country] {
         countries
@@ -18,7 +19,15 @@ struct BucketListView: View {
 
     var body: some View {
         Group {
-            if bucketedCountries.isEmpty {
+            if isLoading {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if bucketedCountries.isEmpty {
                 ContentUnavailableView(
                     "No Bucket List Yet",
                     systemImage: "bookmark",
@@ -66,6 +75,7 @@ struct BucketListView: View {
             CountryDetailView(country: country)
         }
         .task {
+            isLoading = true
             // 1) Show cached data immediately (fast/offline)
             if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
                 countries = cached
@@ -83,6 +93,7 @@ struct BucketListView: View {
                     bucketCountryIds = bucket
                 }
             }
+            isLoading = false
         }
     }
 }
