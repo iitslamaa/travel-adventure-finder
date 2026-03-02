@@ -151,10 +151,16 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
                 span: MKCoordinateSpan(latitudeDelta: 7.0, longitudeDelta: 7.0)
             ),
 
-            // France (mainland only)
+            // France (mainland only – slightly more zoomed out)
             "FR": MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 46.5, longitude: 2.5),
-                span: MKCoordinateSpan(latitudeDelta: 8.0, longitudeDelta: 8.0)
+                span: MKCoordinateSpan(latitudeDelta: 11.0, longitudeDelta: 11.0)
+            ),
+
+            // United States (mainland focus – further zoomed out)
+            "US": MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 39.8, longitude: -98.6),
+                span: MKCoordinateSpan(latitudeDelta: 40.0, longitudeDelta: 70.0)
             ),
 
             // Singapore
