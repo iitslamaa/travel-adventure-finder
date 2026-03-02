@@ -42,7 +42,6 @@ final class ProfileViewModel: ObservableObject {
     @Published var viewedBucketListCountries: Set<String> = [] {
         didSet { }
     }
-    @Published var friendCount: Int = 0
     @Published var friends: [Profile] = [] {
         didSet { }
     }
@@ -123,7 +122,6 @@ final class ProfileViewModel: ObservableObject {
         mutualBucketCountries = []
         mutualTraveledCountries = []
         mutualLanguages = []
-        friendCount = 0
 
         cancelInFlightWork()
 

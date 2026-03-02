@@ -73,7 +73,9 @@ struct ProfileView: View {
             return "\(displayName) — \(entry.proficiency)"
         }
     }
-    private var friendCount: Int { profileVM.friendCount }
+    private var friendCount: Int {
+        profileVM.profile?.friendCount ?? 0
+    }
 
     private var isReadyToRenderProfile: Bool {
         profileVM.profile?.id == userId &&

@@ -54,7 +54,6 @@ extension ProfileViewModel {
             }
 
             friends = fetchedFriends
-            friendCount = fetchedFriends.count
 
             let traveled =
                 try await profileService.fetchTraveledCountries(userId: startingUserId)

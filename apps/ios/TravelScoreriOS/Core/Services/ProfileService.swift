@@ -96,6 +96,7 @@ final class ProfileService {
         }
 
         print("✅ fetchMyProfile returning profile id:", profile.id)
+        print("   🔎 fetchMyProfile friend_count:", profile.friendCount)
         return profile
     }
 
