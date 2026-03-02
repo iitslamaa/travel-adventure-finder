@@ -32,7 +32,12 @@ final class ProfileViewModel: ObservableObject {
     @Published var isRelationshipLoading: Bool = false
     @Published var isRefreshing: Bool = false
     @Published var viewedTraveledCountries: Set<String> = [] {
-        didSet { }
+        didSet {
+            ReviewTriggerService.shared
+                .evaluateAndTriggerReviewIfEligible(
+                    visitedCount: viewedTraveledCountries.count
+                )
+        }
     }
     @Published var viewedBucketListCountries: Set<String> = [] {
         didSet { }

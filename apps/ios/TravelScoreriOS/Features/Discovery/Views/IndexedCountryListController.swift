@@ -13,6 +13,7 @@ final class IndexedCountryListController: UITableViewController {
     private var countries: [Country] = []
     private var grouped: [String: [Country]] = [:]
     private var sortedKeys: [String] = []
+    var onCountryOpen: (() -> Void)?
 
     init(countries: [Country]) {
         self.countries = countries
@@ -131,6 +132,9 @@ final class IndexedCountryListController: UITableViewController {
         guard let country = grouped[sectionKey]?[indexPath.row] else { return }
 
         tableView.deselectRow(at: indexPath, animated: true)
+
+        // 🧪 Testing: trigger review modal when country opens
+        onCountryOpen?()
 
         let hostingController = UIHostingController(
             rootView: CountryDetailView(country: country)

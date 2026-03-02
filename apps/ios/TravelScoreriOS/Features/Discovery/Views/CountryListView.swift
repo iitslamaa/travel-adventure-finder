@@ -162,7 +162,10 @@ struct CountryListView: View {
 
     var body: some View {
         IndexedCountryListView(
-            countries: visibleCountries
+            countries: visibleCountries,
+            onCountryOpen: {
+                ReviewTriggerService.shared.triggerOnCountryOpenForTesting()
+            }
         )
         .onChange(of: searchText) { _, _ in
             scheduleRecomputeVisible()
@@ -195,7 +198,9 @@ private struct CountryRow: View {
     let onVisited: () -> Void
 
     var body: some View {
-        Button(action: onOpen) {
+        Button(action: {
+            onOpen()
+        }) {
             HStack(spacing: 12) {
                 Text(country.flagEmoji)
                     .font(.largeTitle)

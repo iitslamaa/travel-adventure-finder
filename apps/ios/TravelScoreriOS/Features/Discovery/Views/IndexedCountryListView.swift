@@ -11,9 +11,11 @@ import UIKit
 struct IndexedCountryListView: UIViewControllerRepresentable {
 
     let countries: [Country]
+    var onCountryOpen: (() -> Void)? = nil
 
     func makeUIViewController(context: Context) -> IndexedCountryListController {
         let listController = IndexedCountryListController(countries: countries)
+        listController.onCountryOpen = onCountryOpen
         return listController
     }
 

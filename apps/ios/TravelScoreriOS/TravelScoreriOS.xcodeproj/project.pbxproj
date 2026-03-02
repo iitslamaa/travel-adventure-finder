@@ -107,6 +107,10 @@
 		17744B132F54E366001D3396 /* DiscoveryMapRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B0A2F54E366001D3396 /* DiscoveryMapRepresentable.swift */; };
 		17744B152F552DE4001D3396 /* IndexedCountryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B142F552DE4001D3396 /* IndexedCountryListView.swift */; };
 		17744B172F552FC4001D3396 /* IndexedCountryListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B162F552FC4001D3396 /* IndexedCountryListController.swift */; };
+		17744B1A2F554EF7001D3396 /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B192F554EF4001D3396 /* ReviewManager.swift */; };
+		17744B1C2F554F8A001D3396 /* ReviewTriggerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B1B2F554F87001D3396 /* ReviewTriggerService.swift */; };
+		17744B1F2F5550F1001D3396 /* PreReviewModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B1E2F5550EF001D3396 /* PreReviewModalView.swift */; };
+		17744B212F556B2B001D3396 /* LowRatingFeedbackSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B202F556B27001D3396 /* LowRatingFeedbackSheet.swift */; };
 		1776C9632F50FCE800AFC488 /* global_languages.json in Resources */ = {isa = PBXBuildFile; fileRef = 1776C9622F50FCE300AFC488 /* global_languages.json */; };
 		1776C9652F50FD6F00AFC488 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1776C9642F50FD6F00AFC488 /* AppLanguage.swift */; };
 		1776C9672F50FD8800AFC488 /* LanguageRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1776C9662F50FD8800AFC488 /* LanguageRepository.swift */; };
@@ -245,6 +249,10 @@
 		17744B142F552DE4001D3396 /* IndexedCountryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexedCountryListView.swift; sourceTree = "<group>"; };
 		17744B162F552FC4001D3396 /* IndexedCountryListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexedCountryListController.swift; sourceTree = "<group>"; };
 		17744B182F552FD2001D3396 /* Untitled.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Untitled.swift; sourceTree = "<group>"; };
+		17744B192F554EF4001D3396 /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewManager.swift; sourceTree = "<group>"; };
+		17744B1B2F554F87001D3396 /* ReviewTriggerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewTriggerService.swift; sourceTree = "<group>"; };
+		17744B1E2F5550EF001D3396 /* PreReviewModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreReviewModalView.swift; sourceTree = "<group>"; };
+		17744B202F556B27001D3396 /* LowRatingFeedbackSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LowRatingFeedbackSheet.swift; sourceTree = "<group>"; };
 		1776C9622F50FCE300AFC488 /* global_languages.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = global_languages.json; sourceTree = "<group>"; };
 		1776C9642F50FD6F00AFC488 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 		1776C9662F50FD8800AFC488 /* LanguageRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageRepository.swift; sourceTree = "<group>"; };
@@ -408,6 +416,7 @@
 		170C224E2F479B3B0090BA78 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				17744B1D2F5550E7001D3396 /* Review */,
 				170C210D2F4790E00090BA78 /* FrostedCard.swift */,
 				170C227E2F47A9880090BA78 /* ScorePill.swift */,
 				170C21162F4790E00090BA78 /* ScoreColor.swift */,
@@ -785,6 +794,8 @@
 		170C227A2F479F0A0090BA78 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				17744B1B2F554F87001D3396 /* ReviewTriggerService.swift */,
+				17744B192F554EF4001D3396 /* ReviewManager.swift */,
 				170C20E82F4790E00090BA78 /* FriendService.swift */,
 				170C20E92F4790E00090BA78 /* ListSyncService.swift */,
 				170C20EA2F4790E00090BA78 /* MetaService.swift */,
@@ -851,6 +862,15 @@
 				17744B0B2F54E366001D3396 /* DiscoveryMapView.swift */,
 			);
 			path = DiscoveryMap;
+			sourceTree = "<group>";
+		};
+		17744B1D2F5550E7001D3396 /* Review */ = {
+			isa = PBXGroup;
+			children = (
+				17744B202F556B27001D3396 /* LowRatingFeedbackSheet.swift */,
+				17744B1E2F5550EF001D3396 /* PreReviewModalView.swift */,
+			);
+			path = Review;
 			sourceTree = "<group>";
 		};
 		179439C72F53FCB800993FB2 /* Feedback */ = {
@@ -1019,10 +1039,12 @@
 				1776C9652F50FD6F00AFC488 /* AppLanguage.swift in Sources */,
 				170C21322F4790E00090BA78 /* MetaDTO.swift in Sources */,
 				170C21332F4790E00090BA78 /* Profile.swift in Sources */,
+				17744B212F556B2B001D3396 /* LowRatingFeedbackSheet.swift in Sources */,
 				170C21342F4790E00090BA78 /* CollapsibleCountrySection.swift in Sources */,
 				170C21352F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift in Sources */,
 				170C21362F4790E00090BA78 /* StatCard.swift in Sources */,
 				170C21372F4790E00090BA78 /* ProfileHeaderView.swift in Sources */,
+				17744B1C2F554F8A001D3396 /* ReviewTriggerService.swift in Sources */,
 				170C21382F4790E00090BA78 /* ProfileInfoSection.swift in Sources */,
 				170C21392F4790E00090BA78 /* ProfileView.swift in Sources */,
 				170C213A2F4790E00090BA78 /* ProfileSettingsAccountSection.swift in Sources */,
@@ -1089,8 +1111,10 @@
 				170C21662F4790E00090BA78 /* FrostedCard.swift in Sources */,
 				170C21692F4790E00090BA78 /* LegalView.swift in Sources */,
 				17AE40612F50EBC300495208 /* ProfileSettingsDeletionCoordinator.swift in Sources */,
+				17744B1F2F5550F1001D3396 /* PreReviewModalView.swift in Sources */,
 				170C216A2F4790E00090BA78 /* MyTravelsView.swift in Sources */,
 				170C216B2F4790E00090BA78 /* ProfileViewModel.swift in Sources */,
+				17744B1A2F554EF7001D3396 /* ReviewManager.swift in Sources */,
 				170C216C2F4790E00090BA78 /* RootTabView.swift in Sources */,
 				170C216D2F4790E00090BA78 /* ScoreColor.swift in Sources */,
 				170C216E2F4790E00090BA78 /* ScoreCountryDrawerView.swift in Sources */,
