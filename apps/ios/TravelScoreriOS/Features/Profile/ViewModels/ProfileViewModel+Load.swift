@@ -13,6 +13,7 @@ extension ProfileViewModel {
 
     func load(generation: UUID) async {
         let startingUserId = userId
+        print("🔥🔥🔥 LOAD() ENTERED for user:", startingUserId)
 
         
         print("   generation:", generation)

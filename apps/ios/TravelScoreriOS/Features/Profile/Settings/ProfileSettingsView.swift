@@ -365,6 +365,7 @@ struct ProfileSettingsView: View {
 
 
 struct SettingsScrollContent: View {
+    @EnvironmentObject private var sessionManager: SessionManager
     @ObservedObject var profileVM: ProfileViewModel
 
     @Binding var firstName: String
@@ -485,6 +486,49 @@ struct SettingsScrollContent: View {
                     showTravelModeDialog: $showTravelModeDialog,
                     showTravelStyleDialog: $showTravelStyleDialog
                 )
+
+                // MARK: - Account Actions
+
+                SectionCard {
+                    VStack(spacing: 16) {
+
+                        Button(role: .destructive) {
+                            Task {
+                                await sessionManager.signOut()
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                Text("Log Out")
+                                    .fontWeight(.semibold)
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                        }
+
+                        Divider()
+
+                        Button(role: .destructive) {
+                            Task {
+                                do {
+                                    try await SupabaseManager.shared.deleteAccount()
+                                } catch {
+                                    print("❌ Delete account failed:", error)
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: "trash")
+                                Text("Delete Account")
+                                    .fontWeight(.semibold)
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
 
                 Spacer(minLength: 40)
             }

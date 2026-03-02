@@ -137,9 +137,22 @@ final class ProfileService {
             metadata["name"]?.stringValue ??
             "User"
 
+        // Generate a safe default username if none provided
+        let generatedUsername: String = {
+            if let provided = defaultUsername,
+               !provided.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return provided
+            }
+            // e.g. user_925948
+            let shortId = userId.uuidString
+                .replacingOccurrences(of: "-", with: "")
+                .prefix(6)
+            return "user_\(shortId)".lowercased()
+        }()
+
         let createPayload = ProfileCreate(
             id: userId,
-            username: defaultUsername ?? "",
+            username: generatedUsername,
             avatar_url: defaultAvatarUrl ?? "",
             full_name: fullName
         )
