@@ -26,8 +26,8 @@ enum TravelStyle: String, CaseIterable, Identifiable {
         switch self {
         case .budget: return "Budget"
         case .comfortable: return "Comfortable"
-        case .inBetween: return "In Between"
-        case .both: return "Both on Occasion"
+        case .inBetween: return "Between Budget and Comfy"
+        case .both: return "Budget or comfy, depending"
         }
     }
 }

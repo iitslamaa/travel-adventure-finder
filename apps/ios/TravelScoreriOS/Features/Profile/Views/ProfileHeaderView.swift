@@ -97,18 +97,18 @@ struct ProfileHeaderView: View {
             .frame(width: 140)
 
             // RIGHT COLUMN — Improved countries block (always show fields with fallback)
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 20) {
 
                 // Current Country
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Current")
-                        .font(.caption.weight(.medium))
+                        .font(.callout.weight(.semibold))
                         .foregroundStyle(.secondary)
 
                     if let country = profile?.currentCountry,
                        !country.isEmpty {
                         Text(formattedCountry(country))
-                            .font(.subheadline.weight(.medium))
+                            .font(.title3.weight(.semibold))
                             .lineLimit(1)
                     } else {
                         Text("Not set")
@@ -120,13 +120,13 @@ struct ProfileHeaderView: View {
                 // Next Destination
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Next")
-                        .font(.caption.weight(.medium))
+                        .font(.callout.weight(.semibold))
                         .foregroundStyle(.secondary)
 
                     if let destination = profile?.nextDestination,
                        !destination.isEmpty {
                         Text(formattedCountry(destination))
-                            .font(.subheadline.weight(.medium))
+                            .font(.title3.weight(.semibold))
                             .lineLimit(1)
                     } else {
                         Text("Not set")
@@ -137,8 +137,8 @@ struct ProfileHeaderView: View {
 
                 // Favorites
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Favorites")
-                        .font(.caption.weight(.medium))
+                    Text("Favorite trips")
+                        .font(.callout.weight(.semibold))
                         .foregroundStyle(.secondary)
 
                     if let favorites = profile?.favoriteCountries,
