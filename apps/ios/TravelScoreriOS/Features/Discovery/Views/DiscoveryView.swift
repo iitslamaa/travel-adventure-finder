@@ -7,13 +7,12 @@
 
 import SwiftUI
 
-struct DiscoveryView: View {
+struct DiscoveryCountryListView: View {
 
     @EnvironmentObject private var profileVM: ProfileViewModel
 
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
-    @State private var showingWeights = false
     @State private var sort: CountrySort = .name
     @State private var sortOrder: SortOrder = .ascending
     @State private var countries: [Country] = CountryAPI.loadCachedCountries() ?? []
@@ -21,27 +20,21 @@ struct DiscoveryView: View {
 
     @MainActor
     private func reloadCountries() async {
-        // Force reload from source instead of just recomputing locally
         if let fresh = CountryAPI.loadCachedCountries(), !fresh.isEmpty {
             countries = fresh
         }
-
         await profileVM.loadIfNeeded()
     }
 
     @MainActor
     private func loadCountriesWithRetry() async {
-        // Try immediately, then retry a few times in case cache is populated slightly later
-        let delays: [UInt64] = [0, 200_000_000, 500_000_000, 1_000_000_000] // 0s, 0.2s, 0.5s, 1.0s
+        let delays: [UInt64] = [0, 200_000_000, 500_000_000, 1_000_000_000]
 
         for (idx, delay) in delays.enumerated() {
-            if delay > 0 {
-                try? await Task.sleep(nanoseconds: delay)
-            }
+            if delay > 0 { try? await Task.sleep(nanoseconds: delay) }
 
             if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
                 countries = cached
-                // Stop once we have data
                 return
             } else {
                 print("🟡 Discovery initial load: countries still empty (attempt \(idx + 1)/\(delays.count))")
@@ -78,47 +71,12 @@ struct DiscoveryView: View {
             await loadCountriesWithRetry()
             await profileVM.loadIfNeeded()
 
-            // One last assignment after profile loads (some code paths populate country cache during app bring-up)
             if countries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
                 countries = cached
             }
         }
         .navigationTitle("Discover")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            // Filters (leading)
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    showingWeights = true
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                }
-            }
-
-            // Map (trailing)
-            ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink {
-                    DiscoveryMapView(countries: countries)
-                } label: {
-                    Image(systemName: "map")
-                }
-                .simultaneousGesture(
-                    TapGesture().onEnded {
-                        isSearchFocused = false
-                    }
-                )
-            }
-        }
-        .sheet(isPresented: $showingWeights) {
-            NavigationStack {
-                CustomWeightsView()
-            }
-        }
-        .onChange(of: showingWeights) { _, newValue in
-            if newValue {
-                isSearchFocused = false
-            }
-        }
         .safeAreaInset(edge: .bottom) {
             FloatingSearchBar(text: $searchText, isFocused: $isSearchFocused)
         }
@@ -131,6 +89,78 @@ struct DiscoveryView: View {
         }
         .onDisappear {
             isSearchFocused = false
+        }
+    }
+}
+
+struct DiscoveryView: View {
+
+    @EnvironmentObject private var weightsStore: ScoreWeightsStore
+    @State private var showingWeights = false
+
+    private var countries: [Country] {
+        CountryAPI.loadCachedCountries() ?? []
+    }
+
+    var body: some View {
+        VStack(spacing: 24) {
+
+            Spacer()
+
+            NavigationLink {
+                DiscoveryCountryListView()
+            } label: {
+                Label("Explore Countries", systemImage: "list.bullet")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+
+            NavigationLink {
+                DiscoveryMapView(countries: countries)
+            } label: {
+                Label("Explore Map", systemImage: "map")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+
+            NavigationLink {
+                WhenToGoView(
+                    countries: countries,
+                    weightsStore: weightsStore
+                )
+            } label: {
+                Label("When To Go", systemImage: "calendar")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+
+            Spacer()
+        }
+        .padding()
+        .navigationTitle("Discover")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    showingWeights = true
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                }
+            }
+        }
+        .sheet(isPresented: $showingWeights) {
+            NavigationStack {
+                CustomWeightsView()
+            }
         }
     }
 }
@@ -150,9 +180,7 @@ struct FloatingSearchBar: View {
                     .submitLabel(.search)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
-                    .onSubmit {
-                        isFocused.wrappedValue = false
-                    }
+                    .onSubmit { isFocused.wrappedValue = false }
 
                 if isFocused.wrappedValue && !text.isEmpty {
                     Button {
@@ -191,6 +219,6 @@ struct FloatingSearchBar: View {
 
 #Preview {
     NavigationStack {
-        DiscoveryView()
+        DiscoveryCountryListView()
     }
 }

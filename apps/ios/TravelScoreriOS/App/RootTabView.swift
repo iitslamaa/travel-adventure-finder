@@ -29,15 +29,12 @@ struct RootTabView: View {
                 Label("Discovery", systemImage: "globe.americas.fill")
             }
 
-            // When To Go
+            // Planning
             NavigationStack {
-                WhenToGoView(
-                    countries: countries,
-                    weightsStore: weightsStore
-                )
+                ListsView()
             }
             .tabItem {
-                Label("When To Go", systemImage: "calendar")
+                Label("Planning", systemImage: "list.bullet")
             }
 
             // Friends (auth required)
