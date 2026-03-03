@@ -77,6 +77,9 @@ struct AppRootView: View {
                 .ignoresSafeArea()
             }
         }
+        .task {
+            await SupabaseManager.shared.startAuthListener()
+        }
     }
 }
 

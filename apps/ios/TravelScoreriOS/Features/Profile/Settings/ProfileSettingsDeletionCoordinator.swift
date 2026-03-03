@@ -20,13 +20,11 @@ struct ProfileSettingsDeletionCoordinator {
         do {
             try await SupabaseManager.shared.deleteAccount()
 
-            // Close delete sheet first
-            closeSheet()
-
-            // Reset app auth state
+            // Reset app auth state FIRST
             sessionManager.handleAccountDeleted()
 
-            // Dismiss settings view
+            // Then close UI
+            closeSheet()
             dismiss()
 
         } catch {

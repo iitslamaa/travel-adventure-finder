@@ -368,6 +368,9 @@ struct SettingsScrollContent: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @ObservedObject var profileVM: ProfileViewModel
 
+    @State private var showDeleteConfirmation = false
+    @State private var isDeletingAccount = false
+
     @Binding var firstName: String
     @Binding var username: String
     @Binding var homeCountries: Set<String>
@@ -509,13 +512,7 @@ struct SettingsScrollContent: View {
                         Divider()
 
                         Button(role: .destructive) {
-                            Task {
-                                do {
-                                    try await SupabaseManager.shared.deleteAccount()
-                                } catch {
-                                    print("❌ Delete account failed:", error)
-                                }
-                            }
+                            showDeleteConfirmation = true
                         } label: {
                             HStack {
                                 Image(systemName: "trash")
@@ -524,6 +521,27 @@ struct SettingsScrollContent: View {
                                 Spacer()
                             }
                             .padding(.vertical, 8)
+                        }
+                        .disabled(isDeletingAccount)
+                        .confirmationDialog(
+                            "Are you sure you want to permanently delete your account? This cannot be undone.",
+                            isPresented: $showDeleteConfirmation,
+                            titleVisibility: .visible
+                        ) {
+                            Button("Delete Account", role: .destructive) {
+                                Task {
+                                    isDeletingAccount = true
+                                    do {
+                                        try await SupabaseManager.shared.deleteAccount()
+                                        sessionManager.handleAccountDeleted()
+                                    } catch {
+                                        print("❌ Delete account failed:", error)
+                                    }
+                                    isDeletingAccount = false
+                                }
+                            }
+
+                            Button("Cancel", role: .cancel) {}
                         }
                     }
                     .padding(.horizontal, 16)

@@ -73,6 +73,19 @@ final class SupabaseManager {
     /// Deletes the currently authenticated user account via Edge Function
     func deleteAccount() async throws {
         print("🗑 [\(instanceId)] deleteAccount invoked")
+
+        // Safely attempt to hydrate session (do not crash if missing)
+        let session = try? await client.auth.session
+        print("🧾 [\(instanceId)] session before delete →", session as Any)
+
+        guard session != nil, client.auth.currentUser != nil else {
+            throw NSError(
+                domain: "DeleteAccount",
+                code: 401,
+                userInfo: [NSLocalizedDescriptionKey: "No active session. Please log in again."]
+            )
+        }
+
         // Call the deployed edge function
         _ = try await client.functions.invoke("delete-account")
 
