@@ -47,6 +47,7 @@ final class SessionManager: ObservableObject {
     private var didEnsureProfile = false
 
     private var syncTask: Task<Void, Never>?
+    private var ensureProfileTask: Task<Void, Never>?
 
     // MARK: - Initializers
 
@@ -94,6 +95,8 @@ final class SessionManager: ObservableObject {
         didEnsureProfile = false
         syncTask?.cancel()
         syncTask = nil
+        ensureProfileTask?.cancel()
+        ensureProfileTask = nil
         print("🧪 signOut → isAuthenticated=false")
         bumpAuthScreen()
     }
@@ -114,18 +117,26 @@ final class SessionManager: ObservableObject {
         didEnsureProfile = false
         syncTask?.cancel()
         syncTask = nil
+        ensureProfileTask?.cancel()
+        ensureProfileTask = nil
         bumpAuthScreen()
     }
 
     /// Call this after ANY auth attempt (Apple / Google / Email)
     /// to deterministically update UI state.
     func forceRefreshAuthState(source: String = "manual") async {
-        // If we just deleted an account, keep UI in logged-out state until a fresh login occurs.
+        // If we just deleted an account, stay logged out unless we observe a *real* (server-verified) fresh session.
         if isAuthSuppressed {
-            print("🧪 forceRefreshAuthState(\(source)) suppressed → staying logged out")
-            if isAuthenticated != false { isAuthenticated = false }
-            if userId != nil { userId = nil }
-            return
+            let session = try? await supabase.fetchCurrentSession()
+            if let session, !session.isExpired {
+                print("✅ forceRefreshAuthState(\(source)) observed fresh session while suppressed → lifting suppression")
+                isAuthSuppressed = false
+            } else {
+                print("🧪 forceRefreshAuthState(\(source)) suppressed → staying logged out")
+                if isAuthenticated != false { isAuthenticated = false }
+                if userId != nil { userId = nil }
+                return
+            }
         }
         do {
             let session = try await supabase.fetchCurrentSession()
@@ -145,11 +156,7 @@ final class SessionManager: ObservableObject {
                     if isAuthenticated != true { isAuthenticated = true }
                     if userId != session.user.id { userId = session.user.id }
 
-                    if !didEnsureProfile {
-                        didEnsureProfile = true
-                        let profileService = ProfileService(supabase: supabase)
-                        try? await profileService.ensureProfileExists(userId: session.user.id)
-                    }
+                    ensureProfileEventually(for: session.user.id)
                 }
             } else {
                 print("🧪 no session during refresh — clearing auth state")
@@ -161,6 +168,51 @@ final class SessionManager: ObservableObject {
         } catch {
             print("⚠️ forceRefreshAuthState transient error:", error)
             // 🔥 DO NOT clear userId or isAuthenticated on transient error
+        }
+    }
+
+    // MARK: - Profile bring-up
+
+    /// Ensures a `profiles` row exists for the authenticated user.
+    /// On some devices, immediately after signup the `auth.users` row may not be visible yet,
+    /// which causes `profiles_id_fkey` (23503). We retry with backoff.
+    private func ensureProfileEventually(for userId: UUID) {
+        guard !didEnsureProfile else { return }
+        didEnsureProfile = true
+
+        ensureProfileTask?.cancel()
+        ensureProfileTask = Task {
+            let delays: [UInt64] = [500_000_000, 1_000_000_000, 2_000_000_000, 4_000_000_000] // 0.5s, 1s, 2s, 4s
+
+            for (idx, delay) in delays.enumerated() {
+                try? await Task.sleep(nanoseconds: delay)
+
+                // Re-hydrate session in case auth state is still propagating
+                _ = try? await supabase.fetchCurrentSession()
+
+                do {
+                    let profileService = ProfileService(supabase: supabase)
+                    try await profileService.ensureProfileExists(userId: userId)
+                    print("✅ ensureProfileEventually succeeded on attempt \(idx + 1)/\(delays.count) for:", userId)
+                    ensureProfileTask = nil
+                    return
+
+                } catch {
+                    // Keep retrying on FK race; otherwise bail.
+                    if let pg = error as? PostgrestError, pg.code == "23503" {
+                        print("⚠️ ensureProfileEventually FK (23503) — retry \(idx + 1)/\(delays.count) for:", userId)
+                        continue
+                    }
+
+                    print("❌ ensureProfileEventually failed (non-FK):", error)
+                    return
+                }
+            }
+
+            // If we exhausted retries, allow a later auth refresh to try again.
+            print("❌ ensureProfileEventually exhausted retries for:", userId)
+            didEnsureProfile = false
+            ensureProfileTask = nil
         }
     }
 
@@ -203,10 +255,16 @@ final class SessionManager: ObservableObject {
     private func refreshFromCurrentSession(source: String) {
         Task {
             if self.isAuthSuppressed {
-                print("🧪 refreshFromCurrentSession(\(source)) suppressed → staying logged out")
-                if self.isAuthenticated != false { self.isAuthenticated = false }
-                if self.userId != nil { self.userId = nil }
-                return
+                let session = try? await supabase.fetchCurrentSession()
+                if let session, !session.isExpired {
+                    print("✅ refreshFromCurrentSession(\(source)) observed fresh session while suppressed → lifting suppression")
+                    self.isAuthSuppressed = false
+                } else {
+                    print("🧪 refreshFromCurrentSession(\(source)) suppressed → staying logged out")
+                    if self.isAuthenticated != false { self.isAuthenticated = false }
+                    if self.userId != nil { self.userId = nil }
+                    return
+                }
             }
             do {
                 let session = try await supabase.fetchCurrentSession()
@@ -219,11 +277,7 @@ final class SessionManager: ObservableObject {
                     if isAuthenticated != true { isAuthenticated = true }
                     if userId != session.user.id { userId = session.user.id }
 
-                    if !didEnsureProfile {
-                        didEnsureProfile = true
-                        let profileService = ProfileService(supabase: supabase)
-                        try? await profileService.ensureProfileExists(userId: session.user.id)
-                    }
+                    ensureProfileEventually(for: session.user.id)
                 } else {
                     print("🚪 refreshFromCurrentSession(\(source)) clearing auth state")
                     if isAuthenticated != false { isAuthenticated = false }

@@ -196,6 +196,7 @@ final class FriendService {
     }
 
     func hasIncomingRequest(from otherUserId: UUID, to myUserId: UUID) async throws -> Bool {
+        print("📥 [FriendService] hasIncomingRequest:", otherUserId, "→", myUserId)
 
         struct RequestIDRow: Decodable { let id: UUID }
 
@@ -208,6 +209,7 @@ final class FriendService {
             .limit(1)
             .execute()
 
+        print("📥 [FriendService] hasIncomingRequest result:", !response.value.isEmpty)
         return !response.value.isEmpty
     }
 
@@ -230,42 +232,100 @@ final class FriendService {
     }
 
     func sendFriendRequest(from myUserId: UUID, to otherUserId: UUID) async throws {
-        print("📨 [FriendService] sendFriendRequest:", myUserId, "→", otherUserId)
+        let requestId = UUID()
+        let start = Date()
+        print("📨 [FriendService \(instanceId)] sendFriendRequest START")
+        print("   requestId:", requestId)
+        print("   from:", myUserId)
+        print("   to:", otherUserId)
 
-        guard myUserId != otherUserId else { return }
-
-        if try await isFriend(currentUserId: myUserId, otherUserId: otherUserId) { return }
-        if try await hasIncomingRequest(from: otherUserId, to: myUserId) { return }
-        if try await hasSentRequest(from: myUserId, to: otherUserId) { return }
-
-        struct FriendRequestInsert: Encodable {
-            let sender_id: UUID
-            let receiver_id: UUID
-            let status: String
+        guard myUserId != otherUserId else {
+            print("⚠️ [\(requestId)] abort — cannot friend self")
+            return
         }
 
-        let payload = FriendRequestInsert(
-            sender_id: myUserId,
-            receiver_id: otherUserId,
-            status: "pending"
-        )
+        do {
+            if try await isFriend(currentUserId: myUserId, otherUserId: otherUserId) {
+                print("ℹ️ [\(requestId)] early return — already friends")
+                return
+            }
 
-        try await supabase.client
-            .from("friend_requests")
-            .insert(payload)
-            .execute()
-        print("📨 [FriendService] sendFriendRequest SUCCESS")
+            if try await hasIncomingRequest(from: otherUserId, to: myUserId) {
+                print("ℹ️ [\(requestId)] early return — incoming request already exists")
+                return
+            }
+
+            if try await hasSentRequest(from: myUserId, to: otherUserId) {
+                print("ℹ️ [\(requestId)] early return — request already sent")
+                return
+            }
+
+            struct FriendRequestInsert: Encodable {
+                let sender_id: UUID
+                let receiver_id: UUID
+                let status: String
+            }
+
+            let payload = FriendRequestInsert(
+                sender_id: myUserId,
+                receiver_id: otherUserId,
+                status: "pending"
+            )
+
+            print("📡 [\(requestId)] inserting friend_requests row")
+
+            try await supabase.client
+                .from("friend_requests")
+                .insert(payload)
+                .execute()
+
+            let elapsed = Date().timeIntervalSince(start)
+            print("✅ [\(requestId)] sendFriendRequest SUCCESS")
+            print("   elapsed:", String(format: "%.3fs", elapsed))
+
+        } catch {
+            let elapsed = Date().timeIntervalSince(start)
+            print("❌ [\(requestId)] sendFriendRequest FAILED — raw:", error)
+            print("❌ [\(requestId)] sendFriendRequest FAILED — description:", error.localizedDescription)
+            if let pg = error as? PostgrestError {
+                print("❌ [\(requestId)] PostgrestError code:", pg.code as Any, "message:", pg.message, "detail:", pg.detail as Any, "hint:", pg.hint as Any)
+            }
+            print("   elapsed:", String(format: "%.3fs", elapsed))
+            throw error
+        }
     }
 
     func cancelRequest(from myUserId: UUID, to otherUserId: UUID) async throws {
+        let requestId = UUID()
+        let start = Date()
+        print("❌ [FriendService \(instanceId)] cancelRequest START")
+        print("   requestId:", requestId)
+        print("   from:", myUserId)
+        print("   to:", otherUserId)
 
-        try await supabase.client
-            .from("friend_requests")
-            .delete()
-            .eq("sender_id", value: myUserId)
-            .eq("receiver_id", value: otherUserId)
-            .eq("status", value: "pending")
-            .execute()
+        do {
+            try await supabase.client
+                .from("friend_requests")
+                .delete()
+                .eq("sender_id", value: myUserId)
+                .eq("receiver_id", value: otherUserId)
+                .eq("status", value: "pending")
+                .execute()
+
+            let elapsed = Date().timeIntervalSince(start)
+            print("✅ [\(requestId)] cancelRequest SUCCESS")
+            print("   elapsed:", String(format: "%.3fs", elapsed))
+
+        } catch {
+            let elapsed = Date().timeIntervalSince(start)
+            print("❌ [\(requestId)] cancelRequest FAILED — raw:", error)
+            print("❌ [\(requestId)] cancelRequest FAILED — description:", error.localizedDescription)
+            if let pg = error as? PostgrestError {
+                print("❌ [\(requestId)] PostgrestError code:", pg.code as Any, "message:", pg.message, "detail:", pg.detail as Any, "hint:", pg.hint as Any)
+            }
+            print("   elapsed:", String(format: "%.3fs", elapsed))
+            throw error
+        }
     }
 
     func acceptRequest(myUserId: UUID, from otherUserId: UUID) async throws {

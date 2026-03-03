@@ -99,18 +99,34 @@ struct ProfileSettingsView: View {
 
     var body: some View {
         Group {
-            if SupabaseManager.shared.currentUserId != viewedUserId {
+
+            // Wait for profile to exist before rendering settings UI
+            if profileVM.profile == nil {
+                VStack {
+                    ProgressView()
+                        .padding(.top, 40)
+                    Text("Loading profile…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            else if SupabaseManager.shared.currentUserId != viewedUserId {
                 Color.clear
                     .onAppear {
                         dismiss()
                     }
-            } else {
+            }
+
+            else {
                 settingsContent()
                     .onAppear {
                         guard !hasLoadedProfile else { return }
                         hasLoadedProfile = true
 
                         if let profile = profileVM.profile {
+                            print("⚙️ Settings loaded profile:", profile.id)
+
                             firstName = profile.fullName ?? ""
                             username = profile.username ?? ""
 
@@ -171,6 +187,12 @@ struct ProfileSettingsView: View {
                                 showSaveSuccess = true
                             }
                             usernameError = nil
+                            Task { @MainActor in
+                                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                                    showSaveSuccess = false
+                                }
+                            }
 
                         case .usernameTaken:
                             usernameError = "Username is already taken"
@@ -305,7 +327,7 @@ struct ProfileSettingsView: View {
                 get: { false },
                 set: { if $0 { activeSheet = .addLanguage } }
             ),
-            selectedUIImage: selectedUIImage,
+            selectedUIImage: $selectedUIImage,
             selectedPhotoItem: $selectedPhotoItem,
             isUploadingAvatar: isUploadingAvatar,
             shouldRemoveAvatar: shouldRemoveAvatar,
@@ -389,7 +411,7 @@ struct SettingsScrollContent: View {
     @Binding var showNextDestinationPicker: Bool
     @Binding var showAddLanguage: Bool
 
-    let selectedUIImage: UIImage?
+    @Binding var selectedUIImage: UIImage?
     @Binding var selectedPhotoItem: PhotosPickerItem?
     let isUploadingAvatar: Bool
     let shouldRemoveAvatar: Bool
@@ -404,7 +426,7 @@ struct SettingsScrollContent: View {
                     HStack(alignment: .top, spacing: 20) {
 
                         ProfileSettingsAvatarSection(
-                            selectedUIImage: selectedUIImage,
+                            selectedUIImage: $selectedUIImage,
                             profileVM: profileVM,
                             selectedPhotoItem: $selectedPhotoItem,
                             isUploadingAvatar: isUploadingAvatar,

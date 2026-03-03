@@ -157,12 +157,43 @@ final class ProfileService {
             full_name: fullName
         )
 
-        try await supabase.client
-            .from("profiles")
-            .insert(createPayload)
-            .execute()
+        // Insert can transiently fail right after signup if auth.users row isn't visible yet.
+        // Retry a few times on FK violation (23503) before giving up.
+        let delays: [UInt64] = [0, 200_000_000, 500_000_000, 1_000_000_000] // 0s, 0.2s, 0.5s, 1.0s
 
-        print("✅ Profile created with full_name:", fullName)
+        var lastError: Error?
+
+        for (idx, delay) in delays.enumerated() {
+            if delay > 0 {
+                try? await Task.sleep(nanoseconds: delay)
+            }
+
+            do {
+                try await supabase.client
+                    .from("profiles")
+                    .insert(createPayload)
+                    .execute()
+
+                print("✅ Profile created with full_name:", fullName)
+                return
+
+            } catch {
+                lastError = error
+
+                if let pg = error as? PostgrestError, pg.code == "23503" {
+                    print("⚠️ ensureProfileExists FK violation (23503) — retry \(idx + 1)/\(delays.count)")
+                    continue
+                }
+
+                throw error
+            }
+        }
+
+        throw lastError ?? NSError(
+            domain: "ProfileService",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to create profile after retries"]
+        )
     }
 
     func fetchOrCreateProfile(

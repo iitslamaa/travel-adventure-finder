@@ -88,6 +88,7 @@ extension ProfileViewModel {
             }
 
             profile = current
+            print("🖼 merged avatarUrl:", current.avatarUrl as Any)
         }
 
         print("💾 Saved + locally merged profile state (no reload)")

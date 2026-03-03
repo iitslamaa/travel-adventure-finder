@@ -11,7 +11,7 @@ import PhotosUI
 
 struct ProfileSettingsAvatarSection: View {
 
-    let selectedUIImage: UIImage?
+    @Binding var selectedUIImage: UIImage?
     let profileVM: ProfileViewModel
     @Binding var selectedPhotoItem: PhotosPickerItem?
     let isUploadingAvatar: Bool
@@ -20,6 +20,7 @@ struct ProfileSettingsAvatarSection: View {
 
     @State private var showPhotoOptions = false
     @State private var showImagePicker = false
+    @State private var previewImage: UIImage? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -68,6 +69,19 @@ struct ProfileSettingsAvatarSection: View {
                 selection: $selectedPhotoItem,
                 matching: .images
             )
+            .onChange(of: selectedPhotoItem) { _, newItem in
+                guard let newItem else { return }
+
+                Task {
+                    if let data = try? await newItem.loadTransferable(type: Data.self),
+                       let uiImage = UIImage(data: data) {
+                        await MainActor.run {
+                            previewImage = uiImage
+                            selectedUIImage = uiImage
+                        }
+                    }
+                }
+            }
 
         }
     }
@@ -84,7 +98,7 @@ struct ProfileSettingsAvatarSection: View {
         Group {
             if shouldRemoveAvatar {
                 placeholderAvatar
-            } else if let image = selectedUIImage {
+            } else if let image = selectedUIImage ?? previewImage {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
