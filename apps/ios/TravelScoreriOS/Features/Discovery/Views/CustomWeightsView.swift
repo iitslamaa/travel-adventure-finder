@@ -180,7 +180,7 @@ struct CustomWeightsView: View {
                 .upsert(row)
                 .execute()
 
-            print("✅ Weights saved to Supabase")
+            
             originalWeights = weightsStore.weights
             hasSaved = true
 

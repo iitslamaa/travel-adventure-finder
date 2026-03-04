@@ -88,10 +88,9 @@ extension ProfileViewModel {
             }
 
             profile = current
-            print("🖼 merged avatarUrl:", current.avatarUrl as Any)
         }
 
-        print("💾 Saved + locally merged profile state (no reload)")
+        
     }
     
     func uploadAvatar(data: Data, fileName: String) async throws -> String {

@@ -192,11 +192,8 @@ private func submitLowRating() {
                         )
                     )
                     .execute()
-            } else {
-                print("No authenticated user — feedback not inserted")
             }
         } catch {
-            print("Supabase insert failed:", error)
         }
         
         await MainActor.run {

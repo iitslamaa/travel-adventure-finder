@@ -18,17 +18,10 @@ struct AppRootView: View {
     @State private var hasFinishedIntroVideo = false
     
     init() {
-        print("🚀 AppRootView INIT — instance:", instanceId)
     }
     
     var body: some View {
-        let _ = print(
-            "🧱 AppRootView BODY — instance:", instanceId,
-            "isAuthenticated:", sessionManager.isAuthenticated,
-            "didContinueAsGuest:", sessionManager.didContinueAsGuest,
-            "isAuthSuppressed:", sessionManager.isAuthSuppressed,
-            "userId:", sessionManager.userId as Any
-        )
+
         
         ZStack {
             
@@ -36,8 +29,6 @@ struct AppRootView: View {
             if sessionManager.isAuthSuppressed {
                 AuthLandingView()
                     .onAppear {
-                        print("🔐 AuthLandingView APPEARED — instance:", instanceId,
-                              "userId:", sessionManager.userId as Any)
                     }
                 
             } else if sessionManager.isAuthenticated || sessionManager.didContinueAsGuest {
@@ -49,8 +40,6 @@ struct AppRootView: View {
                         RootTabView()
                             .environmentObject(profileVM)
                             .onAppear {
-                                print("📲 RootTabView APPEARED — instance:", instanceId,
-                                      "userId:", userId)
                             }
                     }
                 }
@@ -58,8 +47,6 @@ struct AppRootView: View {
             } else {
                 AuthLandingView()
                     .onAppear {
-                        print("🔐 AuthLandingView APPEARED — instance:", instanceId,
-                              "userId:", sessionManager.userId as Any)
                         profileVMHolder.clear()
                     }
             }

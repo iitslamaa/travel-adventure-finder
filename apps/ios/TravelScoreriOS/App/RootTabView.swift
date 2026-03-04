@@ -17,8 +17,6 @@ struct RootTabView: View {
     private let instanceId = UUID()
 
     var body: some View {
-        let _ = print("🧱 RootTabView BODY — instance:", instanceId,
-                      " userId:", sessionManager.userId as Any)
         TabView {
 
             // Discovery
@@ -39,10 +37,8 @@ struct RootTabView: View {
 
             // Friends (auth required)
             NavigationStack {
-                let _ = print("📦 Friends NavigationStack BUILD — instance:", instanceId)
                 if sessionManager.isAuthenticated,
                    let userId = sessionManager.userId {
-                    let _ = print("🏠 RootTabView building FriendsView for:", userId)
                     FriendsView(userId: userId)
                 } else {
                     VStack(spacing: 20) {
@@ -77,10 +73,8 @@ struct RootTabView: View {
 
             // Profile (auth required)
             NavigationStack {
-                let _ = print("📦 Profile NavigationStack BUILD — instance:", instanceId)
                 if sessionManager.isAuthenticated,
                    let userId = sessionManager.userId {
-                    let _ = print("🏠 RootTabView building ProfileView for:", userId)
                     ProfileView(userId: userId)
                         .id(userId)
                 } else {

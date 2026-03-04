@@ -20,11 +20,11 @@ enum DataLoader {
             let localMeta = loadCachedMeta()
 
             if localMeta != remoteMeta {
-                print("🔄 Meta changed, refreshing remote data")
+                
                 await refreshRemoteData()
                 saveCachedMeta(remoteMeta)
             } else {
-                print("✅ Meta unchanged, using cached data")
+                
             }
         } catch {
             print("❌ Meta check failed:", error)

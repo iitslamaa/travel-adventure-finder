@@ -13,12 +13,6 @@ extension ProfileViewModel {
 
     func load(generation: UUID) async {
         let startingUserId = userId
-        print("🔥🔥🔥 LOAD() ENTERED for user:", startingUserId)
-
-        
-        print("   generation:", generation)
-        print("   current loadGeneration:", loadGeneration)
-        print("   userId at start:", startingUserId)
 
         // Only show full-screen loading during initial load,
         // NOT during pull-to-refresh.
@@ -38,11 +32,9 @@ extension ProfileViewModel {
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                print("🛑 ABORT after fetchProfile (identity changed)")
+                
                 return
             }
-
-            print("🟢 assigning profile id:", fetchedProfile.id)
             profile = fetchedProfile
 
             let fetchedFriends =
@@ -50,7 +42,7 @@ extension ProfileViewModel {
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                print("🛑 ABORT after fetchFriends (identity changed)")
+                
                 return
             }
 
@@ -61,7 +53,7 @@ extension ProfileViewModel {
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                print("🛑 ABORT after fetchTraveled (identity changed)")
+                
                 return
             }
 
@@ -72,7 +64,7 @@ extension ProfileViewModel {
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                print("🛑 ABORT after fetchBucket (identity changed)")
+                
                 return
             }
 
@@ -138,7 +130,7 @@ extension ProfileViewModel {
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                print("🛑 ABORT after computeOrderedLists")
+                
                 return
             }
 
@@ -148,7 +140,7 @@ extension ProfileViewModel {
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                print("🛑 ABORT after refreshRelationshipState")
+                
                 return
             }
 
@@ -156,13 +148,11 @@ extension ProfileViewModel {
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                print("🛑 ABORT after loadPendingRequestCount")
+                
                 return
             }
 
             await loadMutualFriends()
-
-            print("✅ load() COMPLETE — user:", startingUserId)
 
         } catch {
             print("❌ load() failed:", error)

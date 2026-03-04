@@ -157,8 +157,6 @@ struct WorldGeoJSONLoader {
 
         cachedPolygons = finalPolygons
 
-        print("🌎 Loaded FULL dataset overlay count:", finalPolygons.count)
-
         return finalPolygons
     }
 }

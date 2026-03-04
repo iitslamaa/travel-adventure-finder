@@ -17,11 +17,6 @@ enum APIConfig {
 
     static var baseURL: URL {
         let url = URL(string: "https://travel-scorer.vercel.app")!
-
-        #if DEBUG
-        print("🌍 [APIConfig] Using base URL:", url.absoluteString)
-        #endif
-
         return url
     }
 }

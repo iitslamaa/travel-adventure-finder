@@ -19,28 +19,23 @@ final class FriendsViewModel: ObservableObject {
     @Published var searchText: String = ""
     @Published var searchResults: [Profile] = [] {
         didSet {
-            print("📡 [FriendsVM:", instanceId, "] searchResults DID SET — count:", searchResults.count)
         }
     }
     @Published var isLoading: Bool = false {
         didSet {
-            print("📡 [FriendsVM:", instanceId, "] isLoading DID SET —", isLoading)
         }
     }
     @Published var errorMessage: String?
     @Published var friends: [Profile] = [] {
         didSet {
-            print("📡 [FriendsVM:", instanceId, "] friends DID SET — count:", friends.count)
         }
     }
     @Published var incomingRequestCount: Int = 0 {
         didSet {
-            print("📡 [FriendsVM:", instanceId, "] incomingRequestCount DID SET —", incomingRequestCount)
         }
     }
     @Published var displayName: String = "" {
         didSet {
-            print("📡 [FriendsVM:", instanceId, "] displayName DID SET —", displayName)
         }
     }
     @Published private(set) var hasLoaded: Bool = false
@@ -52,22 +47,18 @@ final class FriendsViewModel: ObservableObject {
     // MARK: - Init / Deinit
 
     init() {
-        print("🧠 FriendsViewModel INIT — instance:", instanceId)
     }
 
     deinit {
-        print("💀 FriendsViewModel DEINIT — instance:", instanceId)
     }
 
     // MARK: - Load Friends
 
     func loadFriends(for userId: UUID, forceRefresh: Bool = false) async {
         if hasLoaded && !forceRefresh {
-            print("⏭ [FriendsVM:", instanceId, "] loadFriends skipped (already loaded)")
             return
         }
 
-        print("👥 [FriendsVM:", instanceId, "] loadFriends START for:", userId, "force:", forceRefresh)
         isLoading = true
         errorMessage = nil
 
@@ -75,7 +66,6 @@ final class FriendsViewModel: ObservableObject {
             let fetchedFriends = try await friendService.fetchFriends(for: userId)
             friends = fetchedFriends
             hasLoaded = true
-            print("👥 [FriendsVM:", instanceId, "] loadFriends result count:", friends.count)
         } catch {
             print("❌ [FriendsVM:", instanceId, "] loadFriends failed:", error)
             errorMessage = error.localizedDescription
@@ -88,7 +78,6 @@ final class FriendsViewModel: ObservableObject {
     // MARK: - Load Display Name
 
     func loadDisplayName(for userId: UUID) async {
-        print("🏷 [FriendsVM:", instanceId, "] loadDisplayName for:", userId)
         do {
             let response: PostgrestResponse<Profile> = try await supabase.client
                 .from("profiles")
@@ -98,7 +87,6 @@ final class FriendsViewModel: ObservableObject {
                 .execute()
 
             displayName = response.value.fullName
-            print("🏷 [FriendsVM:", instanceId, "] displayName loaded:", displayName)
         } catch {
             print("❌ [FriendsVM:", instanceId, "] loadDisplayName failed:", error)
             displayName = ""
@@ -108,12 +96,10 @@ final class FriendsViewModel: ObservableObject {
     // MARK: - Incoming Requests Count
 
     func loadIncomingRequestCount() async {
-        print("🔔 [FriendsVM:", instanceId, "] loadIncomingRequestCount")
         guard let userId = supabase.currentUserId else { return }
 
         do {
             incomingRequestCount = try await friendService.incomingRequestCount(for: userId)
-            print("🔔 [FriendsVM:", instanceId, "] incomingRequestCount:", incomingRequestCount)
         } catch {
             print("❌ [FriendsVM:", instanceId, "] loadIncomingRequestCount failed:", error)
             incomingRequestCount = 0
@@ -123,7 +109,6 @@ final class FriendsViewModel: ObservableObject {
     // MARK: - Search
 
     func searchUsers() async {
-        print("🔎 [FriendsVM:", instanceId, "] searchUsers for:", searchText)
         guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else {
             searchResults = []
             return
@@ -134,7 +119,6 @@ final class FriendsViewModel: ObservableObject {
 
         do {
             searchResults = try await supabase.searchUsers(byUsername: searchText)
-            print("🔎 [FriendsVM:", instanceId, "] searchUsers results count:", searchResults.count)
         } catch {
             print("❌ [FriendsVM:", instanceId, "] searchUsers failed:", error)
             errorMessage = error.localizedDescription

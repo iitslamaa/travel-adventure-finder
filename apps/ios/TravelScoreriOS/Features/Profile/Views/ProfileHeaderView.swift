@@ -16,11 +16,6 @@ struct ProfileHeaderView: View {
     }
 
     var body: some View {
-        let _ = print("🧾 ProfileHeaderView BODY — instance:", instanceId,
-                      " profile.id:", profile?.id as Any,
-                      " relationshipState:", relationshipState as Any,
-                      " effectiveState:", effectiveState,
-                      " friendCount:", friendCount)
         HStack(alignment: .top, spacing: 24) {
 
             // LEFT COLUMN — Identity
@@ -56,10 +51,6 @@ struct ProfileHeaderView: View {
                     if effectiveState != .selfProfile {
 
                         Button(action: {
-                            print("🔘 Friend button tapped — instance:", instanceId,
-                                  " profile.id:", profile?.id as Any,
-                                  " currentState:", effectiveState,
-                                  " friendCount:", friendCount)
                             onToggleFriend()
                         }) {
                             HStack(spacing: 6) {
@@ -175,21 +166,6 @@ struct ProfileHeaderView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .layoutPriority(1)
-        }
-        .onChange(of: profile?.id) { oldValue, newValue in
-            print("🔁 ProfileHeaderView profile.id changed — instance:", instanceId,
-                  " old:", oldValue as Any,
-                  " new:", newValue as Any)
-        }
-        .onChange(of: relationshipState) { oldValue, newValue in
-            print("🔁 ProfileHeaderView relationshipState changed — instance:", instanceId,
-                  " old:", oldValue as Any,
-                  " new:", newValue as Any)
-        }
-        .onChange(of: friendCount) { oldValue, newValue in
-            print("🔁 ProfileHeaderView friendCount changed — instance:", instanceId,
-                  " old:", oldValue,
-                  " new:", newValue)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)

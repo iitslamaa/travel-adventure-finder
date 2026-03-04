@@ -125,8 +125,6 @@ struct ProfileSettingsView: View {
                         hasLoadedProfile = true
 
                         if let profile = profileVM.profile {
-                            print("⚙️ Settings loaded profile:", profile.id)
-
                             firstName = profile.fullName ?? ""
                             username = profile.username ?? ""
 

@@ -37,18 +37,14 @@ final class SupabaseManager {
                 )
             )
         )
-        print("🛰 SupabaseManager INIT — instance:", instanceId)
-        print("   URL:", url)
     }
 
     func startAuthListener() async {
-        print("🎧 [\(instanceId)] startAuthListener called. hasStartedAuthListener:", hasStartedAuthListener)
         guard !hasStartedAuthListener else { return }
         hasStartedAuthListener = true
 
         await client.auth.onAuthStateChange { [weak self] _, _ in
             Task { @MainActor in
-                print("🔁 [\(self?.instanceId.uuidString ?? "nil")] Supabase auth state changed")
                 self?.authStateSubject.send(())
             }
         }
@@ -91,7 +87,6 @@ final class SupabaseManager {
     func fetchCurrentSession() async throws -> Session? {
         // Do not throw on missing session; treat as logged out.
         let session = try? await client.auth.session
-        print("📡 [\(instanceId)] fetchCurrentSession →", session as Any)
 
         guard let session else { return nil }
 
@@ -108,17 +103,16 @@ final class SupabaseManager {
     // MARK: - Auth helpers
 
     func signOut() async throws {
-        print("🚪 [\(instanceId)] Supabase signOut called")
+        
         try await client.auth.signOut()
     }
 
     /// Deletes the currently authenticated user account via Edge Function
     func deleteAccount() async throws {
-        print("🗑 [\(instanceId)] deleteAccount invoked")
+        
 
         // Safely attempt to hydrate session (do not crash if missing)
         let session = try? await client.auth.session
-        print("🧾 [\(instanceId)] session before delete →", session as Any)
 
         guard session != nil, client.auth.currentUser != nil else {
             throw NSError(
@@ -140,23 +134,19 @@ final class SupabaseManager {
     /// Returns the currently authenticated user's ID
     var currentUserId: UUID? {
         let id = client.auth.currentUser?.id
-        print("🧾 [\(instanceId)] currentUserId read →", id as Any)
         return id
     }
 
     /// Search users by username (case-insensitive, partial match)
     func searchUsers(byUsername query: String) async throws -> [Profile] {
-        print("🔎 [\(instanceId)] searchUsers called with query:", query)
         let response: PostgrestResponse<[Profile]> = try await client
             .from("profiles")
             .select("*")
             .ilike("username", pattern: "%\(query)%")
             .limit(20)
             .execute()
-        print("🔎 [\(instanceId)] searchUsers result count:", response.value.count)
         return response.value
     }
     deinit {
-        print("💀 SupabaseManager DEINIT — instance:", instanceId)
     }
 }

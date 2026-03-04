@@ -87,13 +87,7 @@ enum SeasonalityCache {
             let data = try encoder.encode(payload)
             try data.write(to: fileURL(for: month), options: [.atomic])
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: refreshKey(for: month))
-#if DEBUG
-            print("💾 [SeasonalityCache] Saved month \(month)")
-#endif
         } catch {
-#if DEBUG
-            print("🔴 [SeasonalityCache] Save failed:", error)
-#endif
         }
     }
 

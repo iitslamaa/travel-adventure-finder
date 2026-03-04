@@ -33,31 +33,18 @@ struct ProfileSettingsSaveCoordinator {
 
         setSaving(true)
 
-        print("💾 SAVE START — userId:", profileVM.userId)
-        print("   firstName:", firstName)
-        print("   username:", username)
-        print("   homeCountries:", homeCountries)
-        print("   travelMode:", travelMode as Any)
-        print("   travelStyle:", travelStyle as Any)
-        print("   nextDestination:", nextDestination as Any)
-        print("   currentCountry:", currentCountry as Any)
-        print("   favoriteCountries:", favoriteCountries)
-
         let avatarURL = await resolveAvatarChange(
             profileVM: profileVM,
             selectedUIImage: selectedUIImage,
             shouldRemoveAvatar: shouldRemoveAvatar,
             setAvatarUploading: setAvatarUploading
         )
-        print("🖼 selectedUIImage is nil?:", selectedUIImage == nil)
-        print("🖼 shouldRemoveAvatar:", shouldRemoveAvatar)
-        print("🖼 resolved avatarURL:", avatarURL as Any)
 
         let trimmedName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
 
         do {
-            print("📡 Calling profileVM.saveProfile...")
+            
 
             try await profileVM.saveProfile(
                 firstName: trimmedName,
@@ -75,7 +62,7 @@ struct ProfileSettingsSaveCoordinator {
                 avatarUrl: avatarURL
             )
 
-            print("✅ SAVE SUCCESS")
+            
 
             setSaving(false)
             setAvatarCleared()
@@ -131,8 +118,6 @@ struct ProfileSettingsSaveCoordinator {
             let userId = profileVM.profile?.id,
             let data = image.jpegData(compressionQuality: 0.85)
         else {
-            print("🖼 uploadAvatarIfNeeded skipped — image nil?:", image == nil,
-                  "profileId:", profileVM.profile?.id as Any)
             return nil
         }
 
@@ -140,7 +125,6 @@ struct ProfileSettingsSaveCoordinator {
         defer { setAvatarUploading(false) }
 
         let fileName = "\(userId)_\(UUID().uuidString).jpg"
-        print("🖼 uploading avatar file:", fileName, "bytes:", data.count)
 
         do {
             let publicURL = try await profileVM.uploadAvatar(
@@ -149,7 +133,6 @@ struct ProfileSettingsSaveCoordinator {
             )
             return publicURL
         } catch {
-            print("🔴 Avatar upload failed:", error)
             return nil
         }
     }

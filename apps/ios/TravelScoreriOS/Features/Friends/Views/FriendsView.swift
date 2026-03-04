@@ -10,8 +10,6 @@ struct FriendsView: View {
 
     init(userId: UUID) {
         self.userId = userId
-        print("👥 FriendsView INIT")
-        print("   userId:", userId)
     }
 
     var body: some View {

@@ -44,8 +44,6 @@ struct ProfileView: View {
     @State private var navigateToFriends = false
 
     init(userId: UUID) {
-        print("🆕 ProfileView INIT for:", userId)
-
         self.userId = userId
 
         // ✅ VM is now single-identity (no rebinding / no stale reuse)
@@ -233,11 +231,9 @@ struct ProfileView: View {
         .animation(.easeInOut(duration: 0.25), value: isReadyToRenderProfile)
         
         .onAppear {
-            print("📌 ProfileView onAppear for:", userId)
-
             // 🔒 Only load if no profile is currently bound
             guard profileVM.profile == nil else {
-                print("🛑 Skipping loadIfNeeded — profile already bound")
+                
                 return
             }
 
@@ -246,11 +242,6 @@ struct ProfileView: View {
             }
         }
         .onDisappear {
-            print("""
-            🚪 ProfileView onDisappear
-               view.userId: \(userId)
-               vm.objectId: \(ObjectIdentifier(profileVM))
-            """)
         }
     }
 }

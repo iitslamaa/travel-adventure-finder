@@ -14,19 +14,13 @@ final class SessionManager: ObservableObject {
 
     @Published private(set) var isAuthenticated: Bool = false {
         didSet {
-            print("🔐 [SessionManager \(instanceId)] isAuthenticated DID SET")
-            print("   old:", oldValue)
-            print("   new:", isAuthenticated)
-            print("   userId:", userId as Any)
+            
         }
     }
     @Published var didContinueAsGuest: Bool = false
     @Published private(set) var userId: UUID? = nil {
         didSet {
-            print("👤 [SessionManager \(instanceId)] userId DID SET")
-            print("   old:", oldValue as Any)
-            print("   new:", userId as Any)
-            print("   isAuthenticated:", isAuthenticated)
+            
         }
     }
     @Published private(set) var authScreenNonce: UUID = UUID()
@@ -56,7 +50,6 @@ final class SessionManager: ObservableObject {
         bucketListStore: BucketListStore,
         traveledStore: TraveledStore
     ) {
-        print("🚀 SessionManager INIT — instance:", instanceId)
         self.supabase = supabase
         self.bucketListStore = bucketListStore
         self.traveledStore = traveledStore
@@ -87,7 +80,7 @@ final class SessionManager: ObservableObject {
         if isAuthSuppressed != false { isAuthSuppressed = false }
         if didContinueAsGuest != false { didContinueAsGuest = false }
         if isAuthenticated != false { isAuthenticated = false }
-        print("🚪 signOut clearing userId")
+        
         if userId != nil { userId = nil }
         bucketListStore.replace(with: guestBucketSnapshot)
         traveledStore.replace(with: guestTraveledSnapshot)
@@ -97,7 +90,7 @@ final class SessionManager: ObservableObject {
         syncTask = nil
         ensureProfileTask?.cancel()
         ensureProfileTask = nil
-        print("🧪 signOut → isAuthenticated=false")
+        
         bumpAuthScreen()
     }
 
@@ -111,7 +104,7 @@ final class SessionManager: ObservableObject {
         if isAuthSuppressed != true { isAuthSuppressed = true }
         if didContinueAsGuest != false { didContinueAsGuest = false }
         if isAuthenticated != false { isAuthenticated = false }
-        print("🚪 handleAccountDeleted clearing userId")
+        
         if userId != nil { userId = nil }
         hasMergedGuestData = false
         didEnsureProfile = false
@@ -129,10 +122,10 @@ final class SessionManager: ObservableObject {
         if isAuthSuppressed {
             let session = try? await supabase.fetchCurrentSession()
             if let session, !session.isExpired {
-                print("✅ forceRefreshAuthState(\(source)) observed fresh session while suppressed → lifting suppression")
+                
                 isAuthSuppressed = false
             } else {
-                print("🧪 forceRefreshAuthState(\(source)) suppressed → staying logged out")
+                
                 if isAuthenticated != false { isAuthenticated = false }
                 if userId != nil { userId = nil }
                 return
@@ -141,25 +134,24 @@ final class SessionManager: ObservableObject {
         do {
             let session = try await supabase.fetchCurrentSession()
 
-            print("🧪 forceRefreshAuthState(\(source)) session:", session as Any)
 
             if let session {
                 // Fresh valid session observed — allow auth again
                 isAuthSuppressed = false
                 if session.isExpired {
-                    print("🧪 session expired during refresh — staying in guest mode")
+                    
                     if isAuthenticated != false { isAuthenticated = false }
                     if userId != nil { userId = nil }
                     hasMergedGuestData = false
                 } else {
-                    print("🔐 forceRefreshAuthState(\(source)) setting userId:", session.user.id)
+                    
                     if isAuthenticated != true { isAuthenticated = true }
                     if userId != session.user.id { userId = session.user.id }
 
                     ensureProfileEventually(for: session.user.id)
                 }
             } else {
-                print("🧪 no session during refresh — clearing auth state")
+                
                 if isAuthenticated != false { isAuthenticated = false }
                 if userId != nil { userId = nil }
                 hasMergedGuestData = false
@@ -193,7 +185,7 @@ final class SessionManager: ObservableObject {
                 do {
                     let profileService = ProfileService(supabase: supabase)
                     try await profileService.ensureProfileExists(userId: userId)
-                    print("✅ ensureProfileEventually succeeded on attempt \(idx + 1)/\(delays.count) for:", userId)
+
                     ensureProfileTask = nil
                     return
 
@@ -257,10 +249,10 @@ final class SessionManager: ObservableObject {
             if self.isAuthSuppressed {
                 let session = try? await supabase.fetchCurrentSession()
                 if let session, !session.isExpired {
-                    print("✅ refreshFromCurrentSession(\(source)) observed fresh session while suppressed → lifting suppression")
+                    
                     self.isAuthSuppressed = false
                 } else {
-                    print("🧪 refreshFromCurrentSession(\(source)) suppressed → staying logged out")
+                    
                     if self.isAuthenticated != false { self.isAuthenticated = false }
                     if self.userId != nil { self.userId = nil }
                     return
@@ -268,18 +260,16 @@ final class SessionManager: ObservableObject {
             }
             do {
                 let session = try await supabase.fetchCurrentSession()
-                print("🧪 [SessionManager \(instanceId)] refreshFromCurrentSession(\(source))")
-                print("   current userId BEFORE:", self.userId as Any)
-                print("   session:", session as Any)
+                
 
                 if let session, !session.isExpired {
-                    print("🔐 refreshFromCurrentSession(\(source)) VALID session for:", session.user.id)
+                    
                     if isAuthenticated != true { isAuthenticated = true }
                     if userId != session.user.id { userId = session.user.id }
 
                     ensureProfileEventually(for: session.user.id)
                 } else {
-                    print("🚪 refreshFromCurrentSession(\(source)) clearing auth state")
+                    
                     if isAuthenticated != false { isAuthenticated = false }
                     if userId != nil { userId = nil }
                     hasMergedGuestData = false
@@ -296,13 +286,11 @@ final class SessionManager: ObservableObject {
         supabase.authStatePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                print("🔁 [SessionManager \(self?.instanceId.uuidString ?? "nil")] authStatePublisher fired")
                 self?.refreshFromCurrentSession(source: "authEvent")
             }
             .store(in: &cancellables)
     }
 
     deinit {
-        print("💀 SessionManager DEINIT — instance:", instanceId)
     }
 }

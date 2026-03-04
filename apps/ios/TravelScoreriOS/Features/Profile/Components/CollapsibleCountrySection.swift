@@ -38,7 +38,6 @@ struct CollapsibleCountrySection: View {
         VStack(alignment: .leading, spacing: 12) {
 
             Button {
-                print("🔘 Toggle tapped —", title)
                 if !isExpanded && !hasLoadedMap {
                     hasLoadedMap = true
                 }
@@ -97,7 +96,6 @@ struct CollapsibleCountrySection: View {
                                 let normalized = $0
                                     .trimmingCharacters(in: .whitespacesAndNewlines)
                                     .uppercased()
-                                print("🇫🇷 [FlagTap] tapped:", $0, "normalized:", normalized)
                                 selectedCountryISO = normalized
                             },
                             mutualCountries: mutualCountries
@@ -114,12 +112,8 @@ struct CollapsibleCountrySection: View {
                         )
                         .id(title + normalizedISOs.joined())
                         .onAppear {
-                            print("🧩 ScoreWorldMapRepresentable onAppear — title:", title,
-                                  " highlightedISOs:", normalizedISOs,
-                                  " selectedCountryISO:", selectedCountryISO as Any)
                         }
                         .onDisappear {
-                            print("🧩 ScoreWorldMapRepresentable onDisappear — title:", title)
                         }
                         .transaction { transaction in
                             transaction.animation = nil
@@ -153,15 +147,10 @@ struct CollapsibleCountrySection: View {
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
         .onAppear {
-            print("📦 CollapsibleCountrySection APPEAR —", title, "count:", countryCodes.count)
         }
         .onDisappear {
-            print("📦 CollapsibleCountrySection DISAPPEAR — title:", title)
         }
-        .onChange(of: countryCodes) { oldValue, newValue in
-            print("🔁 CollapsibleCountrySection countryCodes CHANGED — title:", title)
-            print("   old:", oldValue)
-            print("   new:", newValue)
+        .onChange(of: countryCodes) { _ in
             isExpanded = false
             hasLoadedMap = false
             selectedCountryISO = nil

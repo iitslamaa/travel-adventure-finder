@@ -13,7 +13,6 @@ enum CountryAPI {
     static var countriesURL: URL { baseURL.appendingPathComponent("api/countries") }
 
     static func fetchCountries() async throws -> [Country] {
-        print("🔵 [CountryAPI] Fetching:", countriesURL.absoluteString)
 
         var request = URLRequest(url: countriesURL)
         request.httpMethod = "GET"
@@ -27,22 +26,18 @@ enum CountryAPI {
         let (data, resp) = try await URLSession.shared.data(for: request)
 
         guard let http = resp as? HTTPURLResponse else {
-            print("🔴 [CountryAPI] Non-HTTP response")
+            
             throw URLError(.badServerResponse)
         }
 
-        print("🔵 [CountryAPI] Status:", http.statusCode)
-
         guard (200..<300).contains(http.statusCode) else {
             if let body = String(data: data, encoding: .utf8) {
-                print("🔴 [CountryAPI] Bad status \(http.statusCode). Body:", body.prefix(400))
             }
             throw URLError(.badServerResponse)
         }
 
         #if DEBUG
         if let s = String(data: data, encoding: .utf8) {
-            print("🌐 [CountryAPI] Sample body:", s.prefix(400))
         }
         #endif
 
@@ -64,18 +59,10 @@ enum CountryAPI {
             } catch {
                 #if DEBUG
                 let body = String(data: data, encoding: .utf8) ?? "<non-utf8>"
-                print("🔴 [CountryAPI] Decode failed for both shapes. Body:", body.prefix(400))
                 #endif
                 throw error
             }
         }
-        print("🟢 [CountryAPI] Decoded \(dtos.count) DTOs")
-#if DEBUG
-        if let ch = dtos.first(where: { $0.iso2.uppercased() == "CH" }) {
-            print("🇨🇭 DTO advisoryScore:", ch.advisoryScore as Any)
-        }
-#endif
-
 
         let countries = dtos.map { dto in
             Country(
@@ -110,7 +97,7 @@ enum CountryAPI {
             )
         }
 
-        print("🟢 [CountryAPI] Mapped \(countries.count) countries")
+
         return countries
     }
 }
@@ -159,9 +146,6 @@ extension CountryAPI {
                 )
             }
         } catch {
-            #if DEBUG
-            print("🟡 [CountriesCache] Decode failed:", error)
-            #endif
             return nil
         }
     }
@@ -196,16 +180,10 @@ extension CountryAPI {
                 } catch {
                     #if DEBUG
                     let body = String(data: data, encoding: .utf8) ?? "<non-utf8>"
-                    print("🔴 [CountryAPI] Decode failed for both shapes. Body:", body.prefix(400))
                     #endif
                     throw error
                 }
             }
-#if DEBUG
-            if let ch = dtos.first(where: { $0.iso2.uppercased() == "CH" }) {
-                print("🇨🇭 REFRESH DTO advisoryScore:", ch.advisoryScore as Any)
-            }
-#endif
             let countries = dtos.map { dto in
                 Country(
                     iso2: dto.iso2,
@@ -239,14 +217,8 @@ extension CountryAPI {
                 )
             }
 
-            #if DEBUG
-            print("🟢 [CountryAPI] Refreshed + cached \(countries.count) countries")
-            #endif
             return countries
         } catch {
-            #if DEBUG
-            print("🔴 [CountryAPI] Refresh failed:", error)
-            #endif
             return nil
         }
     }
@@ -269,7 +241,6 @@ extension CountryAPI {
         if !(200..<300).contains(http.statusCode) {
             #if DEBUG
             if let body = String(data: data, encoding: .utf8) {
-                print("🔴 [CountryAPI] Bad status \(http.statusCode). Body:", body.prefix(400))
             }
             #endif
             throw URLError(.badServerResponse)
@@ -295,13 +266,7 @@ extension CountryAPI {
         static func saveData(_ data: Data) {
             do {
                 try data.write(to: cacheURL, options: [.atomic])
-                #if DEBUG
-                print("💾 [CountriesCache] Saved:", cacheURL.lastPathComponent)
-                #endif
             } catch {
-                #if DEBUG
-                print("🔴 [CountriesCache] Save failed:", error)
-                #endif
             }
         }
 

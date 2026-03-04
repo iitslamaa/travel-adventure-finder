@@ -106,9 +106,9 @@ def main():
         writer.writerows(rows_out)
 
     print(f"Wrote {BASE_PATH} with {len(rows_out)} rows.")
-    print("Examples:")
+    
     for r in rows_out[:5]:
-        print(" ", r.get("iso2"), r.get("name"), r.get("col"))
+        print(r.get("iso2"), r.get("name"), r.get("col"))
 
 if __name__ == "__main__":
     main()

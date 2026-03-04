@@ -36,8 +36,6 @@ struct DiscoveryCountryListView: View {
             if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
                 countries = cached
                 return
-            } else {
-                print("🟡 Discovery initial load: countries still empty (attempt \(idx + 1)/\(delays.count))")
             }
         }
     }

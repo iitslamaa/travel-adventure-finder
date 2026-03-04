@@ -5,7 +5,6 @@
 //  Created by Lama Yassine on 11/11/25.
 //
 
-private let DEBUG_COUNTRY_LOGS = true
 import Foundation
 
 struct CountryDTO: Decodable {
@@ -374,48 +373,5 @@ struct CountryDTO: Decodable {
         }
         self.affordabilityBand = facts?.affordabilityBand
         self.affordabilityExplanation = facts?.affordabilityExplanation.map { Self.decodeHTML($0) }
-
-
-        // Debug (super useful right now)
-        #if DEBUG
-        if DEBUG_COUNTRY_LOGS {
-            if let s = score {
-                print("🟢 score for \(name): \(s)")
-            } else {
-                print("🟡 no score found for \(name)")
-            }
-            if let seasonalityScore {
-                print("📅 seasonality for \(name): \(seasonalityScore) (\(seasonalityLabel ?? ""))")
-            }
-            if let visaEaseScore {
-                print("🛂 visa ease for \(name): \(visaEaseScore) type=\(visaType ?? "-")")
-            }
-            if let advisoryScore {
-                print("🛡 advisory score for \(name): \(advisoryScore)")
-            } else {
-                print("🛡 advisory score missing for \(name)")
-            }
-            if let affordabilityCategory {
-                print("💰 affordability category for \(name): \(affordabilityCategory)")
-            } else {
-                print("💰 affordability category missing for \(name)")
-            }
-            if let affordabilityScore {
-                print("💵 affordability score for \(name): \(affordabilityScore)")
-            } else {
-                print("💵 affordability score missing for \(name)")
-            }
-            if let affordabilityBand {
-                print("🎨 affordability band for \(name): \(affordabilityBand)")
-            } else {
-                print("🎨 affordability band missing for \(name)")
-            }
-            if let affordabilityExplanation {
-                print("📝 affordability explanation for \(name): \(affordabilityExplanation)")
-            } else {
-                print("📝 affordability explanation missing for \(name)")
-            }
-        }
-        #endif
     }
 }

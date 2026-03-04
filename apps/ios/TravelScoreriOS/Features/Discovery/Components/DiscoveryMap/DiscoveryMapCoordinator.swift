@@ -9,22 +9,6 @@ final class DiscoveryMapCoordinator: NSObject, MKMapViewDelegate {
     // Cache renderers so MapKit doesn't recreate hundreds of them repeatedly
     private var rendererCache: [ObjectIdentifier: MKOverlayRenderer] = [:]
     
-    // MARK: - Debug
-    private let debugMapStyling = true
-    private let debugTap = true
-    private let debugRenderer = true
-
-    private func dlog(_ items: Any...) {
-        guard debugMapStyling else { return }
-        let msg = items.map { String(describing: $0) }.joined(separator: " ")
-        print("🗺️ [DiscoveryMapCoordinator \(coordinatorId)]", msg)
-    }
-
-    private func dlogAlways(_ items: Any...) {
-        let msg = items.map { String(describing: $0) }.joined(separator: " ")
-        print("🗺️ [DiscoveryMapCoordinator \(coordinatorId)]", msg)
-    }
-
     private func normalizeISO(_ value: String?) -> String? {
         value?
             .trimmingCharacters(in: .whitespacesAndNewlines)

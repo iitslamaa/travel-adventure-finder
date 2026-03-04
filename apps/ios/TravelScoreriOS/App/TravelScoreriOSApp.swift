@@ -17,7 +17,7 @@ struct TravelScoreriOSApp: App {
     @StateObject private var scoreWeightsStore: ScoreWeightsStore
 
     init() {
-        print("🚀 TravelScoreriOSApp INIT")
+        
 
         let bucket = BucketListStore()
         let traveled = TraveledStore()
@@ -34,12 +34,6 @@ struct TravelScoreriOSApp: App {
         _scoreWeightsStore = StateObject(wrappedValue: weights)
         _sessionManager = StateObject(wrappedValue: session)
 
-        print("📦 bucketListStore instance:", ObjectIdentifier(bucket))
-        print("🧳 traveledStore instance:", ObjectIdentifier(traveled))
-        print("⚖️ scoreWeightsStore instance:", ObjectIdentifier(weights))
-        print("🔐 sessionManager instance:", ObjectIdentifier(session))
-        print("   🔎 SupabaseManager shared instance:", ObjectIdentifier(SupabaseManager.shared))
-
         // Configure Nuke global image pipeline for avatar stability
         let dataCache = try? DataCache(name: "com.travelaf.avatarCache")
         dataCache?.sizeLimit = 200 * 1024 * 1024 // 200 MB disk cache
@@ -52,13 +46,6 @@ struct TravelScoreriOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            let _ = print("🧱 TravelScoreriOSApp BODY — app instance:", ObjectIdentifier(self as AnyObject),
-                          " sessionManager instance:", ObjectIdentifier(sessionManager),
-                          " bucketListStore instance:", ObjectIdentifier(bucketListStore),
-                          " traveledStore instance:", ObjectIdentifier(traveledStore),
-                          " scoreWeightsStore instance:", ObjectIdentifier(scoreWeightsStore),
-                          " userId:", sessionManager.userId as Any)
-
             ZStack {
                 AppRootView()
                     .environmentObject(sessionManager)
