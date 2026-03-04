@@ -39,6 +39,35 @@ struct CustomWeightsView: View {
     var body: some View {
         Form {
             
+            Section("Quick Presets") {
+                VStack(spacing: 12) {
+                    HStack(spacing: 12) {
+                        presetButton(
+                            title: "Balanced",
+                            preset: .balanced
+                        )
+
+                        presetButton(
+                            title: "Budget",
+                            preset: .budget
+                        )
+                    }
+
+                    HStack(spacing: 12) {
+                        presetButton(
+                            title: "Easy Travel",
+                            preset: .easyTravel
+                        )
+
+                        presetButton(
+                            title: "Safety First",
+                            preset: .safetyFirst
+                        )
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            
             Section {
                 
                 if isZeroSum {
@@ -105,6 +134,23 @@ struct CustomWeightsView: View {
         }
         .navigationTitle("Travel Preferences")
         .navigationBarTitleDisplayMode(.large)
+    }
+    
+    private func presetButton(title: String, preset: WeightPreset) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                weightsStore.applyPreset(preset)
+            }
+        } label: {
+            Text(title)
+                .font(.subheadline.weight(.medium))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Color.blue.opacity(0.12))
+                .foregroundColor(.blue)
+                .cornerRadius(10)
+        }
+        .buttonStyle(.borderless)
     }
     
     // MARK: - Slider

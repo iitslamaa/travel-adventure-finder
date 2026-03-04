@@ -34,6 +34,15 @@ final class ScoreWeightsStore: ObservableObject {
     func resetToDefault() {
         weights = .default
     }
+
+    func applyPreset(_ preset: WeightPreset) {
+        var newWeights = preset.weights
+
+        // Seasonality remains disabled globally for now
+        newWeights.seasonality = 0
+
+        weights = newWeights
+    }
     
     private func save() {
         if let data = try? JSONEncoder().encode(weights) {
