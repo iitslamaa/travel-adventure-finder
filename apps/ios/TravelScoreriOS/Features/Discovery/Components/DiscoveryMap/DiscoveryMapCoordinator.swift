@@ -6,6 +6,9 @@ final class DiscoveryMapCoordinator: NSObject, MKMapViewDelegate {
     
     private let coordinatorId = UUID()
     
+    // Cache renderers so MapKit doesn't recreate hundreds of them repeatedly
+    private var rendererCache: [ObjectIdentifier: MKOverlayRenderer] = [:]
+    
     // MARK: - Debug
     private let debugMapStyling = true
     private let debugTap = true
@@ -121,6 +124,9 @@ final class DiscoveryMapCoordinator: NSObject, MKMapViewDelegate {
     func rebuildOverlays() {
         guard let mapView = mapView else { return }
 
+        // Clear renderer cache so selection/highlight styling can update
+        rendererCache.removeAll()
+
         let overlays = mapView.overlays
 
         mapView.removeOverlays(overlays)
@@ -161,20 +167,30 @@ final class DiscoveryMapCoordinator: NSObject, MKMapViewDelegate {
     
     func mapView(_ mapView: MKMapView,
                  rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        
+
         guard let polygon = overlay as? CountryPolygon else {
             return MKOverlayRenderer(overlay: overlay)
         }
-        
+
+        let key = ObjectIdentifier(overlay)
+
+        if let cached = rendererCache[key] {
+            return cached
+        }
+
         let normalizedSelected = selectedCountryISO?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .uppercased()
-        
-        return DiscoveryMapRenderer.makeRenderer(
+
+        let renderer = DiscoveryMapRenderer.makeRenderer(
             for: polygon,
             selectedISO: normalizedSelected,
             highlightedTokens: Set(highlightedISOs),
             countryLookup: countryLookup
         )
+
+        rendererCache[key] = renderer
+
+        return renderer
     }
 }

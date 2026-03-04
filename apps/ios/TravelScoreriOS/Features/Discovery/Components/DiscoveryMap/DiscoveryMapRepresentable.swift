@@ -11,6 +11,8 @@ struct DiscoveryMapRepresentable: UIViewRepresentable {
     private let instanceId = UUID()
     private static var cachedSimplified: [MKOverlay]?
     private static var cachedFull: [MKOverlay]?
+    private static var isLoadingFullDataset: Bool = false
+    private static var didInstallFullDataset: Bool = false
     
     let countries: [Country]
     let highlightedISOs: [String]
@@ -65,15 +67,33 @@ struct DiscoveryMapRepresentable: UIViewRepresentable {
         }
         
         // Ensure full dataset overlays are loaded when selecting
-        if Self.cachedFull == nil {
-            let fullPolygons = WorldGeoJSONLoader.loadPolygons(selectedIso: iso)
-            Self.cachedFull = fullPolygons
+        if Self.cachedFull == nil && !Self.isLoadingFullDataset {
+            Self.isLoadingFullDataset = true
+
+            DispatchQueue.global(qos: .userInitiated).async {
+                let fullPolygons = WorldGeoJSONLoader.loadPolygons(selectedIso: iso)
+
+                DispatchQueue.main.async {
+                    Self.cachedFull = fullPolygons
+                    Self.isLoadingFullDataset = false
+
+                    if !Self.didInstallFullDataset {
+                        UIView.performWithoutAnimation {
+                            uiView.removeOverlays(uiView.overlays)
+                            uiView.addOverlays(fullPolygons)
+                        }
+                        Self.didInstallFullDataset = true
+                    }
+                }
+            }
         }
 
-        if let full = Self.cachedFull,
-           uiView.overlays.count != full.count {
-            uiView.removeOverlays(uiView.overlays)
-            uiView.addOverlays(full)
+        if let full = Self.cachedFull, !Self.didInstallFullDataset {
+            UIView.performWithoutAnimation {
+                uiView.removeOverlays(uiView.overlays)
+                uiView.addOverlays(full)
+            }
+            Self.didInstallFullDataset = true
         }
         
         // 🔥 STRICT HARDCODE ZOOM OVERRIDES (Profile map only)
