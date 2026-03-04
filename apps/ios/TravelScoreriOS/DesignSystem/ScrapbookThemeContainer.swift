@@ -9,6 +9,8 @@ import SwiftUI
 
 struct ScrapbookThemeContainer<Content: View>: View {
 
+    @Environment(\.colorScheme) private var colorScheme
+
     let content: Content
 
     init(@ViewBuilder content: () -> Content) {
@@ -18,23 +20,41 @@ struct ScrapbookThemeContainer<Content: View>: View {
     var body: some View {
         ZStack {
 
-            // scrapbook paper background
+            // scrapbook background (light / dark adaptive)
             ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.97, green: 0.94, blue: 0.88),
-                        Color(red: 0.95, green: 0.90, blue: 0.80)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                if colorScheme == .dark {
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.12, green: 0.12, blue: 0.13),
+                            Color(red: 0.08, green: 0.08, blue: 0.09)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
 
-                RadialGradient(
-                    colors: [Color.black.opacity(0.06), .clear],
-                    center: .center,
-                    startRadius: 10,
-                    endRadius: 700
-                )
+                    RadialGradient(
+                        colors: [Color.white.opacity(0.06), .clear],
+                        center: .center,
+                        startRadius: 10,
+                        endRadius: 700
+                    )
+                } else {
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.97, green: 0.94, blue: 0.88),
+                            Color(red: 0.95, green: 0.90, blue: 0.80)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+
+                    RadialGradient(
+                        colors: [Color.black.opacity(0.06), .clear],
+                        center: .center,
+                        startRadius: 10,
+                        endRadius: 700
+                    )
+                }
             }
             .ignoresSafeArea()
 

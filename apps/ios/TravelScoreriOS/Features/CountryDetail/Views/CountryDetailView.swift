@@ -19,7 +19,7 @@ struct CountryDetailView: View {
                 // Header polaroid style
                 ZStack {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(Color.white)
+                        .fill(Color(.secondarySystemBackground))
                         .rotationEffect(.degrees(-3))
                         .shadow(color: .black.opacity(0.15), radius: 10, y: 6)
 
@@ -27,11 +27,11 @@ struct CountryDetailView: View {
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .fill(Color.white.opacity(0.96))
+                                .fill(Color(.systemBackground))
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                                .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
                         )
                         .shadow(color: .black.opacity(0.12), radius: 8, y: 6)
 
@@ -84,7 +84,7 @@ private func scrapbookSection<Content: View>(@ViewBuilder content: () -> Content
     ZStack {
 
         RoundedRectangle(cornerRadius: 22, style: .continuous)
-            .fill(Color.white)
+            .fill(Color(.secondarySystemBackground))
             .rotationEffect(.degrees(-2))
             .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
 
@@ -92,11 +92,11 @@ private func scrapbookSection<Content: View>(@ViewBuilder content: () -> Content
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.white.opacity(0.96))
+                    .fill(Color(.systemBackground))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                    .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
             )
             .shadow(color: .black.opacity(0.12), radius: 8, y: 6)
 

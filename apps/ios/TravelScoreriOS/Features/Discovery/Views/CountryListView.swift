@@ -217,9 +217,9 @@ private struct CountryRow: View {
 
                 // back paper layer
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.white)
+                    .fill(Color(.secondarySystemBackground))
                     .rotationEffect(.degrees(-3))
-                    .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
+                    .shadow(color: .black.opacity(0.25), radius: 8, y: 6)
 
                 HStack(spacing: 14) {
 
@@ -241,11 +241,11 @@ private struct CountryRow: View {
                 .frame(height: 70)
                 .background(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white.opacity(0.96))
+                        .fill(Color(.systemBackground))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                        .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
                 )
                 .shadow(color: .black.opacity(0.12), radius: 8, y: 6)
 

@@ -221,7 +221,7 @@ struct PlanningCard: View {
 
             // back paper layer (scrapbook stack)
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white)
+                .fill(Color(.secondarySystemBackground))
                 .rotationEffect(.degrees(-3))
                 .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
 
@@ -257,13 +257,13 @@ struct PlanningCard: View {
             .frame(height: 100)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white.opacity(0.95))
+                    .fill(Color(.systemBackground))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                    .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
+            .shadow(color: .black.opacity(0.15), radius: 10, y: 6)
 
         }
     }

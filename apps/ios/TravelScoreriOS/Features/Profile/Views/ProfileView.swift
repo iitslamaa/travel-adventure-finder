@@ -124,7 +124,7 @@ struct ProfileView: View {
                         ZStack {
                             // back card
                             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                .fill(Color.white)
+                                .fill(Color(.secondarySystemBackground))
                                 .rotationEffect(.degrees(-0.6))
                                 .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
 
@@ -152,11 +152,11 @@ struct ProfileView: View {
                             .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                    .fill(Color.white.opacity(0.96))
+                                    .fill(Color(.systemBackground))
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 22)
-                                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                                    .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
                             )
                         }
 
@@ -166,7 +166,7 @@ struct ProfileView: View {
 
                             ZStack {
                                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                    .fill(Color.white)
+                                    .fill(Color(.secondarySystemBackground))
                                     .rotationEffect(.degrees(-0.4))
                                     .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
 
@@ -189,11 +189,11 @@ struct ProfileView: View {
                                 .padding()
                                 .background(
                                     RoundedRectangle(cornerRadius: 22)
-                                        .fill(Color.white.opacity(0.96))
+                                        .fill(Color(.systemBackground))
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 22)
-                                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                                        .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
                                 )
                             }
 
