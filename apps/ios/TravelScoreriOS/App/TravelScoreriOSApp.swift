@@ -46,7 +46,7 @@ struct TravelScoreriOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
+            ScrapbookThemeContainer {
                 AppRootView()
                     .environmentObject(sessionManager)
                     .environmentObject(bucketListStore)

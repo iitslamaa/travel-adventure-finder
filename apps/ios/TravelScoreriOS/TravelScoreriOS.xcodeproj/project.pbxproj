@@ -99,6 +99,12 @@
 		171EC56F2F53590600FCB4AB /* GeoJsonLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EC56E2F53590600FCB4AB /* GeoJsonLoader.swift */; };
 		172A74C92F357340003EF4DF /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172A74C82F357340003EF4DF /* SessionManager.swift */; };
 		1758A77E2F57F16800F7AC02 /* WeightPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758A77D2F57F16500F7AC02 /* WeightPreset.swift */; };
+		1758A7872F5808E900F7AC02 /* ThemePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758A7862F58081000F7AC02 /* ThemePreviewView.swift */; };
+		1758A7882F5808F400F7AC02 /* TAFButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758A7842F5807FC00F7AC02 /* TAFButtonStyle.swift */; };
+		1758A7892F5808F900F7AC02 /* TAFTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758A7822F5807DE00F7AC02 /* TAFTypography.swift */; };
+		1758A78A2F5808FD00F7AC02 /* TAFColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758A7812F5807D300F7AC02 /* TAFColor.swift */; };
+		1758A78C2F5811C000F7AC02 /* ScrapbookThemeContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758A78B2F5811BD00F7AC02 /* ScrapbookThemeContainer.swift */; };
+		1758A78E2F58178F00F7AC02 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 1758A78D2F58178F00F7AC02 /* PostgREST */; };
 		176796142F4CF4BC0011EC0E /* CountryAffordabilityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176796132F4CF4BC0011EC0E /* CountryAffordabilityCard.swift */; };
 		176968BB2F4E6B3C0011661A /* OAuthPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176968BA2F4E6B3C0011661A /* OAuthPresenter.swift */; };
 		17744B0E2F54E366001D3396 /* DiscoveryMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17744B0B2F54E366001D3396 /* DiscoveryMapView.swift */; };
@@ -238,6 +244,11 @@
 		171EC56E2F53590600FCB4AB /* GeoJsonLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoJsonLoader.swift; sourceTree = "<group>"; };
 		172A74C82F357340003EF4DF /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		1758A77D2F57F16500F7AC02 /* WeightPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightPreset.swift; sourceTree = "<group>"; };
+		1758A7812F5807D300F7AC02 /* TAFColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TAFColor.swift; sourceTree = "<group>"; };
+		1758A7822F5807DE00F7AC02 /* TAFTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TAFTypography.swift; sourceTree = "<group>"; };
+		1758A7842F5807FC00F7AC02 /* TAFButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TAFButtonStyle.swift; sourceTree = "<group>"; };
+		1758A7862F58081000F7AC02 /* ThemePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewView.swift; sourceTree = "<group>"; };
+		1758A78B2F5811BD00F7AC02 /* ScrapbookThemeContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrapbookThemeContainer.swift; sourceTree = "<group>"; };
 		176796132F4CF4BC0011EC0E /* CountryAffordabilityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryAffordabilityCard.swift; sourceTree = "<group>"; };
 		176968BA2F4E6B3C0011661A /* OAuthPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthPresenter.swift; sourceTree = "<group>"; };
 		17744B082F54E366001D3396 /* DiscoveryMapCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryMapCoordinator.swift; sourceTree = "<group>"; };
@@ -285,6 +296,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1758A78E2F58178F00F7AC02 /* PostgREST in Frameworks */,
 				17E1053F2F4F8A7B00BEED72 /* NukeUI in Frameworks */,
 				17F063882F32747D00F1F4F3 /* Supabase in Frameworks */,
 				17E1053D2F4F8A7B00BEED72 /* Nuke in Frameworks */,
@@ -851,6 +863,42 @@
 			path = Weights;
 			sourceTree = "<group>";
 		};
+		1758A77F2F5807C100F7AC02 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				1758A78B2F5811BD00F7AC02 /* ScrapbookThemeContainer.swift */,
+				1758A7852F58080A00F7AC02 /* Preview */,
+				1758A7832F5807F200F7AC02 /* Components */,
+				1758A7802F5807CD00F7AC02 /* Theme */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		1758A7802F5807CD00F7AC02 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				1758A7822F5807DE00F7AC02 /* TAFTypography.swift */,
+				1758A7812F5807D300F7AC02 /* TAFColor.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		1758A7832F5807F200F7AC02 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				1758A7842F5807FC00F7AC02 /* TAFButtonStyle.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		1758A7852F58080A00F7AC02 /* Preview */ = {
+			isa = PBXGroup;
+			children = (
+				1758A7862F58081000F7AC02 /* ThemePreviewView.swift */,
+			);
+			path = Preview;
+			sourceTree = "<group>";
+		};
 		17744B0D2F54E366001D3396 /* DiscoveryMap */ = {
 			isa = PBXGroup;
 			children = (
@@ -874,6 +922,7 @@
 		17AFEC812EC2C3D800B9585B = {
 			isa = PBXGroup;
 			children = (
+				1758A77F2F5807C100F7AC02 /* DesignSystem */,
 				171EC56E2F53590600FCB4AB /* GeoJsonLoader.swift */,
 				171EC56A2F5358A700FCB4AB /* travelaf.world.full.geo.json */,
 				171EC56B2F5358A700FCB4AB /* travelaf.world.simplified.geo.json */,
@@ -950,6 +999,7 @@
 				17F063872F32747D00F1F4F3 /* Supabase */,
 				17E1053C2F4F8A7B00BEED72 /* Nuke */,
 				17E1053E2F4F8A7B00BEED72 /* NukeUI */,
+				1758A78D2F58178F00F7AC02 /* PostgREST */,
 			);
 			productName = TravelScoreriOS;
 			productReference = 17AFEC8A2EC2C3D800B9585B /* Travel Adventure Finder.app */;
@@ -1072,13 +1122,17 @@
 				170C214B2F4790E00090BA78 /* SeasonalityService.swift in Sources */,
 				170C214C2F4790E00090BA78 /* BucketListStore.swift in Sources */,
 				170C214D2F4790E00090BA78 /* MetaStore.swift in Sources */,
+				1758A7882F5808F400F7AC02 /* TAFButtonStyle.swift in Sources */,
+				1758A7872F5808E900F7AC02 /* ThemePreviewView.swift in Sources */,
 				17EC41E22F4BB227004B80DA /* ScoreWorldMapRenderer.swift in Sources */,
 				170C214E2F4790E00090BA78 /* AppRootView.swift in Sources */,
 				170C214F2F4790E00090BA78 /* AuthGate.swift in Sources */,
+				1758A7892F5808F900F7AC02 /* TAFTypography.swift in Sources */,
 				17AE405B2F50E9F700495208 /* CountrySingleSelectView.swift in Sources */,
 				170C21502F4790E00090BA78 /* AuthLandingView.swift in Sources */,
 				170C21512F4790E00090BA78 /* AuthRequiredView.swift in Sources */,
 				170C21522F4790E00090BA78 /* AuthSheetView.swift in Sources */,
+				1758A78A2F5808FD00F7AC02 /* TAFColor.swift in Sources */,
 				17B478C22F55FF2E002B1865 /* PreReviewModalView.swift in Sources */,
 				17B478C32F55FF2E002B1865 /* LowRatingFeedbackSheet.swift in Sources */,
 				170C21532F4790E00090BA78 /* BucketListView.swift in Sources */,
@@ -1112,6 +1166,7 @@
 				17AE40612F50EBC300495208 /* ProfileSettingsDeletionCoordinator.swift in Sources */,
 				170C216A2F4790E00090BA78 /* MyTravelsView.swift in Sources */,
 				170C216B2F4790E00090BA78 /* ProfileViewModel.swift in Sources */,
+				1758A78C2F5811C000F7AC02 /* ScrapbookThemeContainer.swift in Sources */,
 				170C216C2F4790E00090BA78 /* RootTabView.swift in Sources */,
 				170C216D2F4790E00090BA78 /* ScoreColor.swift in Sources */,
 				170C216E2F4790E00090BA78 /* ScoreCountryDrawerView.swift in Sources */,
@@ -1379,6 +1434,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		1758A78D2F58178F00F7AC02 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 17F0637F2F326FDA00F1F4F3 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
 		17E1053C2F4F8A7B00BEED72 /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 17E1053B2F4F8A7B00BEED72 /* XCRemoteSwiftPackageReference "Nuke" */;

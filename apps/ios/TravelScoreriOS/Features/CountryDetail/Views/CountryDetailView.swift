@@ -14,41 +14,92 @@ struct CountryDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: 28) {
 
-                CountryHeaderCard(country: country)
-                    .padding(.horizontal)
+                // Header polaroid style
+                ZStack {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(Color.white)
+                        .rotationEffect(.degrees(-3))
+                        .shadow(color: .black.opacity(0.15), radius: 10, y: 6)
 
-                CountryAdvisoryCard(
-                    country: country,
-                    weightPercentage: weightsStore.advisoryPercentage
-                )
+                    CountryHeaderCard(country: country)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .fill(Color.white.opacity(0.96))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.12), radius: 8, y: 6)
+
+                }
                 .padding(.horizontal)
 
-                CountrySeasonalityCard(
-                    country: country,
-                    weightPercentage: 0
-                )
-                .padding(.horizontal)
-
-                CountryVisaCard(
-                    country: country,
-                    weightPercentage: weightsStore.visaPercentage
-                )
-                .padding(.horizontal)
-
-                if country.affordabilityScore != nil {
-                    CountryAffordabilityCard(
+                // Advisory card stack
+                scrapbookSection {
+                    CountryAdvisoryCard(
                         country: country,
-                        weightPercentage: weightsStore.affordabilityPercentage
+                        weightPercentage: weightsStore.advisoryPercentage
                     )
-                    .padding(.horizontal)
+                }
+
+                // Seasonality card stack
+                scrapbookSection {
+                    CountrySeasonalityCard(
+                        country: country,
+                        weightPercentage: 0
+                    )
+                }
+
+                // Visa card stack
+                scrapbookSection {
+                    CountryVisaCard(
+                        country: country,
+                        weightPercentage: weightsStore.visaPercentage
+                    )
+                }
+
+                // Affordability card stack
+                if country.affordabilityScore != nil {
+                    scrapbookSection {
+                        CountryAffordabilityCard(
+                            country: country,
+                            weightPercentage: weightsStore.affordabilityPercentage
+                        )
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .padding(.vertical, 16)
+            .padding(.vertical, 24)
         }
         .navigationTitle(country.name)
         .navigationBarTitleDisplayMode(.inline)
     }
+}
+
+private func scrapbookSection<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+    ZStack {
+
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .fill(Color.white)
+            .rotationEffect(.degrees(-2))
+            .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
+
+        content()
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.white.opacity(0.96))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 8, y: 6)
+
+    }
+    .padding(.horizontal)
 }
