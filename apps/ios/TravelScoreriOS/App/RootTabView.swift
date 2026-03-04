@@ -17,12 +17,14 @@ struct RootTabView: View {
     private let instanceId = UUID()
 
     var body: some View {
-        TabView {
+        ScrapbookThemeContainer {
+            TabView {
 
             // Discovery
             NavigationStack {
                 DiscoveryView()
             }
+            .background(Color.clear)
             .tabItem {
                 Label("Discovery", systemImage: "globe.americas.fill")
             }
@@ -31,6 +33,7 @@ struct RootTabView: View {
             NavigationStack {
                 ListsView()
             }
+            .background(Color.clear)
             .tabItem {
                 Label("Planning", systemImage: "list.bullet")
             }
@@ -67,6 +70,7 @@ struct RootTabView: View {
                     }
                 }
             }
+            .background(Color.clear)
             .tabItem {
                 Label("Friends", systemImage: "person.2.fill")
             }
@@ -104,6 +108,7 @@ struct RootTabView: View {
                     }
                 }
             }
+            .background(Color.clear)
             .tabItem {
                 Label("Profile", systemImage: "person.crop.circle")
             }
@@ -112,10 +117,15 @@ struct RootTabView: View {
             NavigationStack {
                 MoreView()
             }
+            .background(Color.clear)
             .tabItem {
                 Label("More", systemImage: "ellipsis")
             }
+            }
         }
+        .toolbarBackground(.hidden, for: .tabBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarColorScheme(.light, for: .navigationBar)
         .task {
             guard !hasLoadedCountries else { return }
             hasLoadedCountries = true
@@ -152,6 +162,8 @@ struct MoreView: View {
                 LegalView()
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.clear)
         .navigationTitle("More")
     }
 }
@@ -191,6 +203,8 @@ struct ListsView: View {
             }
             .padding()
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.clear)
         .navigationTitle("Planning")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -203,44 +217,54 @@ struct PlanningCard: View {
     let icon: String
 
     var body: some View {
-        HStack(spacing: 16) {
+        ZStack {
 
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.blue.opacity(0.12))
-                    .frame(width: 46, height: 46)
+            // back paper layer (scrapbook stack)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.white)
+                .rotationEffect(.degrees(-3))
+                .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
 
-                Image(systemName: icon)
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(.blue)
-            }
+            // front card
+            HStack(spacing: 16) {
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.blue.opacity(0.15))
+                        .frame(width: 48, height: 48)
 
-                Text(subtitle)
-                    .font(.subheadline)
+                    Image(systemName: icon)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(.blue)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.headline)
+
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
+            .padding(18)
+            .frame(height: 100)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.white.opacity(0.95))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
 
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.tertiary)
         }
-        .padding(18)
-        .frame(height: 100)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.systemBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.black.opacity(0.05), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
     }
 }

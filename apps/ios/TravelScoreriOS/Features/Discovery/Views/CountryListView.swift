@@ -176,6 +176,8 @@ struct CountryListView: View {
                 )
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.clear)
         .listStyle(.plain)
         .onChange(of: searchText) { _, _ in
             scheduleRecomputeVisible()
@@ -210,64 +212,47 @@ private struct CountryRow: View {
         NavigationLink {
             CountryDetailView(country: country)
         } label: {
-            HStack(spacing: 12) {
-                Text(country.flagEmoji)
-                    .font(.largeTitle)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(country.name)
-                        .font(.headline)
-                }
+            ZStack {
 
-                Spacer()
+                // back paper layer
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color.white)
+                    .rotationEffect(.degrees(-3))
+                    .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 14) {
+
+                    Text(country.flagEmoji)
+                        .font(.largeTitle)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(country.name)
+                            .font(.headline)
+                    }
+
+                    Spacer()
+
                     if let score = country.score {
                         ScorePill(score: score)
-                    } else {
-                        Text("—")
-                            .font(.caption.bold())
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                Capsule()
-                                    .fill(Color.gray.opacity(0.15))
-                            )
-                            .overlay(
-                                Capsule()
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
                     }
-
-                    ZStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .opacity(0)
-                    }
-                    .frame(width: 22, height: 22)
-                    .overlay {
-                        if showConfirm {
-                            Image(systemName: "checkmark.circle.fill")
-                                .transition(.opacity)
-                        }
-                    }
-                    .animation(.easeInOut(duration: 0.18), value: showConfirm)
                 }
+                .padding(16)
+                .frame(height: 70)
+                .background(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(Color.white.opacity(0.96))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.12), radius: 8, y: 6)
+
             }
-            .padding(.vertical, 6)
-            .contentShape(Rectangle())
+            .padding(.vertical, 4)
         }
         .buttonStyle(.plain)
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(action: onBucket) {
-                Text(isBucketed ? "🪣 Unbucket" : "🪣 Bucket")
-            }
-            .tint(.blue)
-
-            Button(action: onVisited) {
-                Text(isVisited ? "📝 Unvisit" : "📝 Visited")
-            }
-            .tint(.green)
-        }
     }
 }
 

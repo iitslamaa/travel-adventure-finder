@@ -22,8 +22,8 @@ struct AppRootView: View {
     
     var body: some View {
 
-        
-        ZStack {
+        ScrapbookThemeContainer {
+            ZStack {
             
             // MAIN APP CONTENT
             if sessionManager.isAuthSuppressed {
@@ -51,8 +51,8 @@ struct AppRootView: View {
                     }
             }
             
-            // INTRO VIDEO OVERLAY
-            if !hasFinishedIntroVideo {
+            // INTRO VIDEO OVERLAY (temporarily disabled while testing theme)
+            if false {
                 VideoBackgroundView(
                     videoName: "intro",
                     videoType: "mp4",
@@ -63,6 +63,7 @@ struct AppRootView: View {
                 )
                 .ignoresSafeArea()
             }
+        }
         }
         .task {
             await SupabaseManager.shared.startAuthListener()
