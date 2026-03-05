@@ -346,8 +346,6 @@ struct DiscoveryView: View {
     }
     
     #Preview {
-        NavigationStack {
-            DiscoveryCountryListView()
-        }
+        DiscoveryCountryListView()
     }
 }
