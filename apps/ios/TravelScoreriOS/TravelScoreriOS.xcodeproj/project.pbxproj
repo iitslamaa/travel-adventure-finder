@@ -132,6 +132,7 @@
 		17B478C52F55FF65002B1865 /* ReviewTriggerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478C42F55FF65002B1865 /* ReviewTriggerService.swift */; };
 		17B478C72F55FFAF002B1865 /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478C62F55FFAF002B1865 /* ReviewManager.swift */; };
 		17C1D3332F58F88A00FD768B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C1D3322F58F88800FD768B /* Theme.swift */; };
+		17C1D3362F594CDA00FD768B /* PlanningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C1D3352F594CD700FD768B /* PlanningView.swift */; };
 		17E1053D2F4F8A7B00BEED72 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 17E1053C2F4F8A7B00BEED72 /* Nuke */; };
 		17E1053F2F4F8A7B00BEED72 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 17E1053E2F4F8A7B00BEED72 /* NukeUI */; };
 		17EC41DE2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17EC41DD2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift */; };
@@ -278,6 +279,7 @@
 		17B478C42F55FF65002B1865 /* ReviewTriggerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewTriggerService.swift; path = Core/Services/ReviewTriggerService.swift; sourceTree = SOURCE_ROOT; };
 		17B478C62F55FFAF002B1865 /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewManager.swift; path = Core/Services/ReviewManager.swift; sourceTree = SOURCE_ROOT; };
 		17C1D3322F58F88800FD768B /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		17C1D3352F594CD700FD768B /* PlanningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningView.swift; sourceTree = "<group>"; };
 		17EC41DD2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapRepresentable.swift; sourceTree = "<group>"; };
 		17EC41DF2F4BB213004B80DA /* ScoreWorldMapCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapCoordinator.swift; sourceTree = "<group>"; };
 		17EC41E12F4BB227004B80DA /* ScoreWorldMapRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapRenderer.swift; sourceTree = "<group>"; };
@@ -336,6 +338,7 @@
 		170C22452F479AE60090BA78 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				17C1D3342F594CD100FD768B /* Planning */,
 				179439C72F53FCB800993FB2 /* Feedback */,
 				170C22592F479B840090BA78 /* Legal */,
 				170C22582F479B7D0090BA78 /* MyTravels */,
@@ -962,6 +965,14 @@
 			path = Review;
 			sourceTree = "<group>";
 		};
+		17C1D3342F594CD100FD768B /* Planning */ = {
+			isa = PBXGroup;
+			children = (
+				17C1D3352F594CD700FD768B /* PlanningView.swift */,
+			);
+			path = Planning;
+			sourceTree = "<group>";
+		};
 		17EC41DC2F4BB1DB004B80DA /* ScoreWorldMap */ = {
 			isa = PBXGroup;
 			children = (
@@ -1096,6 +1107,7 @@
 				170C21352F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift in Sources */,
 				170C21362F4790E00090BA78 /* StatCard.swift in Sources */,
 				170C21372F4790E00090BA78 /* ProfileHeaderView.swift in Sources */,
+				17C1D3362F594CDA00FD768B /* PlanningView.swift in Sources */,
 				170C21382F4790E00090BA78 /* ProfileInfoSection.swift in Sources */,
 				170C21392F4790E00090BA78 /* ProfileView.swift in Sources */,
 				170C213A2F4790E00090BA78 /* ProfileSettingsAccountSection.swift in Sources */,

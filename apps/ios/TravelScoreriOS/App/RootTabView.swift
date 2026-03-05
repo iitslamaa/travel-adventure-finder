@@ -51,9 +51,9 @@ var body: some View {
 
             // Planning
             NavigationStack {
-                ListsView()
+                PlanningView()
                     .onAppear {
-                        print("🧪 DEBUG: ListsView NavigationStack content appeared")
+                        print("🧪 DEBUG: Planning NavigationStack content appeared")
                     }
             }
             .background(Color.clear)
@@ -188,7 +188,7 @@ struct MoreView: View {
     var body: some View {
         List {
             NavigationLink("Lists") {
-                ListsView()
+                PlanningView()
             }
 
             NavigationLink("Send Feedback") {
@@ -204,100 +204,5 @@ struct MoreView: View {
         .background(Color.clear)
         .listRowBackground(Color.clear)
         .navigationTitle("More")
-    }
-}
-
-struct ListsView: View {
-    var body: some View {
-        ZStack {
-
-            ScrollView {
-                VStack(spacing: 24) {
-
-                    Text("Lists")
-                        .font(.largeTitle.bold())
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.bottom, 4)
-
-                    NavigationLink {
-                        BucketListView()
-                    } label: {
-                        PlanningCard(
-                            title: "Bucket List",
-                            subtitle: "Places you want to visit",
-                            icon: "bookmark"
-                        )
-                    }
-                    .buttonStyle(.plain)
-
-                    NavigationLink {
-                        MyTravelsView()
-                    } label: {
-                        PlanningCard(
-                            title: "Visited Countries",
-                            subtitle: "Track places you've been",
-                            icon: "checkmark.circle"
-                        )
-                    }
-                    .buttonStyle(.plain)
-
-                    Spacer(minLength: 20)
-                }
-                .padding(.horizontal)
-                .padding(.top, 12)
-            }
-            .background(Color.clear)
-        }
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-struct PlanningCard: View {
-
-    let title: String
-    let subtitle: String
-    let icon: String
-
-    var body: some View {
-        ZStack {
-
-            // scrapbook stacked paper
-            Theme.scrapbookBack()
-                .offset(x: -4, y: 4)
-
-            HStack(spacing: 16) {
-
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Theme.accent.opacity(0.18))
-                        .frame(width: 52, height: 52)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(Theme.accent)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.headline)
-
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(Theme.textSecondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Theme.textSecondary)
-            }
-            .padding(18)
-            .frame(height: 110)
-            .background(
-                Theme.cardBackground()
-            )
-            .rotationEffect(.degrees(1))
-        }
     }
 }
