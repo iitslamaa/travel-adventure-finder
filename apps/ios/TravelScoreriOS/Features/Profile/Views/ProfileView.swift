@@ -110,7 +110,8 @@ struct ProfileView: View {
 
     var body: some View {
         ZStack {
-            Color.clear.ignoresSafeArea()
+            Theme.pageBackground("travel4")
+                .ignoresSafeArea()
 
             // 🛡 Strict identity + relationship gate (production-safe)
             if !isReadyToRenderProfile {
