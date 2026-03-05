@@ -17,14 +17,19 @@ struct FriendsView: View {
             Theme.pageBackground("travel3")
                 .ignoresSafeArea()
 
-            contentView
+            VStack(spacing: 16) {
+
+                Theme.titleBanner(
+                    displayName.isEmpty
+                    ? "Friends"
+                    : "\(displayName)'s Friends"
+                )
+
+                contentView
+            }
         }
-            .navigationTitle(
-                displayName.isEmpty
-                ? "Friends"
-                : "\(displayName)'s Friends"
-            )
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if SupabaseManager.shared.currentUserId == userId {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -60,7 +65,6 @@ struct FriendsView: View {
                     FriendRequestsView()
                 }
             }
-            .searchable(text: $friendsVM.searchText, prompt: "Search by username")
             .onChange(of: friendsVM.searchText) { _ in
                 Task { await friendsVM.searchUsers() }
             }
@@ -88,7 +92,32 @@ struct FriendsView: View {
     }
 
     private var contentView: some View {
-        List {
+        VStack(spacing: 8) {
+
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+
+                TextField("Search by username", text: $friendsVM.searchText)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+
+                if !friendsVM.searchText.isEmpty {
+                    Button {
+                        friendsVM.searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(12)
+            .background(
+                Theme.cardBackground(corner: 14)
+            )
+            .padding(.horizontal)
+
+            List {
             let data = friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 ? friendsVM.friends
                 : friendsVM.searchResults
@@ -158,5 +187,7 @@ struct FriendsView: View {
         }
         .listStyle(.plain)
         .background(Color.clear)
+
+        }
     }
 }

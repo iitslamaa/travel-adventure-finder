@@ -102,9 +102,7 @@ struct DiscoveryView: View {
             ScrollView {
             VStack(spacing: Theme.spacingLarge) {
                 
-                Text("Explore")
-                    .font(.largeTitle.bold())
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                Theme.titleBanner("Explore")
                 
                 // scrapbook navigation cards
                 VStack(spacing: Theme.spacingLarge) {
@@ -160,7 +158,7 @@ struct DiscoveryView: View {
                 
                 Spacer(minLength: 20)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity)
             .background(.clear)
             .padding(.horizontal, 24)
         }

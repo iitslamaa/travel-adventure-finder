@@ -18,7 +18,7 @@ struct PlanningView: View {
                 .background(.clear)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle("Planning")
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -30,10 +30,7 @@ struct ListsView: View {
         ScrollView {
             VStack(spacing: 24) {
                 
-                Text("Lists")
-                    .font(.largeTitle.bold())
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.bottom, 4)
+                Theme.titleBanner("Lists")
 
                 NavigationLink {
                     BucketListView()
@@ -59,7 +56,7 @@ struct ListsView: View {
 
                 Spacer(minLength: 20)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal)
             .padding(.top, 12)
         }

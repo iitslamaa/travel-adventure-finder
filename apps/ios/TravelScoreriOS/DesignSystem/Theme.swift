@@ -263,6 +263,26 @@ enum Theme {
             }
         }
     }
+
+    // MARK: - Title Banner (Page Headers)
+
+    static func titleBanner(_ title: String) -> some View {
+        ZStack {
+            Image("title_background")
+                .resizable()
+                .scaledToFit()
+
+            Text(title)
+                .font(.system(size: 34, weight: .bold))
+                .foregroundColor(textPrimary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 24)
+        .padding(.top, spacingSmall - 8)
+        .padding(.bottom, spacingMedium + 6)
+    }
 }
 
 // MARK: - Theme Style

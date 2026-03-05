@@ -122,6 +122,8 @@ struct ProfileView: View {
 
                 ScrollView {
                     VStack(spacing: 40) {
+                        Theme.titleBanner(navigationTitle)
+
                         ZStack {
                             // back card
                             RoundedRectangle(cornerRadius: 26, style: .continuous)
@@ -245,8 +247,8 @@ struct ProfileView: View {
             }
         }
         .id(userId)
-        .navigationTitle(navigationTitle)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if SupabaseManager.shared.currentUserId == userId {
                 ToolbarItem(placement: .navigationBarTrailing) {
