@@ -13,7 +13,12 @@ struct FriendsView: View {
     }
 
     var body: some View {
-        contentView
+        ZStack {
+            Theme.pageBackground("travel3")
+                .ignoresSafeArea()
+
+            contentView
+        }
             .navigationTitle(
                 displayName.isEmpty
                 ? "Friends"
@@ -90,54 +95,68 @@ struct FriendsView: View {
 
             ForEach(data, id: \.id) { profile in
                 NavigationLink(value: profile.id) {
-                    HStack(spacing: 14) {
-                        if let urlString = profile.avatarUrl,
-                           let url = URL(string: urlString) {
-                            LazyImage(url: url) { state in
-                                if let image = state.image {
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                } else {
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .resizable()
-                                        .scaledToFill()
-                                        .foregroundStyle(.secondary)
+                    ZStack {
+                        Theme.scrapbookBack()
+                            .offset(x: -3, y: 3)
+
+                        HStack(spacing: 14) {
+                            if let urlString = profile.avatarUrl,
+                               let url = URL(string: urlString) {
+                                LazyImage(url: url) { state in
+                                    if let image = state.image {
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                    } else {
+                                        Image(systemName: "person.crop.circle.fill")
+                                            .resizable()
+                                            .scaledToFill()
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
-                            }
-                            .processors([
-                                ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
-                            ])
-                            .priority(.high)
-                            .frame(width: 44, height: 44)
-                            .clipShape(Circle())
-                        } else {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .scaledToFill()
-                                .foregroundStyle(.secondary)
+                                .processors([
+                                    ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
+                                ])
+                                .priority(.high)
                                 .frame(width: 44, height: 44)
-                        }
+                                .clipShape(Circle())
+                            } else {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .resizable()
+                                    .scaledToFill()
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 44, height: 44)
+                            }
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(profile.fullName).font(.headline)
-                            Text("@\(profile.username)")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(profile.fullName).font(.headline)
+                                Text("@\(profile.username)")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
 
-                        Spacer()
+                            Spacer()
+                        }
                     }
-                    .padding(.vertical, 6)
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        Theme.cardBackground(corner: 18)
+                    )
+                    .rotationEffect(.degrees(0.5))
                 }
+                .listRowBackground(Color.clear)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.clear)
         .refreshable {
             await friendsVM.loadFriends(for: userId, forceRefresh: true)
             if SupabaseManager.shared.currentUserId == userId {
                 await friendsVM.loadIncomingRequestCount()
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
+        .background(Color.clear)
     }
 }
