@@ -76,7 +76,7 @@ struct DiscoveryCountryListView: View {
         .navigationTitle("Discover")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
-            FloatingSearchBar(text: $searchText, isFocused: $isSearchFocused)
+            DiscoveryView.FloatingSearchBar(text: $searchText, isFocused: $isSearchFocused)
         }
         .onDisappear {
             isSearchFocused = false
@@ -85,82 +85,95 @@ struct DiscoveryCountryListView: View {
 }
 
 struct DiscoveryView: View {
-
+    
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
     @State private var showingWeights = false
-
+    
     private var countries: [Country] {
         CountryAPI.loadCachedCountries() ?? []
     }
-
+    
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        let _ = print("🧪 DEBUG: DiscoveryView.body recomputed")
+        ZStack {
+            Theme.pageBackground("travel1")
+                .ignoresSafeArea()
 
-                Spacer(minLength: 10)
-
+            ScrollView {
+            VStack(spacing: Theme.spacingLarge) {
+                
                 Text("Explore")
                     .font(.largeTitle.bold())
                     .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text("Discover destinations, visualize the world, and find the best time to travel.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                // Top row
-                HStack(spacing: 16) {
-
+                
+                // scrapbook navigation cards
+                VStack(spacing: Theme.spacingLarge) {
+                    
                     NavigationLink {
                         DiscoveryCountryListView()
                     } label: {
-                        DiscoverySquareCard(
+                        Theme.featureCard(
+                            icon: "globe.americas",
                             title: "Countries",
-                            subtitle: "Browse every destination",
-                            icon: "globe.americas"
-                        )
+                            subtitle: "Browse every destination"
+                        ) {
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .buttonStyle(.plain)
-
+                    
                     NavigationLink {
                         WhenToGoView(
                             countries: countries,
                             weightsStore: weightsStore
                         )
                     } label: {
-                        DiscoverySquareCard(
+                        Theme.featureCard(
+                            icon: "calendar",
                             title: "When To Go",
-                            subtitle: "Find peak seasons",
-                            icon: "calendar"
-                        )
+                            subtitle: "Find peak seasons"
+                        ) {
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .buttonStyle(.plain)
+                    
+                    NavigationLink {
+                        DiscoveryMapView(countries: countries)
+                    } label: {
+                        Theme.featureCard(
+                            icon: "map.fill",
+                            title: "Explore the World",
+                            subtitle: "Open the interactive world map"
+                        ) {
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    
                 }
-
-                // Large map card
-                NavigationLink {
-                    DiscoveryMapView(countries: countries)
-                } label: {
-                    DiscoveryWideCard(
-                        title: "Explore the World",
-                        subtitle: "Open the interactive world map",
-                        icon: "map.fill"
-                    )
-                }
-                .buttonStyle(.plain)
-
+                .frame(maxWidth: .infinity)
+                .padding(.top, 12)
+                
                 Spacer(minLength: 20)
             }
-            .padding()
+            .background(.clear)
+            .padding(.horizontal, 24)
         }
-        .navigationTitle("Discover")
-        .navigationBarTitleDisplayMode(.inline)
+        .scrollContentBackground(.hidden)
+        .background(Color.clear)
+        .ignoresSafeArea(edges: .bottom)
+    }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     showingWeights = true
                 } label: {
                     Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 18, weight: .semibold))
                 }
             }
         }
@@ -169,176 +182,171 @@ struct DiscoveryView: View {
                 CustomWeightsView()
             }
         }
-    }
-}
-
-struct DiscoverySquareCard: View {
-
-    let title: String
-    let subtitle: String
-    let icon: String
-
-    var body: some View {
-        ZStack {
-
-            // back paper layer
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.secondarySystemBackground))
-                .rotationEffect(.degrees(-4))
-                .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
-
-            VStack(alignment: .center, spacing: 10) {
-
-                ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.15))
-                        .frame(width: 44, height: 44)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.blue)
-                }
-
-                VStack(alignment: .center, spacing: 4) {
-                    Text(title)
-                        .font(.headline)
-                        .multilineTextAlignment(.center)
-
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 135)
-            .padding(18)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(.systemBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
-
+        .onAppear {
+            print("🧪 DEBUG: DiscoveryView appeared on screen")
         }
     }
-}
-
-struct DiscoveryWideCard: View {
-
-    let title: String
-    let subtitle: String
-    let icon: String
-
-    var body: some View {
-        ZStack {
-
-            // back scrapbook paper
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.secondarySystemBackground))
-                .rotationEffect(.degrees(-3))
-                .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
-
-            HStack(spacing: 16) {
-
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.blue.opacity(0.15))
-                        .frame(width: 46, height: 46)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(.blue)
+    
+    struct DiscoverySquareCard: View {
+        
+        let title: String
+        let subtitle: String
+        let icon: String
+        
+        var body: some View {
+            ZStack {
+                
+                VStack(spacing: 0) {
+                    
+                    VStack {
+                        ZStack {
+                            Circle()
+                                .fill(Theme.accent.opacity(0.15))
+                                .frame(width: 48, height: 48)
+                            
+                            Image(systemName: icon)
+                                .font(.system(size: 22, weight: .semibold))
+                                .foregroundStyle(Theme.accent)
+                        }
+                    }
+                    .padding(.top, 18)
+                    
+                    // caption
+                    VStack(spacing: 4) {
+                        Text(title)
+                            .font(.headline)
+                        
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, Theme.spacingMedium)
+                    .padding(.vertical, 8)
+                    
                 }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.headline)
-
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
             }
-            .padding(18)
-            .frame(height: 120)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(.systemBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
-
         }
     }
-}
-
-struct FloatingSearchBar: View {
-    @Binding var text: String
-    var isFocused: FocusState<Bool>.Binding
-
-    var body: some View {
-        VStack {
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-
-                TextField("Search countries and territories", text: $text)
-                    .focused(isFocused)
-                    .submitLabel(.search)
-                    .textInputAutocapitalization(.never)
-                    .disableAutocorrection(true)
-                    .onSubmit { isFocused.wrappedValue = false }
-
-                if isFocused.wrappedValue && !text.isEmpty {
-                    Button {
-                        text = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
+    
+    struct DiscoveryWideCard: View {
+        
+        let title: String
+        let subtitle: String
+        let icon: String
+        
+        var body: some View {
+            ZStack {
+                
+                VStack(spacing: 0) {
+                    
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(Theme.accent.opacity(0.15))
+                                .frame(width: 48, height: 48)
+                            
+                            Image(systemName: icon)
+                                .font(.system(size: 22, weight: .semibold))
+                                .foregroundStyle(Theme.accent)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(title)
+                                .font(.headline)
+                            
+                            Text(subtitle)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
                             .foregroundStyle(.secondary)
                     }
-                    .buttonStyle(.plain)
+                    .padding(Theme.spacingMedium)
+                    
                 }
-
-                if isFocused.wrappedValue {
-                    Button {
-                        isFocused.wrappedValue = false
-                    } label: {
-                        Image(systemName: "chevron.down")
-                            .foregroundStyle(.secondary)
-                            .font(.system(size: 16, weight: .semibold))
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
+            }
+        }
+    }
+    
+    struct FloatingSearchBar: View {
+        @Binding var text: String
+        var isFocused: FocusState<Bool>.Binding
+        
+        var body: some View {
+            VStack {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    
+                    TextField("Search countries and territories", text: $text)
+                        .focused(isFocused)
+                        .submitLabel(.search)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .onSubmit { isFocused.wrappedValue = false }
+                    
+                    if isFocused.wrappedValue && !text.isEmpty {
+                        Button {
+                            text = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
+                    if isFocused.wrappedValue {
+                        Button {
+                            isFocused.wrappedValue = false
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .foregroundStyle(.secondary)
+                                .font(.system(size: 16, weight: .semibold))
+                        }
                     }
                 }
+                .padding(Theme.spacingSmall)
+                .background(
+                    Theme.cardBackground(corner: 14)
+                )
+                .padding(.horizontal)
+                .padding(.bottom, 8)
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(.secondarySystemBackground))
-            )
-            .padding(.horizontal)
-            .padding(.bottom, 8)
+            .padding(.top, 10)
+            .background(.ultraThinMaterial)
+            .shadow(radius: 8)
+            .padding(.top, 0)
         }
-        .padding(.top, 10)
-        .background(.ultraThinMaterial)
-        .shadow(radius: 6)
-        .padding(.top, 0)
     }
-}
-
-#Preview {
-    NavigationStack {
-        DiscoveryCountryListView()
+    
+    #Preview {
+        NavigationStack {
+            DiscoveryCountryListView()
+        }
     }
 }

@@ -18,12 +18,15 @@ struct AppRootView: View {
     @State private var hasFinishedIntroVideo = false
     
     init() {
+        print("🧪 DEBUG: AppRootView.init() called")
     }
     
     var body: some View {
+        let _ = print("🧪 DEBUG: AppRootView.body recomputed instance=\(instanceId)")
 
-        ScrapbookThemeContainer {
-            ZStack {
+        ZStack {
+            Color.clear
+                .ignoresSafeArea()
             
             // MAIN APP CONTENT
             if sessionManager.isAuthSuppressed {
@@ -40,6 +43,7 @@ struct AppRootView: View {
                         RootTabView()
                             .environmentObject(profileVM)
                             .onAppear {
+                                print("🧪 DEBUG: RootTabView mounted from AppRootView")
                             }
                     }
                 }
@@ -64,6 +68,8 @@ struct AppRootView: View {
                 .ignoresSafeArea()
             }
         }
+        .onAppear {
+            print("🧪 DEBUG: AppRootView appeared. authSuppressed=\(sessionManager.isAuthSuppressed) authenticated=\(sessionManager.isAuthenticated) guest=\(sessionManager.didContinueAsGuest)")
         }
         .task {
             await SupabaseManager.shared.startAuthListener()

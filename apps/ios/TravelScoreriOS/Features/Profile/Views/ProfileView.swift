@@ -110,7 +110,7 @@ struct ProfileView: View {
 
     var body: some View {
         ZStack {
-            Color(.systemBackground).ignoresSafeArea()
+            Color.clear.ignoresSafeArea()
 
             // 🛡 Strict identity + relationship gate (production-safe)
             if !isReadyToRenderProfile {
@@ -124,7 +124,7 @@ struct ProfileView: View {
                         ZStack {
                             // back card
                             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                .fill(Color(.secondarySystemBackground))
+                                .fill(Color.clear)
                                 .rotationEffect(.degrees(-0.6))
                                 .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
 
@@ -152,7 +152,7 @@ struct ProfileView: View {
                             .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                    .fill(Color(.systemBackground))
+                                    .fill(Color.white.opacity(colorScheme == .dark ? 0.08 : 0.96))
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 22)
@@ -166,7 +166,7 @@ struct ProfileView: View {
 
                             ZStack {
                                 RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                    .fill(Color(.secondarySystemBackground))
+                                    .fill(Color.clear)
                                     .rotationEffect(.degrees(-0.4))
                                     .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
 
@@ -189,7 +189,7 @@ struct ProfileView: View {
                                 .padding()
                                 .background(
                                     RoundedRectangle(cornerRadius: 22)
-                                        .fill(Color(.systemBackground))
+                                        .fill(Color.white.opacity(colorScheme == .dark ? 0.08 : 0.96))
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 22)

@@ -8,15 +8,53 @@
 
 import SwiftUI
 import Nuke
+import UIKit
 
 @main
 struct TravelScoreriOSApp: App {
-    @StateObject private var bucketListStore = BucketListStore()
-    @StateObject private var traveledStore = TraveledStore()
+    private func forceTransparentRootBackgrounds() {
+        // Run twice to ensure the UIHostingController + UITabBarController stack exists.
+        func clearBackgrounds() {
+            let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            let windows = scenes.flatMap { $0.windows }
+
+            for window in windows {
+                window.isOpaque = false
+                window.backgroundColor = .clear
+
+                if let root = window.rootViewController {
+                    root.view.isOpaque = false
+                    root.view.backgroundColor = .clear
+
+                    // Walk child controllers because TabView inserts UITabBarController
+                    for child in root.children {
+                        child.view.isOpaque = false
+                        child.view.backgroundColor = .clear
+                    }
+                }
+            }
+
+            print("🧪 DEBUG: Forced transparent UIWindow/root VC backgrounds. windowCount=\(windows.count)")
+        }
+
+        // First pass (next run loop)
+        DispatchQueue.main.async {
+            clearBackgrounds()
+
+            // Second pass slightly later to catch TabView / NavigationStack containers
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                clearBackgrounds()
+            }
+        }
+    }
+
+    @StateObject private var bucketListStore: BucketListStore
+    @StateObject private var traveledStore: TraveledStore
     @StateObject private var sessionManager: SessionManager
     @StateObject private var scoreWeightsStore: ScoreWeightsStore
 
     init() {
+        print("🧪 DEBUG: TravelScoreriOSApp.init() called")
         
 
         let bucket = BucketListStore()
@@ -42,11 +80,38 @@ struct TravelScoreriOSApp: App {
         config.dataCache = dataCache
 
         ImagePipeline.shared = ImagePipeline(configuration: config)
+        print("🧪 DEBUG: Nuke pipeline configured")
+        // 🧪 DEBUG: Force UIKit chrome (TabBar / NavBar / List) to be transparent
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithTransparentBackground()
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        if #available(iOS 15.0, *) {
+            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+        }
+
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithTransparentBackground()
+        UINavigationBar.appearance().standardAppearance = navAppearance
+        UINavigationBar.appearance().compactAppearance = navAppearance
+        if #available(iOS 15.0, *) {
+            UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
+        }
+
+        UITableView.appearance().backgroundColor = .clear
+        UICollectionView.appearance().backgroundColor = .clear
+
+        print("🧪 DEBUG: UIKit appearances forced transparent")
     }
 
     var body: some Scene {
+        let _ = print("🧪 DEBUG: TravelScoreriOSApp.body evaluated")
         WindowGroup {
-            ScrapbookThemeContainer {
+            let _ = print("🧪 DEBUG: WindowGroup rendering root UI")
+
+            ZStack {
+                Theme.pageBackground()
+                    .ignoresSafeArea()
+
                 AppRootView()
                     .environmentObject(sessionManager)
                     .environmentObject(bucketListStore)

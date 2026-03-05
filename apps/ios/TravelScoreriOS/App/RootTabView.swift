@@ -16,15 +16,35 @@ struct RootTabView: View {
 
     private let instanceId = UUID()
 
-    var body: some View {
-        ScrapbookThemeContainer {
-            TabView {
+var body: some View {
+    let _ = print("🧪 DEBUG: RootTabView body recomputed")
+    ZStack {
 
+        GeometryReader { geo in
+            Image("travel1")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(
+                    width: geo.size.width,
+                    height: geo.size.height,
+                    alignment: .center
+                )
+                .clipped()
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+        }
+
+        TabView {
             // Discovery
             NavigationStack {
                 DiscoveryView()
+                    .onAppear {
+                        print("🧪 DEBUG: Discovery NavigationStack content appeared")
+                    }
             }
             .background(Color.clear)
+            .scrollContentBackground(.hidden)
+            .background(.clear)
             .tabItem {
                 Label("Discovery", systemImage: "globe.americas.fill")
             }
@@ -32,8 +52,13 @@ struct RootTabView: View {
             // Planning
             NavigationStack {
                 ListsView()
+                    .onAppear {
+                        print("🧪 DEBUG: ListsView NavigationStack content appeared")
+                    }
             }
             .background(Color.clear)
+            .scrollContentBackground(.hidden)
+            .background(.clear)
             .tabItem {
                 Label("Planning", systemImage: "list.bullet")
             }
@@ -71,6 +96,8 @@ struct RootTabView: View {
                 }
             }
             .background(Color.clear)
+            .scrollContentBackground(.hidden)
+            .background(.clear)
             .tabItem {
                 Label("Friends", systemImage: "person.2.fill")
             }
@@ -109,6 +136,8 @@ struct RootTabView: View {
                 }
             }
             .background(Color.clear)
+            .scrollContentBackground(.hidden)
+            .background(.clear)
             .tabItem {
                 Label("Profile", systemImage: "person.crop.circle")
             }
@@ -118,33 +147,41 @@ struct RootTabView: View {
                 MoreView()
             }
             .background(Color.clear)
+            .scrollContentBackground(.hidden)
+            .background(.clear)
             .tabItem {
                 Label("More", systemImage: "ellipsis")
             }
-            }
         }
-        .toolbarBackground(.hidden, for: .tabBar)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbarColorScheme(.light, for: .navigationBar)
-        .task {
-            guard !hasLoadedCountries else { return }
-            hasLoadedCountries = true
+        .background(Color.clear)
+    }
+    .onAppear {
+        print("🧪 DEBUG: RootTabView fully appeared")
+    }
+    .toolbarBackground(.visible, for: .tabBar)
+    .toolbarBackground(.ultraThinMaterial, for: .tabBar)
 
-            if let cached = CountryAPI.loadCachedCountries() {
-                countries = cached
-            }
+    .toolbarBackground(.hidden, for: .navigationBar)
+    .toolbarColorScheme(.light, for: .navigationBar)
+    .task {
+        guard !hasLoadedCountries else { return }
+        hasLoadedCountries = true
 
-            if let refreshed = await CountryAPI.refreshCountriesIfNeeded() {
-                countries = refreshed
-            } else if countries.isEmpty {
-                do {
-                    countries = try await CountryAPI.fetchCountries()
-                } catch {
-                    print("❌ Failed to fetch countries:", error)
-                }
+        if let cached = CountryAPI.loadCachedCountries() {
+            countries = cached
+        }
+
+        if let refreshed = await CountryAPI.refreshCountriesIfNeeded() {
+            countries = refreshed
+        } else if countries.isEmpty {
+            do {
+                countries = try await CountryAPI.fetchCountries()
+            } catch {
+                print("❌ Failed to fetch countries:", error)
             }
         }
     }
+}
 }
 
 struct MoreView: View {
@@ -162,50 +199,55 @@ struct MoreView: View {
                 LegalView()
             }
         }
+        .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .background(Color.clear)
+        .listRowBackground(Color.clear)
         .navigationTitle("More")
     }
 }
 
 struct ListsView: View {
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        ZStack {
 
-                Text("Lists")
-                    .font(.largeTitle.bold())
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            ScrollView {
+                VStack(spacing: 24) {
 
-                NavigationLink {
-                    BucketListView()
-                } label: {
-                    PlanningCard(
-                        title: "Bucket List",
-                        subtitle: "Places you want to visit",
-                        icon: "bookmark"
-                    )
+                    Text("Lists")
+                        .font(.largeTitle.bold())
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.bottom, 4)
+
+                    NavigationLink {
+                        BucketListView()
+                    } label: {
+                        PlanningCard(
+                            title: "Bucket List",
+                            subtitle: "Places you want to visit",
+                            icon: "bookmark"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        MyTravelsView()
+                    } label: {
+                        PlanningCard(
+                            title: "Visited Countries",
+                            subtitle: "Track places you've been",
+                            icon: "checkmark.circle"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer(minLength: 20)
                 }
-                .buttonStyle(.plain)
-
-                NavigationLink {
-                    MyTravelsView()
-                } label: {
-                    PlanningCard(
-                        title: "Visited Countries",
-                        subtitle: "Track places you've been",
-                        icon: "checkmark.circle"
-                    )
-                }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 20)
+                .padding(.horizontal)
+                .padding(.top, 12)
             }
-            .padding()
+            .background(Color.clear)
         }
-        .scrollContentBackground(.hidden)
-        .background(Color.clear)
-        .navigationTitle("Planning")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -219,23 +261,20 @@ struct PlanningCard: View {
     var body: some View {
         ZStack {
 
-            // back paper layer (scrapbook stack)
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.secondarySystemBackground))
-                .rotationEffect(.degrees(-3))
-                .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
+            // scrapbook stacked paper
+            Theme.scrapbookBack()
+                .offset(x: -4, y: 4)
 
-            // front card
             HStack(spacing: 16) {
 
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.blue.opacity(0.15))
-                        .frame(width: 48, height: 48)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Theme.accent.opacity(0.18))
+                        .frame(width: 52, height: 52)
 
                     Image(systemName: icon)
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.blue)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(Theme.accent)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -244,27 +283,21 @@ struct PlanningCard: View {
 
                     Text(subtitle)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.textSecondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.textSecondary)
             }
             .padding(18)
-            .frame(height: 100)
+            .frame(height: 110)
             .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color(.systemBackground))
+                Theme.cardBackground()
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.15), radius: 10, y: 6)
-
+            .rotationEffect(.degrees(1))
         }
     }
 }

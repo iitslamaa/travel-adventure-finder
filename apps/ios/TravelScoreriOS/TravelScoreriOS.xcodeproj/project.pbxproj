@@ -131,6 +131,7 @@
 		17B478C32F55FF2E002B1865 /* LowRatingFeedbackSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478BF2F55FF2E002B1865 /* LowRatingFeedbackSheet.swift */; };
 		17B478C52F55FF65002B1865 /* ReviewTriggerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478C42F55FF65002B1865 /* ReviewTriggerService.swift */; };
 		17B478C72F55FFAF002B1865 /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478C62F55FFAF002B1865 /* ReviewManager.swift */; };
+		17C1D3332F58F88A00FD768B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C1D3322F58F88800FD768B /* Theme.swift */; };
 		17E1053D2F4F8A7B00BEED72 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 17E1053C2F4F8A7B00BEED72 /* Nuke */; };
 		17E1053F2F4F8A7B00BEED72 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 17E1053E2F4F8A7B00BEED72 /* NukeUI */; };
 		17EC41DE2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17EC41DD2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift */; };
@@ -276,6 +277,7 @@
 		17B478C02F55FF2E002B1865 /* PreReviewModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreReviewModalView.swift; sourceTree = "<group>"; };
 		17B478C42F55FF65002B1865 /* ReviewTriggerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewTriggerService.swift; path = Core/Services/ReviewTriggerService.swift; sourceTree = SOURCE_ROOT; };
 		17B478C62F55FFAF002B1865 /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewManager.swift; path = Core/Services/ReviewManager.swift; sourceTree = SOURCE_ROOT; };
+		17C1D3322F58F88800FD768B /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		17EC41DD2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapRepresentable.swift; sourceTree = "<group>"; };
 		17EC41DF2F4BB213004B80DA /* ScoreWorldMapCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapCoordinator.swift; sourceTree = "<group>"; };
 		17EC41E12F4BB227004B80DA /* ScoreWorldMapRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapRenderer.swift; sourceTree = "<group>"; };
@@ -866,6 +868,7 @@
 		1758A77F2F5807C100F7AC02 /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				17C1D3322F58F88800FD768B /* Theme.swift */,
 				1758A78B2F5811BD00F7AC02 /* ScrapbookThemeContainer.swift */,
 				1758A7852F58080A00F7AC02 /* Preview */,
 				1758A7832F5807F200F7AC02 /* Components */,
@@ -1082,6 +1085,7 @@
 				170C212E2F4790E00090BA78 /* CountryTravelSafeCard.swift in Sources */,
 				170C212F2F4790E00090BA78 /* CountryTravelSafeHelpers.swift in Sources */,
 				170C21302F4790E00090BA78 /* CountryVisaCard.swift in Sources */,
+				17C1D3332F58F88A00FD768B /* Theme.swift in Sources */,
 				171EC56F2F53590600FCB4AB /* GeoJsonLoader.swift in Sources */,
 				170C21312F4790E00090BA78 /* CountryVisaHelpers.swift in Sources */,
 				1776C9652F50FD6F00AFC488 /* AppLanguage.swift in Sources */,
@@ -1326,7 +1330,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TravelScorerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = SVZL633CJV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1362,7 +1366,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TravelScorerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = SVZL633CJV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
