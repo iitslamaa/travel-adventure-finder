@@ -20,19 +20,8 @@ var body: some View {
     let _ = print("🧪 DEBUG: RootTabView body recomputed")
     ZStack {
 
-        GeometryReader { geo in
-            Image("travel1")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(
-                    width: geo.size.width,
-                    height: geo.size.height,
-                    alignment: .center
-                )
-                .clipped()
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-        }
+        Theme.pageBackground("travel1")
+            .ignoresSafeArea()
 
         TabView {
             // Discovery
