@@ -229,6 +229,7 @@ private struct CountryRow: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(country.name)
                             .font(.headline)
+                            .foregroundColor(.black)
                     }
 
                     Spacer()

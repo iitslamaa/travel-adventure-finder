@@ -16,12 +16,12 @@ struct LockedProfileView: View {
         VStack(spacing: 16) {
             Image(systemName: "lock.fill")
                 .font(.system(size: 28))
-                .foregroundStyle(.secondary)
+                .foregroundColor(.white)
 
             Text("Learn more about this user by adding them as a friend!")
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.white)
                 .padding(.horizontal, 32)
         }
         .frame(maxWidth: .infinity)
@@ -121,7 +121,7 @@ struct ProfileView: View {
                 let relationshipState = profileVM.relationshipState
 
                 ScrollView {
-                    VStack(spacing: 40) {
+                    VStack(spacing: 18) {
                         Theme.titleBanner(navigationTitle)
 
                         ZStack {
@@ -206,7 +206,7 @@ struct ProfileView: View {
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 20)
+                    .padding(.top, 8)
                     .padding(.bottom, 60)
                 }
                 .refreshable {
@@ -260,6 +260,7 @@ struct ProfileView: View {
                     } label: {
                         Image(systemName: "gearshape")
                             .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
                     }
                 }
             }
@@ -291,11 +292,11 @@ struct FriendsListView: View {
                 VStack(spacing: 16) {
                     Image(systemName: "person.2")
                         .font(.system(size: 40))
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.white)
 
                     Text("No friends yet")
                         .font(.headline)
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.white)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -328,11 +329,12 @@ struct FriendsListView: View {
                         VStack(alignment: .leading) {
                             Text(friend.fullName ?? "Unknown")
                                 .font(.headline)
+                                .foregroundColor(.white)
 
                             if !friend.username.isEmpty {
                                 Text("@\(friend.username)")
                                     .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundColor(.white)
                             }
                         }
                     }

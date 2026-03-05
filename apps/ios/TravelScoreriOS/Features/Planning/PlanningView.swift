@@ -95,17 +95,18 @@ struct PlanningCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.headline)
+                        .foregroundColor(.black)
 
                     Text(subtitle)
                         .font(.subheadline)
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundColor(.black)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundColor(.black)
             }
             .padding(18)
             .frame(height: 110)

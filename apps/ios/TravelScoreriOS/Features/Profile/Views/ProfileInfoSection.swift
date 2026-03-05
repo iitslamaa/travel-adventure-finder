@@ -86,15 +86,16 @@ struct ProfileInfoSection: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Travel Mode")
                             .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.black)
 
                         if let travelMode, !travelMode.isEmpty {
                             Text(travelMode)
                                 .font(.subheadline)
-                                .foregroundStyle(.primary)
+                                .foregroundColor(.black)
                         } else {
                             Text("Not set")
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.black)
                         }
                     }
 
@@ -103,15 +104,16 @@ struct ProfileInfoSection: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Travel Style")
                             .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.black)
 
                         if let travelStyle, !travelStyle.isEmpty {
                             Text(travelStyle)
                                 .font(.subheadline)
-                                .foregroundStyle(.primary)
+                                .foregroundColor(.black)
                         } else {
                             Text("Not set")
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.black)
                         }
                     }
                 }
@@ -171,7 +173,7 @@ struct ProfileInfoSection: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(.secondarySystemBackground))
+                    .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -182,12 +184,13 @@ struct ProfileInfoSection: View {
     private func sectionHeader(_ text: String) -> some View {
         Text(text)
             .font(.headline)
+            .foregroundColor(.black)
     }
 
     private func secondaryText(_ text: String) -> some View {
         Text(text)
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .foregroundColor(.black)
     }
 
     private func languageRow(_ text: String) -> some View {
@@ -196,13 +199,14 @@ struct ProfileInfoSection: View {
         return HStack {
             Text(components.first ?? "")
                 .font(.subheadline.weight(.semibold))
+                .foregroundColor(.black)
 
             Spacer()
 
             if components.count > 1 {
                 Text(components[1])
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.black)
             }
         }
     }
@@ -213,13 +217,14 @@ struct ProfileInfoSection: View {
         return HStack {
             Text(components.first ?? "")
                 .font(.subheadline.weight(.semibold))
+                .foregroundColor(.black)
 
             Spacer()
 
             if components.count > 1 {
                 Text(components[1])
                     .font(.subheadline)
-                    .foregroundStyle(.blue)
+                    .foregroundColor(.black)
             }
         }
     }
@@ -269,12 +274,12 @@ struct ProfileInfoSection: View {
             VStack(spacing: 12) {
                 Image(systemName: "lock.fill")
                     .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.black)
 
                 Text("Add this user as a friend to see more details.")
                     .font(.subheadline)
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.black)
             }
             .frame(maxWidth: .infinity)
         }

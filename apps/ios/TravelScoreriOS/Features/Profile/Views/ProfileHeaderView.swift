@@ -29,12 +29,13 @@ struct ProfileHeaderView: View {
                     Text(profile?.fullName ?? "")
                         .font(.title2)
                         .fontWeight(.semibold)
+                        .foregroundColor(.black)
                         .multilineTextAlignment(.center)
 
                     if !username.isEmpty {
                         Text("@\(username)")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.black)
                             .multilineTextAlignment(.center)
                     }
 
@@ -94,12 +95,13 @@ struct ProfileHeaderView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Current")
                         .font(.callout.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.black)
 
                     if let country = profile?.currentCountry,
                        !country.isEmpty {
                         Text(formattedCountry(country))
                             .font(.title3.weight(.semibold))
+                            .foregroundColor(.black)
                             .lineLimit(2)
                             .minimumScaleFactor(0.6)
                             .multilineTextAlignment(.leading)
@@ -107,7 +109,7 @@ struct ProfileHeaderView: View {
                     } else {
                         Text("Not set")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.black)
                     }
                 }
 
@@ -115,12 +117,13 @@ struct ProfileHeaderView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Next")
                         .font(.callout.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.black)
 
                     if let destination = profile?.nextDestination,
                        !destination.isEmpty {
                         Text(formattedCountry(destination))
                             .font(.title3.weight(.semibold))
+                            .foregroundColor(.black)
                             .lineLimit(2)
                             .minimumScaleFactor(0.6)
                             .multilineTextAlignment(.leading)
@@ -128,7 +131,7 @@ struct ProfileHeaderView: View {
                     } else {
                         Text("Not set")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.black)
                     }
                 }
 
@@ -136,7 +139,7 @@ struct ProfileHeaderView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Favorite trips")
                         .font(.callout.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.black)
 
                     if let favorites = profile?.favoriteCountries,
                        !favorites.isEmpty {
@@ -153,14 +156,14 @@ struct ProfileHeaderView: View {
                             if remaining > 0 {
                                 Text("+\(remaining)")
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundColor(.black)
                             }
                         }
 
                     } else {
                         Text("Not set")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.black)
                     }
                 }
             }
@@ -171,7 +174,7 @@ struct ProfileHeaderView: View {
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 8)
-        .background(Color(.systemBackground))
+        .background(Color(red: 0.97, green: 0.95, blue: 0.90))
     }
 
     // MARK: - Avatar
@@ -190,7 +193,7 @@ struct ProfileHeaderView: View {
                         Image(systemName: "person.crop.circle.fill")
                             .resizable()
                             .scaledToFill()
-                            .foregroundStyle(.gray)
+                            .foregroundColor(.black)
                     } else {
                         ZStack {
                             Circle()
@@ -208,7 +211,7 @@ struct ProfileHeaderView: View {
                 Image(systemName: "person.crop.circle.fill")
                     .resizable()
                     .scaledToFill()
-                    .foregroundStyle(.gray)
+                    .foregroundColor(.black)
             }
         }
         .clipShape(Circle())

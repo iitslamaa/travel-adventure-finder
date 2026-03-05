@@ -24,7 +24,7 @@ struct MyTravelsView: View {
                     ProgressView()
                     Text("Loading...")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.black)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if visitedCountries.isEmpty {
@@ -43,6 +43,7 @@ struct MyTravelsView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(country.name)
                                     .font(.headline)
+                                    .foregroundColor(.black)
                             }
 
                             Spacer()
@@ -52,6 +53,7 @@ struct MyTravelsView: View {
                             } else {
                                 Text("—")
                                     .font(.caption.bold())
+                                    .foregroundColor(.black)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
                                     .background(

@@ -19,11 +19,7 @@ struct FriendsView: View {
 
             VStack(spacing: 16) {
 
-                Theme.titleBanner(
-                    displayName.isEmpty
-                    ? "Friends"
-                    : "\(displayName)'s Friends"
-                )
+                Theme.titleBanner("Friends")
 
                 contentView
             }
@@ -43,7 +39,7 @@ struct FriendsView: View {
 
                                 Image(systemName: "person.crop.circle.badge.plus")
                                     .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(.primary)
+                                    .foregroundColor(.white)
 
                                 if friendsVM.incomingRequestCount > 0 {
                                     Text("\(min(friendsVM.incomingRequestCount, 9))")
@@ -96,9 +92,15 @@ struct FriendsView: View {
 
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.black)
 
-                TextField("Search by username", text: $friendsVM.searchText)
+                TextField(
+                    "",
+                    text: $friendsVM.searchText,
+                    prompt: Text("Search by username")
+                        .foregroundColor(.black.opacity(0.6))
+                )
+                    .foregroundColor(.black)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
 
@@ -107,13 +109,14 @@ struct FriendsView: View {
                         friendsVM.searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.black)
                     }
                 }
             }
             .padding(12)
             .background(
-                Theme.cardBackground(corner: 14)
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.white)
             )
             .padding(.horizontal)
 
@@ -124,53 +127,51 @@ struct FriendsView: View {
 
             ForEach(data, id: \.id) { profile in
                 NavigationLink(value: profile.id) {
-                    ZStack {
-                        Theme.scrapbookBack()
-                            .offset(x: -3, y: 3)
-
-                        HStack(spacing: 14) {
-                            if let urlString = profile.avatarUrl,
-                               let url = URL(string: urlString) {
-                                LazyImage(url: url) { state in
-                                    if let image = state.image {
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                    } else {
-                                        Image(systemName: "person.crop.circle.fill")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .foregroundStyle(.secondary)
-                                    }
+                    HStack(spacing: 14) {
+                        if let urlString = profile.avatarUrl,
+                           let url = URL(string: urlString) {
+                            LazyImage(url: url) { state in
+                                if let image = state.image {
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                } else {
+                                    Image(systemName: "person.crop.circle.fill")
+                                        .resizable()
+                                        .scaledToFill()
+                                        .foregroundColor(.gray)
                                 }
-                                .processors([
-                                    ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
-                                ])
-                                .priority(.high)
+                            }
+                            .processors([
+                                ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
+                            ])
+                            .priority(.high)
+                            .frame(width: 44, height: 44)
+                            .clipShape(Circle())
+                        } else {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .scaledToFill()
+                                .foregroundColor(.gray)
                                 .frame(width: 44, height: 44)
-                                .clipShape(Circle())
-                            } else {
-                                Image(systemName: "person.crop.circle.fill")
-                                    .resizable()
-                                    .scaledToFill()
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: 44, height: 44)
-                            }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(profile.fullName).font(.headline)
-                                Text("@\(profile.username)")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            Spacer()
                         }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(profile.fullName)
+                                .font(.headline)
+                                .foregroundColor(.black)
+                            Text("@\(profile.username)")
+                                .font(.subheadline)
+                                .foregroundColor(.black)
+                        }
+
+                        Spacer()
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
-                        Theme.cardBackground(corner: 18)
+                        RoundedRectangle(cornerRadius: 18)
+                            .fill(Color.white)
                     )
                     .rotationEffect(.degrees(0.5))
                 }

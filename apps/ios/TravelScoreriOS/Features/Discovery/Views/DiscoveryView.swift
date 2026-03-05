@@ -116,7 +116,7 @@ struct DiscoveryView: View {
                             subtitle: "Browse every destination"
                         ) {
                             Image(systemName: "chevron.right")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.black)
                         }
                     }
                     .buttonStyle(.plain)
@@ -133,7 +133,7 @@ struct DiscoveryView: View {
                             subtitle: "Find peak seasons"
                         ) {
                             Image(systemName: "chevron.right")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.black)
                         }
                     }
                     .buttonStyle(.plain)
@@ -147,7 +147,7 @@ struct DiscoveryView: View {
                             subtitle: "Open the interactive world map"
                         ) {
                             Image(systemName: "chevron.right")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.black)
                         }
                     }
                     .buttonStyle(.plain)
@@ -217,7 +217,7 @@ struct DiscoveryView: View {
                         
                         Text(subtitle)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.black)
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
@@ -267,13 +267,13 @@ struct DiscoveryView: View {
                             
                             Text(subtitle)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.black)
                         }
                         
                         Spacer()
                         
                         Image(systemName: "chevron.right")
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.black)
                     }
                     .padding(Theme.spacingMedium)
                     
@@ -300,7 +300,7 @@ struct DiscoveryView: View {
             VStack {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.black)
                     
                     TextField("Search countries and territories", text: $text)
                         .focused(isFocused)
@@ -314,7 +314,7 @@ struct DiscoveryView: View {
                             text = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.black)
                         }
                         .buttonStyle(.plain)
                     }
@@ -324,7 +324,7 @@ struct DiscoveryView: View {
                             isFocused.wrappedValue = false
                         } label: {
                             Image(systemName: "chevron.down")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.black)
                                 .font(.system(size: 16, weight: .semibold))
                         }
                     }
