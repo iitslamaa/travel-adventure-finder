@@ -29,7 +29,7 @@ struct ListsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-
+                
                 Text("Lists")
                     .font(.largeTitle.bold())
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -59,6 +59,7 @@ struct ListsView: View {
 
                 Spacer(minLength: 20)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal)
             .padding(.top, 12)
         }

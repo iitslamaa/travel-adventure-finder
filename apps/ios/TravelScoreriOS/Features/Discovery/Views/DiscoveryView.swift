@@ -160,6 +160,7 @@ struct DiscoveryView: View {
                 
                 Spacer(minLength: 20)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(.clear)
             .padding(.horizontal, 24)
         }
