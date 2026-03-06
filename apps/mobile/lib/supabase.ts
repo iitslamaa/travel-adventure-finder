@@ -4,8 +4,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import * as Crypto from 'expo-crypto';
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+import Constants from 'expo-constants';
+
+const extra = Constants.expoConfig?.extra ?? {};
+
+const SUPABASE_URL = extra.supabaseUrl;
+const SUPABASE_ANON_KEY = extra.supabaseAnonKey;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('Supabase config missing:', extra);
+  throw new Error('Supabase config missing');
+}
 
 // Ensure WebCrypto subtle.digest exists for PKCE (S256)
 if (!global.crypto) {

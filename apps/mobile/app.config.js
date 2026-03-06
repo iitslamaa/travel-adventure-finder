@@ -55,7 +55,6 @@ export default ({ config }) => ({
 
   experiments: {
     typedRoutes: true,
-    reactCompiler: true,
   },
   extra: {
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
