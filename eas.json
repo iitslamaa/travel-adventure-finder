@@ -12,7 +12,12 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "node": "20.11.1",
+      "pnpm": "9.12.2",
+      "env": {
+        "EXPO_NO_FROZEN_LOCKFILE": "1"
+      }
     }
   },
   "submit": {
