@@ -18,12 +18,8 @@ struct RootTabView: View {
 
 var body: some View {
     let _ = print("🧪 DEBUG: RootTabView body recomputed")
-    ZStack {
 
-        Theme.pageBackground("travel1")
-            .ignoresSafeArea()
-
-        TabView {
+    TabView {
             // Discovery
             NavigationStack {
                 DiscoveryView()
@@ -32,7 +28,6 @@ var body: some View {
                     }
             }
             .background(Color.clear)
-            .scrollContentBackground(.hidden)
             .background(.clear)
             .tabItem {
                 Label("Discovery", systemImage: "globe.americas.fill")
@@ -46,7 +41,6 @@ var body: some View {
                     }
             }
             .background(Color.clear)
-            .scrollContentBackground(.hidden)
             .background(.clear)
             .tabItem {
                 Label("Planning", systemImage: "list.bullet")
@@ -85,7 +79,6 @@ var body: some View {
                 }
             }
             .background(Color.clear)
-            .scrollContentBackground(.hidden)
             .background(.clear)
             .tabItem {
                 Label("Friends", systemImage: "person.2.fill")
@@ -125,7 +118,6 @@ var body: some View {
                 }
             }
             .background(Color.clear)
-            .scrollContentBackground(.hidden)
             .background(.clear)
             .tabItem {
                 Label("Profile", systemImage: "person.crop.circle")
@@ -136,20 +128,16 @@ var body: some View {
                 MoreView()
             }
             .background(Color.clear)
-            .scrollContentBackground(.hidden)
             .background(.clear)
             .tabItem {
                 Label("More", systemImage: "ellipsis")
             }
-        }
-        .background(Color.clear)
     }
     .onAppear {
         print("🧪 DEBUG: RootTabView fully appeared")
     }
     .toolbarBackground(.visible, for: .tabBar)
     .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-
     .toolbarBackground(.hidden, for: .navigationBar)
     .toolbarColorScheme(.light, for: .navigationBar)
     .task {

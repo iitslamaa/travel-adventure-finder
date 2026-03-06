@@ -37,13 +37,17 @@ struct AppRootView: View {
             } else if sessionManager.isAuthenticated || sessionManager.didContinueAsGuest {
 
                 if let userId = sessionManager.userId {
-                    let _ = profileVMHolder.configureIfNeeded(userId: userId)
 
                     if let profileVM = profileVMHolder.profileVM {
                         RootTabView()
                             .environmentObject(profileVM)
                             .onAppear {
                                 print("🧪 DEBUG: RootTabView mounted from AppRootView")
+                            }
+                    } else {
+                        ProgressView()
+                            .onAppear {
+                                print("🧪 DEBUG: Waiting for ProfileViewModel creation for userId=\(userId)")
                             }
                     }
                 }
@@ -72,7 +76,17 @@ struct AppRootView: View {
             print("🧪 DEBUG: AppRootView appeared. authSuppressed=\(sessionManager.isAuthSuppressed) authenticated=\(sessionManager.isAuthenticated) guest=\(sessionManager.didContinueAsGuest)")
         }
         .task {
+            print("🧪 DEBUG: AppRootView.task starting auth listener")
             await SupabaseManager.shared.startAuthListener()
+        }
+        .task(id: sessionManager.userId) {
+            if let userId = sessionManager.userId {
+                print("🧪 DEBUG: Configuring ProfileViewModel for userId=\(userId)")
+                profileVMHolder.configureIfNeeded(userId: userId)
+            } else {
+                print("🧪 DEBUG: Clearing ProfileViewModel because userId is nil")
+                profileVMHolder.clear()
+            }
         }
     }
 }
@@ -81,11 +95,17 @@ final class ProfileVMHolder: ObservableObject {
     @Published var profileVM: ProfileViewModel?
 
     func configureIfNeeded(userId: UUID) {
-        if profileVM?.userId == userId { return }
+        print("🧪 DEBUG: configureIfNeeded called with userId=\(userId)")
+
+        if profileVM?.userId == userId {
+            print("🧪 DEBUG: ProfileViewModel already configured for this user")
+            return
+        }
 
         let profileService = ProfileService(supabase: SupabaseManager.shared)
         let friendService = FriendService(supabase: SupabaseManager.shared)
 
+        print("🧪 DEBUG: Creating new ProfileViewModel")
         profileVM = ProfileViewModel(
             userId: userId,
             profileService: profileService,

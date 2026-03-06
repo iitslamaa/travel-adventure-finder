@@ -46,8 +46,7 @@ final class FriendsViewModel: ObservableObject {
 
     // MARK: - Init / Deinit
 
-    init() {
-    }
+    init() {}
 
     deinit {
     }
@@ -109,7 +108,10 @@ final class FriendsViewModel: ObservableObject {
     // MARK: - Search
 
     func searchUsers() async {
-        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else {
+        let query = searchText
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !query.isEmpty else {
             searchResults = []
             return
         }
@@ -118,7 +120,7 @@ final class FriendsViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            searchResults = try await supabase.searchUsers(byUsername: searchText)
+            searchResults = try await supabase.searchUsers(byUsername: query)
         } catch {
             print("❌ [FriendsVM:", instanceId, "] searchUsers failed:", error)
             errorMessage = error.localizedDescription

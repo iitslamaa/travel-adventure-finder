@@ -76,6 +76,7 @@ enum Theme {
                 }
             }
         }
+        .allowsHitTesting(false)
     }
 
     static var accent: Color { current.accent }

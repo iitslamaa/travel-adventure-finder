@@ -174,7 +174,11 @@ struct ProfileHeaderView: View {
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 8)
-        .background(Color(red: 0.97, green: 0.95, blue: 0.90))
+        .background(
+            Image("profile_header")
+                .resizable()
+                .scaledToFill()
+        )
     }
 
     // MARK: - Avatar
