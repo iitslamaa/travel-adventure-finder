@@ -6,18 +6,15 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "workingDirectory": "apps/mobile"
+      "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
-      "workingDirectory": "apps/mobile"
+      "distribution": "internal"
     },
     "production": {
       "autoIncrement": true,
       "node": "20.11.1",
       "pnpm": "9.12.2",
-      "workingDirectory": "apps/mobile",
       "env": {
         "EXPO_NO_FROZEN_LOCKFILE": "1"
       }
