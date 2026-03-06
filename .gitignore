@@ -73,3 +73,9 @@ next-env.d.ts
 DerivedData/
 build/
 data/build-geo/
+
+# Android build artifacts (local debugging)
+*.apk
+*.apks
+*.aab
+toc.pb

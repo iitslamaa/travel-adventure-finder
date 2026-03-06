@@ -58,6 +58,8 @@ export default ({ config }) => ({
     reactCompiler: true,
   },
   extra: {
+    supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
     eas: {
       projectId: "93f107b6-3588-44e1-88bc-74b5ad9f0af8",
     },
