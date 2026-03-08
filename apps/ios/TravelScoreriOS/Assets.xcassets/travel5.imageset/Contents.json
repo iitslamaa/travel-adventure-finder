@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "Brown and White Modern Paper Vintage Travel Memories Scrapbook.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

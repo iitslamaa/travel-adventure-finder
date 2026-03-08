@@ -1,5 +1,5 @@
 //
-//  CountryListView.swift.swift
+//  CountryListView.swift
 //  TravelScoreriOS
 //
 //  Created by Lama Yassine on 11/10/25.
@@ -12,46 +12,20 @@ enum SortOrder {
     case descending
 }
 
-struct MapPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            Text("Global map view coming soon 🌍")
-                .navigationTitle("Map")
-        }
-    }
-}
-
 struct CountryListView: View {
+
     let showsSearchBar: Bool
-    let searchText: String
+    @Binding var searchText: String
     let countries: [Country]
     @Binding var sort: CountrySort
     @Binding var sortOrder: SortOrder
 
-    init(
-        showsSearchBar: Bool = true,
-        searchText: String = "",
-        countries: [Country],
-        sort: Binding<CountrySort>,
-        sortOrder: Binding<SortOrder>
-    ) {
-        self.showsSearchBar = showsSearchBar
-        self.searchText = searchText
-        self.countries = countries
-        self._sort = sort
-        self._sortOrder = sortOrder
-    }
-
-    @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
     @EnvironmentObject private var profileVM: ProfileViewModel
 
     @State private var visibleCountries: [Country] = []
-
-    // Keep a handle to the latest recompute task so we can cancel stale work
-    @State private var recomputeTask: Task<Void, Never>?
-
-    // MARK: - Quick swipe confirmation (brief checkmark)
+    @State private var selectedCountry: Country?
+    @FocusState private var isSearchFocused: Bool
 
     private enum QuickConfirm {
         case bucket
@@ -70,17 +44,13 @@ struct CountryListView: View {
     }
 
     private func scheduleRecomputeVisible() {
-        // Cancel any in-flight recompute so fast typing / toggling doesn't queue work.
-        recomputeTask?.cancel()
 
-        // Recalculate scores using current weights
         var recalculatedCountries: [Country] = []
         let weights = weightsStore.weights
 
         for country in countries {
             var updated = country
 
-            // Weighted score recompute (exclude missing metrics)
             var components: [(value: Double, weight: Double)] = []
 
             if let advisory = country.travelSafeScore {
@@ -108,24 +78,23 @@ struct CountryListView: View {
                     updated.score = nil
                 }
             }
+
             recalculatedCountries.append(updated)
         }
 
-        // Capture a snapshot of inputs to process off-main.
-        let snapshotCountries = recalculatedCountries
         let snapshotSearch = searchText
         let snapshotSort = sort
         let snapshotSortOrder = sortOrder
 
-        // Filter
         let filtered: [Country]
         if snapshotSearch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            filtered = snapshotCountries
+            filtered = recalculatedCountries
         } else {
-            filtered = snapshotCountries.filter { $0.name.localizedCaseInsensitiveContains(snapshotSearch) }
+            filtered = recalculatedCountries.filter {
+                $0.name.localizedCaseInsensitiveContains(snapshotSearch)
+            }
         }
 
-        // Sort
         let baseSorted: [Country]
         switch snapshotSort {
         case .name:
@@ -133,7 +102,6 @@ struct CountryListView: View {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
         case .score:
-            // Always sort highest score first
             baseSorted = filtered.sorted { ($0.score ?? Int.min) > ($1.score ?? Int.min) }
         }
 
@@ -143,134 +111,194 @@ struct CountryListView: View {
             result = baseSorted
         } else {
             switch snapshotSortOrder {
-            case .ascending:
-                result = baseSorted
-            case .descending:
-                result = Array(baseSorted.reversed())
+            case .ascending: result = baseSorted
+            case .descending: result = Array(baseSorted.reversed())
             }
         }
 
-        self.visibleCountries = result
+        visibleCountries = result
     }
 
     var body: some View {
-        List {
-            ForEach(visibleCountries, id: \.id) { country in
-                CountryRow(
-                    country: country,
-                    isBucketed: profileVM.viewedBucketListCountries.contains(country.id),
-                    isVisited: profileVM.viewedTraveledCountries.contains(country.id),
-                    showConfirm: quickConfirmByCountryId[country.id] != nil,
-                    onBucket: {
-                        Task {
-                            await profileVM.toggleBucket(country.id)
-                            flashConfirm(.bucket, for: country.id)
-                        }
-                    },
-                    onVisited: {
-                        Task {
-                            await profileVM.toggleTraveled(country.id)
-                            flashConfirm(.visited, for: country.id)
-                        }
-                    }
+
+        VStack(spacing: 0) {
+
+            if showsSearchBar {
+                LocalFloatingSearchBar(
+                    text: $searchText,
+                    isFocused: $isSearchFocused
                 )
+                .padding(.horizontal, 12)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+            }
+
+            List {
+
+                Section {
+                    ForEach(visibleCountries, id: \.id) { country in
+                        SwipeableCountryRow(
+                            country: country,
+                            isBucketed: profileVM.viewedBucketListCountries.contains(country.id),
+                            isVisited: profileVM.viewedTraveledCountries.contains(country.id),
+                            showConfirm: quickConfirmByCountryId[country.id] != nil,
+                            onTap: {
+                                selectedCountry = country
+                            },
+                            onBucket: {
+                                Task {
+                                    await profileVM.toggleBucket(country.id)
+                                    flashConfirm(.bucket, for: country.id)
+                                }
+                            },
+                            onVisited: {
+                                Task {
+                                    await profileVM.toggleTraveled(country.id)
+                                    flashConfirm(.visited, for: country.id)
+                                }
+                            }
+                        )
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+                        .listRowBackground(Color.clear)
+                    }
+                }
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(Color.clear)
         .listStyle(.plain)
-        .onChange(of: searchText) { _, _ in
-            scheduleRecomputeVisible()
+        .scrollContentBackground(.hidden)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(
+            Image("country-list")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .stroke(Color.black.opacity(0.06), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
+        .padding(.horizontal, 30)
+        .frame(maxWidth: .infinity)
+        .navigationDestination(item: $selectedCountry) { country in
+            CountryDetailView(country: country)
         }
-        .onChange(of: sort) { _, _ in
-            scheduleRecomputeVisible()
-        }
-        .onChange(of: sortOrder) { _, _ in
-            scheduleRecomputeVisible()
-        }
-        .onReceive(weightsStore.$weights) { _ in
-            scheduleRecomputeVisible()
-        }
-        .onAppear {
-            scheduleRecomputeVisible()
-        }
-        .onChange(of: countries) { _, _ in
-            scheduleRecomputeVisible()
-        }
+        .onAppear { scheduleRecomputeVisible() }
+        .onChange(of: searchText) { _, _ in scheduleRecomputeVisible() }
+        .onChange(of: sort) { _, _ in scheduleRecomputeVisible() }
+        .onChange(of: sortOrder) { _, _ in scheduleRecomputeVisible() }
+        .onChange(of: countries) { _, _ in scheduleRecomputeVisible() }
+        .onReceive(weightsStore.$weights) { _ in scheduleRecomputeVisible() }
     }
 }
 
-private struct CountryRow: View {
+private struct LocalFloatingSearchBar: View {
+
+    @Binding var text: String
+    var isFocused: FocusState<Bool>.Binding
+
+    var body: some View {
+
+        HStack(spacing: 10) {
+
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.black)
+
+            TextField("Search countries and territories", text: $text)
+                .focused(isFocused)
+                .textFieldStyle(.plain)
+                .submitLabel(.search)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
+                .frame(maxWidth: .infinity)
+                .frame(height: 28)
+
+            if !text.isEmpty {
+                Button {
+                    text = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.black)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(9)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(red: 0.94, green: 0.92, blue: 0.86))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.black.opacity(0.05), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.05), radius: 3, y: 1)
+    }
+}
+
+private struct SwipeableCountryRow: View {
+
     let country: Country
     let isBucketed: Bool
     let isVisited: Bool
     let showConfirm: Bool
+    let onTap: () -> Void
     let onBucket: () -> Void
     let onVisited: () -> Void
 
     var body: some View {
-        NavigationLink {
-            CountryDetailView(country: country)
+
+        Button {
+            onTap()
         } label: {
 
-            ZStack {
+            HStack(spacing: 12) {
+                Text(country.flagEmoji)
+                    .font(.system(size: 22))
+                    .frame(width: 28, alignment: .leading)
 
-                // back paper layer
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color(.secondarySystemBackground))
-                    .rotationEffect(.degrees(-3))
-                    .shadow(color: .black.opacity(0.25), radius: 8, y: 6)
+                Text(country.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.black)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
 
-                HStack(spacing: 14) {
+                Spacer(minLength: 12)
 
-                    Text(country.flagEmoji)
-                        .font(.largeTitle)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(country.name)
-                            .font(.headline)
-                            .foregroundColor(.black)
-                    }
-
-                    Spacer()
-
-                    if let score = country.score {
-                        ScorePill(score: score)
-                    }
+                if let score = country.score {
+                    ScorePill(score: score)
                 }
-                .padding(16)
-                .frame(height: 70)
-                .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color(.systemBackground))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.12), radius: 8, y: 6)
-
             }
-            .padding(.vertical, 4)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color.white.opacity(0.78))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(Color.black.opacity(0.03), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
         }
         .buttonStyle(.plain)
-    }
-}
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button {
+                onVisited()
+            } label: {
+                Label("Visited", systemImage: "checkmark.circle.fill")
+            }
+            .tint(.green)
 
-extension View {
-    @ViewBuilder
-    func `if`<Content: View>(
-        _ condition: Bool,
-        transform: (Self) -> Content
-    ) -> some View {
-        if condition {
-            transform(self)
-        } else {
-            self
+            Button {
+                onBucket()
+            } label: {
+                Label("Bucket", systemImage: "star.fill")
+            }
+            .tint(.yellow)
         }
     }
-}
-
-#Preview {
-    CountryListView(showsSearchBar: true, searchText: "", countries: [], sort: .constant(.name), sortOrder: .constant(.descending))
 }
