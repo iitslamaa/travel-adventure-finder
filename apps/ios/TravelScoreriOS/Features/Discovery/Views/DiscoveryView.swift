@@ -30,7 +30,7 @@ struct DiscoveryCountryListView: View {
     private func loadCountriesWithRetry() async {
         let delays: [UInt64] = [0, 200_000_000, 500_000_000, 1_000_000_000]
 
-        for (idx, delay) in delays.enumerated() {
+        for (_, delay) in delays.enumerated() {
             if delay > 0 { try? await Task.sleep(nanoseconds: delay) }
 
             if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
@@ -41,24 +41,29 @@ struct DiscoveryCountryListView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-
+        VStack(spacing: 12) {
             DiscoveryControlsView(
                 sort: $sort,
                 sortOrder: $sortOrder
             )
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
             .padding(.top, 8)
 
             CountryListView(
-                showsSearchBar: false,
-                searchText: searchText,
+                showsSearchBar: true,
+                searchText: $searchText,
                 countries: countries,
                 sort: $sort,
                 sortOrder: $sortOrder
             )
-            .scrollDismissesKeyboard(.interactively)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(
+            Theme.pageBackground("travel1")
+                .ignoresSafeArea()
+        )
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .refreshable {
             await reloadCountries()
         }
@@ -73,11 +78,6 @@ struct DiscoveryCountryListView: View {
                 countries = cached
             }
         }
-        .navigationTitle("Discover")
-        .navigationBarTitleDisplayMode(.inline)
-        .safeAreaInset(edge: .bottom) {
-            DiscoveryView.FloatingSearchBar(text: $searchText, isFocused: $isSearchFocused)
-        }
         .onDisappear {
             isSearchFocused = false
         }
@@ -85,87 +85,85 @@ struct DiscoveryCountryListView: View {
 }
 
 struct DiscoveryView: View {
-    
+
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
     @State private var showingWeights = false
-    
+
     private var countries: [Country] {
         CountryAPI.loadCachedCountries() ?? []
     }
-    
+
     var body: some View {
         let _ = print("🧪 DEBUG: DiscoveryView.body recomputed")
         ZStack {
             Theme.pageBackground("travel1")
                 .ignoresSafeArea()
 
-            ScrollView {
-            VStack(spacing: Theme.spacingLarge) {
-                
+            VStack(spacing: 0) {
                 Theme.titleBanner("Explore")
-                
-                // scrapbook navigation cards
-                VStack(spacing: Theme.spacingLarge) {
-                    
-                    NavigationLink {
-                        DiscoveryCountryListView()
-                    } label: {
-                        Theme.featureCard(
-                            icon: "globe.americas",
-                            title: "Countries",
-                            subtitle: "Browse every destination"
-                        ) {
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.black)
+                ScrollView {
+                    VStack(spacing: Theme.spacingLarge) {
+                        VStack(spacing: Theme.spacingLarge) {
+
+                            NavigationLink {
+                                DiscoveryCountryListView()
+                            } label: {
+                                Theme.featureCard(
+                                    icon: "globe.americas",
+                                    title: "Countries",
+                                    subtitle: "Browse every destination"
+                                ) {
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.black)
+                                }
+                            }
+                            .buttonStyle(.plain)
+
+                            NavigationLink {
+                                WhenToGoView(
+                                    countries: countries,
+                                    weightsStore: weightsStore
+                                )
+                            } label: {
+                                Theme.featureCard(
+                                    icon: "calendar",
+                                    title: "When To Go",
+                                    subtitle: "Find peak seasons"
+                                ) {
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.black)
+                                }
+                            }
+                            .buttonStyle(.plain)
+
+                            NavigationLink {
+                                DiscoveryMapView(countries: countries)
+                            } label: {
+                                Theme.featureCard(
+                                    icon: "map.fill",
+                                    title: "Explore the World",
+                                    subtitle: "Open the interactive world map"
+                                ) {
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.black)
+                                }
+                            }
+                            .buttonStyle(.plain)
+
                         }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 12)
+
+                        Spacer(minLength: 20)
                     }
-                    .buttonStyle(.plain)
-                    
-                    NavigationLink {
-                        WhenToGoView(
-                            countries: countries,
-                            weightsStore: weightsStore
-                        )
-                    } label: {
-                        Theme.featureCard(
-                            icon: "calendar",
-                            title: "When To Go",
-                            subtitle: "Find peak seasons"
-                        ) {
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.black)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    
-                    NavigationLink {
-                        DiscoveryMapView(countries: countries)
-                    } label: {
-                        Theme.featureCard(
-                            icon: "map.fill",
-                            title: "Explore the World",
-                            subtitle: "Open the interactive world map"
-                        ) {
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.black)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    
+                    .frame(maxWidth: .infinity)
+                    .background(.clear)
+                    .padding(.horizontal, 24)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 12)
-                
-                Spacer(minLength: 20)
             }
-            .frame(maxWidth: .infinity)
-            .background(.clear)
-            .padding(.horizontal, 24)
         }
-        .scrollContentBackground(.hidden)
         .background(Color.clear)
         .ignoresSafeArea(edges: .bottom)
-    }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
@@ -185,36 +183,35 @@ struct DiscoveryView: View {
             print("🧪 DEBUG: DiscoveryView appeared on screen")
         }
     }
-    
+
     struct DiscoverySquareCard: View {
-        
+
         let title: String
         let subtitle: String
         let icon: String
-        
+
         var body: some View {
             ZStack {
-                
+
                 VStack(spacing: 0) {
-                    
+
                     VStack {
                         ZStack {
                             Circle()
                                 .fill(Theme.accent.opacity(0.15))
                                 .frame(width: 48, height: 48)
-                            
+
                             Image(systemName: icon)
                                 .font(.system(size: 22, weight: .semibold))
                                 .foregroundStyle(Theme.accent)
                         }
                     }
                     .padding(.top, 18)
-                    
-                    // caption
+
                     VStack(spacing: 4) {
                         Text(title)
                             .font(.headline)
-                        
+
                         Text(subtitle)
                             .font(.caption)
                             .foregroundColor(.black)
@@ -223,7 +220,7 @@ struct DiscoveryView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, Theme.spacingMedium)
                     .padding(.vertical, 8)
-                    
+
                 }
                 .frame(maxWidth: .infinity)
                 .background(
@@ -238,45 +235,45 @@ struct DiscoveryView: View {
             }
         }
     }
-    
+
     struct DiscoveryWideCard: View {
-        
+
         let title: String
         let subtitle: String
         let icon: String
-        
+
         var body: some View {
             ZStack {
-                
+
                 VStack(spacing: 0) {
-                    
+
                     HStack(spacing: 14) {
                         ZStack {
                             Circle()
                                 .fill(Theme.accent.opacity(0.15))
                                 .frame(width: 48, height: 48)
-                            
+
                             Image(systemName: icon)
                                 .font(.system(size: 22, weight: .semibold))
                                 .foregroundStyle(Theme.accent)
                         }
-                        
+
                         VStack(alignment: .leading, spacing: 2) {
                             Text(title)
                                 .font(.headline)
-                            
+
                             Text(subtitle)
                                 .font(.caption)
                                 .foregroundColor(.black)
                         }
-                        
+
                         Spacer()
-                        
+
                         Image(systemName: "chevron.right")
                             .foregroundColor(.black)
                     }
                     .padding(Theme.spacingMedium)
-                    
+
                 }
                 .frame(maxWidth: .infinity)
                 .background(
@@ -291,24 +288,24 @@ struct DiscoveryView: View {
             }
         }
     }
-    
+
     struct FloatingSearchBar: View {
         @Binding var text: String
         var isFocused: FocusState<Bool>.Binding
-        
+
         var body: some View {
             VStack {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.black)
-                    
+
                     TextField("Search countries and territories", text: $text)
                         .focused(isFocused)
                         .submitLabel(.search)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
                         .onSubmit { isFocused.wrappedValue = false }
-                    
+
                     if isFocused.wrappedValue && !text.isEmpty {
                         Button {
                             text = ""
@@ -318,7 +315,7 @@ struct DiscoveryView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    
+
                     if isFocused.wrappedValue {
                         Button {
                             isFocused.wrappedValue = false
@@ -342,7 +339,7 @@ struct DiscoveryView: View {
             .padding(.top, 0)
         }
     }
-    
+
     #Preview {
         DiscoveryCountryListView()
     }
