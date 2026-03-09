@@ -178,7 +178,10 @@ struct ProfileHeaderView: View {
             Image("profile_header")
                 .resizable()
                 .scaledToFill()
+                .clipped()
         )
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
     }
 
     // MARK: - Avatar

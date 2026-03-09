@@ -126,7 +126,6 @@ var body: some View {
         }
         .tag(Tab.more)
     }
-    .tabViewStyle(.page(indexDisplayMode: .never))
     .ignoresSafeArea()
     .overlay(alignment: .bottom) {
         GeometryReader { geo in

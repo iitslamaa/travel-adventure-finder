@@ -133,9 +133,8 @@ struct CountryListView: View {
                 .padding(.bottom, 8)
             }
 
-            List {
-
-                Section {
+            ScrollView {
+                LazyVStack(spacing: 0) {
                     ForEach(visibleCountries, id: \.id) { country in
                         SwipeableCountryRow(
                             country: country,
@@ -158,15 +157,14 @@ struct CountryListView: View {
                                 }
                             }
                         )
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
-                        .listRowBackground(Color.clear)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
                     }
                 }
+                .padding(.bottom, 12)
             }
+            .scrollIndicators(.hidden)
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(
@@ -248,11 +246,103 @@ private struct SwipeableCountryRow: View {
     let onBucket: () -> Void
     let onVisited: () -> Void
 
-    var body: some View {
+    @State private var restingOffset: CGFloat = 0
+    @GestureState private var liveDragOffset: CGFloat = 0
+    @GestureState private var isHorizontalDragActive: Bool = false
 
-        Button {
-            onTap()
-        } label: {
+    private let actionWidth: CGFloat = 92
+
+    private var maxReveal: CGFloat {
+        actionWidth * 2
+    }
+
+    private var rowOffset: CGFloat {
+        let raw = restingOffset + (isHorizontalDragActive ? liveDragOffset : 0)
+        return min(0, max(-maxReveal, raw))
+    }
+
+    private var horizontalDragGesture: some Gesture {
+        DragGesture(minimumDistance: 16, coordinateSpace: .local)
+            .updating($isHorizontalDragActive) { value, state, _ in
+                let horizontal = value.translation.width
+                let vertical = value.translation.height
+
+                // require a very clear horizontal swipe before activating row drag
+                if abs(horizontal) > abs(vertical) * 2.0 && abs(horizontal) > 12 {
+                    state = true
+                }
+            }
+            .updating($liveDragOffset) { value, state, _ in
+                let horizontal = value.translation.width
+                let vertical = value.translation.height
+
+                guard abs(horizontal) > abs(vertical) * 2.0 && abs(horizontal) > 12 else { return }
+                state = horizontal
+            }
+            .onEnded { value in
+                let horizontal = value.translation.width
+                let vertical = value.translation.height
+
+                guard abs(horizontal) > abs(vertical) * 2.0 && abs(horizontal) > 12 else { return }
+
+                withAnimation(.spring(response: 0.18, dampingFraction: 0.88)) {
+                    if horizontal <= -50 {
+                        restingOffset = -maxReveal
+                    } else if horizontal >= 50 {
+                        restingOffset = 0
+                    } else {
+                        restingOffset = restingOffset == 0 ? 0 : -maxReveal
+                    }
+                }
+            }
+    }
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+
+                Button {
+                    withAnimation(.spring(response: 0.18, dampingFraction: 0.88)) {
+                        restingOffset = 0
+                    }
+                    onVisited()
+                } label: {
+                    VStack(spacing: 6) {
+                        Image(systemName: isVisited ? "checkmark.circle.fill" : "checkmark.circle")
+                            .font(.system(size: 18, weight: .semibold))
+                        Text("Visited")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(width: actionWidth)
+                    .frame(maxHeight: .infinity)
+                    .background(Color.green)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    withAnimation(.spring(response: 0.18, dampingFraction: 0.88)) {
+                        restingOffset = 0
+                    }
+                    onBucket()
+                } label: {
+                    VStack(spacing: 6) {
+                        Image(systemName: isBucketed ? "star.fill" : "star")
+                            .font(.system(size: 18, weight: .semibold))
+                        Text("Bucket")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .foregroundStyle(.black)
+                    .frame(width: actionWidth)
+                    .frame(maxHeight: .infinity)
+                    .background(Color.yellow)
+                }
+                .buttonStyle(.plain)
+            }
+            .frame(width: maxReveal, alignment: .trailing)
+            .offset(x: maxReveal + rowOffset)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
 
             HStack(spacing: 12) {
                 Text(country.flagEmoji)
@@ -282,23 +372,22 @@ private struct SwipeableCountryRow: View {
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .stroke(Color.black.opacity(0.03), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.05), radius: 6, y: 2)
-        }
-        .buttonStyle(.plain)
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button {
-                onVisited()
-            } label: {
-                Label("Visited", systemImage: "checkmark.circle.fill")
+            .shadow(color: .black.opacity(restingOffset != 0 ? 0.05 : 0), radius: 6, y: 2)
+            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .offset(x: rowOffset)
+            .onTapGesture {
+                if restingOffset == 0 {
+                    onTap()
+                } else {
+                    withAnimation(.spring(response: 0.18, dampingFraction: 0.88)) {
+                        restingOffset = 0
+                    }
+                }
             }
-            .tint(.green)
-
-            Button {
-                onBucket()
-            } label: {
-                Label("Bucket", systemImage: "star.fill")
-            }
-            .tint(.yellow)
+            .gesture(horizontalDragGesture)
         }
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 58)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
