@@ -269,7 +269,7 @@ struct ProfileView: View {
                     } label: {
                         Image(systemName: "gearshape")
                             .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.brown)
                     }
                 }
             }
@@ -301,11 +301,11 @@ struct FriendsListView: View {
                 VStack(spacing: 16) {
                     Image(systemName: "person.2")
                         .font(.system(size: 40))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
 
                     Text("No friends yet")
                         .font(.headline)
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -338,12 +338,12 @@ struct FriendsListView: View {
                         VStack(alignment: .leading) {
                             Text(friend.fullName ?? "Unknown")
                                 .font(.headline)
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
 
                             if !friend.username.isEmpty {
                                 Text("@\(friend.username)")
                                     .font(.subheadline)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                             }
                         }
                     }

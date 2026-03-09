@@ -41,7 +41,7 @@ struct FriendsView: View {
 
                                 Image(systemName: "person.crop.circle.badge.plus")
                                     .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(Color.brown)
 
                                 if friendsVM.incomingRequestCount > 0 {
                                     Text("\(min(friendsVM.incomingRequestCount, 9))")
