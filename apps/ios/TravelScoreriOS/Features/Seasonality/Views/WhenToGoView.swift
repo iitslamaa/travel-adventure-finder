@@ -25,14 +25,11 @@ struct WhenToGoView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                header
                 monthScroller
                 content
             }
             .padding(.horizontal)
             .padding(.top, 8)
-            .navigationTitle("When to Go")
-            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $isDrawerOpen) {
                 if let selected = viewModel.selectedCountry {
                     NavigationStack {
@@ -42,50 +39,46 @@ struct WhenToGoView: View {
                     .presentationDragIndicator(.visible)
                 }
             }
+            .background(
+                Image("whentogo")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+            )
         }
-    }
-    
-    private var header: some View {
-        Text("Select a month to explore where it's peak or shoulder season around the world.")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
     }
     
     private var monthScroller: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(allMonthsMeta) { month in
-                    let isSelected = month.id == viewModel.selectedMonthIndex
-                    Button {
-                        isDrawerOpen = false
-                        viewModel.selectedCountry = nil
-                        viewModel.selectedMonthIndex = month.id
-                    } label: {
-                        VStack(spacing: 2) {
-                            Text(month.short.uppercased())
-                                .font(.caption2.weight(.semibold))
-                            Text(String(format: "%02d", month.id))
-                                .font(.caption)
+        ZStack {
+            Image("title_background")
+                .resizable()
+                .scaledToFill()
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 16) {
+                    ForEach(allMonthsMeta) { month in
+                        MonthChip(
+                            month: month,
+                            isSelected: viewModel.selectedMonthIndex == month.id
+                        ) {
+                            viewModel.selectedMonthIndex = month.id
                         }
-                        .padding(.vertical, 6)
-                        .padding(.horizontal, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 999)
-                                .fill(isSelected ? Color.black : Color(.systemGray6))
-                        )
-                        .foregroundColor(isSelected ? .white : .primary)
                     }
                 }
+                .padding(.horizontal, 70)
             }
         }
+        .frame(height: 90)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(Color.black.opacity(0.04), lineWidth: 1)
+        )
     }
     
     private var content: some View {
         ScrollView {
             VStack(spacing: 16) {
-                selectedMonthSummary
-                
                 VStack(spacing: 12) {
                     countryListSection(
                         title: "Peak season",
@@ -106,41 +99,6 @@ struct WhenToGoView: View {
         }
     }
     
-    private var selectedMonthSummary: some View {
-        let monthMeta = allMonthsMeta.first { $0.id == viewModel.selectedMonthIndex }
-        
-        return HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Selected month")
-                    .font(.caption.bold())
-                    .foregroundColor(.secondary)
-                Text(monthMeta?.label ?? "Month \(viewModel.selectedMonthIndex)")
-                    .font(.subheadline)
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("Peak: \(viewModel.peakCountries.count)")
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.green.opacity(0.1))
-                    .clipShape(Capsule())
-                Text("Shoulder: \(viewModel.shoulderCountries.count)")
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.yellow.opacity(0.1))
-                    .clipShape(Capsule())
-                Text("Total: \(viewModel.peakCountries.count + viewModel.shoulderCountries.count)")
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color(.systemGray6))
-                    .clipShape(Capsule())
-            }
-        }
-    }
-    
     private func countryListSection(
         title: String,
         note: String,
@@ -149,9 +107,6 @@ struct WhenToGoView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.subheadline.bold())
-            Text(note)
-                .font(.caption)
-                .foregroundColor(.secondary)
             
             if countries.isEmpty {
                 Text("No destinations in this category for the selected month.")
@@ -165,10 +120,26 @@ struct WhenToGoView: View {
             }
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
-        )
+    }
+}
+
+private struct MonthChip: View {
+    let month: MonthMeta
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Text(month.short)
+            .font(.headline)
+            .foregroundColor(isSelected ? .black : .black.opacity(0.45))
+            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? Color.white.opacity(0.6) : Color.clear)
+            )
+            .onTapGesture {
+                onTap()
+            }
     }
 }
