@@ -23,29 +23,27 @@ struct WhenToGoView: View {
     @State private var isDrawerOpen: Bool = false
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 12) {
-                monthScroller
-                content
-            }
-            .padding(.horizontal)
-            .padding(.top, 8)
-            .sheet(isPresented: $isDrawerOpen) {
-                if let selected = viewModel.selectedCountry {
-                    NavigationStack {
-                        WhenToGoCountryDrawerView(country: selected)
-                    }
-                    .presentationDetents([.medium, .large])
-                    .presentationDragIndicator(.visible)
-                }
-            }
-            .background(
-                Image("whentogo")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-            )
+        VStack(spacing: 12) {
+            monthScroller
+            content
         }
+        .padding(.horizontal)
+        .padding(.top, 8)
+        .sheet(isPresented: $isDrawerOpen) {
+            if let selected = viewModel.selectedCountry {
+                NavigationStack {
+                    WhenToGoCountryDrawerView(country: selected)
+                }
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
+        }
+        .background(
+            Image("whentogo")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        )
     }
     
     private var monthScroller: some View {
