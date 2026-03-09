@@ -12,9 +12,8 @@ import Nuke
 struct FriendRequestsView: View {
     @StateObject private var vm = FriendRequestsViewModel()
 
-    var body: some View {
-        NavigationStack {
-            Group {
+var body: some View {
+    Group {
                 if vm.isLoading {
                     ProgressView("Loading requests…")
                 } else if vm.incomingRequests.isEmpty {
@@ -140,6 +139,5 @@ struct FriendRequestsView: View {
             } message: {
                 Text(vm.errorMessage ?? "")
             }
-        }
     }
 }
