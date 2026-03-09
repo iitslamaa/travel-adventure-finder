@@ -20,6 +20,7 @@ struct FriendsView: View {
             Theme.titleBanner("Friends")
 
             contentView
+                .padding(.bottom, 104)
         }
         .background(
             Theme.pageBackground("travel3")
@@ -213,15 +214,13 @@ struct FriendsView: View {
                         }
                         .id("friendsListTop")
                         .padding(.top, 6)
+                        .padding(.bottom, 20)
                     }
                     .refreshable {
                         await friendsVM.loadFriends(for: userId, forceRefresh: true)
                         if SupabaseManager.shared.currentUserId == userId {
                             await friendsVM.loadIncomingRequestCount()
                         }
-                    }
-                    .safeAreaInset(edge: .bottom) {
-                        Color.clear
                     }
                 }
             }

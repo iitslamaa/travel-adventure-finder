@@ -66,6 +66,10 @@ final class FriendsViewModel: ObservableObject {
             friends = fetchedFriends
             hasLoaded = true
         } catch {
+            if (error as? URLError)?.code == .cancelled || Task.isCancelled {
+                return
+            }
+
             print("❌ [FriendsVM:", instanceId, "] loadFriends failed:", error)
             errorMessage = error.localizedDescription
             friends = []
@@ -87,6 +91,10 @@ final class FriendsViewModel: ObservableObject {
 
             displayName = response.value.fullName
         } catch {
+            if (error as? URLError)?.code == .cancelled || Task.isCancelled {
+                return
+            }
+
             print("❌ [FriendsVM:", instanceId, "] loadDisplayName failed:", error)
             displayName = ""
         }
@@ -100,6 +108,10 @@ final class FriendsViewModel: ObservableObject {
         do {
             incomingRequestCount = try await friendService.incomingRequestCount(for: userId)
         } catch {
+            if (error as? URLError)?.code == .cancelled || Task.isCancelled {
+                return
+            }
+
             print("❌ [FriendsVM:", instanceId, "] loadIncomingRequestCount failed:", error)
             incomingRequestCount = 0
         }
@@ -122,6 +134,10 @@ final class FriendsViewModel: ObservableObject {
         do {
             searchResults = try await supabase.searchUsers(byUsername: query)
         } catch {
+            if (error as? URLError)?.code == .cancelled || Task.isCancelled {
+                return
+            }
+
             print("❌ [FriendsVM:", instanceId, "] searchUsers failed:", error)
             errorMessage = error.localizedDescription
             searchResults = []
