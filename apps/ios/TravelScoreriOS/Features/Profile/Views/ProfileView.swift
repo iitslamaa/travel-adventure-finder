@@ -42,6 +42,7 @@ struct ProfileView: View {
     private let userId: UUID
     @State private var showFriendsDrawer = false
     @State private var navigateToFriends = false
+    @State private var scrollAnchor: String? = nil
 
     init(userId: UUID) {
         self.userId = userId
@@ -110,8 +111,7 @@ struct ProfileView: View {
 
     var body: some View {
         ZStack {
-            Theme.pageBackground("travel4")
-                .ignoresSafeArea()
+            Color.clear
 
             // 🛡 Strict identity + relationship gate (production-safe)
             if !isReadyToRenderProfile {
@@ -120,8 +120,9 @@ struct ProfileView: View {
             } else {
                 let relationshipState = profileVM.relationshipState
 
-                ScrollView {
-                    VStack(spacing: 18) {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 18) {
                         Theme.titleBanner(navigationTitle)
 
                         ZStack {
@@ -204,48 +205,56 @@ struct ProfileView: View {
                             LockedProfileView()
                                 .padding(.top, 40)
                         }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-                    .padding(.bottom, 60)
-                }
-                .refreshable {
-                    await profileVM.reloadProfile()
-                }
-                .sheet(isPresented: $showFriendsDrawer) {
-                    FriendsSection(
-                        relationshipState: relationshipState,
-                        friendCount: friendCount,
-                        onToggleFriend: {
-                            Task {
-                                await profileVM.toggleFriend()
-                            }
-                        },
-                        onCancelRequest: {
-                            Task {
-                                await profileVM.toggleFriend()
-                            }
-                        },
-                        onViewFriends: {
-                            showFriendsDrawer = false
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                navigateToFriends = true
-                            }
                         }
-                    )
-                }
-                .background(
-                    NavigationLink(
-                        destination: FriendsListView()
-                            .environmentObject(profileVM),
-                        isActive: $navigateToFriends
-                    ) {
-                        EmptyView()
+                        .id("profileTop")
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                        .padding(.bottom, 100)
                     }
-                    .hidden()
-                )
+                    .refreshable {
+                        await profileVM.reloadProfile()
+                    }
+                    .safeAreaPadding(.bottom, 110)
+                    .background(Color.clear)
+                    .sheet(isPresented: $showFriendsDrawer) {
+                        FriendsSection(
+                            relationshipState: relationshipState,
+                            friendCount: friendCount,
+                            onToggleFriend: {
+                                Task {
+                                    await profileVM.toggleFriend()
+                                }
+                            },
+                            onCancelRequest: {
+                                Task {
+                                    await profileVM.toggleFriend()
+                                }
+                            },
+                            onViewFriends: {
+                                showFriendsDrawer = false
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                    navigateToFriends = true
+                                }
+                            }
+                        )
+                    }
+                    }
+                    .background(
+                        NavigationLink(
+                            destination: FriendsListView()
+                                .environmentObject(profileVM),
+                            isActive: $navigateToFriends
+                        ) {
+                            EmptyView()
+                        }
+                        .hidden()
+                    )
             }
         }
+        .background(
+            Theme.pageBackground("travel4")
+                .ignoresSafeArea()
+        )
         .id(userId)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)

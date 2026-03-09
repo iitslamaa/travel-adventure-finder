@@ -180,7 +180,7 @@ struct CountryListView: View {
                 .stroke(Color.black.opacity(0.06), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
-        .padding(.horizontal, 30)
+        .padding(.horizontal, 22)
         .frame(maxWidth: .infinity)
         .navigationDestination(item: $selectedCountry) { country in
             CountryDetailView(country: country)

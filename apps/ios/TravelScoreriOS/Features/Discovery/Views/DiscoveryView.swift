@@ -17,6 +17,7 @@ struct DiscoveryCountryListView: View {
     @State private var sortOrder: SortOrder = .ascending
     @State private var countries: [Country] = CountryAPI.loadCachedCountries() ?? []
     @State private var didRunInitialLoad = false
+    @State private var scrollAnchor: String? = nil
 
     @MainActor
     private func reloadCountries() async {
@@ -41,45 +42,48 @@ struct DiscoveryCountryListView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
-            DiscoveryControlsView(
-                sort: $sort,
-                sortOrder: $sortOrder
-            )
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
+        ScrollViewReader { proxy in
+            VStack(spacing: 12) {
+                DiscoveryControlsView(
+                    sort: $sort,
+                    sortOrder: $sortOrder
+                )
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
 
-            CountryListView(
-                showsSearchBar: true,
-                searchText: $searchText,
-                countries: countries,
-                sort: $sort,
-                sortOrder: $sortOrder
-            )
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(
-            Theme.pageBackground("travel1")
-                .ignoresSafeArea()
-        )
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .refreshable {
-            await reloadCountries()
-        }
-        .task {
-            guard !didRunInitialLoad else { return }
-            didRunInitialLoad = true
-
-            await loadCountriesWithRetry()
-            await profileVM.loadIfNeeded()
-
-            if countries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
-                countries = cached
+                CountryListView(
+                    showsSearchBar: true,
+                    searchText: $searchText,
+                    countries: countries,
+                    sort: $sort,
+                    sortOrder: $sortOrder
+                )
             }
-        }
-        .onDisappear {
-            isSearchFocused = false
+            .id("discoveryListTop")
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(
+                Theme.pageBackground("travel1")
+                    .ignoresSafeArea()
+            )
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .refreshable {
+                await reloadCountries()
+            }
+            .task {
+                guard !didRunInitialLoad else { return }
+                didRunInitialLoad = true
+
+                await loadCountriesWithRetry()
+                await profileVM.loadIfNeeded()
+
+                if countries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
+                    countries = cached
+                }
+            }
+            .onDisappear {
+                isSearchFocused = false
+            }
         }
     }
 }

@@ -14,40 +14,40 @@ struct RootTabView: View {
     @State private var countries: [Country] = []
     @State private var hasLoadedCountries = false
 
-    private let instanceId = UUID()
+    @State private var discoveryPath = NavigationPath()
+    @State private var planningPath = NavigationPath()
+    @State private var friendsPath = NavigationPath()
+    @State private var profilePath = NavigationPath()
+    @State private var morePath = NavigationPath()
 
 var body: some View {
     let _ = print("🧪 DEBUG: RootTabView body recomputed")
 
     TabView {
             // Discovery
-            NavigationStack {
+            NavigationStack(path: $discoveryPath) {
                 DiscoveryView()
                     .onAppear {
                         print("🧪 DEBUG: Discovery NavigationStack content appeared")
                     }
             }
-            .background(Color.clear)
-            .background(.clear)
             .tabItem {
                 Label("Discovery", systemImage: "globe.americas.fill")
             }
 
             // Planning
-            NavigationStack {
+            NavigationStack(path: $planningPath) {
                 PlanningView()
                     .onAppear {
                         print("🧪 DEBUG: Planning NavigationStack content appeared")
                     }
             }
-            .background(Color.clear)
-            .background(.clear)
             .tabItem {
                 Label("Planning", systemImage: "list.bullet")
             }
 
             // Friends (auth required)
-            NavigationStack {
+            NavigationStack(path: $friendsPath) {
                 if sessionManager.isAuthenticated,
                    let userId = sessionManager.userId {
                     FriendsView(userId: userId)
@@ -78,14 +78,12 @@ var body: some View {
                     }
                 }
             }
-            .background(Color.clear)
-            .background(.clear)
             .tabItem {
                 Label("Friends", systemImage: "person.2.fill")
             }
 
             // Profile (auth required)
-            NavigationStack {
+            NavigationStack(path: $profilePath) {
                 if sessionManager.isAuthenticated,
                    let userId = sessionManager.userId {
                     ProfileView(userId: userId)
@@ -117,18 +115,14 @@ var body: some View {
                     }
                 }
             }
-            .background(Color.clear)
-            .background(.clear)
             .tabItem {
                 Label("Profile", systemImage: "person.crop.circle")
             }
 
             // More
-            NavigationStack {
+            NavigationStack(path: $morePath) {
                 MoreView()
             }
-            .background(Color.clear)
-            .background(.clear)
             .tabItem {
                 Label("More", systemImage: "ellipsis")
             }
@@ -136,8 +130,8 @@ var body: some View {
     .onAppear {
         print("🧪 DEBUG: RootTabView fully appeared")
     }
-    .toolbarBackground(.visible, for: .tabBar)
     .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+    .toolbarBackground(.visible, for: .tabBar)
     .toolbarBackground(.hidden, for: .navigationBar)
     .toolbarColorScheme(.light, for: .navigationBar)
     .task {

@@ -11,95 +11,99 @@ struct CountryDetailView: View {
     private let isTravelSafetyEnabled = false
     @State var country: Country
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
-
+    @State private var scrollAnchor: String? = nil
+    
     var body: some View {
-        ScrollView {
-            VStack(spacing: 28) {
-
-                // Header polaroid style
-                ZStack {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(Color(.secondarySystemBackground))
-                        .rotationEffect(.degrees(-3))
-                        .shadow(color: .black.opacity(0.15), radius: 10, y: 6)
-
+        ScrollViewReader { proxy in
+            ScrollView {
+                
+                LazyVStack(spacing: 28) {
+                    
+                    // Header polaroid style
                     CountryHeaderCard(country: country)
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .fill(Color(.systemBackground))
+                                .fill(.ultraThinMaterial)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
+                                .stroke(Color.black.opacity(0.05), lineWidth: 1)
                         )
-                        .shadow(color: .black.opacity(0.12), radius: 8, y: 6)
-
-                }
-                .padding(.horizontal)
-
-                // Advisory card stack
-                scrapbookSection {
-                    CountryAdvisoryCard(
-                        country: country,
-                        weightPercentage: weightsStore.advisoryPercentage
-                    )
-                }
-
-                // Seasonality card stack
-                scrapbookSection {
-                    CountrySeasonalityCard(
-                        country: country,
-                        weightPercentage: 0
-                    )
-                }
-
-                // Visa card stack
-                scrapbookSection {
-                    CountryVisaCard(
-                        country: country,
-                        weightPercentage: weightsStore.visaPercentage
-                    )
-                }
-
-                // Affordability card stack
-                if country.affordabilityScore != nil {
+                        .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+                    
+                    // Advisory card stack
                     scrapbookSection {
-                        CountryAffordabilityCard(
+                        CountryAdvisoryCard(
                             country: country,
-                            weightPercentage: weightsStore.affordabilityPercentage
+                            weightPercentage: weightsStore.advisoryPercentage
                         )
                     }
+                    
+                    // Seasonality card stack
+                    scrapbookSection {
+                        CountrySeasonalityCard(
+                            country: country,
+                            weightPercentage: 0
+                        )
+                    }
+                    
+                    // Visa card stack
+                    scrapbookSection {
+                        CountryVisaCard(
+                            country: country,
+                            weightPercentage: weightsStore.visaPercentage
+                        )
+                    }
+                    
+                    // Affordability card stack
+                    if country.affordabilityScore != nil {
+                        scrapbookSection {
+                            CountryAffordabilityCard(
+                                country: country,
+                                weightPercentage: weightsStore.affordabilityPercentage
+                            )
+                        }
+                    }
                 }
+                .id("countryDetailTop")
+                .padding(.top, 24)
+                .padding(.horizontal)
+                .safeAreaPadding(.bottom)
             }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
-            .padding(.vertical, 24)
         }
-        .navigationTitle(country.name)
-        .navigationBarTitleDisplayMode(.inline)
+        .background(
+            ZStack {
+                Image("travel5")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+
+                LinearGradient(
+                    colors: [
+                        Color.black.opacity(0.08),
+                        Color.clear,
+                        Color.black.opacity(0.05)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+            }
+        )
     }
-}
-
-private func scrapbookSection<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-    ZStack {
-
-        RoundedRectangle(cornerRadius: 22, style: .continuous)
-            .fill(Color(.secondarySystemBackground))
-            .rotationEffect(.degrees(-2))
-            .shadow(color: .black.opacity(0.15), radius: 8, y: 6)
-
+    
+    private func scrapbookSection<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color(.systemBackground))
+                    .fill(.ultraThinMaterial)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color(.separator).opacity(0.6), lineWidth: 1)
+                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.12), radius: 8, y: 6)
-
+            .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
     }
-    .padding(.horizontal)
 }

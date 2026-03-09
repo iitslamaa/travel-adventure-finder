@@ -8,6 +8,7 @@ struct FriendsView: View {
     @State private var displayName: String = ""
     @State private var showFriendRequests: Bool = false
     @FocusState private var isSearchFocused: Bool
+    @State private var scrollAnchor: String? = nil
 
     init(userId: UUID) {
         self.userId = userId
@@ -139,82 +140,88 @@ struct FriendsView: View {
                 .padding(.top, 14)
                 .zIndex(1)
 
-                ScrollView {
-                    let data = friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        ? friendsVM.friends
-                        : friendsVM.searchResults
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        let data = friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            ? friendsVM.friends
+                            : friendsVM.searchResults
 
-                    LazyVStack(spacing: 16) {
-                        ForEach(data, id: \.id) { profile in
-                            NavigationLink(value: profile.id) {
-                                HStack(spacing: 14) {
-                                    if let urlString = profile.avatarUrl,
-                                       let url = URL(string: urlString) {
-                                        LazyImage(url: url) { state in
-                                            if let image = state.image {
-                                                image
-                                                    .resizable()
-                                                    .scaledToFill()
-                                            } else {
-                                                Image(systemName: "person.crop.circle.fill")
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .foregroundColor(.gray)
+                        LazyVStack(spacing: 16) {
+                            ForEach(data, id: \.id) { profile in
+                                NavigationLink(value: profile.id) {
+                                    HStack(spacing: 14) {
+                                        if let urlString = profile.avatarUrl,
+                                           let url = URL(string: urlString) {
+                                            LazyImage(url: url) { state in
+                                                if let image = state.image {
+                                                    image
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                } else {
+                                                    Image(systemName: "person.crop.circle.fill")
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .foregroundColor(.gray)
+                                                }
                                             }
-                                        }
-                                        .processors([
-                                            ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
-                                        ])
-                                        .priority(.high)
-                                        .frame(width: 44, height: 44)
-                                        .clipShape(Circle())
-                                    } else {
-                                        Image(systemName: "person.crop.circle.fill")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .foregroundColor(.gray)
+                                            .processors([
+                                                ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
+                                            ])
+                                            .priority(.high)
                                             .frame(width: 44, height: 44)
+                                            .clipShape(Circle())
+                                        } else {
+                                            Image(systemName: "person.crop.circle.fill")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .foregroundColor(.gray)
+                                                .frame(width: 44, height: 44)
+                                        }
+
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(profile.fullName)
+                                                .font(.headline)
+                                                .foregroundColor(.black)
+                                            Text("@\(profile.username)")
+                                                .font(.subheadline)
+                                                .foregroundColor(.black)
+                                        }
+
+                                        Spacer()
+
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(.black.opacity(0.35))
                                     }
+                                    .padding(16)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(
+                                        ZStack {
+                                            RoundedRectangle(cornerRadius: 18)
+                                                .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
+                                                .offset(x: 2, y: 3)
+                                                .rotationEffect(.degrees(-0.8))
 
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(profile.fullName)
-                                            .font(.headline)
-                                            .foregroundColor(.black)
-                                        Text("@\(profile.username)")
-                                            .font(.subheadline)
-                                            .foregroundColor(.black)
-                                    }
-
-                                    Spacer()
-
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.black.opacity(0.35))
+                                            RoundedRectangle(cornerRadius: 18)
+                                                .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
+                                        }
+                                    )
+                                    .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
+                                    .rotationEffect(.degrees((Double(profile.id.uuidString.hashValue % 3) - 1) * 0.35))
                                 }
-                                .padding(16)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: 18)
-                                            .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
-                                            .offset(x: 2, y: 3)
-                                            .rotationEffect(.degrees(-0.8))
-
-                                        RoundedRectangle(cornerRadius: 18)
-                                            .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
-                                    }
-                                )
-                                .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
-                                .rotationEffect(.degrees((Double(profile.id.uuidString.hashValue % 3) - 1) * 0.35))
                             }
                         }
+                        .id("friendsListTop")
+                        .padding(.top, 6)
                     }
-                    .padding(.top, 6)
-                }
-                .refreshable {
-                    await friendsVM.loadFriends(for: userId, forceRefresh: true)
-                    if SupabaseManager.shared.currentUserId == userId {
-                        await friendsVM.loadIncomingRequestCount()
+                    .refreshable {
+                        await friendsVM.loadFriends(for: userId, forceRefresh: true)
+                        if SupabaseManager.shared.currentUserId == userId {
+                            await friendsVM.loadIncomingRequestCount()
+                        }
+                    }
+                    .safeAreaInset(edge: .bottom) {
+                        Color.clear
                     }
                 }
             }

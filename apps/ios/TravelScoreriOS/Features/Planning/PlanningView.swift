@@ -26,43 +26,49 @@ struct PlanningView: View {
 // MARK: - Lists Root
 
 struct ListsView: View {
+    @State private var scrollAnchor: String? = nil
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                
-                Theme.titleBanner("Lists")
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 24) {
+                    
+                    Theme.titleBanner("Lists")
 
-                NavigationLink {
-                    BucketListView()
-                } label: {
-                    PlanningCard(
-                        title: "Bucket List",
-                        subtitle: "Places you want to visit",
-                        icon: "bookmark"
-                    )
+                    NavigationLink {
+                        BucketListView()
+                    } label: {
+                        PlanningCard(
+                            title: "Bucket List",
+                            subtitle: "Places you want to visit",
+                            icon: "bookmark"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        MyTravelsView()
+                    } label: {
+                        PlanningCard(
+                            title: "Visited Countries",
+                            subtitle: "Track places you've been",
+                            icon: "checkmark.circle"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer(minLength: 20)
                 }
-                .buttonStyle(.plain)
-
-                NavigationLink {
-                    MyTravelsView()
-                } label: {
-                    PlanningCard(
-                        title: "Visited Countries",
-                        subtitle: "Track places you've been",
-                        icon: "checkmark.circle"
-                    )
-                }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 20)
+                .id("planningListTop")
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal)
+                .padding(.top, 12)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal)
-            .padding(.top, 12)
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
+            .safeAreaPadding(.bottom)
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .scrollContentBackground(.hidden)
-        .background(Color.clear)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
