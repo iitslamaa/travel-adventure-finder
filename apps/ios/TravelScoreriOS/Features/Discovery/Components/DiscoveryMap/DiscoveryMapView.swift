@@ -23,11 +23,11 @@ struct DiscoveryMapView: View {
                     selectedCountryISO: $selectedCountryISO,
                     isLoading: $isLoadingMap
                 )
-                .ignoresSafeArea()
+                .ignoresSafeArea(edges: .top)
                 .allowsHitTesting(!isLoadingMap)
             } else {
                 Color(.systemBackground)
-                    .ignoresSafeArea()
+                    .ignoresSafeArea(edges: .top)
             }
             
             if isLoadingMap {
@@ -43,6 +43,10 @@ struct DiscoveryMapView: View {
                     country: country,
                     onDismiss: { selectedCountryISO = nil }
                 )
+                .padding(.horizontal, 16)
+                .padding(.bottom, 20)
+                .safeAreaPadding(.bottom)
+                .zIndex(2)
                 .transition(.move(edge: .bottom))
                 .animation(.easeInOut, value: selectedCountryISO)
             }
