@@ -10,6 +10,7 @@ import SwiftUI
 struct DiscoveryCountryListView: View {
 
     @EnvironmentObject private var profileVM: ProfileViewModel
+    @Environment(\.dismiss) private var dismiss
 
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
@@ -17,7 +18,6 @@ struct DiscoveryCountryListView: View {
     @State private var sortOrder: SortOrder = .ascending
     @State private var countries: [Country] = CountryAPI.loadCachedCountries() ?? []
     @State private var didRunInitialLoad = false
-    @State private var scrollAnchor: String? = nil
 
     @MainActor
     private func reloadCountries() async {
@@ -42,48 +42,63 @@ struct DiscoveryCountryListView: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            VStack(spacing: 12) {
+        VStack(spacing: 2) {
+            HStack(spacing: 12) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
+                        .background(
+                            Circle()
+                                .fill(Color.black.opacity(0.36))
+                        )
+                }
+                .buttonStyle(.plain)
+
                 DiscoveryControlsView(
                     sort: $sort,
                     sortOrder: $sortOrder
                 )
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-
-                CountryListView(
-                    showsSearchBar: true,
-                    searchText: $searchText,
-                    countries: countries,
-                    sort: $sort,
-                    sortOrder: $sortOrder
-                )
+                .frame(maxWidth: .infinity)
             }
-            .id("discoveryListTop")
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background(
-                Theme.pageBackground("travel1")
-                    .ignoresSafeArea()
+            .padding(.horizontal, 16)
+            .padding(.top, 4)
+
+            CountryListView(
+                showsSearchBar: true,
+                searchText: $searchText,
+                countries: countries,
+                sort: $sort,
+                sortOrder: $sortOrder
             )
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .refreshable {
-                await reloadCountries()
-            }
-            .task {
-                guard !didRunInitialLoad else { return }
-                didRunInitialLoad = true
+            .frame(maxHeight: .infinity, alignment: .top)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(
+            Theme.pageBackground("travel1")
+                .ignoresSafeArea()
+        )
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .refreshable {
+            await reloadCountries()
+        }
+        .task {
+            guard !didRunInitialLoad else { return }
+            didRunInitialLoad = true
 
-                await loadCountriesWithRetry()
-                await profileVM.loadIfNeeded()
+            await loadCountriesWithRetry()
+            await profileVM.loadIfNeeded()
 
-                if countries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
-                    countries = cached
-                }
+            if countries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
+                countries = cached
             }
-            .onDisappear {
-                isSearchFocused = false
-            }
+        }
+        .onDisappear {
+            isSearchFocused = false
         }
     }
 }

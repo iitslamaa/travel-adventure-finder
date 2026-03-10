@@ -7,6 +7,25 @@
 
 import SwiftUI
 
+private struct FloatingTabBarInsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+private struct FloatingTabBarInsetEnvironmentKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 0
+}
+
+extension EnvironmentValues {
+    var floatingTabBarInset: CGFloat {
+        get { self[FloatingTabBarInsetEnvironmentKey.self] }
+        set { self[FloatingTabBarInsetEnvironmentKey.self] = newValue }
+    }
+}
+
 struct RootTabView: View {
     private enum Tab: Hashable {
         case discovery
@@ -28,6 +47,7 @@ struct RootTabView: View {
     @State private var morePath = NavigationPath()
 
     @State private var selectedTab: Tab = .discovery
+    @State private var floatingTabBarInset: CGFloat = 0
 
 var body: some View {
     let _ = print("🧪 DEBUG: RootTabView body recomputed")
@@ -130,12 +150,25 @@ var body: some View {
     .overlay(alignment: .bottom) {
         GeometryReader { geo in
             customTabBar
+                .background {
+                    GeometryReader { tabGeo in
+                        Color.clear
+                            .preference(
+                                key: FloatingTabBarInsetPreferenceKey.self,
+                                value: geo.safeAreaInsets.bottom + 12
+                            )
+                    }
+                }
                 .padding(.horizontal, 16)
                 .padding(.bottom, geo.safeAreaInsets.bottom + 6)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
         .ignoresSafeArea()
     }
+    .onPreferenceChange(FloatingTabBarInsetPreferenceKey.self) { inset in
+        floatingTabBarInset = inset
+    }
+    .environment(\.floatingTabBarInset, floatingTabBarInset)
     .onAppear {
         print("🧪 DEBUG: RootTabView fully appeared")
     }

@@ -22,6 +22,7 @@ struct CountryListView: View {
 
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
     @EnvironmentObject private var profileVM: ProfileViewModel
+    @Environment(\.floatingTabBarInset) private var floatingTabBarInset
 
     @State private var visibleCountries: [Country] = []
     @State private var selectedCountry: Country?
@@ -120,58 +121,16 @@ struct CountryListView: View {
     }
 
     var body: some View {
-
         VStack(spacing: 0) {
-
             if showsSearchBar {
-                LocalFloatingSearchBar(
-                    text: $searchText,
-                    isFocused: $isSearchFocused
-                )
-                .padding(.horizontal, 12)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
+                searchBar
             }
 
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(visibleCountries, id: \.id) { country in
-                        SwipeableCountryRow(
-                            country: country,
-                            isBucketed: profileVM.viewedBucketListCountries.contains(country.id),
-                            isVisited: profileVM.viewedTraveledCountries.contains(country.id),
-                            showConfirm: quickConfirmByCountryId[country.id] != nil,
-                            onTap: {
-                                selectedCountry = country
-                            },
-                            onBucket: {
-                                Task {
-                                    await profileVM.toggleBucket(country.id)
-                                    flashConfirm(.bucket, for: country.id)
-                                }
-                            },
-                            onVisited: {
-                                Task {
-                                    await profileVM.toggleTraveled(country.id)
-                                    flashConfirm(.visited, for: country.id)
-                                }
-                            }
-                        )
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                    }
-                }
-                .padding(.bottom, 12)
-            }
-            .scrollIndicators(.hidden)
+            countryScroll
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.vertical, 8)
-        .background(
-            Image("country-list")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-        )
+        .background(backgroundView)
         .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
@@ -179,6 +138,7 @@ struct CountryListView: View {
         )
         .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
         .padding(.horizontal, 22)
+        .padding(.bottom, floatingTabBarInset)
         .frame(maxWidth: .infinity)
         .navigationDestination(item: $selectedCountry) { country in
             CountryDetailView(country: country)
@@ -189,6 +149,57 @@ struct CountryListView: View {
         .onChange(of: sortOrder) { _, _ in scheduleRecomputeVisible() }
         .onChange(of: countries) { _, _ in scheduleRecomputeVisible() }
         .onReceive(weightsStore.$weights) { _ in scheduleRecomputeVisible() }
+    }
+
+    private var searchBar: some View {
+        LocalFloatingSearchBar(
+            text: $searchText,
+            isFocused: $isSearchFocused
+        )
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+    }
+
+    private var countryScroll: some View {
+        List {
+            ForEach(visibleCountries, id: \.id) { country in
+                SwipeableCountryRow(
+                    country: country,
+                    isBucketed: profileVM.viewedBucketListCountries.contains(country.id),
+                    isVisited: profileVM.viewedTraveledCountries.contains(country.id),
+                    showConfirm: quickConfirmByCountryId[country.id] != nil,
+                    onTap: {
+                        selectedCountry = country
+                    },
+                    onBucket: {
+                        Task {
+                            await profileVM.toggleBucket(country.id)
+                            flashConfirm(.bucket, for: country.id)
+                        }
+                    },
+                    onVisited: {
+                        Task {
+                            await profileVM.toggleTraveled(country.id)
+                            flashConfirm(.visited, for: country.id)
+                        }
+                    }
+                )
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+                .listRowBackground(Color.clear)
+            }
+        }
+        .frame(maxHeight: .infinity)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
+    }
+
+    private var backgroundView: some View {
+        Image("country-list")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
     }
 }
 
@@ -204,7 +215,12 @@ private struct LocalFloatingSearchBar: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.black)
 
-            TextField("Search countries and territories", text: $text)
+            TextField(
+                "",
+                text: $text,
+                prompt: Text("Search countries or territories")
+                    .foregroundStyle(Color.black.opacity(0.28))
+            )
                 .focused(isFocused)
                 .textFieldStyle(.plain)
                 .submitLabel(.search)
@@ -237,7 +253,6 @@ private struct LocalFloatingSearchBar: View {
 }
 
 private struct SwipeableCountryRow: View {
-
     let country: Country
     let isBucketed: Bool
     let isVisited: Bool
@@ -246,145 +261,52 @@ private struct SwipeableCountryRow: View {
     let onBucket: () -> Void
     let onVisited: () -> Void
 
-    @State private var restingOffset: CGFloat = 0
-    @GestureState private var liveDragOffset: CGFloat = 0
-    @GestureState private var isHorizontalDragActive: Bool = false
-
-    private let actionWidth: CGFloat = 92
-
-    private var maxReveal: CGFloat {
-        actionWidth * 2
-    }
-
-    private var rowOffset: CGFloat {
-        let raw = restingOffset + (isHorizontalDragActive ? liveDragOffset : 0)
-        return min(0, max(-maxReveal, raw))
-    }
-
-    private var horizontalDragGesture: some Gesture {
-        DragGesture(minimumDistance: 16, coordinateSpace: .local)
-            .updating($isHorizontalDragActive) { value, state, _ in
-                let horizontal = value.translation.width
-                let vertical = value.translation.height
-
-                // require a very clear horizontal swipe before activating row drag
-                if abs(horizontal) > abs(vertical) * 2.0 && abs(horizontal) > 12 {
-                    state = true
-                }
-            }
-            .updating($liveDragOffset) { value, state, _ in
-                let horizontal = value.translation.width
-                let vertical = value.translation.height
-
-                guard abs(horizontal) > abs(vertical) * 2.0 && abs(horizontal) > 12 else { return }
-                state = horizontal
-            }
-            .onEnded { value in
-                let horizontal = value.translation.width
-                let vertical = value.translation.height
-
-                guard abs(horizontal) > abs(vertical) * 2.0 && abs(horizontal) > 12 else { return }
-
-                withAnimation(.spring(response: 0.18, dampingFraction: 0.88)) {
-                    if horizontal <= -50 {
-                        restingOffset = -maxReveal
-                    } else if horizontal >= 50 {
-                        restingOffset = 0
-                    } else {
-                        restingOffset = restingOffset == 0 ? 0 : -maxReveal
-                    }
-                }
-            }
-    }
-
     var body: some View {
-        ZStack(alignment: .trailing) {
-            HStack(spacing: 0) {
-                Spacer(minLength: 0)
+        HStack(spacing: 12) {
+            Text(country.flagEmoji)
+                .font(.system(size: 22))
+                .frame(width: 28, alignment: .leading)
 
-                Button {
-                    withAnimation(.spring(response: 0.18, dampingFraction: 0.88)) {
-                        restingOffset = 0
-                    }
-                    onVisited()
-                } label: {
-                    VStack(spacing: 6) {
-                        Image(systemName: isVisited ? "checkmark.circle.fill" : "checkmark.circle")
-                            .font(.system(size: 18, weight: .semibold))
-                        Text("Visited")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .frame(width: actionWidth)
-                    .frame(maxHeight: .infinity)
-                    .background(Color.green)
-                }
-                .buttonStyle(.plain)
+            Text(country.name)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.black)
+                .lineLimit(1)
+                .truncationMode(.tail)
 
-                Button {
-                    withAnimation(.spring(response: 0.18, dampingFraction: 0.88)) {
-                        restingOffset = 0
-                    }
-                    onBucket()
-                } label: {
-                    VStack(spacing: 6) {
-                        Image(systemName: isBucketed ? "star.fill" : "star")
-                            .font(.system(size: 18, weight: .semibold))
-                        Text("Bucket")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .foregroundStyle(.black)
-                    .frame(width: actionWidth)
-                    .frame(maxHeight: .infinity)
-                    .background(Color.yellow)
-                }
-                .buttonStyle(.plain)
+            Spacer(minLength: 12)
+
+            if showConfirm {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            } else if let score = country.score {
+                ScorePill(score: score)
             }
-            .frame(width: maxReveal, alignment: .trailing)
-            .offset(x: maxReveal + rowOffset)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-
-            HStack(spacing: 12) {
-                Text(country.flagEmoji)
-                    .font(.system(size: 22))
-                    .frame(width: 28, alignment: .leading)
-
-                Text(country.name)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.black)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                Spacer(minLength: 12)
-
-                if let score = country.score {
-                    ScorePill(score: score)
-                }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color.white.opacity(0.78))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.black.opacity(0.03), lineWidth: 1)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .onTapGesture {
+            onTap()
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(action: onVisited) {
+                Label("Visited", systemImage: isVisited ? "checkmark.circle.fill" : "checkmark.circle")
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(Color.white.opacity(0.78))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color.black.opacity(0.03), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(restingOffset != 0 ? 0.05 : 0), radius: 6, y: 2)
-            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .offset(x: rowOffset)
-            .onTapGesture {
-                if restingOffset == 0 {
-                    onTap()
-                } else {
-                    withAnimation(.spring(response: 0.18, dampingFraction: 0.88)) {
-                        restingOffset = 0
-                    }
-                }
+            .tint(.green)
+
+            Button(action: onBucket) {
+                Label("Bucket", systemImage: isBucketed ? "star.fill" : "star")
             }
-            .gesture(horizontalDragGesture)
+            .tint(.yellow)
         }
         .frame(maxWidth: .infinity)
         .frame(minHeight: 58)
