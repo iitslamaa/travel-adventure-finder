@@ -25,6 +25,6 @@ struct DiscoveryControlsView: View {
             .pickerStyle(.segmented)
             .frame(maxWidth: .infinity)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 2)
     }
 }
