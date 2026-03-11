@@ -5,7 +5,22 @@
 //  Created by Lama Yassine on 11/15/25.
 //
 
+import Combine
 import SwiftUI
+
+enum SocialRoute: Hashable {
+    case profile(UUID)
+    case friends(UUID)
+}
+
+@MainActor
+final class SocialNavigationController: ObservableObject {
+    @Published var path = NavigationPath()
+
+    func push(_ route: SocialRoute) {
+        path.append(route)
+    }
+}
 
 private struct FloatingTabBarInsetPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
@@ -39,11 +54,11 @@ struct RootTabView: View {
 
     @State private var countries: [Country] = []
     @State private var hasLoadedCountries = false
+    @StateObject private var friendsSocialNav = SocialNavigationController()
+    @StateObject private var profileSocialNav = SocialNavigationController()
 
     @State private var discoveryPath = NavigationPath()
     @State private var planningPath = NavigationPath()
-    @State private var friendsPath = NavigationPath()
-    @State private var profilePath = NavigationPath()
     @State private var morePath = NavigationPath()
 
     @State private var selectedTab: Tab = .discovery
@@ -72,70 +87,82 @@ var body: some View {
         .tag(Tab.planning)
 
         // Friends (auth required)
-        NavigationStack(path: $friendsPath) {
-            if sessionManager.isAuthenticated,
-               let userId = sessionManager.userId {
-                FriendsView(userId: userId)
-            } else {
-                VStack(spacing: 20) {
-                    Spacer()
+        NavigationStack(path: $friendsSocialNav.path) {
+            Group {
+                if sessionManager.isAuthenticated,
+                   let userId = sessionManager.userId {
+                    FriendsView(userId: userId)
+                        .environmentObject(friendsSocialNav)
+                } else {
+                    VStack(spacing: 20) {
+                        Spacer()
 
-                    Text("Create an account to add your friends!")
-                        .font(.headline)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
+                        Text("Create an account to add your friends!")
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
 
-                    Button {
-                        sessionManager.didContinueAsGuest = false
-                        sessionManager.bumpAuthScreen()
-                    } label: {
-                        Text("Create Account / Log In")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                        Button {
+                            sessionManager.didContinueAsGuest = false
+                            sessionManager.bumpAuthScreen()
+                        } label: {
+                            Text("Create Account / Log In")
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
+                        .padding(.horizontal, 40)
+
+                        Spacer()
                     }
-                    .padding(.horizontal, 40)
-
-                    Spacer()
                 }
+            }
+            .navigationDestination(for: SocialRoute.self) { route in
+                socialDestination(route, navigator: friendsSocialNav)
             }
         }
         .tag(Tab.friends)
 
         // Profile (auth required)
-        NavigationStack(path: $profilePath) {
-            if sessionManager.isAuthenticated,
-               let userId = sessionManager.userId {
-                ProfileView(userId: userId)
-                    .id(userId)
-            } else {
-                VStack(spacing: 20) {
-                    Spacer()
+        NavigationStack(path: $profileSocialNav.path) {
+            Group {
+                if sessionManager.isAuthenticated,
+                   let userId = sessionManager.userId {
+                    ProfileView(userId: userId)
+                        .id(userId)
+                        .environmentObject(profileSocialNav)
+                } else {
+                    VStack(spacing: 20) {
+                        Spacer()
 
-                    Text("Create an account to customize your profile!")
-                        .font(.headline)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
+                        Text("Create an account to customize your profile!")
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
 
-                    Button {
-                        sessionManager.didContinueAsGuest = false
-                        sessionManager.bumpAuthScreen()
-                    } label: {
-                        Text("Create Account / Log In")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                        Button {
+                            sessionManager.didContinueAsGuest = false
+                            sessionManager.bumpAuthScreen()
+                        } label: {
+                            Text("Create Account / Log In")
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
+                        .padding(.horizontal, 40)
+
+                        Spacer()
                     }
-                    .padding(.horizontal, 40)
-
-                    Spacer()
                 }
+            }
+            .navigationDestination(for: SocialRoute.self) { route in
+                socialDestination(route, navigator: profileSocialNav)
             }
         }
         .tag(Tab.profile)
@@ -196,8 +223,8 @@ var body: some View {
 
 private var customTabBar: some View {
     HStack(spacing: 10) {
-        tabButton(.discovery, title: "Discovery", systemImage: "globe.americas.fill")
-        tabButton(.planning, title: "Planning", systemImage: "list.bullet")
+        tabButton(.discovery, title: "Discover", systemImage: "globe.americas.fill")
+        tabButton(.planning, title: "Plan", systemImage: "list.bullet")
         tabButton(.friends, title: "Friends", systemImage: "person.2.fill")
         tabButton(.profile, title: "Profile", systemImage: "person.crop.circle")
         tabButton(.more, title: "More", systemImage: "ellipsis")
@@ -223,6 +250,18 @@ private var customTabBar: some View {
 }
 
 @ViewBuilder
+private func socialDestination(_ route: SocialRoute, navigator: SocialNavigationController) -> some View {
+    switch route {
+    case .profile(let userId):
+        ProfileView(userId: userId, showsBackButton: true)
+            .environmentObject(navigator)
+    case .friends(let userId):
+        FriendsListView(userId: userId)
+            .environmentObject(navigator)
+    }
+}
+
+@ViewBuilder
 private func tabButton(_ tab: Tab, title: String, systemImage: String) -> some View {
     let isSelected = selectedTab == tab
 
@@ -231,9 +270,9 @@ private func tabButton(_ tab: Tab, title: String, systemImage: String) -> some V
     } label: {
         VStack(spacing: 4) {
             Image(systemName: systemImage)
-                .font(.system(size: 22, weight: .semibold))
+                .font(TAFTypography.title(.bold))
             Text(title)
-                .font(.system(size: 12, weight: .semibold))
+                .font(TAFTypography.caption(.bold))
                 .lineLimit(1)
         }
         .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.72))
@@ -284,7 +323,7 @@ struct MoreView: View {
                         .buttonStyle(.plain)
                     }
                     .padding(.horizontal, 24)
-                    .padding(.top, 12)
+                    .padding(.top, 18)
                     .padding(.bottom, 120)
                 }
             }
@@ -300,33 +339,13 @@ private struct MoreCard: View {
     let icon: String
 
     var body: some View {
-        Theme.scrapbookSection {
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(Theme.accent.opacity(0.18))
-                        .frame(width: 44, height: 44)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Theme.accent)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(Theme.textPrimary)
-
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(Theme.textSecondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(Theme.textPrimary)
-            }
+        Theme.featureCard(
+            icon: icon,
+            title: title,
+            subtitle: subtitle
+        ) {
+            Image(systemName: "chevron.right")
+                .foregroundStyle(Theme.textPrimary)
         }
     }
 }

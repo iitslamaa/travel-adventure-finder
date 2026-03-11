@@ -146,8 +146,8 @@ struct ProfileSettingsView: View {
                     }
             }
         }
-        .navigationTitle("Profile Settings")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {
@@ -332,7 +332,10 @@ struct ProfileSettingsView: View {
             usernameError: usernameError,
             onRemoveAvatar: { markAvatarForRemoval() }
         )
-        .background(Color(.systemBackground))
+        .background(
+            Theme.pageBackground("travel4")
+                .ignoresSafeArea()
+        )
         .overlay(alignment: .top) {
             if showSaveSuccess {
                 HStack(spacing: 8) {
@@ -343,7 +346,7 @@ struct ProfileSettingsView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(.ultraThinMaterial)
+                .background(Color.white.opacity(0.96))
                 .clipShape(Capsule())
                 .shadow(radius: 8)
                 .padding(.top, 8)
@@ -419,6 +422,7 @@ struct SettingsScrollContent: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                Theme.titleBanner("Profile Settings")
 
                 SectionCard {
                     HStack(alignment: .top, spacing: 20) {
@@ -449,7 +453,11 @@ struct SettingsScrollContent: View {
                             .font(.system(size: 18, weight: .semibold))
                             .padding(.vertical, 10)
                             .padding(.horizontal, 12)
-                            .background(Color(.secondarySystemBackground))
+                            .background(Color.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                            )
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                             HStack(spacing: 6) {
@@ -471,7 +479,11 @@ struct SettingsScrollContent: View {
                             }
                             .padding(.vertical, 10)
                             .padding(.horizontal, 12)
-                            .background(Color(.secondarySystemBackground))
+                            .background(Color.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                            )
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                             if let usernameError {

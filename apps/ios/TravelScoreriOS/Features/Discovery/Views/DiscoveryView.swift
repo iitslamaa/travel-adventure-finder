@@ -122,8 +122,8 @@ struct DiscoveryView: View {
             VStack(spacing: 0) {
                 Theme.titleBanner("Explore")
                 ScrollView {
-                    VStack(spacing: Theme.spacingLarge) {
-                        VStack(spacing: Theme.spacingLarge) {
+                    VStack(spacing: 24) {
+                        VStack(spacing: 24) {
 
                             NavigationLink {
                                 DiscoveryCountryListView()
@@ -172,7 +172,7 @@ struct DiscoveryView: View {
 
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 12)
+                        .padding(.top, 18)
 
                         Spacer(minLength: 20)
                     }
@@ -181,19 +181,32 @@ struct DiscoveryView: View {
                     .padding(.horizontal, 24)
                 }
             }
+
+            VStack {
+                HStack {
+                    Button {
+                        showingWeights = true
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(TAFTypography.title(.bold))
+                            .foregroundStyle(.black)
+                            .frame(width: 36, height: 36)
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+                Spacer()
+            }
         }
         .background(Color.clear)
         .ignoresSafeArea(edges: .bottom)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    showingWeights = true
-                } label: {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 18, weight: .semibold))
-                }
-            }
-        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showingWeights) {
             NavigationStack {
                 CustomWeightsView(

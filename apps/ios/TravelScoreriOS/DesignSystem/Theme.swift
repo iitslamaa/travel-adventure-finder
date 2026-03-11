@@ -196,6 +196,46 @@ enum Theme {
         .padding(.horizontal)
     }
 
+    // MARK: - Button Image Card
+
+    static func buttonImageBackground(corner: CGFloat = 22) -> some View {
+        Image("button-image")
+            .resizable(
+                capInsets: EdgeInsets(top: 44, leading: 80, bottom: 44, trailing: 80),
+                resizingMode: .stretch
+            )
+            .scaledToFill()
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(.white.opacity(0.14), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            .shadow(color: .black.opacity(0.16), radius: 10, y: 6)
+    }
+
+    static func buttonImageCard<Content: View>(
+        height: CGFloat = 72,
+        horizontalPadding: CGFloat = 20,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        content()
+            .padding(.horizontal, horizontalPadding)
+            .frame(maxWidth: .infinity)
+            .frame(height: height, alignment: .center)
+            .background(buttonImageBackground())
+            .padding(.vertical, 8)
+    }
+
+    static func listCardBackground(corner: CGFloat = 28) -> some View {
+        RoundedRectangle(cornerRadius: corner, style: .continuous)
+            .fill(.white.opacity(0.76))
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(.white.opacity(0.34), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 18, y: 10)
+    }
+
     // MARK: - Scrapbook Collage Layout
 
     static func collage<Content1: View, Content2: View, Content3: View>(
@@ -230,39 +270,52 @@ enum Theme {
         icon: String,
         title: String,
         subtitle: String,
+        minHeight: CGFloat = 108,
         @ViewBuilder trailing: () -> Content
     ) -> some View {
+        HStack(spacing: 16) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(.white.opacity(0.58))
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(.white.opacity(0.42), lineWidth: 1)
+                    )
 
-        scrapbookSection {
-
-            HStack(spacing: 16) {
-
-                ZStack {
-                    Circle()
-                        .fill(accent.opacity(0.18))
-                        .frame(width: 44, height: 44)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(accent)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundColor(textPrimary)
-
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundColor(textSecondary)
-                }
-
-                Spacer()
-
-                trailing()
-
+                Image(systemName: icon)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(accent)
             }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.black)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                Text(subtitle)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.black.opacity(0.8))
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            trailing()
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.black.opacity(0.88))
+                .frame(width: 42, height: 42)
+                .background(
+                    Circle()
+                        .fill(.white.opacity(0.54))
+                )
         }
+        .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .center)
+        .background(listCardBackground())
+        .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
     }
 
     // MARK: - Title Banner (Page Headers)
@@ -274,15 +327,16 @@ enum Theme {
                 .scaledToFit()
 
             Text(title)
-                .font(.system(size: 34, weight: .bold))
-                .foregroundColor(textPrimary)
+                .font(TAFTypography.largeTitle())
+                .foregroundColor(.black)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
+        .frame(height: 110, alignment: .top)
         .padding(.horizontal, 24)
-        .padding(.top, spacingSmall - 8)
-        .padding(.bottom, spacingMedium + 6)
+        .padding(.top, 4)
+        .padding(.bottom, 0)
     }
 }
 
@@ -390,7 +444,7 @@ struct ThemeStyle {
         backgroundPrimary: Color(red: 0.96, green: 0.94, blue: 0.90),
         backgroundSecondary: Color(red: 0.92, green: 0.89, blue: 0.84),
         accent: Color(red: 0.78, green: 0.44, blue: 0.32),
-        textPrimary: Color(red: 0.22, green: 0.20, blue: 0.18),
-        textSecondary: Color(red: 0.36, green: 0.33, blue: 0.30)
+        textPrimary: .black,
+        textSecondary: Color.black.opacity(0.78)
     )
 }

@@ -63,8 +63,8 @@ struct ListsView: View {
                     }
                     .id("planningListTop")
                     .frame(maxWidth: .infinity)
-                    .padding(.horizontal)
-                    .padding(.top, 12)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 18)
                 }
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
@@ -84,45 +84,13 @@ struct PlanningCard: View {
     let icon: String
 
     var body: some View {
-        ZStack {
-
-            Theme.scrapbookBack()
-                .offset(x: -4, y: 4)
-
-            HStack(spacing: 16) {
-
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Theme.accent.opacity(0.18))
-                        .frame(width: 52, height: 52)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(Theme.accent)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundColor(.black)
-
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundColor(.black)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.black)
-            }
-            .padding(18)
-            .frame(height: 110)
-            .background(
-                Theme.cardBackground()
-            )
-            .rotationEffect(.degrees(1))
+        Theme.featureCard(
+            icon: icon,
+            title: title,
+            subtitle: subtitle
+        ) {
+            Image(systemName: "chevron.right")
+                .foregroundColor(.black)
         }
     }
 }
