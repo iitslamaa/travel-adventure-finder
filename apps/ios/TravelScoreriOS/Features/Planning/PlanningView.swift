@@ -31,7 +31,7 @@ struct ListsView: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            Theme.titleBanner("Lists")
+            Theme.titleBanner("Planning")
 
             ScrollViewReader { proxy in
                 ScrollView {

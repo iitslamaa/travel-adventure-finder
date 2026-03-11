@@ -67,10 +67,26 @@ private struct CountryRow: Decodable {
 @MainActor
 final class ProfileService {
 
+    private static var profileCache: [UUID: Profile] = [:]
+    private static var traveledCache: [UUID: Set<String>] = [:]
+    private static var bucketCache: [UUID: Set<String>] = [:]
+
     private let supabase: SupabaseManager
 
     init(supabase: SupabaseManager) {
         self.supabase = supabase
+    }
+
+    func cachedProfile(userId: UUID) -> Profile? {
+        Self.profileCache[userId]
+    }
+
+    func cachedTraveledCountries(userId: UUID) -> Set<String>? {
+        Self.traveledCache[userId]
+    }
+
+    func cachedBucketListCountries(userId: UUID) -> Set<String>? {
+        Self.bucketCache[userId]
     }
 
     // MARK: - Fetch
@@ -90,6 +106,8 @@ final class ProfileService {
                 userInfo: [NSLocalizedDescriptionKey: "Profile not found"]
             )
         }
+
+        Self.profileCache[userId] = profile
 
         return profile
     }
@@ -254,7 +272,9 @@ final class ProfileService {
             .limit(1000)
             .execute()
 
-        return Set(response.value.map { $0.countryId })
+        let traveled = Set(response.value.map { $0.countryId })
+        Self.traveledCache[userId] = traveled
+        return traveled
     }
 
     /// Bucket list countries for any viewed user
@@ -266,7 +286,9 @@ final class ProfileService {
             .limit(1000)
             .execute()
 
-        return Set(response.value.map { $0.countryId })
+        let bucket = Set(response.value.map { $0.countryId })
+        Self.bucketCache[userId] = bucket
+        return bucket
     }
 
     // MARK: - Bucket List Mutations

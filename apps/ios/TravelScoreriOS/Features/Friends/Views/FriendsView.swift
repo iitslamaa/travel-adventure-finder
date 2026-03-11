@@ -8,19 +8,20 @@ struct FriendsView: View {
     @State private var displayName: String = ""
     @State private var showFriendRequests: Bool = false
     @FocusState private var isSearchFocused: Bool
-    @State private var scrollAnchor: String? = nil
+    @Environment(\.floatingTabBarInset) private var floatingTabBarInset
 
     init(userId: UUID) {
         self.userId = userId
     }
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 0) {
 
             Theme.titleBanner("Friends")
+                .padding(.bottom, -20)
 
             contentView
-                .padding(.bottom, 104)
+                .padding(.bottom, 12)
         }
         .background(
             Theme.pageBackground("travel3")
@@ -111,6 +112,8 @@ struct FriendsView: View {
 
                     TextField("Search by username", text: $friendsVM.searchText)
                         .textFieldStyle(.plain)
+                        .foregroundStyle(.black)
+                        .tint(.black)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                         .submitLabel(.search)
@@ -138,7 +141,7 @@ struct FriendsView: View {
                 )
                 .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
                 .padding(.horizontal)
-                .padding(.top, 14)
+                .padding(.top, 6)
                 .zIndex(1)
 
                 ScrollViewReader { proxy in
@@ -214,7 +217,7 @@ struct FriendsView: View {
                         }
                         .id("friendsListTop")
                         .padding(.top, 6)
-                        .padding(.bottom, 20)
+                        .padding(.bottom, floatingTabBarInset + 20)
                     }
                     .refreshable {
                         await friendsVM.loadFriends(for: userId, forceRefresh: true)
@@ -225,11 +228,11 @@ struct FriendsView: View {
                 }
             }
             .padding(.horizontal, 14)
-            .padding(.top, 14)
+            .padding(.top, 4)
         }
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
         .padding(.horizontal)
-        .padding(.bottom, 12)
+        .padding(.bottom, floatingTabBarInset)
     }
 }

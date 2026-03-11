@@ -106,6 +106,7 @@ struct DiscoveryCountryListView: View {
 struct DiscoveryView: View {
 
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
+    @EnvironmentObject private var sessionManager: SessionManager
     @State private var showingWeights = false
 
     private var countries: [Country] {
@@ -195,7 +196,11 @@ struct DiscoveryView: View {
         }
         .sheet(isPresented: $showingWeights) {
             NavigationStack {
-                CustomWeightsView()
+                CustomWeightsView(
+                    userId: sessionManager.userId,
+                    initialWeights: weightsStore.weights
+                )
+                    .environmentObject(weightsStore)
             }
         }
         .onAppear {

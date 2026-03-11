@@ -252,23 +252,81 @@ private func tabButton(_ tab: Tab, title: String, systemImage: String) -> some V
 
 struct MoreView: View {
     var body: some View {
-        List {
-            NavigationLink("Lists") {
-                PlanningView()
-            }
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
 
-            NavigationLink("Send Feedback") {
-                FeedbackView()
-            }
+            VStack(spacing: 0) {
+                Theme.titleBanner("More")
 
-            NavigationLink("Legal") {
-                LegalView()
+                ScrollView {
+                    VStack(spacing: 24) {
+                        NavigationLink {
+                            FeedbackView()
+                        } label: {
+                            MoreCard(
+                                title: "Send Feedback",
+                                subtitle: "Tell us what feels off",
+                                icon: "bubble.left.and.bubble.right"
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        NavigationLink {
+                            LegalView()
+                        } label: {
+                            MoreCard(
+                                title: "Legal",
+                                subtitle: "Privacy, terms, and app policies",
+                                icon: "doc.text"
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 12)
+                    .padding(.bottom, 120)
+                }
             }
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .background(Color.clear)
-        .listRowBackground(Color.clear)
-        .navigationTitle("More")
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct MoreCard: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+
+    var body: some View {
+        Theme.scrapbookSection {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(Theme.accent.opacity(0.18))
+                        .frame(width: 44, height: 44)
+
+                    Image(systemName: icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Theme.accent)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(Theme.textPrimary)
+
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(Theme.textPrimary)
+            }
+        }
     }
 }

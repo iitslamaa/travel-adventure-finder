@@ -18,84 +18,95 @@ struct FeedbackView: View {
     @State private var errorMessage: String?
     
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
 
-                    VStack(spacing: 14) {
+            VStack(spacing: 0) {
+                Theme.titleBanner("Feedback")
 
-                        HStack(alignment: .center, spacing: 16) {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        Theme.scrapbookSection {
+                            HStack(alignment: .center, spacing: 16) {
+                                Image("lama_profile")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 92, height: 92)
+                                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                            .stroke(Color(.systemGray5), lineWidth: 1)
+                                    )
 
-                            Image("lama_profile")
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 92, height: 92)
-                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                        .stroke(Color(.systemGray5), lineWidth: 1)
-                                )
+                                Text("I’m Lama, the developer behind Travel Adventure Finder!")
+                                    .font(.title3.weight(.semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
 
-                            Text("I’m Lama, the developer behind Travel Adventure Finder!")
-                                .font(.title3.weight(.semibold))
-                                .fixedSize(horizontal: false, vertical: true)
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("I built TAF because I kept looking up the same travel statistics when deciding where to go, and I couldn’t believe a tool like this didn’t already exist.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+
+                                Text("I’m passionate about traveling and connecting with people, and I genuinely want TAF to be something travelers find useful.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+
+                                Text("I truly want to hear from you.")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+
+                                Text("I read every message personally and work daily to make TAF better. Thank you for being here and travel on!")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
                         }
 
-                        VStack(alignment: .leading, spacing: 10) {
+                        Theme.scrapbookSection {
+                            TextEditor(text: $message)
+                                .frame(minHeight: 170)
+                                .padding(12)
+                                .background(Color(red: 0.95, green: 0.92, blue: 0.86))
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-                            Text("I built TAF because I kept looking up the same travel statistics when deciding where to go, and I couldn’t believe a tool like this didn’t already exist.")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                            if let errorMessage {
+                                Text(errorMessage)
+                                    .foregroundColor(.red)
+                                    .font(.footnote)
+                            }
 
-                            Text("I’m passionate about traveling and connecting with people, and I genuinely want TAF to be something travelers find useful.")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-
-                            Text("I truly want to hear from you.")
-                                .font(.subheadline.weight(.semibold))
-
-                            Text("I read every message personally and work daily to make TAF better. Thank you for being here and travel on!")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                            Button {
+                                Task {
+                                    await submit()
+                                }
+                            } label: {
+                                Group {
+                                    if isSubmitting {
+                                        ProgressView()
+                                            .frame(maxWidth: .infinity)
+                                    } else {
+                                        Text(didSubmit ? "Sent ✓" : "Send Feedback")
+                                            .fontWeight(.semibold)
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                }
+                                .padding()
+                                .background(message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSubmitting ? Color.gray.opacity(0.3) : Theme.accent)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                            }
+                            .disabled(message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSubmitting)
                         }
                     }
-
-                    TextEditor(text: $message)
-                        .frame(minHeight: 150)
-                        .padding(12)
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(16)
-
-                    if let errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .font(.footnote)
-                    }
-
-                    Button {
-                        Task {
-                            await submit()
-                        }
-                    } label: {
-                        if isSubmitting {
-                            ProgressView()
-                        } else {
-                            Text(didSubmit ? "Sent ✓" : "Send Feedback")
-                                .fontWeight(.semibold)
-                        }
-                    }
-                    .disabled(message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSubmitting)
-                    .buttonStyle(.borderedProminent)
-
-                    Spacer(minLength: 40)
+                    .padding(.top, 12)
+                    .padding(.bottom, 120)
                 }
-                .frame(maxWidth: 600)
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
             }
-            .navigationTitle("Feedback")
-            .navigationBarTitleDisplayMode(.inline)
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private func submit() async {

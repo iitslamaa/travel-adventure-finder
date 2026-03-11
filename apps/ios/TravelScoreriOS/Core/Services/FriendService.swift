@@ -207,6 +207,30 @@ final class FriendService {
         return !response.value.isEmpty
     }
 
+    func fetchRelationshipState(currentUserId: UUID, otherUserId: UUID) async throws -> RelationshipState {
+        if currentUserId == otherUserId {
+            return .selfProfile
+        }
+
+        async let isFriendValue = isFriend(currentUserId: currentUserId, otherUserId: otherUserId)
+        async let hasIncomingValue = hasIncomingRequest(from: otherUserId, to: currentUserId)
+        async let hasSentValue = hasSentRequest(from: currentUserId, to: otherUserId)
+
+        if try await isFriendValue {
+            return .friends
+        }
+
+        if try await hasIncomingValue {
+            return .requestReceived
+        }
+
+        if try await hasSentValue {
+            return .requestSent
+        }
+
+        return .none
+    }
+
     func sendFriendRequest(from myUserId: UUID, to otherUserId: UUID) async throws {
         let requestId = UUID()
         let start = Date()
