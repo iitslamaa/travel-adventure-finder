@@ -34,7 +34,7 @@ struct ProfileSettingsAvatarSection: View {
                     if isUploadingAvatar {
                         ZStack {
                             Circle()
-                                .fill(.ultraThinMaterial)
+                                .fill(Color.white.opacity(0.94))
                             ProgressView()
                                 .progressViewStyle(.circular)
                         }
@@ -153,7 +153,7 @@ struct ProfileSettingsAvatarSection: View {
     private var cameraBadge: some View {
         ZStack {
             Circle()
-                .fill(Color(.systemBackground))
+                .fill(Color.white)
                 .frame(width: 34, height: 34)
                 .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
 

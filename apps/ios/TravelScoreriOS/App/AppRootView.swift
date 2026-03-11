@@ -88,6 +88,9 @@ struct AppRootView: View {
                 profileVMHolder.clear()
             }
         }
+        .font(TAFTypography.body())
+        .foregroundStyle(.black)
+        .tint(.black)
     }
 }
 

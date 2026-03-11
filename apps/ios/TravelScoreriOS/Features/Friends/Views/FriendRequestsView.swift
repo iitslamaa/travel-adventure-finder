@@ -13,24 +13,29 @@ struct FriendRequestsView: View {
     @StateObject private var vm = FriendRequestsViewModel()
 
 var body: some View {
-    Group {
+    VStack(spacing: 0) {
+                Theme.titleBanner("Friend Requests")
+
                 if vm.isLoading {
                     ProgressView("Loading requests…")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if vm.incomingRequests.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "person.crop.circle.badge.plus")
                             .font(.system(size: 48))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.black.opacity(0.7))
 
                         Text("No friend requests")
-                            .font(.headline)
+                            .font(TAFTypography.title(.bold))
+                            .foregroundStyle(.black)
 
                         Text("When someone sends you a friend request, it’ll show up here.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(TAFTypography.section())
+                            .foregroundStyle(.black.opacity(0.75))
                             .multilineTextAlignment(.center)
                     }
                     .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
                         ForEach(vm.incomingRequests) { profile in
@@ -128,7 +133,8 @@ var body: some View {
                     }
                 }
             }
-            .navigationTitle("Friend Requests")
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .task {
                 await vm.loadIncomingRequests()
             }

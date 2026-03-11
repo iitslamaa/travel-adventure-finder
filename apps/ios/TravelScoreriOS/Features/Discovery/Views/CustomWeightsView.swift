@@ -101,10 +101,6 @@ struct CustomWeightsView: View {
                                     value: binding(for: \.advisory)
                                 )
 
-                                Text("Your selected weights determine how Travelability Scores are calculated throughout the app. Rankings update after you save.")
-                                    .font(.footnote)
-                                    .foregroundStyle(Color.black.opacity(0.58))
-                                    .padding(.top, 4)
                             }
                         }
 
@@ -222,7 +218,7 @@ struct CustomWeightsView: View {
                 .font(.system(size: 32, weight: .bold))
                 .foregroundStyle(.black)
 
-            Text("Tune what matters most and save once. Sliders stay local while you edit so the experience stays smooth.")
+            Text("Your selected weights determine how Travelability Scores are calculated throughout the app. Rankings update after you save.")
                 .font(.subheadline)
                 .foregroundStyle(Color.black.opacity(0.58))
                 .fixedSize(horizontal: false, vertical: true)

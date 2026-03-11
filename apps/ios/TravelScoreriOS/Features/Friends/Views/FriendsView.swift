@@ -3,6 +3,7 @@ import NukeUI
 import Nuke
 
 struct FriendsView: View {
+    @EnvironmentObject private var socialNav: SocialNavigationController
     private let userId: UUID
     @StateObject private var friendsVM = FriendsViewModel()
     @State private var displayName: String = ""
@@ -15,13 +16,48 @@ struct FriendsView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            VStack(spacing: 0) {
+                Theme.titleBanner("Friends")
 
-            Theme.titleBanner("Friends")
-                .padding(.bottom, -20)
+                contentView
+                    .padding(.top, 12)
+                    .padding(.bottom, 12)
+            }
 
-            contentView
-                .padding(.bottom, 12)
+            VStack {
+                HStack {
+                    Spacer()
+
+                    if SupabaseManager.shared.currentUserId == userId {
+                        Button {
+                            showFriendRequests = true
+                        } label: {
+                            ZStack {
+                                Image(systemName: "person.crop.circle.badge.plus")
+                                    .font(TAFTypography.title(.bold))
+                                    .foregroundStyle(.black)
+
+                                if friendsVM.incomingRequestCount > 0 {
+                                    Text("\(min(friendsVM.incomingRequestCount, 9))")
+                                        .font(TAFTypography.caption(.bold))
+                                        .foregroundStyle(.white)
+                                        .frame(width: 18, height: 18)
+                                        .background(Circle().fill(.red))
+                                        .offset(x: 10, y: -10)
+                                }
+                            }
+                            .frame(width: 40, height: 40)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+                Spacer()
+            }
         }
         .background(
             Theme.pageBackground("travel3")
@@ -29,36 +65,7 @@ struct FriendsView: View {
         )
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                if SupabaseManager.shared.currentUserId == userId {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            showFriendRequests = true
-                        } label: {
-                            ZStack {
-                                Circle()
-                                    .fill(Color(.systemGray5))
-                                    .frame(width: 36, height: 36)
-
-                                Image(systemName: "person.crop.circle.badge.plus")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(Color.brown)
-
-                                if friendsVM.incomingRequestCount > 0 {
-                                    Text("\(min(friendsVM.incomingRequestCount, 9))")
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundStyle(.white)
-                                        .frame(width: 16, height: 16)
-                                        .background(Circle().fill(.red))
-                                        .offset(x: 10, y: -10)
-                                }
-                            }
-                            .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showFriendRequests) {
                 NavigationStack {
                     FriendRequestsView()
@@ -71,10 +78,6 @@ struct FriendsView: View {
                 Button("OK") { friendsVM.errorMessage = nil }
             } message: {
                 Text(friendsVM.errorMessage ?? "")
-            }
-            // ✅ CRITICAL: destination attached at same level as the List/NavigationLink
-            .navigationDestination(for: UUID.self) { destinationUserId in
-                ProfileView(userId: destinationUserId)
             }
             .task(id: userId) {
                 await friendsVM.loadFriends(for: userId, forceRefresh: false)
@@ -91,68 +94,68 @@ struct FriendsView: View {
     }
 
     private var contentView: some View {
-        ZStack {
-            ZStack {
-                Image("friends-scroll")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+        VStack(spacing: 14) {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.black)
 
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.white.opacity(0.18), Color.clear]),
-                    startPoint: .top,
-                    endPoint: .center
-                )
-            }
-            .allowsHitTesting(false)
+                TextField("Search by username", text: $friendsVM.searchText)
+                    .textFieldStyle(.plain)
+                    .foregroundStyle(.black)
+                    .tint(.black)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .submitLabel(.search)
+                    .focused($isSearchFocused)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 34)
 
-            VStack(spacing: 14) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.black)
-
-                    TextField("Search by username", text: $friendsVM.searchText)
-                        .textFieldStyle(.plain)
-                        .foregroundStyle(.black)
-                        .tint(.black)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .submitLabel(.search)
-                        .focused($isSearchFocused)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 34)
-
-                    if !friendsVM.searchText.isEmpty {
-                        Button {
-                            friendsVM.searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.black)
-                        }
+                if !friendsVM.searchText.isEmpty {
+                    Button {
+                        friendsVM.searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.black)
                     }
                 }
-                .padding(8)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color(red: 0.94, green: 0.92, blue: 0.86))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.black.opacity(0.05), lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
-                .padding(.horizontal)
-                .padding(.top, 6)
-                .zIndex(1)
+            }
+            .padding(8)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(red: 0.94, green: 0.92, blue: 0.86))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+            .padding(.horizontal, 16)
 
-                ScrollViewReader { proxy in
+            ScrollViewReader { proxy in
+                ZStack {
+                    ZStack {
+                        Image("friends-scroll")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.white.opacity(0.16), Color.clear]),
+                            startPoint: .top,
+                            endPoint: .center
+                        )
+                    }
+                    .allowsHitTesting(false)
+
                     ScrollView {
                         let data = friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             ? friendsVM.friends
                             : friendsVM.searchResults
 
-                        LazyVStack(spacing: 16) {
+                        LazyVStack(spacing: 18) {
                             ForEach(data, id: \.id) { profile in
-                                NavigationLink(value: profile.id) {
+                                Button {
+                                    socialNav.push(.profile(profile.id))
+                                } label: {
                                     HStack(spacing: 14) {
                                         if let urlString = profile.avatarUrl,
                                            let url = URL(string: urlString) {
@@ -200,23 +203,17 @@ struct FriendsView: View {
                                     .padding(16)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .background(
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 18)
-                                                .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
-                                                .offset(x: 2, y: 3)
-                                                .rotationEffect(.degrees(-0.8))
-
-                                            RoundedRectangle(cornerRadius: 18)
-                                                .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
-                                        }
+                                        RoundedRectangle(cornerRadius: 18)
+                                            .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
                                     )
                                     .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
-                                    .rotationEffect(.degrees((Double(profile.id.uuidString.hashValue % 3) - 1) * 0.35))
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
                         .id("friendsListTop")
-                        .padding(.top, 6)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 10)
                         .padding(.bottom, floatingTabBarInset + 20)
                     }
                     .refreshable {
@@ -226,13 +223,11 @@ struct FriendsView: View {
                         }
                     }
                 }
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal, 14)
-            .padding(.top, 4)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
-        .padding(.horizontal)
         .padding(.bottom, floatingTabBarInset)
     }
 }
