@@ -23,11 +23,11 @@ struct DiscoveryMapView: View {
                     selectedCountryISO: $selectedCountryISO,
                     isLoading: $isLoadingMap
                 )
-                .ignoresSafeArea(edges: .top)
+                .ignoresSafeArea()
                 .allowsHitTesting(!isLoadingMap)
             } else {
                 Color(.systemBackground)
-                    .ignoresSafeArea(edges: .top)
+                    .ignoresSafeArea()
             }
             
             if isLoadingMap {

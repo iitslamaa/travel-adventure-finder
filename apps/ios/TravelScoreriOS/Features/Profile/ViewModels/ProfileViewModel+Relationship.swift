@@ -14,7 +14,6 @@ extension ProfileViewModel {
     // MARK: - Relationship refresh
     
     func refreshRelationshipState() async throws {
-        
         isRelationshipLoading = true
         defer {
             isRelationshipLoading = false
@@ -30,52 +29,14 @@ extension ProfileViewModel {
             print("❌ refreshRelationshipState abort — currentUserId nil")
             return
         }
-        
-        // Viewing own profile
-        if currentUserId == userId {
-            
-            relationshipState = .selfProfile
-            // logPublishedState("set selfProfile")
-            isFriend = false
-            return
-        }
 
-        // Friends?
-        if try await friendService.isFriend(
+        let resolvedState = try await friendService.fetchRelationshipState(
             currentUserId: currentUserId,
             otherUserId: userId
-        ) {
-            
-            relationshipState = .friends
-            isFriend = true
-            return
-        }
-        
-        // Incoming request?
-        if try await friendService.hasIncomingRequest(
-            from: userId,
-            to: currentUserId
-        ) {
-            
-            relationshipState = .requestReceived
-            isFriend = false
-            return
-        }
-        
-        // Request already sent?
-        if try await friendService.hasSentRequest(from: currentUserId, to: userId) {
-            
-            relationshipState = .requestSent
-            // logPublishedState("set requestSent")
-            isFriend = false
-            return
-        }
-        
-        
-        // No relationship
-        relationshipState = .none
-        // logPublishedState("set none")
-        isFriend = false
+        )
+
+        relationshipState = resolvedState
+        isFriend = resolvedState == .friends
     }
     
     // MARK: - Friend actions

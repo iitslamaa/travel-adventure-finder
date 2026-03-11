@@ -12,7 +12,11 @@ import Combine
 @MainActor
 final class WhenToGoViewModel: ObservableObject {
 
-    @Published var selectedMonthIndex: Int = 1 {
+    static var currentMonth: Int {
+        Calendar.current.component(.month, from: Date())
+    }
+
+    @Published var selectedMonthIndex: Int = WhenToGoViewModel.currentMonth {
         didSet {
             recalculateForSelectedMonth()
         }

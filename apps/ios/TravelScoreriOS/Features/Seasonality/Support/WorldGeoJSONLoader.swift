@@ -13,8 +13,8 @@ class CountryPolygon: MKMultiPolygon {
 
 struct WorldGeoJSONLoader {
 
-    // Full-detail cache
-    private static var cachedPolygons: [CountryPolygon]?
+    private static var cachedSimplifiedPolygons: [CountryPolygon]?
+    private static var cachedFullPolygons: [CountryPolygon]?
 
     // RN parity: ISO3 -> ISO2 map (optional file: iso3_to_iso2.json)
     private static var iso3ToIso2: [String: String] = {
@@ -41,13 +41,32 @@ struct WorldGeoJSONLoader {
     }
 
     static func loadPolygons(selectedIso: String? = nil) -> [CountryPolygon] {
+        let isFullDatasetRequested = selectedIso != nil
 
-        // Always use FULL dataset (no simplified switching)
-        if let cached = cachedPolygons {
-            return cached
+        if isFullDatasetRequested, let cachedFullPolygons {
+            return cachedFullPolygons
         }
 
-        let fileName = "travelaf.world.full"
+        if !isFullDatasetRequested, let cachedSimplifiedPolygons {
+            return cachedSimplifiedPolygons
+        }
+
+        let fileName = isFullDatasetRequested
+            ? "travelaf.world.full"
+            : "travelaf.world.simplified"
+
+        let polygons = decodePolygons(fileName: fileName)
+
+        if isFullDatasetRequested {
+            cachedFullPolygons = polygons
+        } else {
+            cachedSimplifiedPolygons = polygons
+        }
+
+        return polygons
+    }
+
+    private static func decodePolygons(fileName: String) -> [CountryPolygon] {
 
         guard let url = Bundle.main.url(forResource: fileName, withExtension: "geo.json"),
               let data = try? Data(contentsOf: url) else {
@@ -154,8 +173,6 @@ struct WorldGeoJSONLoader {
 
             finalPolygons.append(countryPolygon)
         }
-
-        cachedPolygons = finalPolygons
 
         return finalPolygons
     }

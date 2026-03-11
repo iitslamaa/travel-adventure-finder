@@ -10,54 +10,53 @@ import SwiftUI
 
 struct LegalView: View {
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
 
-                Text("Legal & Disclaimers")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+            VStack(spacing: 0) {
+                Theme.titleBanner("Legal")
 
-                Group {
-                    Text("General Information")
-                        .font(.headline)
+                ScrollView {
+                    VStack(spacing: 20) {
+                        legalSection(
+                            title: "General Information",
+                            body: "Travel Adventure Finder provides informational travel insights only. All scores, advisories, and recommendations are intended for general guidance and educational purposes. Seasonality insights are based on historical climate averages and typical travel patterns."
+                        )
 
-                    Text("""
-                    Travel Adventure Finder provides informational travel insights only. All scores, advisories, and recommendations are intended for general guidance and educational purposes. Seasonality insights are based on historical climate averages and typical travel patterns.
-                    """)
+                        legalSection(
+                            title: "Advisories & Safety Scores",
+                            body: "Safety advisories and scores are derived from publicly available sources and third-party data. Conditions may change rapidly, and Travel Adventure Finder does not guarantee accuracy, completeness, or timeliness."
+                        )
+
+                        legalSection(
+                            title: "No Professional Advice",
+                            body: "Travel Adventure Finder does not provide legal, medical, or governmental advice. Users should verify information with official sources before making travel decisions."
+                        )
+
+                        legalSection(
+                            title: "Limitation of Liability",
+                            body: "Travel Adventure Finder is not responsible for decisions made based on information presented in the app. Use of this app is at your own discretion."
+                        )
+                    }
+                    .padding(.top, 12)
+                    .padding(.bottom, 120)
                 }
-
-                Group {
-                    Text("Advisories & Safety Scores")
-                        .font(.headline)
-
-                    Text("""
-                    Safety advisories and scores are derived from publicly available sources and third-party data. Conditions may change rapidly, and Travel Adventure Finder does not guarantee accuracy, completeness, or timeliness.
-                    """)
-                }
-
-                Group {
-                    Text("No Professional Advice")
-                        .font(.headline)
-
-                    Text("""
-                    Travel Adventure Finder does not provide legal, medical, or governmental advice. Users should verify information with official sources before making travel decisions.
-                    """)
-                }
-
-                Group {
-                    Text("Limitation of Liability")
-                        .font(.headline)
-
-                    Text("""
-                    Travel Adventure Finder is not responsible for decisions made based on information presented in the app. Use of this app is at your own discretion.
-                    """)
-                }
-
-                Spacer(minLength: 24)
             }
-            .padding()
         }
-        .navigationTitle("Legal")
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func legalSection(title: String, body: String) -> some View {
+        Theme.scrapbookSection {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(Theme.textPrimary)
+
+            Text(body)
+                .font(.subheadline)
+                .foregroundStyle(Theme.textSecondary)
+        }
     }
 }

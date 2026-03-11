@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Supabase
+import Auth
 
 extension ProfileViewModel {
 
@@ -13,6 +15,7 @@ extension ProfileViewModel {
 
     func load(generation: UUID) async {
         let startingUserId = userId
+        let isOwnProfile = startingUserId == supabase.currentUserId
 
         // Only show full-screen loading during initial load,
         // NOT during pull-to-refresh.
@@ -27,132 +30,42 @@ extension ProfileViewModel {
         errorMessage = nil
 
         do {
-            let fetchedProfile =
-                try await profileService.fetchOrCreateProfile(userId: startingUserId)
+            async let fetchedProfileTask: Profile = isOwnProfile
+                ? profileService.fetchOrCreateProfile(userId: startingUserId)
+                : profileService.fetchMyProfile(userId: startingUserId)
+            async let traveledTask = profileService.fetchTraveledCountries(userId: startingUserId)
+            async let bucketTask = profileService.fetchBucketListCountries(userId: startingUserId)
+            async let relationshipTask = resolvedRelationshipState(for: startingUserId)
+
+            let fetchedProfile = try await fetchedProfileTask
+            let traveled = try await traveledTask
+            let bucket = try await bucketTask
+            let resolvedRelationship = try await relationshipTask
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                
                 return
             }
+
             profile = fetchedProfile
-
-            let fetchedFriends =
-                try await friendService.fetchFriends(for: startingUserId)
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                
-                return
-            }
-
-            friends = fetchedFriends
-
-            let traveled =
-                try await profileService.fetchTraveledCountries(userId: startingUserId)
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                
-                return
-            }
-
             viewedTraveledCountries = traveled
-
-            let bucket =
-                try await profileService.fetchBucketListCountries(userId: startingUserId)
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                
-                return
-            }
-
             viewedBucketListCountries = bucket
-
-            // Reset mutuals before computing
+            relationshipState = resolvedRelationship
+            isFriend = resolvedRelationship == .friends
             mutualLanguages = []
             mutualBucketCountries = []
             mutualTraveledCountries = []
-
             computeOrderedLists()
-
-            // If viewing a friend, compute mutual country intersections
-            if startingUserId != supabase.currentUserId {
-                if let currentUserId = supabase.currentUserId {
-                    let myTraveled =
-                        try await profileService.fetchTraveledCountries(userId: currentUserId)
-
-                    let myBucket =
-                        try await profileService.fetchBucketListCountries(userId: currentUserId)
-
-                    let normalizedMyTraveled = Set(
-                        myTraveled.map {
-                            $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                        }
-                    )
-
-                    let normalizedMyBucket = Set(
-                        myBucket.map {
-                            $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                        }
-                    )
-
-                    let normalizedViewedTraveled = Set(
-                        viewedTraveledCountries.map {
-                            $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                        }
-                    )
-
-                    let normalizedViewedBucket = Set(
-                        viewedBucketListCountries.map {
-                            $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                        }
-                    )
-
-                    mutualTraveledCountries =
-                        Array(normalizedMyTraveled.intersection(normalizedViewedTraveled))
-
-                    mutualBucketCountries =
-                        Array(normalizedMyBucket.intersection(normalizedViewedBucket))
-
-                    // Compute mutual languages (canonical codes)
-                    if let viewedLanguages = profile?.languages {
-                        if let myProfile = try? await profileService.fetchOrCreateProfile(userId: currentUserId) {
-                            let myLanguageCodes = Set(myProfile.languages.map { $0.code.uppercased() })
-                            let viewedLanguageCodes = Set(viewedLanguages.map { $0.code.uppercased() })
-
-                            mutualLanguages = Array(myLanguageCodes.intersection(viewedLanguageCodes))
-                        }
-                    }
-                }
-            }
+            hasLoadedCoreData = true
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                
                 return
             }
 
-            isRelationshipLoading = true
-            try await refreshRelationshipState()
-            isRelationshipLoading = false
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                
-                return
+            Task { [weak self] in
+                await self?.loadSecondaryData(generation: generation)
             }
-
-            await loadPendingRequestCount()
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                
-                return
-            }
-
-            await loadMutualFriends()
 
         } catch {
             print("❌ load() failed:", error)
@@ -167,5 +80,18 @@ extension ProfileViewModel {
         loadTask = Task { [weak self] in
             await self?.load(generation: generation)
         }
+    }
+
+    private func resolvedRelationshipState(for viewedUserId: UUID) async throws -> RelationshipState {
+        _ = try? await supabase.client.auth.session
+
+        guard let currentUserId = supabase.currentUserId else {
+            return .none
+        }
+
+        return try await friendService.fetchRelationshipState(
+            currentUserId: currentUserId,
+            otherUserId: viewedUserId
+        )
     }
 }

@@ -79,11 +79,15 @@ struct CountryDetailView: View {
                     .scaledToFill()
                     .ignoresSafeArea()
 
+                Color(red: 0.97, green: 0.95, blue: 0.90)
+                    .opacity(0.22)
+                    .ignoresSafeArea()
+
                 LinearGradient(
                     colors: [
-                        Color.black.opacity(0.08),
-                        Color.clear,
-                        Color.black.opacity(0.05)
+                        Color.white.opacity(0.18),
+                        Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.08),
+                        Color.black.opacity(0.03)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -98,7 +102,7 @@ struct CountryDetailView: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.82))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)

@@ -7,9 +7,11 @@ import SwiftUI
 
 struct MyTravelsView: View {
     @EnvironmentObject private var sessionManager: SessionManager
+    @Environment(\.floatingTabBarInset) private var floatingTabBarInset
     @State private var countries: [Country] = []
     @State private var traveledCountryIds: Set<String> = []
     @State private var isLoading: Bool = true
+    @State private var hasLoadedOnce: Bool = false
 
     private var visitedCountries: [Country] {
         countries
@@ -18,7 +20,10 @@ struct MyTravelsView: View {
     }
 
     var body: some View {
-        Group {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
+
             if isLoading {
                 VStack(spacing: 12) {
                     ProgressView()
@@ -33,69 +38,90 @@ struct MyTravelsView: View {
                     systemImage: "backpack",
                     description: Text("Swipe left on a country and tap 📝 Visited to track places you’ve already been.")
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(visitedCountries) { country in
-                    NavigationLink(value: country) {
-                        HStack(spacing: 12) {
-                            Text(country.flagEmoji)
-                                .font(.largeTitle)
+                List {
+                    ForEach(visitedCountries) { country in
+                        NavigationLink {
+                            CountryDetailView(country: country)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Text(country.flagEmoji)
+                                    .font(.largeTitle)
 
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(country.name)
-                                    .font(.headline)
-                                    .foregroundColor(.black)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(country.name)
+                                        .font(.headline)
+                                        .foregroundColor(Theme.textPrimary)
+                                }
+
+                                Spacer()
+
+                                if let score = country.score {
+                                    ScorePill(score: score)
+                                } else {
+                                    Text("—")
+                                        .font(.caption.bold())
+                                        .foregroundColor(Theme.textPrimary)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(
+                                            Capsule()
+                                                .fill(Color.gray.opacity(0.15))
+                                        )
+                                        .overlay(
+                                            Capsule()
+                                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                        )
+                                }
                             }
-
-                            Spacer()
-
-                            if let score = country.score {
-                                ScorePill(score: score)
-                            } else {
-                                Text("—")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.black)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(
-                                        Capsule()
-                                            .fill(Color.gray.opacity(0.15))
-                                    )
-                                    .overlay(
-                                        Capsule()
-                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                    )
-                            }
+                            .padding(16)
+                            .background(Theme.cardBackground())
                         }
-                        .padding(.vertical, 6)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .padding(.bottom, floatingTabBarInset)
             }
         }
         .navigationTitle("🎒 My Travels")
-        .navigationDestination(for: Country.self) { country in
-            CountryDetailView(country: country)
-        }
         .task {
+            await loadVisitedListIfNeeded()
+        }
+    }
+
+    @MainActor
+    private func loadVisitedListIfNeeded() async {
+        let shouldShowBlockingLoad = !hasLoadedOnce && countries.isEmpty && traveledCountryIds.isEmpty
+
+        if shouldShowBlockingLoad {
             isLoading = true
-            // 1) Show cached data immediately (fast/offline)
-            if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
-                countries = cached
-            }
+        }
 
-            // 2) Try to refresh from API
-            if let fresh = await CountryAPI.refreshCountriesIfNeeded(minInterval: 60), !fresh.isEmpty {
-                countries = fresh
-            }
-
-            // Fetch traveled countries for current user (identity-scoped)
-            if let userId = sessionManager.userId {
-                let service = ProfileService(supabase: SupabaseManager.shared)
-                if let traveled = try? await service.fetchTraveledCountries(userId: userId) {
-                    traveledCountryIds = traveled
-                }
-            }
+        defer {
             isLoading = false
+            hasLoadedOnce = true
+        }
+
+        if countries.isEmpty,
+           let cached = CountryAPI.loadCachedCountries(),
+           !cached.isEmpty {
+            countries = cached
+        }
+
+        if let fresh = await CountryAPI.refreshCountriesIfNeeded(minInterval: 60), !fresh.isEmpty {
+            countries = fresh
+        }
+
+        if let userId = sessionManager.userId {
+            let service = ProfileService(supabase: SupabaseManager.shared)
+            if let traveled = try? await service.fetchTraveledCountries(userId: userId) {
+                traveledCountryIds = traveled
+            }
         }
     }
 }
