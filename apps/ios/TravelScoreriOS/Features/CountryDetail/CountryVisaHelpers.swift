@@ -16,7 +16,7 @@ enum CountryVisaHelpers {
 
         switch type {
         case "freedom_of_movement":
-            return "Freedom of movement with US passport"
+            return "Freedom of movement with US passport ✅"
         case "visa_free":
             return "Visa-free for US passport ✅"
         case "voa":

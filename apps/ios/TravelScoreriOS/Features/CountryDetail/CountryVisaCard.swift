@@ -12,6 +12,21 @@ struct CountryVisaCard: View {
     let country: Country
     let weightPercentage: Int
 
+    private func formattedVisaType(_ type: String) -> String {
+        switch type {
+        case "freedom_of_movement":
+            return "Freedom of movement"
+        case "visa_free":
+            return "Visa free"
+        case "visa_required":
+            return "Visa required"
+        case "entry_permit":
+            return "Entry permit"
+        default:
+            return type.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+    }
+
     var body: some View {
         if country.visaEaseScore != nil || country.visaType != nil {
             VStack(alignment: .leading, spacing: 12) {
@@ -71,7 +86,7 @@ struct CountryVisaCard: View {
                 // Details rows
                 VStack(alignment: .leading, spacing: 4) {
                     if let type = country.visaType {
-                        Text("Type: \(type.replacingOccurrences(of: "_", with: " ").capitalized)")
+                        Text("Type: \(formattedVisaType(type))")
                     }
 
                     if let days = country.visaAllowedDays {

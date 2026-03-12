@@ -49,4 +49,11 @@ enum CountrySeasonalityHelpers {
         guard (1...12).contains(month) else { return "Month" }
         return names[month - 1]
     }
+
+    static func fullMonthName(for month: Int) -> String {
+        let names = ["January", "February", "March", "April", "May", "June",
+                     "July", "August", "September", "October", "November", "December"]
+        guard (1...12).contains(month) else { return "this month" }
+        return names[month - 1]
+    }
 }
