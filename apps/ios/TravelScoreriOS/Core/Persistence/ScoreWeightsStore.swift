@@ -9,25 +9,46 @@ import Foundation
 import Combine
 
 final class ScoreWeightsStore: ObservableObject {
-    
+
+    private struct StoredPreferences: Codable {
+        let weights: ScoreWeights
+        let selectedMonth: Int
+    }
+
     @Published var weights: ScoreWeights {
         didSet {
             save()
         }
     }
-    
-    private let key = "score_weights"
+
+    @Published var selectedMonth: Int {
+        didSet {
+            let clamped = Self.clampMonth(selectedMonth)
+            if clamped != selectedMonth {
+                selectedMonth = clamped
+                return
+            }
+            save()
+        }
+    }
+
+    private let key = "score_preferences"
+    private let legacyWeightsKey = "score_weights"
     
     init() {
+        let currentMonth = Self.clampMonth(Calendar.current.component(.month, from: Date()))
+
         if let data = UserDefaults.standard.data(forKey: key),
-           let decoded = try? JSONDecoder().decode(ScoreWeights.self, from: data) {
+           let decoded = try? JSONDecoder().decode(StoredPreferences.self, from: data) {
+            self.weights = decoded.weights
+            self.selectedMonth = Self.clampMonth(decoded.selectedMonth)
+        } else if let data = UserDefaults.standard.data(forKey: legacyWeightsKey),
+                  let decoded = try? JSONDecoder().decode(ScoreWeights.self, from: data) {
             self.weights = decoded
-            // Ensure legacy seasonality weight does not affect calculations
-            self.weights.seasonality = 0
+            self.selectedMonth = currentMonth
         } else {
             self.weights = .default
-            // Ensure seasonality starts at zero going forward
-            self.weights.seasonality = 0
+            self.selectedMonth = currentMonth
         }
     }
     
@@ -36,18 +57,28 @@ final class ScoreWeightsStore: ObservableObject {
     }
 
     func applyPreset(_ preset: WeightPreset) {
-        var newWeights = preset.weights
+        weights = preset.weights
+    }
 
-        // Seasonality remains disabled globally for now
-        newWeights.seasonality = 0
-
-        weights = newWeights
+    func updatePreferences(weights: ScoreWeights, selectedMonth: Int) {
+        self.weights = weights
+        self.selectedMonth = Self.clampMonth(selectedMonth)
     }
     
     private func save() {
-        if let data = try? JSONEncoder().encode(weights) {
+        let payload = StoredPreferences(
+            weights: weights,
+            selectedMonth: Self.clampMonth(selectedMonth)
+        )
+
+        if let data = try? JSONEncoder().encode(payload) {
             UserDefaults.standard.set(data, forKey: key)
+            UserDefaults.standard.removeObject(forKey: legacyWeightsKey)
         }
+    }
+
+    private static func clampMonth(_ month: Int) -> Int {
+        min(max(month, 1), 12)
     }
 }
 
@@ -56,7 +87,8 @@ extension ScoreWeightsStore {
     var totalWeight: Double {
         weights.advisory +
         weights.visa +
-        weights.affordability
+        weights.affordability +
+        weights.seasonality
     }
 
     func percentage(for keyPath: KeyPath<ScoreWeights, Double>) -> Int {
@@ -76,5 +108,15 @@ extension ScoreWeightsStore {
 
     var affordabilityPercentage: Int {
         percentage(for: \.affordability)
+    }
+
+    var seasonalityPercentage: Int {
+        percentage(for: \.seasonality)
+    }
+
+    var selectedMonthShortName: String {
+        let names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+        let month = Self.clampMonth(selectedMonth)
+        return names[month - 1]
     }
 }

@@ -1,13 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { DEFAULT_WEIGHTS } from '@travel-af/domain';
-import type { Weights } from '@travel-af/shared';
+import type { ScoreWeights } from '@travel-af/domain/src/scoring';
 
 // Derive a safe key type from DEFAULT_WEIGHTS so our slider keys are checked
 type WeightMap = typeof DEFAULT_WEIGHTS;
 type WeightKey = Extract<keyof WeightMap, string>;
 
-type Props = { onChange: (w: Weights, month: number, tags: string[]) => void };
+type Props = { onChange: (w: ScoreWeights, month: number, tags: string[]) => void };
 
 export default function Filters({ onChange }: Props) {
   const [w, setW] = useState<WeightMap>({ ...DEFAULT_WEIGHTS });
@@ -16,25 +16,25 @@ export default function Filters({ onChange }: Props) {
 
   // Kick an initial compute on mount
   useEffect(() => {
-    onChange(w as unknown as Weights, month, tags);
+    onChange(w as ScoreWeights, month, tags);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateWeight = (k: WeightKey, v: number) => {
     const next = { ...w, [k]: v } as WeightMap;
     setW(next);
-    onChange(next as unknown as Weights, month, tags);
+    onChange(next as ScoreWeights, month, tags);
   };
 
   const updateMonth = (v: number) => {
     setMonth(v);
-    onChange(w as unknown as Weights, v, tags);
+    onChange(w as ScoreWeights, v, tags);
   };
 
   const toggleTag = (t: string) => {
     const next = tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t];
     setTags(next);
-    onChange(w as unknown as Weights, month, next);
+    onChange(w as ScoreWeights, month, next);
   };
 
   const slider = (label: string, key: WeightKey) => (
@@ -61,15 +61,11 @@ export default function Filters({ onChange }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           {slider('Travel.gov advisory', 'travelGov' as WeightKey)}
-          {slider('Solo Female Travelers', 'stfi' as WeightKey)}
-          {slider('Reddit sentiment', 'reddit' as WeightKey)}
           {slider('Seasonality', 'seasonality' as WeightKey)}
         </div>
         <div>
           {slider('Visa', 'visa' as WeightKey)}
           {slider('Affordability', 'affordability' as WeightKey)}
-          {slider('Direct flight', 'directFlight' as WeightKey)}
-          {slider('Tourist infrastructure', 'infrastructure' as WeightKey)}
           <div className="mt-4">
             <label className="block text-sm font-medium mb-1">Target Month</label>
             <input

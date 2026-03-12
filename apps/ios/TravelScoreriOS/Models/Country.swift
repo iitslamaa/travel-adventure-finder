@@ -26,6 +26,9 @@ struct Country: Identifiable, Hashable {
     let seasonalityScore: Int?
     let seasonalityLabel: String?
     let seasonalityBestMonths: [Int]?
+    let seasonalityShoulderMonths: [Int]?
+    let seasonalityGoodMonths: [Int]?
+    let seasonalityAvoidMonths: [Int]?
     let seasonalityNotes: String?
 
     // Visa
@@ -86,6 +89,9 @@ struct Country: Identifiable, Hashable {
         seasonalityScore: Int? = nil,
         seasonalityLabel: String? = nil,
         seasonalityBestMonths: [Int]? = nil,
+        seasonalityShoulderMonths: [Int]? = nil,
+        seasonalityGoodMonths: [Int]? = nil,
+        seasonalityAvoidMonths: [Int]? = nil,
         seasonalityNotes: String? = nil,
         visaEaseScore: Int? = nil,
         visaType: String? = nil,
@@ -114,6 +120,9 @@ struct Country: Identifiable, Hashable {
         self.seasonalityScore = seasonalityScore
         self.seasonalityLabel = seasonalityLabel
         self.seasonalityBestMonths = seasonalityBestMonths
+        self.seasonalityShoulderMonths = seasonalityShoulderMonths
+        self.seasonalityGoodMonths = seasonalityGoodMonths
+        self.seasonalityAvoidMonths = seasonalityAvoidMonths
         self.seasonalityNotes = seasonalityNotes
         self.visaEaseScore = visaEaseScore
         self.visaType = visaType
@@ -195,11 +204,69 @@ struct Country: Identifiable, Hashable {
 }
 
 extension Country {
-    func recalculatedScore(using weights: ScoreWeights) -> Int? {
+    func resolvedSeasonalityScore(for month: Int? = nil) -> Int? {
+        guard let month else { return seasonalityScore }
+
+        if let best = seasonalityBestMonths, best.contains(month) {
+            return 100
+        }
+        if let shoulder = seasonalityShoulderMonths, shoulder.contains(month) {
+            return 80
+        }
+        if let good = seasonalityGoodMonths, good.contains(month) {
+            return 40
+        }
+        if let avoid = seasonalityAvoidMonths, avoid.contains(month) {
+            return 0
+        }
+
+        let hasExplicitSeasonality =
+            !(seasonalityBestMonths?.isEmpty ?? true) ||
+            !(seasonalityShoulderMonths?.isEmpty ?? true) ||
+            !(seasonalityGoodMonths?.isEmpty ?? true) ||
+            !(seasonalityAvoidMonths?.isEmpty ?? true)
+
+        if hasExplicitSeasonality {
+            return 50
+        }
+
+        return seasonalityScore
+    }
+
+    func resolvedSeasonalityLabel(for month: Int? = nil) -> String? {
+        guard let month else { return seasonalityLabel }
+
+        if let best = seasonalityBestMonths, best.contains(month) {
+            return "best"
+        }
+        if let shoulder = seasonalityShoulderMonths, shoulder.contains(month) {
+            return "shoulder"
+        }
+        if let good = seasonalityGoodMonths, good.contains(month) {
+            return "good"
+        }
+        if let avoid = seasonalityAvoidMonths, avoid.contains(month) {
+            return "poor"
+        }
+
+        let hasExplicitSeasonality =
+            !(seasonalityBestMonths?.isEmpty ?? true) ||
+            !(seasonalityShoulderMonths?.isEmpty ?? true) ||
+            !(seasonalityGoodMonths?.isEmpty ?? true) ||
+            !(seasonalityAvoidMonths?.isEmpty ?? true)
+
+        return hasExplicitSeasonality ? "shoulder" : seasonalityLabel
+    }
+
+    func recalculatedScore(using weights: ScoreWeights, selectedMonth: Int? = nil) -> Int? {
         var components: [(value: Double, weight: Double)] = []
 
         if let advisory = advisoryScore {
             components.append((Double(advisory), weights.advisory))
+        }
+
+        if let seasonality = resolvedSeasonalityScore(for: selectedMonth) {
+            components.append((Double(seasonality), weights.seasonality))
         }
 
         if let visa = visaEaseScore {
@@ -223,9 +290,9 @@ extension Country {
         return Int((weightedSum / totalWeight).rounded())
     }
 
-    func applyingOverallScore(using weights: ScoreWeights) -> Country {
+    func applyingOverallScore(using weights: ScoreWeights, selectedMonth: Int? = nil) -> Country {
         var updated = self
-        updated.score = recalculatedScore(using: weights)
+        updated.score = recalculatedScore(using: weights, selectedMonth: selectedMonth)
         return updated
     }
 
@@ -250,6 +317,9 @@ extension Country {
             seasonalityScore: seasonalityScore,
             seasonalityLabel: seasonalityLabel,
             seasonalityBestMonths: seasonalityBestMonths,
+            seasonalityShoulderMonths: seasonalityShoulderMonths,
+            seasonalityGoodMonths: seasonalityGoodMonths,
+            seasonalityAvoidMonths: seasonalityAvoidMonths,
             seasonalityNotes: seasonalityNotes,
             visaEaseScore: visaEaseScore ?? self.visaEaseScore,
             visaType: visaType ?? self.visaType,

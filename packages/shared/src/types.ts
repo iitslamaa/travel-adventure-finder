@@ -1,12 +1,8 @@
 export type Weights = {
-  advisorySafety: number;
-  soloFemale: number;
-  redditComposite: number;
+  travelGov: number;
   seasonality: number;
   visaEase: number;
   affordability: number;
-  directFlight: number;
-  infrastructure: number;
 };
 
 export type VisaEase =
@@ -19,12 +15,9 @@ export type VisaEase =
 export type CountryFacts = {
   iso2: string;
 
-  // Safety and sentiment
+  // Safety
   advisoryLevel?: 1 | 2 | 3 | 4;
   advisoryScore?: number;
-  soloFemaleIndex?: number;
-  redditComposite?: number;
-  redditN?: number;
 
   // Travel logistics
   seasonality?: number;

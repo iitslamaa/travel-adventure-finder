@@ -9,8 +9,8 @@ import Foundation
 
 enum CountrySeasonalityHelpers {
 
-    static func headline(for country: Country) -> String {
-        switch country.seasonalityLabel {
+    static func headline(for country: Country, selectedMonth: Int? = nil) -> String {
+        switch country.resolvedSeasonalityLabel(for: selectedMonth) {
         case "best":
             return "Peak time to go ✅"
         case "good":
@@ -24,20 +24,20 @@ enum CountrySeasonalityHelpers {
         }
     }
 
-    static func body(for country: Country) -> String {
+    static func body(for country: Country, selectedMonth: Int? = nil) -> String {
         if let notes = country.seasonalityNotes, !notes.isEmpty {
             return notes
         }
 
-        switch country.seasonalityLabel {
+        switch country.resolvedSeasonalityLabel(for: selectedMonth) {
         case "best":
-            return "Weather and crowd patterns are ideal right now."
+            return "Weather and crowd patterns are ideal for this month."
         case "good":
-            return "Conditions are generally favorable, with decent weather and crowds."
+            return "Conditions are generally favorable for this month, with decent weather and crowds."
         case "shoulder":
-            return "Decent balance of weather, crowds, and prices—expect some trade-offs."
+            return "This month offers a decent balance of weather, crowds, and prices, with some trade-offs."
         case "poor":
-            return "This isn’t an ideal time for weather or crowds; consider different months if possible."
+            return "This month isn’t an ideal time for weather or crowds; consider different months if possible."
         default:
             return "Seasonality data is limited; timing may still be fine, but check local conditions."
         }

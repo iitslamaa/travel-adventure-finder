@@ -28,6 +28,9 @@ struct CountryDTO: Decodable {
     let seasonalityScore: Int?        // 0...100 (today)
     let seasonalityLabel: String?     // "best" | "good" | "shoulder" | "poor"
     let seasonalityBestMonths: [Int]? // 1..12
+    let seasonalityShoulderMonths: [Int]?
+    let seasonalityGoodMonths: [Int]?
+    let seasonalityAvoidMonths: [Int]?
     let seasonalityNotes: String?     // extra description from FM / overrides
 
     /// Visa (US passport)
@@ -102,6 +105,9 @@ struct CountryDTO: Decodable {
         let fmSeasonalityTodayScore: Double?
         let fmSeasonalityTodayLabel: String?
         let fmSeasonalityBestMonths: [Int]?
+        let fmSeasonalityShoulderMonths: [Int]?
+        let fmSeasonalityGoodMonths: [Int]?
+        let fmSeasonalityAvoidMonths: [Int]?
         let fmSeasonalityNotes: String?
 
         // visa
@@ -130,6 +136,9 @@ struct CountryDTO: Decodable {
             case fmSeasonalityTodayScore
             case fmSeasonalityTodayLabel
             case fmSeasonalityBestMonths
+            case fmSeasonalityShoulderMonths
+            case fmSeasonalityGoodMonths
+            case fmSeasonalityAvoidMonths
             case fmSeasonalityNotes
             case visaEase
             case visaType
@@ -162,6 +171,9 @@ struct CountryDTO: Decodable {
             fmSeasonalityTodayScore = try? c.decode(Double.self, forKey: .fmSeasonalityTodayScore)
             fmSeasonalityTodayLabel = try? c.decode(String.self, forKey: .fmSeasonalityTodayLabel)
             fmSeasonalityBestMonths = try? c.decode([Int].self, forKey: .fmSeasonalityBestMonths)
+            fmSeasonalityShoulderMonths = try? c.decode([Int].self, forKey: .fmSeasonalityShoulderMonths)
+            fmSeasonalityGoodMonths = try? c.decode([Int].self, forKey: .fmSeasonalityGoodMonths)
+            fmSeasonalityAvoidMonths = try? c.decode([Int].self, forKey: .fmSeasonalityAvoidMonths)
             fmSeasonalityNotes = try? c.decode(String.self, forKey: .fmSeasonalityNotes)
 
             visaEase = try? c.decode(Double.self, forKey: .visaEase)
@@ -313,6 +325,9 @@ struct CountryDTO: Decodable {
         }
         self.seasonalityLabel = facts?.fmSeasonalityTodayLabel
         self.seasonalityBestMonths = facts?.fmSeasonalityBestMonths
+        self.seasonalityShoulderMonths = facts?.fmSeasonalityShoulderMonths
+        self.seasonalityGoodMonths = facts?.fmSeasonalityGoodMonths
+        self.seasonalityAvoidMonths = facts?.fmSeasonalityAvoidMonths
         self.seasonalityNotes = facts?.fmSeasonalityNotes
 
         // --- Visa (from facts) ---

@@ -1,25 +1,16 @@
 import type { CountryFacts, Weights } from './types';
 
 export const DEFAULT_WEIGHTS: Weights = {
-  advisorySafety: 0.30,
-  soloFemale: 0.10,
-  redditComposite: 0.20,
-  seasonality: 0.05,
-  visaEase: 0.05,
-  affordability: 0.05,
-  directFlight: 0.05,
-  infrastructure: 0.05,
+  travelGov: 0.40,
+  seasonality: 0.20,
+  visaEase: 0.20,
+  affordability: 0.20,
 };
 
 // Helper functions
 const clamp = (x: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, x));
 const advisoryToPct = (lvl?: 1 | 2 | 3 | 4) =>
   lvl ? clamp(((5 - lvl) / 4) * 100) : undefined;
-const shrinkReddit = (score: number | undefined, n: number | undefined) => {
-  if (score == null) return undefined;
-  const k = (n ?? 0) >= 300 ? 1 : 0.7;
-  return Math.round(k * score + (1 - k) * score);
-};
 
 // Compute final weighted score
 export function computeScoreFromFacts(
@@ -29,14 +20,7 @@ export function computeScoreFromFacts(
   const components: Array<{ value: number; weight: number }> = [];
 
   const advisory = advisoryToPct(f.advisoryLevel);
-  if (advisory != null) components.push({ value: advisory, weight: w.advisorySafety });
-
-  if (f.soloFemaleIndex != null)
-    components.push({ value: f.soloFemaleIndex, weight: w.soloFemale });
-
-  const reddit = shrinkReddit(f.redditComposite, f.redditN);
-  if (reddit != null)
-    components.push({ value: reddit, weight: w.redditComposite });
+  if (advisory != null) components.push({ value: advisory, weight: w.travelGov });
 
   if (f.seasonality != null)
     components.push({ value: f.seasonality, weight: w.seasonality });
@@ -46,12 +30,6 @@ export function computeScoreFromFacts(
 
   if (f.affordability != null)
     components.push({ value: f.affordability, weight: w.affordability });
-
-  if (f.directFlight != null)
-    components.push({ value: f.directFlight, weight: w.directFlight });
-
-  if (f.infrastructure != null)
-    components.push({ value: f.infrastructure, weight: w.infrastructure });
 
   if (components.length === 0) return null;
 

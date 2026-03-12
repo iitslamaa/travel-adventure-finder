@@ -18,6 +18,27 @@ import {
   type CountrySeasonalityDefinition,
 } from '../../../../../../packages/data/src/countrySeasonality';
 
+type CountryRouteFacts = Partial<CountryFacts> & {
+  visaType?: string;
+  visaAllowedDays?: number;
+  visaFeeUsd?: number;
+  visaNotes?: string;
+  visaSource?: string;
+  gdpPerCapitaUsd?: number;
+  fxLocalPerUSD?: number;
+  costOfLivingIndex?: number;
+  foodCostIndex?: number;
+  housingCostIndex?: number;
+  transportCostIndex?: number;
+  dailySpend?: DailySpend;
+  fmSeasonalityBestMonths?: number[];
+  fmSeasonalityShoulderMonths?: number[];
+  fmSeasonalityGoodMonths?: number[];
+  fmSeasonalityAvoidMonths?: number[];
+  fmSeasonalityTodayScore?: number;
+  fmSeasonalityTodayLabel?: 'best' | 'good' | 'shoulder' | 'poor';
+};
+
 function clusterConsecutiveMonths(months: number[]): number[][] {
   if (!months.length) return [];
   const sorted = [...new Set(months.filter(m => m >= 1 && m <= 12))].sort((a, b) => a - b);
@@ -103,7 +124,11 @@ export async function GET(
 
   const facts = factsByIso2[isoUpper] as CountryFacts | undefined;
 
-  const enriched: any = {
+  const enriched: typeof seed & {
+    facts: CountryRouteFacts;
+    advisory?: { iso2?: string; level?: number };
+    scoreTotal?: number;
+  } = {
     ...seed,
     facts: facts ?? {},
   };
@@ -119,17 +144,21 @@ export async function GET(
     const advRes = await fetch(advUrl, { cache: 'no-store' });
 
     if (advRes.ok) {
-      const advisories = await advRes.json();
-      const advisory = advisories.find((a: any) => a.iso2 === isoUpper);
+      const advisories = (await advRes.json()) as Array<{
+        iso2?: string;
+        level?: 1 | 2 | 3 | 4;
+      }>;
+      const advisory = advisories.find((a) => a.iso2 === isoUpper);
 
       if (advisory?.level) {
-        enriched.facts.advisoryLevel = advisory.level;
+        const advisoryLevel = advisory.level;
+        enriched.facts.advisoryLevel = advisoryLevel;
 
         // Compute normalized advisory score (0–100) same as scoring engine
-        const advisoryScore = ((5 - advisory.level) / 4) * 100;
+        const advisoryScore = ((5 - advisoryLevel) / 4) * 100;
         enriched.facts.advisoryScore = advisoryScore;
 
-        enriched.advisory = advisory;
+        enriched.advisory = { iso2: advisory.iso2, level: advisoryLevel };
       }
     }
   } catch (e) {
@@ -140,12 +169,12 @@ export async function GET(
   if (visa) {
     enriched.facts = {
       ...enriched.facts,
-      visaEase: visa.visaEase,
-      visaType: visa.visaType,
-      visaAllowedDays: visa.allowedDays,
-      visaFeeUsd: visa.feeUsd,
-      visaNotes: visa.notes,
-      visaSource: visa.sourceUrl,
+      visaEase: visa.visaEase ?? undefined,
+      visaType: visa.visaType ?? undefined,
+      visaAllowedDays: visa.allowedDays ?? undefined,
+      visaFeeUsd: visa.feeUsd ?? undefined,
+      visaNotes: visa.notes ?? undefined,
+      visaSource: visa.sourceUrl ?? undefined,
     };
   }
 
@@ -180,6 +209,18 @@ export async function GET(
       else if (inGood) todayScore = 40;
       else if (inAvoid) todayScore = 0;
       else todayScore = 50;
+
+      enriched.facts.fmSeasonalityBestMonths = allMonths;
+      enriched.facts.fmSeasonalityShoulderMonths = override.shoulder ?? [];
+      enriched.facts.fmSeasonalityGoodMonths = override.good ?? [];
+      enriched.facts.fmSeasonalityAvoidMonths = override.avoid ?? [];
+      enriched.facts.fmSeasonalityTodayScore = todayScore;
+      enriched.facts.fmSeasonalityTodayLabel =
+        inBest ? 'best' :
+        inShoulder ? 'shoulder' :
+        inGood ? 'good' :
+        inAvoid ? 'poor' :
+        'shoulder';
 
       enriched.facts.seasonality = todayScore;
     }

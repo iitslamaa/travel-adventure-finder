@@ -46,7 +46,12 @@ struct CountryListView: View {
 
     private func scheduleRecomputeVisible() {
         let weights = weightsStore.weights
-        let recalculatedCountries = countries.map { $0.applyingOverallScore(using: weights) }
+        let recalculatedCountries = countries.map {
+            $0.applyingOverallScore(
+                using: weights,
+                selectedMonth: weightsStore.selectedMonth
+            )
+        }
 
         let snapshotSearch = searchText
         let snapshotSort = sort
@@ -114,6 +119,7 @@ struct CountryListView: View {
         .onChange(of: sortOrder) { _, _ in scheduleRecomputeVisible() }
         .onChange(of: countries) { _, _ in scheduleRecomputeVisible() }
         .onReceive(weightsStore.$weights) { _ in scheduleRecomputeVisible() }
+        .onReceive(weightsStore.$selectedMonth) { _ in scheduleRecomputeVisible() }
     }
 
     private var searchBar: some View {

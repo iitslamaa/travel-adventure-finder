@@ -24,7 +24,12 @@ struct DiscoveryCountryListView: View {
     @MainActor
     private func applyCurrentWeightsAndVisa(to countries: [Country]) async -> [Country] {
         let visaHydrated = await visaStore.hydrate(countries: countries)
-        return visaHydrated.map { $0.applyingOverallScore(using: weightsStore.weights) }
+        return visaHydrated.map {
+            $0.applyingOverallScore(
+                using: weightsStore.weights,
+                selectedMonth: weightsStore.selectedMonth
+            )
+        }
     }
 
     @MainActor
@@ -104,7 +109,20 @@ struct DiscoveryCountryListView: View {
             }
         }
         .onReceive(weightsStore.$weights) { _ in
-            countries = countries.map { $0.applyingOverallScore(using: weightsStore.weights) }
+            countries = countries.map {
+                $0.applyingOverallScore(
+                    using: weightsStore.weights,
+                    selectedMonth: weightsStore.selectedMonth
+                )
+            }
+        }
+        .onReceive(weightsStore.$selectedMonth) { _ in
+            countries = countries.map {
+                $0.applyingOverallScore(
+                    using: weightsStore.weights,
+                    selectedMonth: weightsStore.selectedMonth
+                )
+            }
         }
         .onDisappear {
             isSearchFocused = false
@@ -120,7 +138,10 @@ struct DiscoveryView: View {
 
     private var countries: [Country] {
         (CountryAPI.loadCachedCountries() ?? []).map {
-            $0.applyingOverallScore(using: weightsStore.weights)
+            $0.applyingOverallScore(
+                using: weightsStore.weights,
+                selectedMonth: weightsStore.selectedMonth
+            )
         }
     }
 
@@ -222,7 +243,8 @@ struct DiscoveryView: View {
             NavigationStack {
                 CustomWeightsView(
                     userId: sessionManager.userId,
-                    initialWeights: weightsStore.weights
+                    initialWeights: weightsStore.weights,
+                    initialSelectedMonth: weightsStore.selectedMonth
                 )
                     .environmentObject(weightsStore)
             }

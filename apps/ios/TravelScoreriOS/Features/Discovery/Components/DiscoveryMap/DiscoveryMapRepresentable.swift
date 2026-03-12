@@ -56,6 +56,7 @@ struct DiscoveryMapRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: MKMapView, context: Context) {
+        context.coordinator.updateCountries(countries)
         context.coordinator.selectedCountryISO = selectedCountryISO
         context.coordinator.updateHighlights(highlightedISOs)
 
