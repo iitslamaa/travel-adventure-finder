@@ -86,9 +86,7 @@ struct CountryPreviewCardMobile: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+            Theme.countryDetailCardBackground(corner: 18)
         )
     }
     
@@ -123,7 +121,7 @@ private extension View {
             .font(.caption2)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color(.systemGray6))
+            .background(Color.white.opacity(0.55))
             .clipShape(Capsule())
     }
 }

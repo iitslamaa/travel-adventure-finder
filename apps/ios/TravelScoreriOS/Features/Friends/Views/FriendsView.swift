@@ -3,16 +3,38 @@ import NukeUI
 import Nuke
 
 struct FriendsView: View {
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var socialNav: SocialNavigationController
     private let userId: UUID
+    private let showsBackButton: Bool
     @StateObject private var friendsVM = FriendsViewModel()
     @State private var displayName: String = ""
-    @State private var showFriendRequests: Bool = false
     @FocusState private var isSearchFocused: Bool
     @Environment(\.floatingTabBarInset) private var floatingTabBarInset
 
-    init(userId: UUID) {
+    private var isOwnFriendsPage: Bool {
+        SupabaseManager.shared.currentUserId == userId
+    }
+
+    private var displayedProfiles: [Profile] {
+        let query = friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !query.isEmpty else { return friendsVM.friends }
+
+        if isOwnFriendsPage {
+            return friendsVM.searchResults
+        }
+
+        let lowered = query.lowercased()
+        return friendsVM.friends.filter { profile in
+            profile.username.lowercased().contains(lowered) ||
+            profile.fullName.lowercased().contains(lowered)
+        }
+    }
+
+    init(userId: UUID, showsBackButton: Bool = false) {
         self.userId = userId
+        self.showsBackButton = showsBackButton
     }
 
     var body: some View {
@@ -27,13 +49,37 @@ struct FriendsView: View {
 
             VStack {
                 HStack {
-                    Spacer()
-
-                    if SupabaseManager.shared.currentUserId == userId {
+                    if showsBackButton {
                         Button {
-                            showFriendRequests = true
+                            dismiss()
                         } label: {
                             ZStack {
+                                Theme.chromeIconButtonBackground(size: 40)
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(.black)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+                Spacer()
+            }
+
+            if isOwnFriendsPage {
+                VStack {
+                    HStack {
+                        Spacer()
+
+                        NavigationLink(value: SocialRoute.friendRequests) {
+                            ZStack {
+                                Theme.chromeIconButtonBackground(size: 40)
+
                                 Image(systemName: "person.crop.circle.badge.plus")
                                     .font(TAFTypography.title(.bold))
                                     .foregroundStyle(.black)
@@ -44,7 +90,7 @@ struct FriendsView: View {
                                         .foregroundStyle(.white)
                                         .frame(width: 18, height: 18)
                                         .background(Circle().fill(.red))
-                                        .offset(x: 10, y: -10)
+                                        .offset(x: 12, y: -12)
                                 }
                             }
                             .frame(width: 40, height: 40)
@@ -52,11 +98,12 @@ struct FriendsView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
+                    .padding(.leading, 16)
+                    .padding(.trailing, 24)
+                    .padding(.top, 12)
 
-                Spacer()
+                    Spacer()
+                }
             }
         }
         .background(
@@ -66,12 +113,8 @@ struct FriendsView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
-            .sheet(isPresented: $showFriendRequests) {
-                NavigationStack {
-                    FriendRequestsView()
-                }
-            }
             .onChange(of: friendsVM.searchText) { _ in
+                guard isOwnFriendsPage else { return }
                 Task { await friendsVM.searchUsers() }
             }
             .alert("Error", isPresented: .constant(friendsVM.errorMessage != nil)) {
@@ -87,72 +130,26 @@ struct FriendsView: View {
                     displayName = friendsVM.displayName
                 }
 
-                if SupabaseManager.shared.currentUserId == userId {
+                if isOwnFriendsPage {
                     await friendsVM.loadIncomingRequestCount()
                 }
             }
     }
 
     private var contentView: some View {
-        VStack(spacing: 14) {
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.black)
-
-                TextField("Search by username", text: $friendsVM.searchText)
-                    .textFieldStyle(.plain)
-                    .foregroundStyle(.black)
-                    .tint(.black)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .submitLabel(.search)
-                    .focused($isSearchFocused)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 34)
-
-                if !friendsVM.searchText.isEmpty {
-                    Button {
-                        friendsVM.searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.black)
-                    }
-                }
-            }
-            .padding(8)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(red: 0.94, green: 0.92, blue: 0.86))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
-            .padding(.horizontal, 16)
-
-            ScrollViewReader { proxy in
-                ZStack {
-                    ZStack {
-                        Image("friends-scroll")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.white.opacity(0.16), Color.clear]),
-                            startPoint: .top,
-                            endPoint: .center
-                        )
-                    }
+        ScrollViewReader { proxy in
+            ZStack {
+                Theme.notebookListBackground(corner: 22)
                     .allowsHitTesting(false)
 
-                    ScrollView {
-                        let data = friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            ? friendsVM.friends
-                            : friendsVM.searchResults
+                VStack(spacing: 14) {
+                    searchBar
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
 
+                    ScrollView {
                         LazyVStack(spacing: 18) {
-                            ForEach(data, id: \.id) { profile in
+                            ForEach(displayedProfiles, id: \.id) { profile in
                                 Button {
                                     socialNav.push(.profile(profile.id))
                                 } label: {
@@ -204,7 +201,11 @@ struct FriendsView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .background(
                                         RoundedRectangle(cornerRadius: 18)
-                                            .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
+                                            .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                    .stroke(.white.opacity(0.35), lineWidth: 1)
+                                            )
                                     )
                                     .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
                                 }
@@ -213,21 +214,57 @@ struct FriendsView: View {
                         }
                         .id("friendsListTop")
                         .padding(.horizontal, 16)
-                        .padding(.top, 10)
+                        .padding(.top, 6)
                         .padding(.bottom, floatingTabBarInset + 20)
                     }
                     .refreshable {
                         await friendsVM.loadFriends(for: userId, forceRefresh: true)
-                        if SupabaseManager.shared.currentUserId == userId {
+                        if isOwnFriendsPage {
                             await friendsVM.loadIncomingRequestCount()
                         }
                     }
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
-                .padding(.horizontal, 16)
+            }
+            .padding(.top, 18)
+            .padding(.horizontal, 24)
+            .padding(.bottom, floatingTabBarInset + 18)
+        }
+    }
+
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.black)
+
+            TextField("Search by username", text: $friendsVM.searchText)
+                .textFieldStyle(.plain)
+                .foregroundStyle(.black)
+                .tint(.black)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .submitLabel(.search)
+                .focused($isSearchFocused)
+                .frame(maxWidth: .infinity)
+                .frame(height: 34)
+
+            if !friendsVM.searchText.isEmpty {
+                Button {
+                    friendsVM.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.black)
+                }
             }
         }
-        .padding(.bottom, floatingTabBarInset)
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(red: 0.94, green: 0.92, blue: 0.86))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color.black.opacity(0.05), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
     }
 }

@@ -39,6 +39,8 @@ struct WhenToGoView: View {
                 }
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
+                .presentationBackground(.clear)
+                .preferredColorScheme(.light)
             }
         }
         .background(

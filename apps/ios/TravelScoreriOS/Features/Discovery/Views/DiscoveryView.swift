@@ -47,14 +47,12 @@ struct DiscoveryCountryListView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
-                        .background(
-                            Circle()
-                                .fill(Color.black.opacity(0.36))
-                        )
+                    ZStack {
+                        Theme.chromeIconButtonBackground(size: 44)
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.black)
+                    }
                 }
                 .buttonStyle(.plain)
 

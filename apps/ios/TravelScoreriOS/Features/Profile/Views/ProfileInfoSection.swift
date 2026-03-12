@@ -23,8 +23,6 @@ struct ProfileInfoSection: View {
     let currentCountry: String?
     let favoriteCountries: [String]
 
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
         LazyVStack(spacing: 32) {
             languagesSection
@@ -173,11 +171,11 @@ struct ProfileInfoSection: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(red: 0.97, green: 0.95, blue: 0.90))
+                    .fill(Color.white)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color.black.opacity(colorScheme == .dark ? 0.15 : 0.05), lineWidth: 1)
+                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
             )
     }
 

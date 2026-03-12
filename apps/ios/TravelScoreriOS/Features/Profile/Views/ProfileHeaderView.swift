@@ -2,73 +2,32 @@ import SwiftUI
 import NukeUI
 import Nuke
 
-private struct FlagWrapLayout: Layout {
-    var spacing: CGFloat = 6
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let maxWidth = proposal.width ?? .greatestFiniteMagnitude
-        var currentX: CGFloat = 0
-        var currentY: CGFloat = 0
-        var lineHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-
-            if currentX + size.width > maxWidth, currentX > 0 {
-                currentX = 0
-                currentY += lineHeight + spacing
-                lineHeight = 0
-            }
-
-            currentX += size.width + spacing
-            lineHeight = max(lineHeight, size.height)
-        }
-
-        return CGSize(
-            width: min(maxWidth, proposal.width ?? currentX),
-            height: currentY + lineHeight
-        )
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var currentX = bounds.minX
-        var currentY = bounds.minY
-        var lineHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-
-            if currentX + size.width > bounds.maxX, currentX > bounds.minX {
-                currentX = bounds.minX
-                currentY += lineHeight + spacing
-                lineHeight = 0
-            }
-
-            subview.place(
-                at: CGPoint(x: currentX, y: currentY),
-                proposal: ProposedViewSize(width: size.width, height: size.height)
-            )
-
-            currentX += size.width + spacing
-            lineHeight = max(lineHeight, size.height)
-        }
-    }
-}
-
 struct ProfileHeaderView: View {
     let profile: Profile?
     let username: String
     let homeCountryCodes: [String]
     let relationshipState: RelationshipState?
-    let friendCount: Int
     let onToggleFriend: () -> Void
+    @State private var showFavoriteTripsSheet = false
 
     private var effectiveState: RelationshipState {
         relationshipState ?? .none
     }
 
+    private var favoriteCountries: [String] {
+        profile?.favoriteCountries ?? []
+    }
+
+    private var visibleFavoriteCountries: [String] {
+        Array(favoriteCountries.prefix(4))
+    }
+
+    private var showsFavoriteTripsOverflow: Bool {
+        favoriteCountries.count > visibleFavoriteCountries.count
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 24) {
+        HStack(alignment: .center, spacing: 28) {
 
             // LEFT COLUMN — Identity
             VStack(alignment: .center, spacing: 12) {
@@ -84,7 +43,10 @@ struct ProfileHeaderView: View {
                         .foregroundColor(.black)
                         .multilineTextAlignment(.center)
 
-                    if !username.isEmpty {
+                    if effectiveState != .selfProfile, !username.isEmpty {
+                        ctaButton
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    } else if !username.isEmpty {
                         Text("@\(username)")
                             .font(.subheadline)
                             .foregroundColor(.black)
@@ -100,45 +62,10 @@ struct ProfileHeaderView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                     }
-
-                    if effectiveState != .selfProfile {
-
-                        Button(action: {
-                            onToggleFriend()
-                        }) {
-                            HStack(spacing: 6) {
-
-                                switch effectiveState {
-                                case .friends:
-                                    Image(systemName: "checkmark")
-                                case .requestSent:
-                                    Image(systemName: "clock")
-                                case .requestReceived:
-                                    Image(systemName: "checkmark.circle.fill")
-                                case .none:
-                                    Image(systemName: "person.badge.plus")
-                                case .selfProfile:
-                                    EmptyView()
-                                }
-
-                                Text(buttonLabel(for: effectiveState))
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                            }
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 10)
-                            .background(
-                                Capsule()
-                                    .fill(backgroundColor(for: effectiveState))
-                            )
-                            .foregroundStyle(foregroundColor(for: effectiveState))
-                        }
-                        .padding(.top, 4)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    }
                 }
             }
             .frame(width: 140)
+            .frame(maxHeight: .infinity, alignment: .center)
 
             // RIGHT COLUMN — Improved countries block (always show fields with fallback)
             VStack(alignment: .leading, spacing: 20) {
@@ -189,24 +116,32 @@ struct ProfileHeaderView: View {
 
                 // Favorites
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Favorite trips")
-                        .font(.callout.weight(.semibold))
-                        .foregroundColor(.black)
+                    HStack(spacing: 6) {
+                        Text("Favorite trips")
+                            .font(.callout.weight(.semibold))
+                            .foregroundColor(.black)
 
-                    if let favorites = profile?.favoriteCountries,
-                       !favorites.isEmpty {
+                        if showsFavoriteTripsOverflow {
+                            Button {
+                                showFavoriteTripsSheet = true
+                            } label: {
+                                Image(systemName: "chevron.right.circle.fill")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.black.opacity(0.65))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
 
-                        let visible = Array(favorites.prefix(10))
-                        let remaining = favorites.count - visible.count
-
-                        FlagWrapLayout(spacing: 6) {
-                            ForEach(visible, id: \.self) { code in
+                    if !favoriteCountries.isEmpty {
+                        HStack(spacing: 6) {
+                            ForEach(visibleFavoriteCountries, id: \.self) { code in
                                 Text(flagEmoji(for: code.uppercased()))
                                     .font(.title3)
                             }
 
-                            if remaining > 0 {
-                                Text("+\(remaining)")
+                            if showsFavoriteTripsOverflow {
+                                Text("+\(favoriteCountries.count - visibleFavoriteCountries.count)")
                                     .font(.caption.weight(.semibold))
                                     .foregroundColor(.black)
                             }
@@ -221,6 +156,7 @@ struct ProfileHeaderView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxHeight: .infinity, alignment: .center)
             .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -235,6 +171,44 @@ struct ProfileHeaderView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+        .sheet(isPresented: $showFavoriteTripsSheet) {
+            FavoriteTripsSheet(countryCodes: favoriteCountries)
+        }
+    }
+
+    private var ctaButton: some View {
+        Button(action: {
+            onToggleFriend()
+        }) {
+            HStack(spacing: 6) {
+                switch effectiveState {
+                case .friends:
+                    Image(systemName: "checkmark")
+                case .requestSent:
+                    Image(systemName: "clock")
+                case .requestReceived:
+                    Image(systemName: "checkmark.circle.fill")
+                case .none:
+                    Image(systemName: "person.badge.plus")
+                case .selfProfile:
+                    EmptyView()
+                }
+
+                Text(buttonLabel(for: effectiveState))
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(
+                Capsule()
+                    .fill(backgroundColor(for: effectiveState))
+            )
+            .foregroundStyle(foregroundColor(for: effectiveState))
+        }
+        .padding(.top, 2)
     }
 
     // MARK: - Avatar
@@ -277,12 +251,16 @@ struct ProfileHeaderView: View {
         .clipShape(Circle())
         .overlay(
             Circle()
-                .stroke(Color(.systemBackground), lineWidth: 3)
+                .stroke(.white.opacity(0.8), lineWidth: 3)
         )
         .shadow(radius: 6)
     }
 
     private func buttonLabel(for state: RelationshipState) -> String {
+        if !username.isEmpty {
+            return "@\(username)"
+        }
+
         switch state {
         case .none:
             return "Add Friend"
@@ -291,7 +269,7 @@ struct ProfileHeaderView: View {
         case .requestReceived:
             return "Accept"
         case .friends:
-            return friendCount == 1 ? "1 Friend" : "\(friendCount) Friends"
+            return "Friends"
         case .selfProfile:
             return ""
         }
@@ -337,5 +315,92 @@ struct ProfileHeaderView: View {
         let locale = Locale(identifier: "en_US")
         let name = locale.localizedString(forRegionCode: upper) ?? upper
         return "\(name) \(flagEmoji(for: upper))"
+    }
+}
+
+private struct FavoriteTripsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let countryCodes: [String]
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.pageBackground("travel4")
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    Theme.titleBanner("Favorite Trips")
+
+                    ZStack {
+                        Theme.notebookListBackground(corner: 24)
+                            .allowsHitTesting(false)
+
+                        ScrollView {
+                            LazyVStack(spacing: 14) {
+                                ForEach(countryCodes, id: \.self) { code in
+                                    HStack(spacing: 14) {
+                                        Text(flagEmoji(for: code))
+                                            .font(.title2)
+
+                                        Text(countryName(for: code))
+                                            .font(.headline)
+                                            .foregroundStyle(.black)
+
+                                        Spacer()
+                                    }
+                                    .padding(16)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                            .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                    .stroke(.white.opacity(0.35), lineWidth: 1)
+                                            )
+                                    )
+                                    .shadow(color: .black.opacity(0.08), radius: 5, y: 3)
+                                }
+                            }
+                            .padding(16)
+                            .padding(.bottom, 24)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+
+                    Spacer()
+                }
+            }
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
+            .overlay(alignment: .topLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.black)
+                        .frame(width: 36, height: 36)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 16)
+                .padding(.top, 12)
+            }
+        }
+        .presentationDragIndicator(.visible)
+    }
+
+    private func flagEmoji(for countryCode: String) -> String {
+        countryCode
+            .uppercased()
+            .unicodeScalars
+            .compactMap { UnicodeScalar(127397 + $0.value) }
+            .map { String($0) }
+            .joined()
+    }
+
+    private func countryName(for countryCode: String) -> String {
+        Locale(identifier: "en_US").localizedString(forRegionCode: countryCode.uppercased()) ?? countryCode.uppercased()
     }
 }

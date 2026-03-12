@@ -10,140 +10,232 @@ import NukeUI
 import Nuke
 
 struct FriendRequestsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var socialNav: SocialNavigationController
     @StateObject private var vm = FriendRequestsViewModel()
 
-var body: some View {
-    VStack(spacing: 0) {
+    var body: some View {
+        ZStack {
+            Theme.pageBackground("travel3")
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
                 Theme.titleBanner("Friend Requests")
 
-                if vm.isLoading {
-                    ProgressView("Loading requests…")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if vm.incomingRequests.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "person.crop.circle.badge.plus")
-                            .font(.system(size: 48))
-                            .foregroundStyle(.black.opacity(0.7))
+                contentView
+                    .padding(.top, 14)
+                    .padding(.bottom, 16)
+            }
 
-                        Text("No friend requests")
-                            .font(TAFTypography.title(.bold))
-                            .foregroundStyle(.black)
-
-                        Text("When someone sends you a friend request, it’ll show up here.")
-                            .font(TAFTypography.section())
-                            .foregroundStyle(.black.opacity(0.75))
-                            .multilineTextAlignment(.center)
+            VStack {
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        ZStack {
+                            Theme.chromeIconButtonBackground(size: 40)
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(.black)
+                        }
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List {
+                    .buttonStyle(.plain)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+                Spacer()
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
+        .task {
+            await vm.loadIncomingRequests()
+        }
+        .alert("Error", isPresented: .constant(vm.errorMessage != nil)) {
+            Button("OK") {
+                vm.errorMessage = nil
+            }
+        } message: {
+            Text(vm.errorMessage ?? "")
+        }
+    }
+
+    @ViewBuilder
+    private var contentView: some View {
+        if vm.isLoading {
+            ProgressView("Loading requests…")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if vm.incomingRequests.isEmpty {
+            VStack(spacing: 12) {
+                Image(systemName: "person.crop.circle.badge.plus")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.black.opacity(0.7))
+
+                Text("No friend requests")
+                    .font(TAFTypography.title(.bold))
+                    .foregroundStyle(.black)
+
+                Text("When someone sends you a friend request, it’ll show up here.")
+                    .font(TAFTypography.section())
+                    .foregroundStyle(.black.opacity(0.75))
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ZStack {
+                Theme.notebookListBackground(corner: 24)
+                    .allowsHitTesting(false)
+
+                ScrollView {
+                    LazyVStack(spacing: 18) {
                         ForEach(vm.incomingRequests) { profile in
-                            HStack(spacing: 12) {
+                            requestRow(for: profile)
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.top, 14)
+                    .padding(.bottom, 28)
+                }
+            }
+            .padding(.top, 14)
+            .padding(.horizontal, 22)
+            .padding(.bottom, 24)
+        }
+    }
 
-                                // Avatar
-                                Group {
-                                    if let urlString = profile.avatarUrl,
-                                       let url = URL(string: urlString) {
-                                        LazyImage(url: url) { state in
-                                            if let image = state.image {
-                                                image
-                                                    .resizable()
-                                                    .scaledToFill()
-                                            } else if state.error != nil {
-                                                Image(systemName: "person.crop.circle.fill")
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .foregroundStyle(.secondary)
-                                            } else {
-                                                ZStack {
-                                                    Circle()
-                                                        .fill(Color.gray.opacity(0.15))
-                                                    ProgressView()
-                                                        .scaleEffect(0.7)
-                                                }
-                                            }
-                                        }
-                                        .processors([
-                                            ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
-                                        ])
-                                        .priority(.high)
-                                    } else {
-                                        Image(systemName: "person.crop.circle.fill")
-                                            .resizable()
-                                            .scaledToFill()
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                                .frame(width: 44, height: 44)
-                                .clipShape(Circle())
+    private func requestRow(for profile: Profile) -> some View {
+        VStack(spacing: 16) {
+            NavigationLink(value: SocialRoute.profile(profile.id)) {
+                HStack(spacing: 14) {
+                    avatarView(for: profile)
 
-                                // Name + username
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(profile.fullName)
-                                        .fontWeight(.medium)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(profile.fullName)
+                            .font(.headline)
+                            .foregroundStyle(.black)
+                            .lineLimit(1)
 
-                                    Text("@\(profile.username)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
+                        Text("@\(profile.username)")
+                            .font(.subheadline)
+                            .foregroundStyle(.black.opacity(0.7))
+                            .lineLimit(2)
+                    }
 
-                                Spacer()
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
 
-                                // Accept / Decline
-                                HStack(spacing: 8) {
+            HStack(spacing: 12) {
+                actionButton(
+                    title: "Accept",
+                    foreground: .white,
+                    background: Theme.accent.opacity(0.88),
+                    border: .white.opacity(0.22)
+                ) {
+                    Task {
+                        do {
+                            try await vm.acceptRequest(from: profile.id)
+                        } catch {
+                            print("❌ accept failed:", error)
+                        }
+                        await vm.loadIncomingRequests()
+                        NotificationCenter.default.post(name: .friendshipUpdated, object: nil)
+                    }
+                }
 
-                                    Button {
-                                        Task {
-                                            do {
-                                                try await vm.acceptRequest(from: profile.id)
-                                            } catch {
-                                                print("❌ accept failed:", error)
-                                            }
-                                            await vm.loadIncomingRequests()
-                                            NotificationCenter.default.post(name: .friendshipUpdated, object: nil)
-                                        }
-                                    } label: {
-                                        Text("Accept")
-                                            .font(.system(size: 14, weight: .semibold))
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .controlSize(.small)
-                                    .buttonBorderShape(.capsule)
-                                    .fixedSize()
+                actionButton(
+                    title: "Decline",
+                    foreground: .black.opacity(0.78),
+                    background: Color(red: 0.95, green: 0.93, blue: 0.89).opacity(0.96),
+                    border: .white.opacity(0.35)
+                ) {
+                    Task {
+                        try? await vm.rejectRequest(from: profile.id)
+                        await vm.loadIncomingRequests()
+                    }
+                }
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.94))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(.white.opacity(0.36), lineWidth: 1)
+                )
+        )
+        .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
+    }
 
-                                    Button {
-                                        Task {
-                                            try? await vm.rejectRequest(from: profile.id)
-                                            await vm.loadIncomingRequests()
-                                        }
-                                    } label: {
-                                        Text("Decline")
-                                            .font(.system(size: 14, weight: .semibold))
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .controlSize(.small)
-                                    .buttonBorderShape(.capsule)
-                                    .fixedSize()
-                                }
-                                .fixedSize()
-                            }
-                            .padding(.vertical, 6)
+    private func actionButton(
+        title: String,
+        foreground: Color,
+        background: Color,
+        border: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(foreground)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    Capsule()
+                        .fill(background)
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(border, lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func avatarView(for profile: Profile) -> some View {
+        Group {
+            if let urlString = profile.avatarUrl,
+               let url = URL(string: urlString) {
+                LazyImage(url: url) { state in
+                    if let image = state.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } else if state.error != nil {
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .scaledToFill()
+                            .foregroundStyle(.gray)
+                    } else {
+                        ZStack {
+                            Circle()
+                                .fill(Color.gray.opacity(0.15))
+                            ProgressView()
+                                .scaleEffect(0.7)
                         }
                     }
                 }
+                .processors([
+                    ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
+                ])
+                .priority(.high)
+            } else {
+                Image(systemName: "person.crop.circle.fill")
+                    .resizable()
+                    .scaledToFill()
+                    .foregroundStyle(.gray)
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .task {
-                await vm.loadIncomingRequests()
-            }
-            .alert("Error", isPresented: .constant(vm.errorMessage != nil)) {
-                Button("OK") {
-                    vm.errorMessage = nil
-                }
-            } message: {
-                Text(vm.errorMessage ?? "")
-            }
+        }
+        .frame(width: 56, height: 56)
+        .clipShape(Circle())
     }
 }

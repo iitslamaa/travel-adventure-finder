@@ -92,7 +92,7 @@ struct CountryAdvisoryCard: View {
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.thinMaterial)
+            .background(Theme.countryDetailCardBackground(corner: 14))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
     }

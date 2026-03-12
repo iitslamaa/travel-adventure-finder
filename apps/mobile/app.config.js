@@ -8,7 +8,6 @@ export default ({ config }) => ({
   scheme: "travelaf",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
-
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.lamayassine.travelaf",
