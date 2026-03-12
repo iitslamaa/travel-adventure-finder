@@ -154,12 +154,12 @@ export async function GET(
   if (visa) {
     enriched.facts = {
       ...enriched.facts,
-      visaEase: visa.visaEase,
-      visaType: visa.visaType,
-      visaAllowedDays: visa.allowedDays,
-      visaFeeUsd: visa.feeUsd,
-      visaNotes: visa.notes,
-      visaSource: visa.sourceUrl,
+      visaEase: visa.visaEase ?? undefined,
+      visaType: visa.visaType ?? undefined,
+      visaAllowedDays: visa.allowedDays ?? undefined,
+      visaFeeUsd: visa.feeUsd ?? undefined,
+      visaNotes: visa.notes ?? undefined,
+      visaSource: visa.sourceUrl ?? undefined,
     };
   }
 
