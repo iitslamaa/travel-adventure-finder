@@ -127,6 +127,7 @@ export async function GET(
   const enriched: typeof seed & {
     facts: CountryRouteFacts;
     advisory?: { iso2?: string; level?: number };
+    scoreTotal?: number;
   } = {
     ...seed,
     facts: facts ?? {},
