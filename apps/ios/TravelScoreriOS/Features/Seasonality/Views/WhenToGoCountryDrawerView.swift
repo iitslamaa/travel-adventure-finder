@@ -78,10 +78,11 @@ struct WhenToGoCountryDrawerView: View {
 
             // MARK: - Seasonality Insight
             VStack(alignment: .leading, spacing: 16) {
+                let selectedMonthName = CountrySeasonalityHelpers.fullMonthName(for: weightsStore.selectedMonth)
 
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Seasonality")
+                        Text("Seasonality in \(selectedMonthName)")
                             .font(.headline)
 
                         Text("Monthly travel conditions")

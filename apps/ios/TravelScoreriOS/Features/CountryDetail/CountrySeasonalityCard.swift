@@ -15,12 +15,13 @@ struct CountrySeasonalityCard: View {
 
     var body: some View {
         let displayedSeasonalityScore = country.resolvedSeasonalityScore(for: weightsStore.selectedMonth)
+        let selectedMonthName = CountrySeasonalityHelpers.fullMonthName(for: weightsStore.selectedMonth)
 
         VStack(alignment: .leading, spacing: 12) {
 
             // Title row
             HStack {
-                Text("Seasonality")
+                Text("Seasonality in \(selectedMonthName)")
                     .font(.headline)
                 Spacer()
                 Text("\(weightsStore.selectedMonthShortName) · \(weightPercentage)%")
