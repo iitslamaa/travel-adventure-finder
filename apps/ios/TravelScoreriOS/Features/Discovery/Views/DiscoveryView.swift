@@ -214,7 +214,7 @@ struct DiscoveryView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .background(.clear)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, Theme.pageHorizontalInset)
                 }
             }
 

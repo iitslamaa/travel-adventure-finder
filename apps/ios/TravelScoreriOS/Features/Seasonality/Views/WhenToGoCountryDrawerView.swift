@@ -180,18 +180,41 @@ struct WhenToGoCountryDrawerView: View {
             Button {
                 showCountryDetail = true
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Spacer()
                     Text("View Full Country Details")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.headline.weight(.bold))
                     Image(systemName: "arrow.right")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.headline.weight(.bold))
                     Spacer()
                 }
-                .padding(.vertical, 12)
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color(red: 0.20, green: 0.14, blue: 0.10))
+                .padding(.vertical, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Color(red: 0.95, green: 0.91, blue: 0.83).opacity(0.98))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(.white.opacity(0.65), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.14), radius: 10, y: 5)
             }
+            .buttonStyle(.plain)
             .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.0),
+                        Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.88)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea(edges: .bottom)
+            )
         }
         .sheet(isPresented: $showCountryDetail) {
             NavigationStack {

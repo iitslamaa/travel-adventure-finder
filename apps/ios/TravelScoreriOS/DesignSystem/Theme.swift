@@ -43,6 +43,8 @@ enum Theme {
     static var spacingSmall: CGFloat { current.spacingSmall }
     static var spacingMedium: CGFloat { current.spacingMedium }
     static var spacingLarge: CGFloat { current.spacingLarge }
+    static let pageHorizontalInset: CGFloat = 18
+    static let readableContentMaxWidth: CGFloat = 720
 
     // MARK: - Color Tokens
 
@@ -193,7 +195,7 @@ enum Theme {
             }
             .padding(20)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, pageHorizontalInset)
     }
 
     // MARK: - Button Image Card
@@ -454,7 +456,7 @@ enum Theme {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 110, alignment: .top)
-        .padding(.horizontal, 24)
+        .padding(.horizontal, pageHorizontalInset)
         .padding(.top, 4)
         .padding(.bottom, 0)
     }

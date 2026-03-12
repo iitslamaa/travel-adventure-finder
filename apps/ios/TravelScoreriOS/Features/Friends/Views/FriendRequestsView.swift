@@ -14,39 +14,63 @@ struct FriendRequestsView: View {
     @EnvironmentObject private var socialNav: SocialNavigationController
     @StateObject private var vm = FriendRequestsViewModel()
 
+    private func socialHorizontalInset(for width: CGFloat) -> CGFloat {
+        switch width {
+        case ..<390:
+            return 42
+        case ..<430:
+            return 38
+        case ..<520:
+            return 32
+        default:
+            return max((width - 680) / 2, 32)
+        }
+    }
+
+    private func socialContentWidth(for width: CGFloat) -> CGFloat {
+        max(width - (socialHorizontalInset(for: width) * 2), 0)
+    }
+
     var body: some View {
-        ZStack {
-            Theme.pageBackground("travel3")
-                .ignoresSafeArea()
+        GeometryReader { geo in
+            let horizontalInset = socialHorizontalInset(for: geo.size.width)
+            let contentWidth = socialContentWidth(for: geo.size.width)
 
-            VStack(spacing: 0) {
-                Theme.titleBanner("Friend Requests")
+            ZStack {
+                Theme.pageBackground("travel3")
+                    .ignoresSafeArea()
 
-                contentView
-                    .padding(.top, 14)
-                    .padding(.bottom, 16)
-            }
+                VStack(spacing: 0) {
+                    Theme.titleBanner("Friend Requests")
+                        .frame(width: min(contentWidth, 560))
+                        .frame(maxWidth: .infinity)
 
-            VStack {
-                HStack {
-                    Button {
-                        dismiss()
-                    } label: {
-                        ZStack {
-                            Theme.chromeIconButtonBackground(size: 40)
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(.black)
+                    contentView(contentWidth: contentWidth)
+                        .padding(.top, 14)
+                        .padding(.bottom, 16)
+                }
+
+                VStack {
+                    HStack {
+                        Button {
+                            dismiss()
+                        } label: {
+                            ZStack {
+                                Theme.chromeIconButtonBackground(size: 40)
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(.black)
+                            }
                         }
+                        .buttonStyle(.plain)
+
+                        Spacer()
                     }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, horizontalInset)
+                    .padding(.top, 12)
 
                     Spacer()
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-
-                Spacer()
             }
         }
         .navigationTitle("")
@@ -65,7 +89,7 @@ struct FriendRequestsView: View {
     }
 
     @ViewBuilder
-    private var contentView: some View {
+    private func contentView(contentWidth: CGFloat) -> some View {
         if vm.isLoading {
             ProgressView("Loading requests…")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -87,28 +111,25 @@ struct FriendRequestsView: View {
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            GeometryReader { geo in
-                ZStack {
-                    Theme.notebookListBackground(corner: 24)
-                        .allowsHitTesting(false)
+            ZStack {
+                Theme.notebookListBackground(corner: 24)
+                    .allowsHitTesting(false)
 
-                    ScrollView {
-                        LazyVStack(spacing: 18) {
-                            ForEach(vm.incomingRequests) { profile in
-                                requestRow(for: profile)
-                            }
+                ScrollView {
+                    LazyVStack(spacing: 18) {
+                        ForEach(vm.incomingRequests) { profile in
+                            requestRow(for: profile)
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.top, 14)
-                        .padding(.bottom, 28)
                     }
+                    .padding(.horizontal, 14)
+                    .padding(.top, 14)
+                    .padding(.bottom, 28)
                 }
-                .frame(width: min(max(geo.size.width - 36, 0), 720))
-                .frame(maxWidth: .infinity)
-                .padding(.top, 14)
-                .padding(.horizontal, 18)
-                .padding(.bottom, 24)
             }
+            .frame(width: contentWidth)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.top, 14)
+            .padding(.bottom, 24)
         }
     }
 
