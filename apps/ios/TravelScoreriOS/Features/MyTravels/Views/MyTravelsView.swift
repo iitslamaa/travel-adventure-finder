@@ -7,6 +7,7 @@ import SwiftUI
 
 struct MyTravelsView: View {
     @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var traveledStore: TraveledStore
     @Environment(\.floatingTabBarInset) private var floatingTabBarInset
     @State private var countries: [Country] = []
     @State private var traveledCountryIds: Set<String> = []
@@ -101,37 +102,42 @@ struct MyTravelsView: View {
         .task {
             await loadVisitedListIfNeeded()
         }
+        .onReceive(traveledStore.$ids) { ids in
+            traveledCountryIds = ids
+        }
     }
 
     @MainActor
     private func loadVisitedListIfNeeded() async {
-        let shouldShowBlockingLoad = !hasLoadedOnce && countries.isEmpty && traveledCountryIds.isEmpty
-
-        if shouldShowBlockingLoad {
-            isLoading = true
-        }
-
-        defer {
-            isLoading = false
-            hasLoadedOnce = true
-        }
-
         if countries.isEmpty,
            let cached = CountryAPI.loadCachedCountries(),
            !cached.isEmpty {
             countries = cached
         }
 
-        if let fresh = await CountryAPI.refreshCountriesIfNeeded(minInterval: 60), !fresh.isEmpty {
-            countries = fresh
+        if traveledCountryIds.isEmpty || !hasLoadedOnce {
+            traveledCountryIds = traveledStore.ids
         }
+
+        let shouldShowBlockingLoad = !hasLoadedOnce && countries.isEmpty && traveledCountryIds.isEmpty
+        isLoading = shouldShowBlockingLoad
+        hasLoadedOnce = true
+
+        async let freshCountriesTask = CountryAPI.refreshCountriesIfNeeded(minInterval: 60)
 
         if let userId = sessionManager.userId {
             let service = ProfileService(supabase: SupabaseManager.shared)
             if let traveled = try? await service.fetchTraveledCountries(userId: userId) {
                 traveledCountryIds = traveled
+                traveledStore.replace(with: traveled)
             }
         }
+
+        if let fresh = await freshCountriesTask, !fresh.isEmpty {
+            countries = fresh
+        }
+
+        isLoading = false
     }
 }
 

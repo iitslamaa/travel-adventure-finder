@@ -116,6 +116,7 @@ struct CollapsibleCountrySection: View {
                         .transaction { transaction in
                             transaction.animation = nil
                         }
+                        .preferredColorScheme(nil)
                         .frame(height: 240)
                         .clipShape(RoundedRectangle(cornerRadius: 16))
 

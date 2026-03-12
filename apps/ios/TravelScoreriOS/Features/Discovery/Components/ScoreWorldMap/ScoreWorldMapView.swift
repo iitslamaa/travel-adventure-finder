@@ -52,6 +52,7 @@ struct ScoreWorldMapView: View {
                 shouldMountMap = true
             }
         }
+        .preferredColorScheme(nil)
     }
     
     private func matchedCountry(for iso: String) -> Country? {

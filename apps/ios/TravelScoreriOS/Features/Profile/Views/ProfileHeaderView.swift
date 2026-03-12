@@ -331,41 +331,48 @@ private struct FavoriteTripsSheet: View {
                 VStack(spacing: 0) {
                     Theme.titleBanner("Favorite Trips")
 
-                    ZStack {
-                        Theme.notebookListBackground(corner: 24)
-                            .allowsHitTesting(false)
+                    ScrollView {
+                        LazyVStack(spacing: 14) {
+                            ForEach(countryCodes, id: \.self) { code in
+                                HStack(spacing: 14) {
+                                    Text(flagEmoji(for: code))
+                                        .font(.title2)
 
-                        ScrollView {
-                            LazyVStack(spacing: 14) {
-                                ForEach(countryCodes, id: \.self) { code in
-                                    HStack(spacing: 14) {
-                                        Text(flagEmoji(for: code))
-                                            .font(.title2)
+                                    Text(countryName(for: code))
+                                        .font(.headline)
+                                        .foregroundStyle(.black)
 
-                                        Text(countryName(for: code))
-                                            .font(.headline)
-                                            .foregroundStyle(.black)
-
-                                        Spacer()
-                                    }
-                                    .padding(16)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                            .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                                    .stroke(.white.opacity(0.35), lineWidth: 1)
-                                            )
-                                    )
-                                    .shadow(color: .black.opacity(0.08), radius: 5, y: 3)
+                                    Spacer()
                                 }
+                                .padding(16)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                .stroke(.white.opacity(0.35), lineWidth: 1)
+                                        )
+                                )
+                                .shadow(color: .black.opacity(0.08), radius: 5, y: 3)
                             }
-                            .padding(16)
-                            .padding(.bottom, 24)
                         }
+                        .padding(.horizontal, 12)
+                        .padding(.top, 14)
+                        .padding(.bottom, 24)
                     }
-                    .padding(.horizontal, 20)
+                    .background(
+                        Image("country-list")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 26, style: .continuous)
+                            .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
+                    .padding(.horizontal, 16)
                     .padding(.top, 16)
 
                     Spacer()

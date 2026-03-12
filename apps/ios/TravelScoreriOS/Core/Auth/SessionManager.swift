@@ -25,6 +25,7 @@ final class SessionManager: ObservableObject {
     }
     @Published private(set) var authScreenNonce: UUID = UUID()
     @Published private(set) var isAuthSuppressed: Bool = false
+    @Published private(set) var hasResolvedInitialAuthState: Bool = false
 
 
     let supabase: SupabaseManager
@@ -42,6 +43,7 @@ final class SessionManager: ObservableObject {
 
     private var syncTask: Task<Void, Never>?
     private var ensureProfileTask: Task<Void, Never>?
+    private var syncingUserId: UUID?
 
     // MARK: - Initializers
 
@@ -88,6 +90,7 @@ final class SessionManager: ObservableObject {
         didEnsureProfile = false
         syncTask?.cancel()
         syncTask = nil
+        syncingUserId = nil
         ensureProfileTask?.cancel()
         ensureProfileTask = nil
         
@@ -110,6 +113,7 @@ final class SessionManager: ObservableObject {
         didEnsureProfile = false
         syncTask?.cancel()
         syncTask = nil
+        syncingUserId = nil
         ensureProfileTask?.cancel()
         ensureProfileTask = nil
         bumpAuthScreen()
@@ -128,6 +132,7 @@ final class SessionManager: ObservableObject {
                 
                 if isAuthenticated != false { isAuthenticated = false }
                 if userId != nil { userId = nil }
+                if hasResolvedInitialAuthState != true { hasResolvedInitialAuthState = true }
                 return
             }
         }
@@ -149,6 +154,7 @@ final class SessionManager: ObservableObject {
                     if userId != session.user.id { userId = session.user.id }
 
                     ensureProfileEventually(for: session.user.id)
+                    synchronizeListsIfNeeded(for: session.user.id)
                 }
             } else {
                 
@@ -156,10 +162,15 @@ final class SessionManager: ObservableObject {
                 if userId != nil { userId = nil }
                 hasMergedGuestData = false
                 didEnsureProfile = false
+                syncingUserId = nil
             }
         } catch {
             print("⚠️ forceRefreshAuthState transient error:", error)
             // 🔥 DO NOT clear userId or isAuthenticated on transient error
+        }
+
+        if hasResolvedInitialAuthState != true {
+            hasResolvedInitialAuthState = true
         }
     }
 
@@ -210,12 +221,18 @@ final class SessionManager: ObservableObject {
 
     // MARK: - Private
 
-    private func mergeGuestDataIfNeeded(for userId: UUID) async {
+    private func mergeGuestDataIfNeeded(
+        for userId: UUID,
+        remoteBucketIds: Set<String>,
+        remoteTraveledIds: Set<String>
+    ) async {
         guard !hasMergedGuestData else { return }
         hasMergedGuestData = true
 
-        // Merge guest bucket list into account
-        for countryId in guestBucketSnapshot {
+        let bucketIdsToMerge = guestBucketSnapshot.subtracting(remoteBucketIds)
+        let traveledIdsToMerge = guestTraveledSnapshot.subtracting(remoteTraveledIds)
+
+        for countryId in bucketIdsToMerge {
             await listSync.setBucket(
                 userId: userId,
                 countryId: countryId,
@@ -223,8 +240,7 @@ final class SessionManager: ObservableObject {
             )
         }
 
-        // Merge guest traveled list into account
-        for countryId in guestTraveledSnapshot {
+        for countryId in traveledIdsToMerge {
             await listSync.setTraveled(
                 userId: userId,
                 countryId: countryId,
@@ -235,6 +251,46 @@ final class SessionManager: ObservableObject {
         // Clear guest snapshots after successful merge
         guestBucketSnapshot.removeAll()
         guestTraveledSnapshot.removeAll()
+    }
+
+    private func synchronizeListsIfNeeded(for userId: UUID) {
+        guard syncingUserId != userId else { return }
+
+        syncTask?.cancel()
+        syncingUserId = userId
+
+        syncTask = Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                async let bucketTask = self.listSync.fetchBucketList(userId: userId)
+                async let traveledTask = self.listSync.fetchTraveled(userId: userId)
+                var (bucketIds, traveledIds) = try await (bucketTask, traveledTask)
+
+                if !self.guestBucketSnapshot.isEmpty || !self.guestTraveledSnapshot.isEmpty {
+                    await self.mergeGuestDataIfNeeded(
+                        for: userId,
+                        remoteBucketIds: bucketIds,
+                        remoteTraveledIds: traveledIds
+                    )
+
+                    bucketIds.formUnion(self.guestBucketSnapshot)
+                    traveledIds.formUnion(self.guestTraveledSnapshot)
+                }
+
+                if Task.isCancelled { return }
+
+                self.bucketListStore.replace(with: bucketIds)
+                self.traveledStore.replace(with: traveledIds)
+            } catch {
+                print("⚠️ synchronizeListsIfNeeded failed:", error)
+            }
+
+            if !Task.isCancelled, self.syncingUserId == userId {
+                self.syncingUserId = nil
+                self.syncTask = nil
+            }
+        }
     }
 
     private func startAuthObservation() {
@@ -255,6 +311,7 @@ final class SessionManager: ObservableObject {
                     
                     if self.isAuthenticated != false { self.isAuthenticated = false }
                     if self.userId != nil { self.userId = nil }
+                    if self.hasResolvedInitialAuthState != true { self.hasResolvedInitialAuthState = true }
                     return
                 }
             }
@@ -268,16 +325,22 @@ final class SessionManager: ObservableObject {
                     if userId != session.user.id { userId = session.user.id }
 
                     ensureProfileEventually(for: session.user.id)
+                    synchronizeListsIfNeeded(for: session.user.id)
                 } else {
                     
                     if isAuthenticated != false { isAuthenticated = false }
                     if userId != nil { userId = nil }
                     hasMergedGuestData = false
                     didEnsureProfile = false
+                    syncingUserId = nil
                 }
             } catch {
                 print("⚠️ refreshFromCurrentSession transient error:", error)
                 // 🔥 DO NOT clear userId or isAuthenticated on transient error
+            }
+
+            if self.hasResolvedInitialAuthState != true {
+                self.hasResolvedInitialAuthState = true
             }
         }
     }
