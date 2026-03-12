@@ -6,6 +6,7 @@ export type Weights = {
 };
 
 export type VisaEase =
+  | 'freedom_of_movement'
   | 'visa_free'
   | 'eta'
   | 'voa'
