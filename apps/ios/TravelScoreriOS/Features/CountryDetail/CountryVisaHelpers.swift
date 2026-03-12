@@ -15,6 +15,8 @@ enum CountryVisaHelpers {
         }
 
         switch type {
+        case "freedom_of_movement":
+            return "Freedom of movement with US passport"
         case "visa_free":
             return "Visa-free for US passport ✅"
         case "voa":
@@ -42,6 +44,8 @@ enum CountryVisaHelpers {
         }
 
         switch type {
+        case "freedom_of_movement":
+            return "This destination is part of a territory arrangement where US passport holders can move freely without visa limits."
         case "visa_free":
             return "You can typically enter without arranging a visa in advance, subject to time limits."
         case "voa":

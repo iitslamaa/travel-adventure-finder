@@ -52,7 +52,7 @@ private enum VisaRowMatcher {
     static let sourceURL = URL(string: "https://en.wikipedia.org/wiki/Visa_requirements_for_United_States_citizens")
 
     static func normalize(_ text: String) -> String {
-        text
+        let normalized = text
             .replacingOccurrences(of: "\\[\\d+\\]", with: " ", options: .regularExpression)
             .lowercased()
             .folding(options: .diacriticInsensitive, locale: .current)
@@ -60,6 +60,23 @@ private enum VisaRowMatcher {
             .replacingOccurrences(of: "[^a-z0-9\\s]", with: " ", options: .regularExpression)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let tokens = normalized.split(separator: " ").map(String.init)
+        var collapsed: [String] = []
+
+        for token in tokens {
+            if
+                token.count == 1,
+                let last = collapsed.last,
+                last.count == 1
+            {
+                collapsed[collapsed.count - 1] = last + token
+            } else {
+                collapsed.append(token)
+            }
+        }
+
+        return collapsed.joined(separator: " ")
     }
 
     static func aliases(forISO2 iso2: String) -> [String] {
@@ -80,6 +97,7 @@ private enum VisaRowMatcher {
         case "TC": return ["turks and caicos", "turks and caicos islands"]
         case "TW": return ["taiwan", "republic of china taiwan", "taiwan province of china"]
         case "VA": return ["vatican", "vatican city", "holy see"]
+        case "VI": return ["u s virgin islands", "us virgin islands", "virgin islands u s", "virgin islands us"]
         default: return []
         }
     }
@@ -87,6 +105,7 @@ private enum VisaRowMatcher {
     static func visaType(from requirement: String?) -> String? {
         let value = (requirement ?? "").lowercased()
         if value.isEmpty { return nil }
+        if value.range(of: "freedom of movement", options: .regularExpression) != nil { return "freedom_of_movement" }
         if value.range(of: "visa[- ]?free|not required", options: .regularExpression) != nil { return "visa_free" }
         if value.range(of: "visa on arrival|\\bvoa\\b", options: .regularExpression) != nil { return "voa" }
         if value.range(of: "(^|\\b)e-?visa\\b|electronic travel authorization|\\beta\\b", options: .regularExpression) != nil { return "evisa" }
@@ -97,6 +116,7 @@ private enum VisaRowMatcher {
 
     static func score(for visaType: String?) -> Int? {
         switch visaType {
+        case "freedom_of_movement": return 100
         case "visa_free": return 100
         case "voa": return 90
         case "evisa": return 50

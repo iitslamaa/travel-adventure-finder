@@ -1,7 +1,9 @@
 import { nameToIso2 } from '@/lib/countryMatch';
+import { byIso2 } from '@/lib/seed';
 const WP_URL = 'https://en.wikipedia.org/wiki/Visa_requirements_for_United_States_citizens';
 // --- Types & helpers for visa parsing --------------------------------------
 export type VisaType =
+  | 'freedom_of_movement'
   | 'visa_free'
   | 'voa'
   | 'evisa'
@@ -47,6 +49,7 @@ function parseDays(text?: string | null): number | undefined {
 // Score mapping for visa ease (0..100) with simple fee-aware adjustments
 function scoreFor(visaType: VisaType, feeUsd?: number): number | null {
   switch (visaType) {
+    case 'freedom_of_movement':
     case 'visa_free':
       return 100;
     case 'voa':
@@ -170,7 +173,8 @@ async function fetchVisaFromWikipedia(): Promise<Map<string, VisaRow>> {
     const notes = clean(tdCells[thName ? 2 : 3] || '');
 
     let visaType: VisaType = 'visa_required';
-    if (/visa[- ]?free|not required/i.test(requirement)) visaType = 'visa_free';
+    if (/freedom of movement/i.test(requirement)) visaType = 'freedom_of_movement';
+    else if (/visa[- ]?free|not required/i.test(requirement)) visaType = 'visa_free';
     else if (/visa on arrival|\bvoa\b/i.test(requirement)) visaType = 'voa';
     else if (/(^|\b)e-?visa\b|electronic travel authorization|\beta\b/i.test(requirement)) visaType = 'evisa';
     else if (/entry permit|required permit/i.test(requirement)) visaType = 'entry_permit';
@@ -263,10 +267,12 @@ export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
     .eq('version', latestRun.version);
 
   if (!rows) return map;
+  type VisaRequirementDbRow = (typeof rows)[number];
 
   // Helper normalize (must match ingestion normalize behavior)
   const normalize = (text: string) =>
-    text
+    {
+      const normalized = text
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -275,23 +281,45 @@ export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
       .replace(/\s+/g, ' ')
       .trim();
 
-  for (const seedName of Object.keys(require('@/lib/seed').byIso2)) {
-    const iso2 = seedName.toUpperCase();
-    const seed = require('@/lib/seed').byIso2.get(iso2);
-    if (!seed) continue;
+      const tokens = normalized.split(' ').filter(Boolean);
+      const collapsed: string[] = [];
+      for (const token of tokens) {
+        const last = collapsed[collapsed.length - 1];
+        if (
+          token.length === 1 &&
+          /^[a-z0-9]$/.test(token) &&
+          last &&
+          last.length === 1 &&
+          /^[a-z0-9]$/.test(last)
+        ) {
+          collapsed[collapsed.length - 1] = `${last}${token}`;
+        } else {
+          collapsed.push(token);
+        }
+      }
 
-    const countryNorm = normalize(seed.name);
+      return collapsed.join(' ');
+    };
 
-    let matchedRow: any | null = null;
+  for (const [iso2, seed] of byIso2.entries()) {
+
+    const candidateNorms = new Set<string>(
+      [seed.name, seed.officialName, ...(Array.isArray(seed.aliases) ? seed.aliases : [])]
+        .filter(Boolean)
+        .map((label: string) => normalize(label))
+        .filter(Boolean)
+    );
+
+    let matchedRow: VisaRequirementDbRow | null = null;
 
     // 1️⃣ Exact match
-    matchedRow = rows.find(r => r.visitor_to_norm === countryNorm) ?? null;
+    matchedRow = rows.find(r => candidateNorms.has(normalize(r.visitor_to_norm ?? ''))) ?? null;
 
     // 2️⃣ Alias match
     if (!matchedRow) {
       matchedRow = rows.find(r =>
         Array.isArray(r.aliases_norm) &&
-        r.aliases_norm.includes(countryNorm)
+        r.aliases_norm.some((alias: string) => candidateNorms.has(normalize(alias)))
       ) ?? null;
     }
 
@@ -299,8 +327,9 @@ export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
     if (!matchedRow) {
       matchedRow = rows.find(r => {
         if (r.is_special_subregion) return false;
-        if (r.parent_norm && r.parent_norm === countryNorm) return false;
-        return r.visitor_to_norm.includes(countryNorm);
+        if (r.parent_norm && candidateNorms.has(normalize(r.parent_norm))) return false;
+        const visitorNorm = normalize(r.visitor_to_norm ?? '');
+        return [...candidateNorms].some(candidateNorm => visitorNorm.includes(candidateNorm));
       }) ?? null;
     }
 
@@ -308,6 +337,7 @@ export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
 
     const visaType: VisaType = (() => {
       const r = (matchedRow.requirement || '').toLowerCase();
+      if (/freedom of movement/i.test(r)) return 'freedom_of_movement';
       if (/visa[- ]?free|not required/i.test(r)) return 'visa_free';
       if (/visa on arrival|\bvoa\b/i.test(r)) return 'voa';
       if (/(^|\b)e-?visa\b|electronic travel authorization|\beta\b/i.test(r)) return 'evisa';
@@ -329,6 +359,17 @@ export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
       sourceUrl: 'wikipedia',
       visaEase,
     });
+  }
+
+  try {
+    const wikiMap = await fetchVisaFromWikipedia();
+    for (const [iso2, visaRow] of wikiMap.entries()) {
+      if (!map.has(iso2)) {
+        map.set(iso2, visaRow);
+      }
+    }
+  } catch {
+    // If Wikipedia is unavailable, keep the versioned dataset result.
   }
 
   _visaCache = map;
