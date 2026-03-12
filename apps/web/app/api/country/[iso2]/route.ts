@@ -129,17 +129,21 @@ export async function GET(
     const advRes = await fetch(advUrl, { cache: 'no-store' });
 
     if (advRes.ok) {
-      const advisories = (await advRes.json()) as Array<{ iso2?: string; level?: number }>;
+      const advisories = (await advRes.json()) as Array<{
+        iso2?: string;
+        level?: 1 | 2 | 3 | 4;
+      }>;
       const advisory = advisories.find((a) => a.iso2 === isoUpper);
 
       if (advisory?.level) {
-        enriched.facts.advisoryLevel = advisory.level;
+        const advisoryLevel = advisory.level;
+        enriched.facts.advisoryLevel = advisoryLevel;
 
         // Compute normalized advisory score (0–100) same as scoring engine
-        const advisoryScore = ((5 - advisory.level) / 4) * 100;
+        const advisoryScore = ((5 - advisoryLevel) / 4) * 100;
         enriched.facts.advisoryScore = advisoryScore;
 
-        enriched.advisory = advisory;
+        enriched.advisory = { iso2: advisory.iso2, level: advisoryLevel };
       }
     }
   } catch (e) {
