@@ -16,6 +16,26 @@ struct CountryDetailView: View {
     private var displayedCountry: Country {
         country.applyingOverallScore(using: weightsStore.weights, selectedMonth: weightsStore.selectedMonth)
     }
+
+    @MainActor
+    private func refreshCountryIfAvailable() async {
+        let iso2 = country.iso2.uppercased()
+
+        if let cached = CountryAPI.loadCachedCountries()?.first(where: { $0.iso2.uppercased() == iso2 }) {
+            country = cached
+        }
+
+        if let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 0)?
+            .first(where: { $0.iso2.uppercased() == iso2 }) {
+            country = refreshed
+            return
+        }
+
+        if let fetched = try? await CountryAPI.fetchCountries()
+            .first(where: { $0.iso2.uppercased() == iso2 }) {
+            country = fetched
+        }
+    }
     
     var body: some View {
         ScrollViewReader { proxy in
@@ -96,6 +116,7 @@ struct CountryDetailView: View {
         )
         .preferredColorScheme(.light)
         .task(id: country.iso2.uppercased()) {
+            await refreshCountryIfAvailable()
             country = await visaStore.hydrate(country: country)
         }
     }

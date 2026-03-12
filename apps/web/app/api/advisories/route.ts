@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import dns from 'node:dns';
 dns.setDefaultResultOrder('ipv4first');
 
+import { load } from 'cheerio';
 import { XMLParser } from 'fast-xml-parser';
 import { COUNTRY_SEEDS } from '@/lib/seed';
+import { nameToIso2 } from '@/lib/countryMatch';
 
 // Force Node runtime (so we can use regular Node features if needed)
 export const runtime = 'nodejs';
@@ -24,6 +26,10 @@ const FEEDS = [
   'https://travel.state.gov/_res/rss/TAsTWs.xml',
   'https://travel.state.gov/_res/rss/TWs.xml',
   'https://travel.state.gov/content/travel/en/traveladvisories/traveladvisories.xml',
+] as const;
+
+const ADVISORY_INDEX_PAGES = [
+  'https://travel.state.gov/en/international-travel/travel-advisories.html',
 ] as const;
 
 // Build iso3 -> iso2 lookup from seeds
@@ -122,8 +128,10 @@ function iso2FromLink(link: string): string | null {
     return ISO3_TO_ISO2.get(iso3) ?? null;
   }
 
-  // Case 2: <slug>-travel-advisory.html (country slug pages)
-  const s = link.match(/\/([a-z0-9-]+)-travel-advisory\.html/i);
+  // Case 2: <slug>-travel-advisory.html / <slug>-travel-warning.html
+  // Some legacy State Dept pages still use `travel-warning`, and a few slugs
+  // contain misspellings even though the page title has the correct country name.
+  const s = link.match(/\/([a-z0-9-]+)-(?:travel-advisory|travel-warning)\.html/i);
   if (s?.[1]) {
     const rawSlug = s[1];
     const key = normalizeSlugKey(rawSlug);
@@ -137,26 +145,13 @@ function iso2FromLink(link: string): string | null {
     if (iso2 && /^[A-Z]{2}$/.test(iso2)) return iso2;
   }
 
-  return null;
-}
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore JSON import without explicit types
-import snapshot from '../../../data/advisories.snapshot.json';
-
-function loadSnapshot(): Advisory[] {
-  try {
-    if (Array.isArray(snapshot)) {
-      // If the snapshot already matches Advisory[]
-      return (snapshot as Advisory[]).map(a => ({
-        ...a,
-        iso2: String(a.iso2 || '').slice(0, 2).toUpperCase(),
-      })).filter(a => /^[A-Z]{2}$/.test(a.iso2));
-    }
-    return [];
-  } catch {
-    return [];
+  // Case 3: Country Information Pages often use `/.../CountryName.html`
+  const infoPage = link.match(/\/International-Travel-Country-Information-Pages\/([^/]+)\.html/i);
+  if (infoPage?.[1]) {
+    return nameToIso2(infoPage[1]) ?? null;
   }
+
+  return null;
 }
 
 const parser = new XMLParser({ ignoreAttributes: false });
@@ -197,12 +192,22 @@ async function fetchTextWithRetry(url: string, tries = 2): Promise<string | null
   return null;
 }
 
+function absoluteTravelStateUrl(link: string): string {
+  if (!link) return '';
+  if (/^https?:\/\//i.test(link)) return link;
+  if (link.startsWith('/')) return `https://travel.state.gov${link}`;
+  return `https://travel.state.gov/${link.replace(/^\.?\//, '')}`;
+}
+
 function extractCountry(rawTitle: string) {
-  // Examples: "Lebanon - Level 4: Do Not Travel", "Afghanistan Travel Advisory"
+  // Examples:
+  // "Lebanon - Level 4: Do Not Travel"
+  // "Afghanistan Travel Advisory"
+  // "Afghanistan Travel Warning"
   let t = (rawTitle || '').trim();
-  t = t.replace(/\s*Travel Advisory\s*$/i, '');
   const dashIdx = t.indexOf(' - ');
   if (dashIdx > -1) t = t.slice(0, dashIdx);
+  t = t.replace(/\s*Travel (?:Advisory|Warning|Alert)\s*$/i, '');
   t = t.replace(/:$/, '');
   return t.trim();
 }
@@ -214,6 +219,85 @@ function parseLevel(title: string, description?: string): 1 | 2 | 3 | 4 {
   return (n >= 1 && n <= 4 ? (n as 1 | 2 | 3 | 4) : 1);
 }
 
+function parseDate(text?: string): string | undefined {
+  if (!text) return undefined;
+
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  const patterns = [
+    /\b([A-Z][a-z]+ \d{1,2}, \d{4})\b/,
+    /\b(\d{1,2}\/\d{1,2}\/\d{4})\b/,
+    /\b(\d{4}-\d{2}-\d{2})\b/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (!match?.[1]) continue;
+    const parsed = new Date(match[1]);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
+  }
+
+  return undefined;
+}
+
+function resolveIso2(item: RssItem): string | null {
+  const fromLink = iso2FromLink(item.link || '');
+  if (fromLink) return fromLink;
+
+  const countryFromTitle = extractCountry(item.title || '');
+  if (countryFromTitle) {
+    const fromTitle = nameToIso2(countryFromTitle);
+    if (fromTitle) return fromTitle;
+  }
+
+  return null;
+}
+
+function coerceHtmlAdvisories(htmlTexts: string[]): Advisory[] {
+  const deduped = new Map<string, Advisory>();
+
+  for (const html of htmlTexts) {
+    const $ = load(html);
+
+    $('a[href*="/International-Travel-Country-Information-Pages/"], a[href*="/traveladvisories/traveladvisories/"]').each((_, element) => {
+      const href = absoluteTravelStateUrl($(element).attr('href') || '');
+      if (
+        !href.match(/-(?:travel-advisory|travel-warning|travel-alert)\.html/i) &&
+        !href.match(/\/International-Travel-Country-Information-Pages\/[^/]+\.html/i)
+      ) return;
+
+      const anchorText = $(element).text().replace(/\s+/g, ' ').trim();
+      const containerText = $(element)
+        .closest('li, tr, article, section, div')
+        .text()
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const titleText = anchorText || containerText;
+      const iso2 =
+        iso2FromLink(href) ??
+        nameToIso2(extractCountry(titleText)) ??
+        nameToIso2(extractCountry(containerText));
+
+      if (!iso2 || !COUNTRY_SEEDS.some((s) => s.iso2 === iso2)) return;
+
+      const level = parseLevel(titleText, containerText);
+      const updated = parseDate(containerText);
+
+      deduped.set(iso2, {
+        iso2,
+        level,
+        summary: containerText || titleText || undefined,
+        url: href || undefined,
+        updated,
+      });
+    });
+  }
+
+  return [...deduped.values()].sort((a, b) => a.iso2.localeCompare(b.iso2));
+}
+
 function coerceAdvisories(items: RssItem[]): Advisory[] {
   const mapped = items.map((it) => {
     const title = it.title || '';
@@ -221,7 +305,7 @@ function coerceAdvisories(items: RssItem[]): Advisory[] {
     const link = it.link || '';
     const pubDate = it.pubDate || new Date().toISOString();
 
-    const iso2 = iso2FromLink(link);
+    const iso2 = resolveIso2(it);
 
     // STRICT: only accept advisories with canonical ISO2 from URL or allowlist
     if (!iso2 || !/^[A-Z]{2}$/.test(iso2)) return null;
@@ -260,6 +344,12 @@ export async function GET(req: Request) {
       if (text) texts.push(text);
     }
 
+    const htmlTexts: string[] = [];
+    for (const u of ADVISORY_INDEX_PAGES) {
+      const text = await fetchTextWithRetry(u, 2);
+      if (text) htmlTexts.push(text);
+    }
+
     const items: RssItem[] = [];
     for (const text of texts) {
       // Basic RSS sanity
@@ -275,13 +365,12 @@ export async function GET(req: Request) {
     }
 
     const rssOut = coerceAdvisories(items);
+    const htmlOut = coerceHtmlAdvisories(htmlTexts);
 
-    // Always load snapshot and fill missing ISO2s so common countries never go missing
-    const snapshotOut = loadSnapshot();
     const byIso = new Map<string, Advisory>();
 
-    for (const a of snapshotOut) byIso.set(a.iso2, a); // snapshot baseline
-    for (const a of rssOut) byIso.set(a.iso2, a);      // RSS overrides snapshot
+    for (const a of htmlOut) byIso.set(a.iso2, a);
+    for (const a of rssOut) byIso.set(a.iso2, a);
 
     const out = [...byIso.values()].sort((a, b) => a.iso2.localeCompare(b.iso2));
 
@@ -289,27 +378,27 @@ export async function GET(req: Request) {
       return NextResponse.json(
         {
           ok: true,
-          source: 'rss+snapshot',
+          source: 'rss+html',
           feedsTried: FEEDS.length,
+          htmlPagesTried: ADVISORY_INDEX_PAGES.length,
           itemsParsed: items.length,
           rssCount: rssOut.length,
-          snapshotCount: snapshotOut.length,
+          htmlCount: htmlOut.length,
           count: out.length,
           sample: out.slice(0, 8),
         },
-        { status: 200, headers: { 'cache-control': 'no-store', 'x-advisories-source': 'rss+snapshot' } }
+        { status: 200, headers: { 'cache-control': 'no-store', 'x-advisories-source': 'rss+html' } }
       );
     }
 
-    return NextResponse.json(out, { status: 200, headers: { 'cache-control': 'no-store', 'x-advisories-source': 'rss+snapshot' } });
+    return NextResponse.json(out, { status: 200, headers: { 'cache-control': 'no-store', 'x-advisories-source': 'rss+html' } });
   } catch (e) {
-    const fb = loadSnapshot();
     if (debug) {
       return NextResponse.json(
-        { ok: true, source: 'snapshot-fallback', error: String(e), count: fb.length, sample: fb.slice(0, 5) },
-        { status: 200, headers: { 'cache-control': 'no-store', 'x-advisories-source': 'snapshot-fallback' } }
+        { ok: false, source: 'error', error: String(e), count: 0, sample: [] },
+        { status: 200, headers: { 'cache-control': 'no-store', 'x-advisories-source': 'error' } }
       );
     }
-    return NextResponse.json(fb, { status: 200, headers: { 'cache-control': 'no-store', 'x-advisories-source': 'snapshot-fallback' } });
+    return NextResponse.json([], { status: 200, headers: { 'cache-control': 'no-store', 'x-advisories-source': 'error' } });
   }
 }

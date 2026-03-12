@@ -16,7 +16,18 @@ enum APIConfig {
     }
 
     static var baseURL: URL {
-        let url = URL(string: "https://travel-scorer.vercel.app")!
-        return url
+        if let overrideBaseURLString,
+           let trimmed = overrideBaseURLString.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
+           let overrideURL = URL(string: trimmed) {
+            return overrideURL
+        }
+
+        return URL(string: "https://travel-scorer.vercel.app")!
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        isEmpty ? nil : self
     }
 }
