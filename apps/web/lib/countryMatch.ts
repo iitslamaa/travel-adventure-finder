@@ -67,6 +67,11 @@ const OVERRIDES: Record<string, string> = {
 
   // Åland Islands
   alandislands: 'AX',
+
+  // US territories / abbreviations
+  usvirginislands: 'VI',
+  virginislandsus: 'VI',
+  unitedstatesvirginislands: 'VI',
 };
 
 export function normalizeName(raw: string) {

@@ -25,7 +25,14 @@ import { createServerClient } from '@supabase/auth-helpers-nextjs';
 type FactsExtraServer = Partial<CountryFacts> & {
   seasonality?: number;
   visaEase?: number;
-  visaType?: 'visa_free' | 'voa' | 'evisa' | 'visa_required' | 'entry_permit' | 'ban';
+  visaType?:
+    | 'freedom_of_movement'
+    | 'visa_free'
+    | 'voa'
+    | 'evisa'
+    | 'visa_required'
+    | 'entry_permit'
+    | 'ban';
   visaAllowedDays?: number;
   visaFeeUsd?: number;
   visaNotes?: string;

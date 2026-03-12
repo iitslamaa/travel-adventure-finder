@@ -16,6 +16,7 @@ type Props = {
 function prettyVisaType(t?: string) {
   if (!t) return 'Visa';
   const map: Record<string, string> = {
+    freedom_of_movement: 'Freedom of movement',
     visa_free: 'Visa-free',
     visa_required: 'Visa required',
     evisa: 'eVisa',

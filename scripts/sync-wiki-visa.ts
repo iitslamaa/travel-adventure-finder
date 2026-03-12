@@ -52,7 +52,7 @@ const WIKI_URL =
   "https://en.wikipedia.org/wiki/Visa_requirements_for_United_States_citizens";
 
 function normalize(text) {
-  return String(text || "")
+  const normalized = String(text || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -62,6 +62,24 @@ function normalize(text) {
     .replace(/[^\w\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
+  const tokens = normalized.split(" ").filter(Boolean);
+  const collapsed = [];
+  for (const token of tokens) {
+    if (
+      token.length === 1 &&
+      /^[a-z0-9]$/.test(token) &&
+      collapsed.length > 0 &&
+      collapsed[collapsed.length - 1].length === 1 &&
+      /^[a-z0-9]$/.test(collapsed[collapsed.length - 1])
+    ) {
+      collapsed[collapsed.length - 1] += token;
+    } else {
+      collapsed.push(token);
+    }
+  }
+
+  return collapsed.join(" ");
 }
 
 function cleanDisplayName(text) {
@@ -94,16 +112,25 @@ const MANUAL_ALIASES_BY_NORM = {
   palestine: ["palestinian territories", "palestinian territory"],
   "turks and caicos islands": ["turks and caicos"],
   "cote divoire": ["cote d ivoire", "ivory coast"],
+  "united states virgin islands": [
+    "u s virgin islands",
+    "us virgin islands",
+    "virgin islands u s",
+    "virgin islands us",
+    "u s virgin is",
+  ],
 };
 
 const aliasToSeed = (() => {
   const map = new Map();
 
   for (const seed of COUNTRY_SEEDS) {
+    const manualAliases = MANUAL_ALIASES_BY_NORM[normalize(seed.name)] || [];
     const labels = [
       seed.name,
       seed.officialName,
       ...(Array.isArray(seed.aliases) ? seed.aliases : []),
+      ...manualAliases,
     ]
       .filter(Boolean)
       .filter((value) => value !== "undefined");
