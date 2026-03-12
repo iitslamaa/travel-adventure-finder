@@ -16,8 +16,6 @@ struct Country: Identifiable, Hashable {
     let region: String?
     let subregion: String?
     let advisoryScore: Int?
-    
-    let travelSafeScore: Int?
 
     // Extra details from API
     let advisorySummary: String?
@@ -102,8 +100,7 @@ struct Country: Identifiable, Hashable {
         affordabilityCategory: Int? = nil,
         affordabilityScore: Int? = nil,
         affordabilityBand: String? = nil,
-        affordabilityExplanation: String? = nil,
-        travelSafeScore: Int? = nil
+        affordabilityExplanation: String? = nil
     ) {
         self.iso2 = iso2
         self.name = name
@@ -132,7 +129,6 @@ struct Country: Identifiable, Hashable {
         self.affordabilityScore = affordabilityScore
         self.affordabilityBand = affordabilityBand
         self.affordabilityExplanation = affordabilityExplanation
-        self.travelSafeScore = travelSafeScore
     }
 
     var flagEmoji: String {
@@ -195,6 +191,81 @@ struct Country: Identifiable, Hashable {
         }
 
         return nil
+    }
+}
+
+extension Country {
+    func recalculatedScore(using weights: ScoreWeights) -> Int? {
+        var components: [(value: Double, weight: Double)] = []
+
+        if let advisory = advisoryScore {
+            components.append((Double(advisory), weights.advisory))
+        }
+
+        if let visa = visaEaseScore {
+            components.append((Double(visa), weights.visa))
+        }
+
+        if let affordability = affordabilityScore {
+            components.append((Double(affordability), weights.affordability))
+        }
+
+        guard !components.isEmpty else {
+            return nil
+        }
+
+        let totalWeight = components.reduce(0) { $0 + $1.weight }
+        guard totalWeight > 0 else {
+            return nil
+        }
+
+        let weightedSum = components.reduce(0) { $0 + ($1.value * $1.weight) }
+        return Int((weightedSum / totalWeight).rounded())
+    }
+
+    func applyingOverallScore(using weights: ScoreWeights) -> Country {
+        var updated = self
+        updated.score = recalculatedScore(using: weights)
+        return updated
+    }
+
+    func applyingVisa(
+        visaEaseScore: Int?,
+        visaType: String?,
+        visaAllowedDays: Int?,
+        visaFeeUsd: Double?,
+        visaNotes: String?,
+        visaSourceUrl: URL?
+    ) -> Country {
+        Country(
+            iso2: iso2,
+            name: name,
+            score: score,
+            region: region,
+            subregion: subregion,
+            advisoryScore: advisoryScore,
+            advisorySummary: advisorySummary,
+            advisoryUpdatedAt: advisoryUpdatedAt,
+            advisoryUrl: advisoryUrl,
+            seasonalityScore: seasonalityScore,
+            seasonalityLabel: seasonalityLabel,
+            seasonalityBestMonths: seasonalityBestMonths,
+            seasonalityNotes: seasonalityNotes,
+            visaEaseScore: visaEaseScore ?? self.visaEaseScore,
+            visaType: visaType ?? self.visaType,
+            visaAllowedDays: visaAllowedDays ?? self.visaAllowedDays,
+            visaFeeUsd: visaFeeUsd ?? self.visaFeeUsd,
+            visaNotes: visaNotes ?? self.visaNotes,
+            visaSourceUrl: visaSourceUrl ?? self.visaSourceUrl,
+            dailySpendTotalUsd: dailySpendTotalUsd,
+            dailySpendHotelUsd: dailySpendHotelUsd,
+            dailySpendFoodUsd: dailySpendFoodUsd,
+            dailySpendActivitiesUsd: dailySpendActivitiesUsd,
+            affordabilityCategory: affordabilityCategory,
+            affordabilityScore: affordabilityScore,
+            affordabilityBand: affordabilityBand,
+            affordabilityExplanation: affordabilityExplanation
+        )
     }
 }
 

@@ -1,15 +1,23 @@
 import { nameToIso2 } from '@/lib/countryMatch';
 const WP_URL = 'https://en.wikipedia.org/wiki/Visa_requirements_for_United_States_citizens';
 // --- Types & helpers for visa parsing --------------------------------------
-export type VisaType = 'visa_free' | 'voa' | 'evisa' | 'visa_required' | 'ban';
+export type VisaType =
+  | 'visa_free'
+  | 'voa'
+  | 'evisa'
+  | 'visa_required'
+  | 'entry_permit'
+  | 'ban';
 
 export interface VisaRow {
   visaType: VisaType;
   allowedDays?: number;
   feeUsd?: number;
   notes?: string;
+  visaRequirementText?: string;
+  allowedStayText?: string;
   sourceUrl: string;
-  visaEase: number; // 0..100
+  visaEase: number | null; // 0..100 or null if unknown
 }
 
 // Parse durations like "90 days", "3 months", "1 year", "2 weeks" into days
@@ -37,33 +45,69 @@ function parseDays(text?: string | null): number | undefined {
 }
 
 // Score mapping for visa ease (0..100) with simple fee-aware adjustments
-function scoreFor(visaType: VisaType, feeUsd?: number): number {
-  let score = 0;
+function scoreFor(visaType: VisaType, feeUsd?: number): number | null {
   switch (visaType) {
     case 'visa_free':
-      score = 100;
-      break;
+      return 100;
     case 'voa':
-      // Visa on arrival
-      score = feeUsd && feeUsd > 0 ? 75 : 90;
-      break;
+      return feeUsd && feeUsd > 0 ? 75 : 90;
     case 'evisa':
-      // Electronic visa / ETA
-      score = feeUsd && feeUsd > 0 ? 35 : 50;
-      break;
+      // If no reliable fee info, treat as unknown instead of neutral 50
+      if (feeUsd == null) return null;
+      return feeUsd > 0 ? 35 : 90;
     case 'visa_required':
-      score = 30;
-      break;
+      return 30;
     case 'ban':
+      return 0;
     default:
-      score = 0;
-      break;
+      return null;
   }
-  // Clamp and round just in case
-  if (!Number.isFinite(score)) score = 0;
-  if (score < 0) score = 0;
-  if (score > 100) score = 100;
-  return Math.round(score);
+}
+
+function splitList(input: string): string[] {
+  return input
+    .split(/,| and |\//i)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function resolveIso2Targets(name: string): string[] {
+  // 1) exact match first
+  const exact = nameToIso2(name);
+  if (exact) return [exact.toUpperCase()];
+
+  const results: string[] = [];
+
+  // 2) parentheses expansion
+  const paren = name.match(/\(([^)]+)\)/)?.[1];
+  if (paren) {
+    for (const token of splitList(paren)) {
+      const iso = nameToIso2(token);
+      if (iso) results.push(iso.toUpperCase());
+    }
+    if (results.length > 0) return [...new Set(results)];
+  }
+
+  // 3) hyphen handling (X - Y)
+  const dashParts = name.split(/\s+-\s+/);
+  if (dashParts.length > 1) {
+    const rhs = dashParts.slice(1).join(' - ');
+    for (const token of splitList(rhs)) {
+      const iso = nameToIso2(token);
+      if (iso) results.push(iso.toUpperCase());
+    }
+    // safety: if RHS resolves to none, do not map to LHS
+    if (results.length > 0) return [...new Set(results)];
+    return [];
+  }
+
+  // 4) token-safe contains fallback
+  for (const token of splitList(name)) {
+    const iso = nameToIso2(token);
+    if (iso) results.push(iso.toUpperCase());
+  }
+
+  return [...new Set(results)];
 }
 
 /**
@@ -117,36 +161,40 @@ async function fetchVisaFromWikipedia(): Promise<Map<string, VisaRow>> {
     const name = clean(nameCell);
     if (!name) continue;
 
-    const iso2 = nameToIso2(name)?.toUpperCase();
-    if (!iso2) continue;
+    const isoTargets = resolveIso2Targets(name);
+    if (isoTargets.length === 0) continue;
 
-    // Column mapping depends on whether name is in <th> (typical) or first <td>
-    const requirement = clean(tdCells[thName ? 0 : 1] || '').toLowerCase();
-    const stayText   = clean(tdCells[thName ? 1 : 2] || '');
-    const notes      = clean(tdCells[thName ? 2 : 3] || '');
+    const requirementTextRaw = clean(tdCells[thName ? 0 : 1] || '');
+    const requirement = requirementTextRaw.toLowerCase();
+    const stayTextRaw = clean(tdCells[thName ? 1 : 2] || '');
+    const notes = clean(tdCells[thName ? 2 : 3] || '');
 
     let visaType: VisaType = 'visa_required';
     if (/visa[- ]?free|not required/i.test(requirement)) visaType = 'visa_free';
     else if (/visa on arrival|\bvoa\b/i.test(requirement)) visaType = 'voa';
     else if (/(^|\b)e-?visa\b|electronic travel authorization|\beta\b/i.test(requirement)) visaType = 'evisa';
+    else if (/entry permit|required permit/i.test(requirement)) visaType = 'entry_permit';
     else if (/not allowed|prohibit|ban/i.test(requirement)) visaType = 'ban';
 
-    const allowedDays = parseDays(stayText) ?? parseDays(requirement);
+    const allowedDays = parseDays(stayTextRaw) ?? parseDays(requirementTextRaw);
 
-    // Crude fee parse from notes; refine in future if needed
     const feeMatch = notes.match(/(?:US?\$|\$|€|£)\s?(\d{1,4})/);
     const feeUsd = feeMatch ? parseInt(feeMatch[1], 10) : undefined;
 
     const visaEase = scoreFor(visaType, feeUsd);
 
-    byIso2.set(iso2, {
-      visaType,
-      allowedDays,
-      feeUsd,
-      notes: notes || undefined,
-      sourceUrl: WP_URL,
-      visaEase,
-    });
+    for (const iso2 of isoTargets) {
+      byIso2.set(iso2, {
+        visaType,
+        allowedDays,
+        feeUsd,
+        notes: notes || undefined,
+        visaRequirementText: requirementTextRaw || undefined,
+        allowedStayText: stayTextRaw || undefined,
+        sourceUrl: WP_URL,
+        visaEase,
+      });
+    }
   }
 
   // Merge manual overrides if present (typed, no `any`)
@@ -157,13 +205,20 @@ async function fetchVisaFromWikipedia(): Promise<Map<string, VisaRow>> {
     if (ovUnknown && typeof ovUnknown === 'object' && !Array.isArray(ovUnknown)) {
       const ov = ovUnknown as Record<string, Partial<VisaRow>>;
       for (const [k, v] of Object.entries(ov)) {
-        const base: VisaRow = byIso2.get(k) ?? {
-          visaType: 'visa_required',
-          sourceUrl: WP_URL,
-          visaEase: 30,
-        } as VisaRow;
-        const merged: VisaRow = { ...base, ...v } as VisaRow;
-        merged.visaEase = v.visaEase ?? scoreFor(merged.visaType, merged.feeUsd);
+        const base = byIso2.get(k);
+        if (!base && !v) continue;
+
+        const merged: VisaRow = {
+          visaType: v.visaType ?? base?.visaType ?? 'visa_required',
+          allowedDays: v.allowedDays ?? base?.allowedDays,
+          feeUsd: v.feeUsd ?? base?.feeUsd,
+          notes: v.notes ?? base?.notes,
+          visaRequirementText: v.visaRequirementText ?? base?.visaRequirementText,
+          allowedStayText: v.allowedStayText ?? base?.allowedStayText,
+          sourceUrl: v.sourceUrl ?? base?.sourceUrl ?? WP_URL,
+          visaEase: v.visaEase ?? scoreFor(v.visaType ?? base?.visaType ?? 'visa_required', v.feeUsd ?? base?.feeUsd),
+        };
+
         byIso2.set(k.toUpperCase(), merged);
       }
     }
@@ -174,17 +229,110 @@ async function fetchVisaFromWikipedia(): Promise<Map<string, VisaRow>> {
   return byIso2;
 }
 
-// Use tsconfig path alias so Next/Vercel can resolve the snapshot at build time
-import visaSnapshot from '@/data/snapshots/visa_us_citizens.json';
+import { createClient } from '@supabase/supabase-js';
 
-// Runtime source of truth: static snapshot (no Wikipedia fetches in prod)
+let _visaCache: Map<string, VisaRow> | null = null;
+let _visaCacheExpiresAt = 0;
+const VISA_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
-  const map = new Map<string, VisaRow>();
-
-  for (const [iso2, row] of Object.entries(visaSnapshot)) {
-    map.set(iso2.toUpperCase(), row as VisaRow);
+  const now = Date.now();
+  if (_visaCache && now < _visaCacheExpiresAt) {
+    return _visaCache;
   }
 
+  const map = new Map<string, VisaRow>();
+
+  const supabaseUrl = process.env.SUPABASE_URL!;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const supabase = createClient(supabaseUrl, serviceRole);
+
+  // Get latest version
+  const { data: latestRun } = await supabase
+    .from('visa_sync_runs')
+    .select('version')
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!latestRun?.version) return map;
+
+  const { data: rows } = await supabase
+    .from('visa_requirements')
+    .select('*')
+    .eq('version', latestRun.version);
+
+  if (!rows) return map;
+
+  // Helper normalize (must match ingestion normalize behavior)
+  const normalize = (text: string) =>
+    text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/&/g, 'and')
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  for (const seedName of Object.keys(require('@/lib/seed').byIso2)) {
+    const iso2 = seedName.toUpperCase();
+    const seed = require('@/lib/seed').byIso2.get(iso2);
+    if (!seed) continue;
+
+    const countryNorm = normalize(seed.name);
+
+    let matchedRow: any | null = null;
+
+    // 1️⃣ Exact match
+    matchedRow = rows.find(r => r.visitor_to_norm === countryNorm) ?? null;
+
+    // 2️⃣ Alias match
+    if (!matchedRow) {
+      matchedRow = rows.find(r =>
+        Array.isArray(r.aliases_norm) &&
+        r.aliases_norm.includes(countryNorm)
+      ) ?? null;
+    }
+
+    // 3️⃣ Safe contains (only non-special rows, and not parent bleed)
+    if (!matchedRow) {
+      matchedRow = rows.find(r => {
+        if (r.is_special_subregion) return false;
+        if (r.parent_norm && r.parent_norm === countryNorm) return false;
+        return r.visitor_to_norm.includes(countryNorm);
+      }) ?? null;
+    }
+
+    if (!matchedRow) continue;
+
+    const visaType: VisaType = (() => {
+      const r = (matchedRow.requirement || '').toLowerCase();
+      if (/visa[- ]?free|not required/i.test(r)) return 'visa_free';
+      if (/visa on arrival|\bvoa\b/i.test(r)) return 'voa';
+      if (/(^|\b)e-?visa\b|electronic travel authorization|\beta\b/i.test(r)) return 'evisa';
+      if (/entry permit|required permit/i.test(r)) return 'entry_permit';
+      if (/not allowed|prohibit|ban/i.test(r)) return 'ban';
+      return 'visa_required';
+    })();
+
+    const allowedDays = parseDays(matchedRow.allowed_stay) ?? parseDays(matchedRow.requirement);
+    const visaEase = scoreFor(visaType);
+
+    map.set(iso2, {
+      visaType,
+      allowedDays,
+      feeUsd: undefined,
+      notes: matchedRow.notes || undefined,
+      visaRequirementText: matchedRow.requirement || undefined,
+      allowedStayText: matchedRow.allowed_stay || undefined,
+      sourceUrl: 'wikipedia',
+      visaEase,
+    });
+  }
+
+  _visaCache = map;
+  _visaCacheExpiresAt = Date.now() + VISA_CACHE_TTL_MS;
   return map;
 }
 

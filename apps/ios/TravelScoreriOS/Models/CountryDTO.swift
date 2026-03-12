@@ -15,10 +15,7 @@ struct CountryDTO: Decodable {
 
     /// Final 0...100 Travelability score
     let score: Int?
-    
-    /// TravelSafe / crime & safety index (0...100, higher = safer)
-    let travelSafeScore: Int?
-    
+
     /// From advisory.level (1–4)
     let advisoryLevelNumber: Int?
     /// Pure advisory normalized score (0...100) from backend
@@ -96,9 +93,6 @@ struct CountryDTO: Decodable {
     private struct Facts: Decodable {
         let scoreTotal: Double?
 
-        // safety
-        let travelSafeOverall: Double?
-
         // advisory (single source of truth from backend facts)
         let advisoryScore: Double?
         let advisoryLevel: Int?
@@ -130,7 +124,6 @@ struct CountryDTO: Decodable {
 
         private enum CodingKeys: String, CodingKey {
             case scoreTotal
-            case travelSafeOverall
             case advisoryScore
             case advisoryLevel
             case seasonality
@@ -155,7 +148,6 @@ struct CountryDTO: Decodable {
             let c = try decoder.container(keyedBy: CodingKeys.self)
 
             scoreTotal = try? c.decode(Double.self, forKey: .scoreTotal)
-            travelSafeOverall = try? c.decode(Double.self, forKey: .travelSafeOverall)
             // Decode advisoryScore as Double OR Int (backend may send either)
             if let d = try? c.decode(Double.self, forKey: .advisoryScore) {
                 advisoryScore = d
@@ -283,13 +275,6 @@ struct CountryDTO: Decodable {
             s = Int(total.rounded())
         }
         self.score = s
-        
-        // TravelSafe safety score (0...100, higher = safer)
-        if let ts = facts?.travelSafeOverall {
-            self.travelSafeScore = Int(ts.rounded())
-        } else {
-            self.travelSafeScore = nil
-        }
 
         // Decode advisory object (level + metadata)
         let advisory = try? c.decode(Advisory.self, forKey: .advisory)

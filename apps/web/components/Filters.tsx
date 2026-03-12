@@ -61,7 +61,6 @@ export default function Filters({ onChange }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           {slider('Travel.gov advisory', 'travelGov' as WeightKey)}
-          {slider('TravelSafe Abroad', 'travelSafe' as WeightKey)}
           {slider('Solo Female Travelers', 'stfi' as WeightKey)}
           {slider('Reddit sentiment', 'reddit' as WeightKey)}
           {slider('Seasonality', 'seasonality' as WeightKey)}

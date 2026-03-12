@@ -41,12 +41,11 @@ const ADVISORY_FALLBACK_BY_ISO2: Record<string, { level: 1|2|3|4; summary: strin
 
 // Local type to avoid any
 type FactsExtraServer = Partial<CountryFacts> & {
-  travelSafeOverall?: number;
   soloFemaleIndex?: number;
   redditComposite?: number;
   seasonality?: number;
   visaEase?: number;
-  visaType?: 'visa_free' | 'voa' | 'evisa' | 'visa_required' | 'ban';
+  visaType?: 'visa_free' | 'voa' | 'evisa' | 'visa_required' | 'entry_permit' | 'ban';
   visaAllowedDays?: number;
   visaFeeUsd?: number;
   visaNotes?: string;
@@ -472,7 +471,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // Load and attach facts (TravelSafe, SFTI, Reddit, visa, seasonality, flights, infrastructure, affordability)
+  // Load and attach facts (advisory, SFTI, Reddit, visa, seasonality, flights, infrastructure, affordability)
   if (lite) {
     merged.sort((x, y) => x.name.localeCompare(y.name));
 
@@ -649,7 +648,7 @@ export async function GET(request: Request) {
         const visa = visaIndex.get(keyUpper);
         if (visa) {
           const fxs = row.facts as unknown as FactsExtraServer;
-          fxs.visaEase = visa.visaEase;
+          fxs.visaEase = visa.visaEase ?? undefined;
           fxs.visaType = visa.visaType;
           fxs.visaAllowedDays = visa.allowedDays;
           fxs.visaFeeUsd = visa.feeUsd;

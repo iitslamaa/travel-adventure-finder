@@ -15,8 +15,6 @@
 		170C212B2F4790E00090BA78 /* CountrySeasonalityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20C42F4790E00090BA78 /* CountrySeasonalityCard.swift */; };
 		170C212C2F4790E00090BA78 /* CountrySeasonalityHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20C52F4790E00090BA78 /* CountrySeasonalityHelpers.swift */; };
 		170C212D2F4790E00090BA78 /* CountryTextHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20C62F4790E00090BA78 /* CountryTextHelpers.swift */; };
-		170C212E2F4790E00090BA78 /* CountryTravelSafeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20C72F4790E00090BA78 /* CountryTravelSafeCard.swift */; };
-		170C212F2F4790E00090BA78 /* CountryTravelSafeHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20C82F4790E00090BA78 /* CountryTravelSafeHelpers.swift */; };
 		170C21302F4790E00090BA78 /* CountryVisaCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20C92F4790E00090BA78 /* CountryVisaCard.swift */; };
 		170C21312F4790E00090BA78 /* CountryVisaHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20CA2F4790E00090BA78 /* CountryVisaHelpers.swift */; };
 		170C21322F4790E00090BA78 /* MetaDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20CC2F4790E00090BA78 /* MetaDTO.swift */; };
@@ -45,6 +43,7 @@
 		170C21492F4790E00090BA78 /* MetaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EA2F4790E00090BA78 /* MetaService.swift */; };
 		170C214A2F4790E00090BA78 /* ProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EB2F4790E00090BA78 /* ProfileService.swift */; };
 		170C214B2F4790E00090BA78 /* SeasonalityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EC2F4790E00090BA78 /* SeasonalityService.swift */; };
+		17F9A0012F60000100AA0001 /* VisaRequirementsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */; };
 		170C214C2F4790E00090BA78 /* BucketListStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EE2F4790E00090BA78 /* BucketListStore.swift */; };
 		170C214D2F4790E00090BA78 /* MetaStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EF2F4790E00090BA78 /* MetaStore.swift */; };
 		170C214E2F4790E00090BA78 /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20F12F4790E00090BA78 /* AppRootView.swift */; };
@@ -160,8 +159,6 @@
 		170C20C42F4790E00090BA78 /* CountrySeasonalityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountrySeasonalityCard.swift; sourceTree = "<group>"; };
 		170C20C52F4790E00090BA78 /* CountrySeasonalityHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountrySeasonalityHelpers.swift; sourceTree = "<group>"; };
 		170C20C62F4790E00090BA78 /* CountryTextHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryTextHelpers.swift; sourceTree = "<group>"; };
-		170C20C72F4790E00090BA78 /* CountryTravelSafeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryTravelSafeCard.swift; sourceTree = "<group>"; };
-		170C20C82F4790E00090BA78 /* CountryTravelSafeHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryTravelSafeHelpers.swift; sourceTree = "<group>"; };
 		170C20C92F4790E00090BA78 /* CountryVisaCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryVisaCard.swift; sourceTree = "<group>"; };
 		170C20CA2F4790E00090BA78 /* CountryVisaHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryVisaHelpers.swift; sourceTree = "<group>"; };
 		170C20CC2F4790E00090BA78 /* MetaDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaDTO.swift; sourceTree = "<group>"; };
@@ -190,6 +187,7 @@
 		170C20EA2F4790E00090BA78 /* MetaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaService.swift; sourceTree = "<group>"; };
 		170C20EB2F4790E00090BA78 /* ProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
 		170C20EC2F4790E00090BA78 /* SeasonalityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeasonalityService.swift; sourceTree = "<group>"; };
+		17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisaRequirementsStore.swift; sourceTree = "<group>"; };
 		170C20EE2F4790E00090BA78 /* BucketListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketListStore.swift; sourceTree = "<group>"; };
 		170C20EF2F4790E00090BA78 /* MetaStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaStore.swift; sourceTree = "<group>"; };
 		170C20F12F4790E00090BA78 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
@@ -474,8 +472,6 @@
 				170C20C42F4790E00090BA78 /* CountrySeasonalityCard.swift */,
 				170C20C52F4790E00090BA78 /* CountrySeasonalityHelpers.swift */,
 				170C20C62F4790E00090BA78 /* CountryTextHelpers.swift */,
-				170C20C72F4790E00090BA78 /* CountryTravelSafeCard.swift */,
-				170C20C82F4790E00090BA78 /* CountryTravelSafeHelpers.swift */,
 				170C20C92F4790E00090BA78 /* CountryVisaCard.swift */,
 				170C20CA2F4790E00090BA78 /* CountryVisaHelpers.swift */,
 				176796132F4CF4BC0011EC0E /* CountryAffordabilityCard.swift */,
@@ -808,6 +804,7 @@
 				170C20EA2F4790E00090BA78 /* MetaService.swift */,
 				170C20EB2F4790E00090BA78 /* ProfileService.swift */,
 				170C20EC2F4790E00090BA78 /* SeasonalityService.swift */,
+				17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */,
 				1776C9662F50FD8800AFC488 /* LanguageRepository.swift */,
 			);
 			path = Services;
@@ -1093,8 +1090,6 @@
 				17EC41E02F4BB213004B80DA /* ScoreWorldMapCoordinator.swift in Sources */,
 				170C212C2F4790E00090BA78 /* CountrySeasonalityHelpers.swift in Sources */,
 				170C212D2F4790E00090BA78 /* CountryTextHelpers.swift in Sources */,
-				170C212E2F4790E00090BA78 /* CountryTravelSafeCard.swift in Sources */,
-				170C212F2F4790E00090BA78 /* CountryTravelSafeHelpers.swift in Sources */,
 				170C21302F4790E00090BA78 /* CountryVisaCard.swift in Sources */,
 				17C1D3332F58F88A00FD768B /* Theme.swift in Sources */,
 				171EC56F2F53590600FCB4AB /* GeoJsonLoader.swift in Sources */,
@@ -1136,6 +1131,7 @@
 				170C214A2F4790E00090BA78 /* ProfileService.swift in Sources */,
 				17EC41E62F4BB2CA004B80DA /* LoadingOverlayView.swift in Sources */,
 				170C214B2F4790E00090BA78 /* SeasonalityService.swift in Sources */,
+				17F9A0012F60000100AA0001 /* VisaRequirementsStore.swift in Sources */,
 				170C214C2F4790E00090BA78 /* BucketListStore.swift in Sources */,
 				170C214D2F4790E00090BA78 /* MetaStore.swift in Sources */,
 				1758A7882F5808F400F7AC02 /* TAFButtonStyle.swift in Sources */,
