@@ -13,20 +13,16 @@ enum RelationshipState {
     case selfProfile
     case none
     case requestSent
+    case requestReceived
     case friends
 }
 
 @MainActor
 final class ProfileViewModel: ObservableObject {
     
-    let instanceId = UUID()
-    
     // MARK: - Published state
     @Published var profile: Profile? {
-        didSet {
-            print("📦 [\(instanceId)] profile DID SET →", profile?.id as Any)
-            logPublishedState("profile updated")
-        }
+        didSet { }
     }
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -37,35 +33,30 @@ final class ProfileViewModel: ObservableObject {
     @Published var isRefreshing: Bool = false
     @Published var viewedTraveledCountries: Set<String> = [] {
         didSet {
-            print("✈️ [\(instanceId)] traveled DID SET → count:", viewedTraveledCountries.count)
+            ReviewTriggerService.shared
+                .evaluateAndTriggerReviewIfEligible(
+                    visitedCount: viewedTraveledCountries.count
+                )
         }
     }
     @Published var viewedBucketListCountries: Set<String> = [] {
-        didSet {
-            print("🪣 [\(instanceId)] bucket DID SET → count:", viewedBucketListCountries.count)
-        }
+        didSet { }
     }
-    @Published var friendCount: Int = 0
     @Published var friends: [Profile] = [] {
-        didSet {
-            print("👥 [\(instanceId)] friends DID SET → count:", friends.count)
-            logPublishedState("friends updated")
-        }
+        didSet { }
     }
     @Published var mutualBucketCountries: [String] = []
     @Published var mutualTraveledCountries: [String] = []
+    @Published var mutualLanguages: [String] = []
     @Published var pendingRequestCount: Int = 0
     @Published var mutualFriends: [Profile] = []
     @Published var orderedBucketListCountries: [String] = [] {
-        didSet {
-            print("📊 [\(instanceId)] orderedBucket DID SET →", orderedBucketListCountries)
-        }
+        didSet { }
     }
     @Published var orderedTraveledCountries: [String] = [] {
-        didSet {
-            print("📊 [\(instanceId)] orderedTraveled DID SET →", orderedTraveledCountries)
-        }
+        didSet { }
     }
+    @Published var hasLoadedCoreData: Bool = false
     
     // MARK: - Dependencies
     let profileService: ProfileService
@@ -84,7 +75,6 @@ final class ProfileViewModel: ObservableObject {
         profileService: ProfileService,
         friendService: FriendService
     ) {
-        print("🧠 ProfileViewModel INIT — instance:", instanceId)
         self.userId = userId
         self.profileService = profileService
         self.friendService = friendService
@@ -95,8 +85,6 @@ final class ProfileViewModel: ObservableObject {
     /// Forces a full reload even if the same user is already bound.
     /// This is used by `.refreshable` in ProfileView.
     func reloadProfile() async {
-        print("🔄 [\(instanceId)] reloadProfile called for:", userId)
-
         isRefreshing = true
         errorMessage = nil
 
@@ -117,24 +105,47 @@ final class ProfileViewModel: ObservableObject {
     // MARK: - Identity-Safe Lifecycle
 
     func loadIfNeeded() async {
-        guard profile?.id != userId else { return }
+        guard !hasLoadedCoreData || profile?.id != userId else { return }
 
-        isLoading = true
         errorMessage = nil
         isRelationshipLoading = true
 
-        // 🔒 Reset visible state to prevent stale UI flash
-        profile = nil
-        relationshipState = .none
-        friends = []
-        viewedTraveledCountries = []
-        viewedBucketListCountries = []
-        orderedBucketListCountries = []
-        orderedTraveledCountries = []
-        mutualFriends = []
-        mutualBucketCountries = []
-        mutualTraveledCountries = []
-        friendCount = 0
+        let isSwitchingUsers = profile?.id != nil && profile?.id != userId
+        let cachedProfile = profileService.cachedProfile(userId: userId)
+        let cachedTraveled = profileService.cachedTraveledCountries(userId: userId)
+        let cachedBucket = profileService.cachedBucketListCountries(userId: userId)
+
+        if let cachedProfile {
+            profile = cachedProfile
+        } else if isSwitchingUsers {
+            profile = nil
+        }
+
+        if let cachedTraveled {
+            viewedTraveledCountries = cachedTraveled
+        } else if isSwitchingUsers {
+            viewedTraveledCountries = []
+        }
+
+        if let cachedBucket {
+            viewedBucketListCountries = cachedBucket
+        } else if isSwitchingUsers {
+            viewedBucketListCountries = []
+        }
+
+        if isSwitchingUsers {
+            relationshipState = .none
+            friends = []
+            orderedBucketListCountries = []
+            orderedTraveledCountries = []
+            mutualFriends = []
+            mutualBucketCountries = []
+            mutualTraveledCountries = []
+            mutualLanguages = []
+        }
+
+        computeOrderedLists()
+        isLoading = cachedProfile == nil && cachedTraveled == nil && cachedBucket == nil
 
         cancelInFlightWork()
 
@@ -147,25 +158,85 @@ final class ProfileViewModel: ObservableObject {
 
         await loadTask?.value
         isRelationshipLoading = false
-        isLoading = false
     }
 
     func cancelInFlightWork() {
         loadTask?.cancel()
         loadTask = nil
     }
-    
-    deinit {
-        print("💀 ProfileViewModel DEINIT — instance:", instanceId, "userId:", userId as Any)
+
+    func loadSecondaryData(generation: UUID) async {
+        let viewedUserId = userId
+
+        if viewedUserId == supabase.currentUserId {
+            await loadPendingRequestCount()
+            return
+        }
+
+        guard let currentUserId = supabase.currentUserId else { return }
+
+        async let myTraveledTask = profileService.fetchTraveledCountries(userId: currentUserId)
+        async let myBucketTask = profileService.fetchBucketListCountries(userId: currentUserId)
+        async let myProfileTask = profileService.fetchMyProfile(userId: currentUserId)
+        async let mutualFriendsTask = friendService.fetchMutualFriends(
+            currentUserId: currentUserId,
+            otherUserId: viewedUserId
+        )
+
+        do {
+            let myTraveled = try await myTraveledTask
+            let myBucket = try await myBucketTask
+            let myProfile = try await myProfileTask
+            let fetchedMutualFriends = try await mutualFriendsTask
+
+            guard generation == loadGeneration,
+                  self.userId == viewedUserId else {
+                return
+            }
+
+            let normalizedMyTraveled = Set(
+                myTraveled.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            )
+            let normalizedMyBucket = Set(
+                myBucket.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            )
+            let normalizedViewedTraveled = Set(
+                viewedTraveledCountries.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            )
+            let normalizedViewedBucket = Set(
+                viewedBucketListCountries.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            )
+
+            mutualTraveledCountries = Array(normalizedMyTraveled.intersection(normalizedViewedTraveled))
+            mutualBucketCountries = Array(normalizedMyBucket.intersection(normalizedViewedBucket))
+
+            if let viewedLanguages = profile?.languages {
+                let myLanguageCodes = Set(myProfile.languages.map { $0.code.uppercased() })
+                let viewedLanguageCodes = Set(viewedLanguages.map { $0.code.uppercased() })
+                mutualLanguages = Array(myLanguageCodes.intersection(viewedLanguageCodes))
+            }
+
+            mutualFriends = fetchedMutualFriends
+            computeOrderedLists()
+        } catch {
+            print("❌ secondary profile load failed:", error)
+        }
+    }
+
+    func ensureFriendsLoaded() async {
+        guard friends.isEmpty else { return }
+
+        do {
+            friends = try await friendService.fetchFriends(for: userId)
+        } catch {
+            print("❌ failed to load friends list:", error)
+        }
     }
     
-    func logPublishedState(_ label: String) {
-        print("📡 [\(instanceId)] \(label)")
-        print("   userId:", userId)
-        print("   profile.id:", profile?.id as Any)
-        print("   friends.count:", friends.count)
-        print("   traveled.count:", viewedTraveledCountries.count)
-        print("   bucket.count:", viewedBucketListCountries.count)
-        print("   relationshipState:", relationshipState as Any)
+    // MARK: - Optimistic Avatar Update (Meta Gold Standard)
+    func updateAvatarLocally(to newUrl: String?) {
+        guard var current = profile else { return }
+        current.avatarUrl = newUrl
+        profile = current
     }
 }

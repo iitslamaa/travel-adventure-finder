@@ -268,7 +268,9 @@ type CountryOut = CountrySeed & {
   facts?: FactsExtraServer;
 };
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const lite = searchParams.get('lite') === '1';
   // Build absolute base to call our other route reliably in dev/prod
   const h = await headers();
   const vercel = h.get('x-vercel-deployment-url'); // e.g. myapp-abc123.vercel.app
@@ -471,6 +473,21 @@ export async function GET() {
   }
 
   // Load and attach facts (TravelSafe, SFTI, Reddit, visa, seasonality, flights, infrastructure, affordability)
+  if (lite) {
+    merged.sort((x, y) => x.name.localeCompare(y.name));
+
+    console.log('[countries] returning LITE payload');
+
+    return NextResponse.json(
+      merged.map((c) => ({
+        iso2: c.iso2,
+        name: c.name,
+        region: c.region,
+        subregion: c.subregion,
+        advisory: c.advisory,
+      }))
+    );
+  }
   try {
     const iso2s = merged.map((r) => r.iso2.toUpperCase());
 
@@ -766,5 +783,11 @@ export async function GET() {
   // Sort alphabetically by name
   merged.sort((x, y) => x.name.localeCompare(y.name));
 
-  return NextResponse.json(merged as unknown as CountryOut[]);
+  // Expose scoreTotal at top level for Discovery list
+  const listPayload = merged.map((row) => ({
+    ...row,
+    scoreTotal: (row.facts as any)?.scoreTotal ?? 0,
+  }));
+
+  return NextResponse.json(listPayload);
 }

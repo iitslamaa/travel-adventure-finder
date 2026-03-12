@@ -1,5 +1,6 @@
 import React from "react";
 import { ScrollView, TouchableOpacity, Text, StyleSheet, View } from "react-native";
+import { useTheme } from "../../hooks/useTheme";
 
 const months = [
   "JAN","FEB","MAR","APR","MAY","JUN",
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export default function MonthSelector({ selected, onSelect }: Props) {
+  const colors = useTheme();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       <View style={styles.row}>
@@ -22,20 +24,37 @@ export default function MonthSelector({ selected, onSelect }: Props) {
               key={m}
               style={[
                 styles.pill,
-                isSelected && styles.selected
+                {
+                  backgroundColor: isSelected
+                    ? colors.primary
+                    : colors.segmentBg,
+                  borderColor: colors.border,
+                },
               ]}
               onPress={() => onSelect(i)}
             >
-              <Text style={[
-                styles.text,
-                isSelected && styles.selectedText
-              ]}>
+              <Text
+                style={[
+                  styles.text,
+                  {
+                    color: isSelected
+                      ? colors.primaryText
+                      : colors.textPrimary,
+                  },
+                ]}
+              >
                 {m}
               </Text>
-              <Text style={[
-                styles.sub,
-                isSelected && styles.selectedText
-              ]}>
+              <Text
+                style={[
+                  styles.sub,
+                  {
+                    color: isSelected
+                      ? colors.primaryText
+                      : colors.textSecondary,
+                  },
+                ]}
+              >
                 {String(i+1).padStart(2,"0")}
               </Text>
             </TouchableOpacity>
@@ -54,21 +73,14 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#E5E5EA",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 8,
-  },
-  selected: {
-    backgroundColor: "#000",
   },
   text: {
     fontWeight: "600",
   },
   sub: {
     fontSize: 12,
-  },
-  selectedText: {
-    color: "#FFF",
   },
 });

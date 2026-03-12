@@ -7,54 +7,62 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 struct AppRootView: View {
     private let instanceId = UUID()
     @EnvironmentObject private var sessionManager: SessionManager
+    @StateObject private var profileVMHolder = ProfileVMHolder()
     
     // Controls whether intro overlay is visible
     @State private var hasFinishedIntroVideo = false
     
     init() {
-        print("🚀 AppRootView INIT — instance:", instanceId)
+        print("🧪 DEBUG: AppRootView.init() called")
     }
     
     var body: some View {
-        let _ = print(
-            "🧱 AppRootView BODY — instance:", instanceId,
-            "isAuthenticated:", sessionManager.isAuthenticated,
-            "didContinueAsGuest:", sessionManager.didContinueAsGuest,
-            "isAuthSuppressed:", sessionManager.isAuthSuppressed,
-            "userId:", sessionManager.userId as Any
-        )
-        
+        let _ = print("🧪 DEBUG: AppRootView.body recomputed instance=\(instanceId)")
+
         ZStack {
-            
+            Color.clear
+                .ignoresSafeArea()
+
             // MAIN APP CONTENT
-            if sessionManager.isAuthSuppressed {
+            if !sessionManager.hasResolvedInitialAuthState {
+                ProgressView()
+            } else if sessionManager.isAuthSuppressed {
                 AuthLandingView()
                     .onAppear {
-                        print("🔐 AuthLandingView APPEARED — instance:", instanceId,
-                              "userId:", sessionManager.userId as Any)
                     }
                 
             } else if sessionManager.isAuthenticated || sessionManager.didContinueAsGuest {
-                RootTabView()
-                    .onAppear {
-                        print("📲 RootTabView APPEARED — instance:", instanceId,
-                              "userId:", sessionManager.userId as Any)
+
+                if let userId = sessionManager.userId {
+
+                    if let profileVM = profileVMHolder.profileVM {
+                        RootTabView()
+                            .environmentObject(profileVM)
+                            .onAppear {
+                                print("🧪 DEBUG: RootTabView mounted from AppRootView")
+                            }
+                    } else {
+                        ProgressView()
+                            .onAppear {
+                                print("🧪 DEBUG: Waiting for ProfileViewModel creation for userId=\(userId)")
+                            }
                     }
-                
+                }
+
             } else {
                 AuthLandingView()
                     .onAppear {
-                        print("🔐 AuthLandingView APPEARED — instance:", instanceId,
-                              "userId:", sessionManager.userId as Any)
+                        profileVMHolder.clear()
                     }
             }
             
-            // INTRO VIDEO OVERLAY
-            if !hasFinishedIntroVideo {
+            // INTRO VIDEO OVERLAY (temporarily disabled while testing theme)
+            if false {
                 VideoBackgroundView(
                     videoName: "intro",
                     videoType: "mp4",
@@ -66,5 +74,51 @@ struct AppRootView: View {
                 .ignoresSafeArea()
             }
         }
+        .onAppear {
+            print("🧪 DEBUG: AppRootView appeared. authSuppressed=\(sessionManager.isAuthSuppressed) authenticated=\(sessionManager.isAuthenticated) guest=\(sessionManager.didContinueAsGuest)")
+        }
+        .task {
+            print("🧪 DEBUG: AppRootView.task starting auth listener")
+            await SupabaseManager.shared.startAuthListener()
+        }
+        .task(id: sessionManager.userId) {
+            if let userId = sessionManager.userId {
+                print("🧪 DEBUG: Configuring ProfileViewModel for userId=\(userId)")
+                profileVMHolder.configureIfNeeded(userId: userId)
+            } else {
+                print("🧪 DEBUG: Clearing ProfileViewModel because userId is nil")
+                profileVMHolder.clear()
+            }
+        }
+        .font(TAFTypography.body())
+        .foregroundStyle(.black)
+        .tint(.black)
+    }
+}
+
+final class ProfileVMHolder: ObservableObject {
+    @Published var profileVM: ProfileViewModel?
+
+    func configureIfNeeded(userId: UUID) {
+        print("🧪 DEBUG: configureIfNeeded called with userId=\(userId)")
+
+        if profileVM?.userId == userId {
+            print("🧪 DEBUG: ProfileViewModel already configured for this user")
+            return
+        }
+
+        let profileService = ProfileService(supabase: SupabaseManager.shared)
+        let friendService = FriendService(supabase: SupabaseManager.shared)
+
+        print("🧪 DEBUG: Creating new ProfileViewModel")
+        profileVM = ProfileViewModel(
+            userId: userId,
+            profileService: profileService,
+            friendService: friendService
+        )
+    }
+
+    func clear() {
+        profileVM = nil
     }
 }

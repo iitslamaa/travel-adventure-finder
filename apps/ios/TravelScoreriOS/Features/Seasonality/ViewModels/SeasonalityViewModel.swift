@@ -42,10 +42,6 @@ final class SeasonalityViewModel: ObservableObject {
         }
 
         loadError = nil
-
-#if DEBUG
-        print("💾 [SeasonalityViewModel] Loaded cached seasonality for month \(month) (peak=\(peak.count), shoulder=\(shoulder.count))")
-#endif
     }
 
 
@@ -86,9 +82,6 @@ final class SeasonalityViewModel: ObservableObject {
 
         // If we have cached data and we're within cooldown, don't spam network
         if !SeasonalityCache.shouldRefresh(month: month, minInterval: 60) {
-#if DEBUG
-            print("🟡 [SeasonalityViewModel] Skipping seasonality refresh for month \(month) (cooldown)")
-#endif
             return
         }
 

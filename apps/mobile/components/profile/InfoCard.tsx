@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '../../hooks/useTheme';
 
 type Props = {
   title: string;
@@ -8,17 +9,19 @@ type Props = {
 };
 
 export default function InfoCard({ title, value, hideValuePadding }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  const colors = useTheme();
 
   return (
-    <View style={[styles.card, isDark ? styles.cardDark : styles.cardLight]}>
-      <Text
-        style={[
-          styles.title,
-          isDark ? styles.titleDark : styles.titleLight,
-        ]}
-      >
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+        },
+      ]}
+    >
+      <Text style={[styles.title, { color: colors.textSecondary }]}>
         {title}
       </Text>
 
@@ -26,7 +29,7 @@ export default function InfoCard({ title, value, hideValuePadding }: Props) {
         <Text
           style={[
             styles.value,
-            isDark ? styles.valueDark : styles.valueLight,
+            { color: colors.textPrimary },
             hideValuePadding && { marginTop: 0 },
           ]}
         >
@@ -43,14 +46,7 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 22,
     marginBottom: 22,
-  },
-
-  cardDark: {
-    backgroundColor: '#111111',
-  },
-
-  cardLight: {
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
   },
 
   title: {
@@ -59,25 +55,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  titleDark: {
-    color: '#A1A1AA',
-  },
-
-  titleLight: {
-    color: '#6B7280',
-  },
-
   value: {
     marginTop: 10,
     fontSize: 18,
     fontWeight: '600',
-  },
-
-  valueDark: {
-    color: '#FFFFFF',
-  },
-
-  valueLight: {
-    color: '#111827',
   },
 });

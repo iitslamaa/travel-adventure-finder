@@ -71,8 +71,7 @@ struct WhenToGoCountryDrawerView: View {
             }
             .padding(20)
             .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(.secondarySystemBackground))
+                Theme.countryDetailCardBackground(corner: 24)
             )
             .padding(.horizontal, 20)
             .padding(.top, 16)
@@ -157,14 +156,25 @@ struct WhenToGoCountryDrawerView: View {
             }
             .padding(20)
             .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(.secondarySystemBackground))
+                Theme.countryDetailCardBackground(corner: 24)
             )
             .padding(.horizontal, 20)
 
 
             }
         }
+        .background(
+            ZStack {
+                Image("travel5")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+
+                Color(red: 0.97, green: 0.95, blue: 0.90)
+                    .opacity(0.20)
+                    .ignoresSafeArea()
+            }
+        )
         .safeAreaInset(edge: .bottom) {
             Button {
                 showCountryDetail = true
@@ -186,8 +196,11 @@ struct WhenToGoCountryDrawerView: View {
             NavigationStack {
                 CountryDetailView(country: country.country)
             }
+            .presentationBackground(.clear)
+            .preferredColorScheme(.light)
         }
         .scrollIndicators(.hidden)
+        .preferredColorScheme(.light)
     }
 
     private func scoreRow(title: String, value: Double, weightPercentage: Int) -> some View {

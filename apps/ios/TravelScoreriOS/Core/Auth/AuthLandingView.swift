@@ -8,12 +8,8 @@ struct AuthLandingView: View {
     var body: some View {
         ZStack {
             // MARK: - Background video (loop only, no intro phase)
-            VideoBackgroundView(
-                videoName: "auth_loop",
-                videoType: "mp4",
-                loop: true
-            )
-            .ignoresSafeArea()
+            Color.clear
+                .ignoresSafeArea()
 
             // MARK: - Auth UI
             if !sessionManager.isAuthenticated && !sessionManager.didContinueAsGuest {

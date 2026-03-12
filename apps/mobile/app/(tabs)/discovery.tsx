@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useState, useMemo } from 'react';
@@ -16,10 +15,15 @@ import AuthGate from '../../components/AuthGate';
 import { useCountries } from '../../hooks/useCountries';
 import CountryRow from '../../components/CountryRow';
 import { useAuth } from '../../context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../hooks/useTheme';
 
 export default function DiscoveryScreen() {
   const { countries, loading } = useCountries();
-  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
+  const colors = useTheme();
 
   const [sortBy, setSortBy] = useState<'name' | 'score'>('score');
   const [ascending, setAscending] = useState(false);
@@ -45,8 +49,8 @@ export default function DiscoveryScreen() {
         const result = a.name.localeCompare(b.name);
         return ascending ? result : -result;
       } else {
-        const aScore = a.facts?.scoreTotal ?? 0;
-        const bScore = b.facts?.scoreTotal ?? 0;
+        const aScore = a.scoreTotal ?? 0;
+        const bScore = b.scoreTotal ?? 0;
         const result = aScore - bScore;
         return ascending ? result : -result;
       }
@@ -66,9 +70,13 @@ export default function DiscoveryScreen() {
 
   return (
     <AuthGate>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         {loading ? (
-          <ActivityIndicator style={{ marginTop: 40 }} />
+          <ActivityIndicator
+            style={{ marginTop: 40 }}
+            size="large"
+            color={colors.primary}
+          />
         ) : (
           <FlatList
             contentContainerStyle={{
@@ -82,9 +90,11 @@ export default function DiscoveryScreen() {
             ListHeaderComponent={
               <View
                 style={{
-                  paddingTop: 20,
+                  paddingTop: insets.top + 12,
                   paddingBottom: 20,
-                  backgroundColor: 'white',
+                  borderBottomWidth: 1,
+                  backgroundColor: colors.background,
+                  borderBottomColor: colors.border,
                 }}
               >
                 <View
@@ -99,7 +109,7 @@ export default function DiscoveryScreen() {
                   <View
                     style={{
                       flexDirection: 'row',
-                      backgroundColor: '#F2F2F7',
+                      backgroundColor: colors.segmentBg,
                       borderRadius: 24,
                       flex: 1,
                       padding: 4,
@@ -117,12 +127,13 @@ export default function DiscoveryScreen() {
                         alignItems: 'center',
                         borderRadius: 20,
                         backgroundColor:
-                          sortBy === 'name' ? 'white' : 'transparent',
+                          sortBy === 'name' ? colors.segmentActive : 'transparent',
                       }}
                     >
                       <Text
                         style={{
                           fontWeight: sortBy === 'name' ? '600' : '500',
+                          color: colors.textPrimary,
                         }}
                       >
                         Name {sortBy === 'name' ? (ascending ? '↓' : '↑') : ''}
@@ -140,12 +151,13 @@ export default function DiscoveryScreen() {
                         alignItems: 'center',
                         borderRadius: 20,
                         backgroundColor:
-                          sortBy === 'score' ? 'white' : 'transparent',
+                          sortBy === 'score' ? colors.segmentActive : 'transparent',
                       }}
                     >
                       <Text
                         style={{
                           fontWeight: sortBy === 'score' ? '600' : '500',
+                          color: colors.textPrimary,
                         }}
                       >
                         Score {sortBy === 'score' ? (ascending ? '↓' : '↑') : ''}
@@ -156,16 +168,23 @@ export default function DiscoveryScreen() {
                   {/* World Map Button */}
                   <Pressable
                     onPress={() => router.push('/score-map')}
+                    android_ripple={{ color: '#E5E7EB', borderless: false }}
                     style={{
                       width: 48,
                       height: 48,
                       borderRadius: 24,
-                      backgroundColor: '#111',
+                      backgroundColor: colors.segmentBg,
+                      borderWidth: 1,
+                      borderColor: colors.border,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
-                    <Text style={{ color: 'white', fontSize: 20 }}>🗺</Text>
+                    <Ionicons
+                      name="map-outline"
+                      size={20}
+                      color={colors.textPrimary}
+                    />
                   </Pressable>
                 </View>
               </View>
@@ -176,7 +195,10 @@ export default function DiscoveryScreen() {
                 onPress={() =>
                   router.push({
                     pathname: '/country/[iso2]',
-                    params: { iso2: item.iso2 },
+                    params: {
+                      iso2: item.iso2,
+                      name: item.name,
+                    },
                   })
                 }
                 isBucketed={isBucketed(item.iso2)}
@@ -195,16 +217,18 @@ export default function DiscoveryScreen() {
           <View
             style={{
               position: 'absolute',
-              bottom: 24,
-              left: 16,
-              right: 16,
+              bottom: insets.bottom + 16,
+              width: '100%',
+              maxWidth: 720,
+              alignSelf: 'center',
+              paddingHorizontal: 16,
             }}
           >
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: 'white',
+                backgroundColor: colors.segmentBg,
                 borderRadius: 26,
                 paddingHorizontal: 18,
                 paddingVertical: 14,
@@ -216,10 +240,11 @@ export default function DiscoveryScreen() {
             >
               <TextInput
                 placeholder="Search destinations by country or code"
+                placeholderTextColor={colors.textMuted}
                 value={search}
                 onFocus={() => setSearchActive(true)}
                 onChangeText={setSearch}
-                style={{ flex: 1 }}
+                style={{ flex: 1, color: colors.textPrimary }}
               />
 
               {searchActive && (
@@ -229,7 +254,7 @@ export default function DiscoveryScreen() {
                     setSearchActive(false);
                   }}
                 >
-                  <Text style={{ fontSize: 18 }}>↓</Text>
+                  <Text style={{ fontSize: 18, color: colors.textPrimary }}>↓</Text>
                 </Pressable>
               )}
             </View>

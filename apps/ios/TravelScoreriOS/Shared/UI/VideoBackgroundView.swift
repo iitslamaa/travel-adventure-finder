@@ -29,11 +29,14 @@ final class PlayerUIView: UIView {
     private let playerLayer = AVPlayerLayer()
     private var player: AVPlayer?
     private var currentKey: String?
+    private var currentItem: AVPlayerItem?
+    private var shouldLoop: Bool = false
 
     var onFinished: (() -> Void)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
+        backgroundColor = .black
         playerLayer.videoGravity = .resizeAspectFill
         layer.addSublayer(playerLayer)
     }
@@ -53,6 +56,8 @@ final class PlayerUIView: UIView {
 
         let key = "\(videoName).\(videoType)-loop:\(loop)"
         currentKey = key
+        shouldLoop = loop
+        alpha = 1
 
         guard let url = Bundle.main.url(forResource: videoName, withExtension: videoType) else {
             assertionFailure("Missing bundled video: \(videoName).\(videoType)")
@@ -60,9 +65,11 @@ final class PlayerUIView: UIView {
         }
 
         let item = AVPlayerItem(url: url)
+        currentItem = item
+
         let player = AVPlayer(playerItem: item)
         player.isMuted = true
-        player.actionAtItemEnd = .pause
+        player.actionAtItemEnd = loop ? .none : .pause
 
         NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: nil)
 
@@ -83,12 +90,22 @@ final class PlayerUIView: UIView {
         guard newKey != currentKey else { return }
 
         player?.pause()
+        currentItem = nil
         player = nil
 
         load(videoName: videoName, videoType: videoType, loop: loop)
     }
 
     @objc private func handleVideoFinished(_ notification: Notification) {
+        guard let item = notification.object as? AVPlayerItem else { return }
+
+        if shouldLoop {
+            // Looping videos should never fade out — restart playback.
+            item.seek(to: .zero, completionHandler: nil)
+            player?.play()
+            return
+        }
+
         player?.pause()
 
         // Trigger routing immediately
@@ -101,6 +118,9 @@ final class PlayerUIView: UIView {
     }
 
     deinit {
+        playerLayer.player = nil
+        player = nil
+        currentItem = nil
         NotificationCenter.default.removeObserver(self)
     }
 }

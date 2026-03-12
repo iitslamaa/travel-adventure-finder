@@ -4,61 +4,73 @@ type OverlayParams = {
   iso: string;
   selectedIso?: string;
   score?: number;
+  highlightedIsos?: string[];
 };
 
 export function buildCountryOverlay({
   iso,
   selectedIso,
   score,
+  highlightedIsos,
 }: OverlayParams): CountryFeatureOverlay {
   const isSelected = selectedIso === iso;
 
-  // Selected overrides everything
+  // Selected country (bold, gold highlight)
   if (isSelected) {
     return {
       iso,
       strokeColor: '#000000',
-      fillColor: 'rgba(255, 215, 0, 0.6)',
+      fillColor: 'rgba(255, 215, 0, 0.65)',
     };
   }
 
-  // Score-based coloring
+  const isHighlighted = highlightedIsos?.includes(iso);
+
+  if (!isSelected && isHighlighted) {
+    return {
+      iso,
+      strokeColor: 'transparent',
+      fillColor: 'rgba(255, 215, 0, 0.35)',
+    };
+  }
+
+  // Score-based coloring (used in detailed/full dataset mode)
   if (typeof score === 'number') {
     if (score >= 80) {
       return {
         iso,
-        strokeColor: '#14532d',
-        fillColor: 'rgba(34, 197, 94, 0.45)',
+        strokeColor: 'transparent',
+        fillColor: 'rgba(34, 197, 94, 0.5)',
       };
     }
 
     if (score >= 60) {
       return {
         iso,
-        strokeColor: '#92400e',
-        fillColor: 'rgba(234, 179, 8, 0.45)',
+        strokeColor: 'transparent',
+        fillColor: 'rgba(234, 179, 8, 0.5)',
       };
     }
 
     if (score >= 40) {
       return {
         iso,
-        strokeColor: '#9a3412',
-        fillColor: 'rgba(249, 115, 22, 0.45)',
+        strokeColor: 'transparent',
+        fillColor: 'rgba(249, 115, 22, 0.5)',
       };
     }
 
     return {
       iso,
-      strokeColor: '#7f1d1d',
-      fillColor: 'rgba(239, 68, 68, 0.45)',
+      strokeColor: 'transparent',
+      fillColor: 'rgba(239, 68, 68, 0.5)',
     };
   }
 
-  // Neutral default state
+  // World idle state (simplified dataset)
   return {
     iso,
-    strokeColor: '#1f2937',
-    fillColor: 'rgba(148, 163, 184, 0.15)',
+    strokeColor: 'transparent',
+    fillColor: 'rgba(0, 0, 0, 0)', // transparent fill for clean world outline
   };
 }

@@ -8,13 +8,15 @@ import MapKit
 
 struct WorldMapView: UIViewRepresentable {
 
-    private static var cachedPolygons: [MKOverlay]?
+    private static var cachedSimplified: [MKOverlay]?
+    private static var cachedFull: [MKOverlay]?
 
     let highlightedCountryCodes: [String]
     @Binding var selectedCountryISO: String?
 
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
+        mapView.overrideUserInterfaceStyle = .unspecified
 
         mapView.mapType = .mutedStandard
         mapView.isRotateEnabled = false
@@ -29,11 +31,12 @@ struct WorldMapView: UIViewRepresentable {
             animated: false
         )
 
-        if let cached = WorldMapView.cachedPolygons {
+        // World view always starts with simplified dataset
+        if let cached = WorldMapView.cachedSimplified {
             mapView.addOverlays(cached)
         } else {
-            let polygons = WorldGeoJSONLoader.loadPolygons()
-            WorldMapView.cachedPolygons = polygons
+            let polygons = WorldGeoJSONLoader.loadPolygons(selectedIso: nil)
+            WorldMapView.cachedSimplified = polygons
             mapView.addOverlays(polygons)
         }
 
@@ -54,11 +57,22 @@ struct WorldMapView: UIViewRepresentable {
         context.coordinator.highlightedCountryCodes =
             highlightedCountryCodes.map { $0.uppercased() }
 
-        // 🔥 Only zoom when selection changes
-        guard let iso = selectedCountryISO?.uppercased(),
-              context.coordinator.lastZoomedISO != iso else { return }
+        // Always attempt zoom when a country is selected
+        guard let iso = selectedCountryISO?.uppercased() else { return }
 
-        context.coordinator.lastZoomedISO = iso
+        // Ensure full dataset overlays are loaded when selecting
+        if WorldMapView.cachedFull == nil {
+            let fullPolygons = WorldGeoJSONLoader.loadPolygons(selectedIso: iso)
+            WorldMapView.cachedFull = fullPolygons
+        }
+
+        // Replace overlays with full dataset if not already applied
+        if let full = WorldMapView.cachedFull,
+           uiView.overlays.count != full.count {
+            uiView.removeOverlays(uiView.overlays)
+            uiView.addOverlays(full)
+        }
+
 
         let matching = uiView.overlays
             .compactMap { $0 as? CountryPolygon }
@@ -69,6 +83,7 @@ struct WorldMapView: UIViewRepresentable {
         // 🔥 CRITICAL: async to avoid SwiftUI mutation cycle
         DispatchQueue.main.async {
             context.coordinator.zoomToCountry(polygons: matching, animated: true)
+            context.coordinator.lastZoomedISO = iso
         }
     }
 
@@ -119,6 +134,7 @@ struct WorldMapView: UIViewRepresentable {
 
         func zoomToCountry(polygons: [CountryPolygon], animated: Bool) {
             guard let mapView = mapView else { return }
+            guard !polygons.isEmpty else { return }
 
             var combinedRect = polygons.first!.boundingMapRect
             for polygon in polygons.dropFirst() {

@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
   View,
   Text,
   Pressable,
-  useColorScheme,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,10 +18,20 @@ import HeaderCard from '../../components/profile/HeaderCard';
 import InfoCard from '../../components/profile/InfoCard';
 import DisclosureRow from '../../components/profile/DisclosureRow';
 import CollapsibleCountrySection from '../../components/profile/CollapsibleCountrySection';
+import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../hooks/useTheme';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    navigation.setOptions({
+      title: 'Profile',
+    });
+  }, [navigation]);
+
   const {
     session,
     profile,
@@ -30,53 +40,83 @@ export default function ProfileScreen() {
     visitedIsoCodes,
   } = useAuth();
   const { countries } = useCountries();
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
-
-  const backgroundColor = isDark ? '#0F0F10' : '#F7F7F8';
-  const titleColor = isDark ? '#FFFFFF' : '#111827';
-  const subtitleColor = isDark ? '#A1A1AA' : '#6B7280';
-  const iconColor = isDark ? '#FFFFFF' : '#111827';
+  const colors = useTheme();
 
   const user = session?.user ?? null;
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      // Small delay to allow auth/profile context to re-sync if updated elsewhere
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (err) {
+      console.error('Profile refresh error:', err);
+    }
+
+    setRefreshing(false);
+  };
 
   if (!user) {
     return (
       <View
-        style={[
-          styles.container,
-          {
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor,
-          },
-        ]}
+        style={{
+          flex: 1,
+          paddingHorizontal: 20,
+          paddingTop: 60,
+          paddingBottom: 120,
+          justifyContent: 'center',
+          backgroundColor: colors.background,
+        }}
       >
-        <Text style={[styles.title, { color: titleColor }]}>
+        <Text
+          style={{
+            fontSize: 34,
+            fontWeight: '700',
+            color: colors.textPrimary,
+          }}
+        >
           Login to customize your profile
         </Text>
 
-        <Text style={[styles.subtitle, { color: subtitleColor }]}>
+        <Text
+          style={{
+            marginTop: 16,
+            fontSize: 16,
+            color: colors.textMuted,
+            lineHeight: 22,
+            maxWidth: 320,
+          }}
+        >
           Sign in to set your languages, travel style, and destinations.
         </Text>
 
         <Pressable
-          style={styles.loginButton}
-          onPress={() => {
-            exitGuest();
-            router.replace('/');
-          }}
+          onPress={() => router.push('/login')}
+          style={{ marginTop: 24 }}
         >
-          <Text style={styles.loginButtonText}>Go to Login →</Text>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '600',
+              color: '#3B82F6',
+            }}
+          >
+            Go to Login →
+          </Text>
         </Pressable>
       </View>
     );
   }
 
   const languages =
-    Array.isArray(profile?.languages)
-      ? profile.languages.join(' · ')
+    Array.isArray(profile?.languages) && profile.languages.length
+      ? profile.languages
+          .map((l: any) => (typeof l === 'string' ? l : l?.name))
+          .filter(Boolean)
+          .join(' · ')
       : '—';
 
   const travelMode =
@@ -107,16 +147,23 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
-      style={{ backgroundColor }}
+      style={{ backgroundColor: colors.background }}
       contentContainerStyle={[
         styles.container,
-        { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 80 },
+        { paddingBottom: insets.bottom + 80 },
       ]}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={colors.textPrimary}
+        />
+      }
     >
       <View style={styles.topRow}>
-        <Text style={[styles.title, { color: titleColor }]}>
-          {displayName}
+        <Text style={[styles.title, { color: colors.textPrimary }]}>
+          Profile
         </Text>
 
         <Pressable
@@ -126,7 +173,7 @@ export default function ProfileScreen() {
           <Ionicons
             name="settings-outline"
             size={20}
-            color={iconColor}
+            color={colors.textPrimary}
           />
         </Pressable>
       </View>
@@ -156,7 +203,15 @@ export default function ProfileScreen() {
           value={
             nextDestinationCountry ? (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text>{nextDestinationCountry.name}</Text>
+                <Text
+                  style={{
+                    color: colors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: '600',
+                  }}
+                >
+                  {nextDestinationCountry.name}
+                </Text>
                 <CountryFlag
                   isoCode={nextDestinationCountry.iso2}
                   size={18}
@@ -184,12 +239,14 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 22,
+    paddingTop: 60,
   },
 
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 14,
     marginBottom: 20,
   },
 

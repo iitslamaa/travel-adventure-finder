@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { useTheme } from "../../hooks/useTheme";
 import CountryChip from "./CountryChip";
 import CountryDetailPreviewDrawer from "./CountryDetailPreviewDrawer";
 
@@ -23,6 +24,7 @@ export default function SeasonSection({
   countries: Country[];
   selectedMonth: number;
 }) {
+  const colors = useTheme();
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
 
@@ -38,8 +40,10 @@ export default function SeasonSection({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.description}>{description}</Text>
+      <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
+      <Text style={[styles.description, { color: colors.textSecondary }]}>
+        {description}
+      </Text>
 
       <View style={styles.chips}>
         {countries.map((c) => (
@@ -70,7 +74,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   description: {
-    opacity: 0.6,
     marginBottom: 8,
   },
   chips: {

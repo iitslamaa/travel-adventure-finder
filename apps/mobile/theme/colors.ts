@@ -1,14 +1,53 @@
-export const lightColors = {
+export type AppColors = {
+  background: string;
+  card: string;
+  surface: string;
+  border: string;
+
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+
+  primary: string;
+  primaryText: string;
+
+  segmentBg: string;
+  segmentActive: string;
+
+  inputBg: string;
+  tabBarBg: string;
+
+  greenBg: string;
+  greenBorder: string;
+  greenText: string;
+
+  yellowBg: string;
+  yellowBorder: string;
+  yellowText: string;
+
+  redBg: string;
+  redBorder: string;
+  redText: string;
+};
+
+export const lightColors: AppColors = {
   background: '#F5F5F7',
-  card: '#F9FAFB',
+  card: '#FFFFFF',
+  surface: '#F9FAFB',
+  border: '#E5E7EB',
 
   textPrimary: '#111827',
   textSecondary: '#6B7280',
   textMuted: '#9CA3AF',
 
-  // Primary brand color
   primary: '#065F46',
   primaryText: '#FFFFFF',
+
+  segmentBg: '#F2F2F7',
+  segmentActive: '#FFFFFF',
+
+  inputBg: '#FFFFFF',
+  tabBarBg: '#FFFFFF',
 
   greenBg: '#EAFBF1',
   greenBorder: '#6EE7B7',
@@ -23,27 +62,34 @@ export const lightColors = {
   redText: '#7F1D1D',
 };
 
-export const darkColors = {
-  background: '#0F172A',
-  card: '#1E293B',
+export const darkColors: AppColors = {
+  background: '#121212',
+  card: '#1E1E1E',
+  surface: '#232323',
+  border: '#2C2C2C',
 
-  textPrimary: '#F9FAFB',
-  textSecondary: '#CBD5E1',
-  textMuted: '#94A3B8',
+  textPrimary: '#F5F5F5',
+  textSecondary: '#B3B3B3',
+  textMuted: '#8A8A8A',
 
-  // Primary brand color (brighter for dark mode)
   primary: '#10B981',
-  primaryText: '#0F172A',
+  primaryText: '#121212',
 
-  greenBg: '#064E3B',
+  segmentBg: '#1E1E1E',
+  segmentActive: '#2A2A2A',
+
+  inputBg: '#1E1E1E',
+  tabBarBg: '#1E1E1E',
+
+  greenBg: '#163D2E',
   greenBorder: '#10B981',
   greenText: '#A7F3D0',
 
-  yellowBg: '#78350F',
+  yellowBg: '#4A3A10',
   yellowBorder: '#F59E0B',
   yellowText: '#FDE68A',
 
-  redBg: '#7F1D1D',
+  redBg: '#3F1D1D',
   redBorder: '#EF4444',
   redText: '#FCA5A5',
 };

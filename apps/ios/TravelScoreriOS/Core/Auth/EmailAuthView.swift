@@ -165,6 +165,9 @@ struct EmailAuthView: View {
                             TextField("Email address", text: $vm.email)
                                 .textInputAutocapitalization(.never)
                                 .keyboardType(.emailAddress)
+                                .textContentType(.emailAddress)
+                                .autocorrectionDisabled(true)
+                                .submitLabel(.continue)
                                 .padding(12)
                                 .background(
                                     RoundedRectangle(cornerRadius: 8)
@@ -172,7 +175,8 @@ struct EmailAuthView: View {
                                 )
                                 .focused($focusedField, equals: .email)
                                 .onAppear {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                    focusedField = nil
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
                                         focusedField = .email
                                     }
                                 }
@@ -186,8 +190,13 @@ struct EmailAuthView: View {
 
                                     isSending = false
                                     if vm.errorMessage == nil {
-                                        step = .enterCode
-                                        focusedField = .code
+                                        withAnimation(.easeInOut(duration: 0.25)) {
+                                            step = .enterCode
+                                        }
+                                        focusedField = nil
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
+                                            focusedField = .code
+                                        }
                                         cooldownSeconds = 30
                                         startCooldown()
                                     }
@@ -210,6 +219,9 @@ struct EmailAuthView: View {
                                 guard !vm.email.isEmpty else { return }
                                 withAnimation(.easeInOut(duration: 0.25)) {
                                     step = .enterCode
+                                }
+                                focusedField = nil
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
                                     focusedField = .code
                                 }
                             } label: {
@@ -240,7 +252,11 @@ struct EmailAuthView: View {
                                 .foregroundColor(.secondary)
 
                             TextField("6-digit code or password", text: $vm.otp)
-                                .keyboardType(.default)
+                                .keyboardType(.asciiCapable)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled(true)
+                                .textContentType(.oneTimeCode)
+                                .submitLabel(.go)
                                 .padding(12)
                                 .background(
                                     RoundedRectangle(cornerRadius: 8)
@@ -253,6 +269,7 @@ struct EmailAuthView: View {
                                     await vm.verifyEmailOTP()
 
                                     if vm.errorMessage == nil {
+                                        focusedField = nil
                                         dismissKeyboard()
                                         await sessionManager.forceRefreshAuthState()
                                     }

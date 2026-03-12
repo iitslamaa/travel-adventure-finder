@@ -7,8 +7,12 @@ import SwiftUI
 
 struct MyTravelsView: View {
     @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var traveledStore: TraveledStore
+    @Environment(\.floatingTabBarInset) private var floatingTabBarInset
     @State private var countries: [Country] = []
     @State private var traveledCountryIds: Set<String> = []
+    @State private var isLoading: Bool = true
+    @State private var hasLoadedOnce: Bool = false
 
     private var visitedCountries: [Country] {
         countries
@@ -17,74 +21,123 @@ struct MyTravelsView: View {
     }
 
     var body: some View {
-        Group {
-            if visitedCountries.isEmpty {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
+
+            if isLoading {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading...")
+                        .font(.subheadline)
+                        .foregroundColor(.black)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if visitedCountries.isEmpty {
                 ContentUnavailableView(
                     "No trips yet",
                     systemImage: "backpack",
                     description: Text("Swipe left on a country and tap 📝 Visited to track places you’ve already been.")
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(visitedCountries) { country in
-                    NavigationLink(value: country) {
-                        HStack(spacing: 12) {
-                            Text(country.flagEmoji)
-                                .font(.largeTitle)
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        ForEach(visitedCountries) { country in
+                            NavigationLink {
+                                CountryDetailView(country: country)
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Text(country.flagEmoji)
+                                        .font(.largeTitle)
 
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(country.name)
-                                    .font(.headline)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(country.name)
+                                            .font(.headline)
+                                            .foregroundColor(Theme.textPrimary)
+                                    }
+
+                                    Spacer()
+
+                                    if let score = country.score {
+                                        ScorePill(score: score)
+                                    } else {
+                                        Text("—")
+                                            .font(.caption.bold())
+                                            .foregroundColor(Theme.textPrimary)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(
+                                                Capsule()
+                                                    .fill(Color.gray.opacity(0.15))
+                                            )
+                                            .overlay(
+                                                Capsule()
+                                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                            )
+                                    }
+                                }
+                                .padding(16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.94))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                                .stroke(.white.opacity(0.34), lineWidth: 1)
+                                        )
+                                )
+                                .shadow(color: .black.opacity(0.10), radius: 8, y: 5)
                             }
-
-                            Spacer()
-
-                            if let score = country.score {
-                                ScorePill(score: score)
-                            } else {
-                                Text("—")
-                                    .font(.caption.bold())
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(
-                                        Capsule()
-                                            .fill(Color.gray.opacity(0.15))
-                                    )
-                                    .overlay(
-                                        Capsule()
-                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                    )
-                            }
+                            .buttonStyle(.plain)
                         }
-                        .padding(.vertical, 6)
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, floatingTabBarInset + 12)
                 }
-                .listStyle(.plain)
+                .scrollIndicators(.hidden)
             }
         }
         .navigationTitle("🎒 My Travels")
-        .navigationDestination(for: Country.self) { country in
-            CountryDetailView(country: country)
-        }
         .task {
-            // 1) Show cached data immediately (fast/offline)
-            if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
-                countries = cached
-            }
+            await loadVisitedListIfNeeded()
+        }
+        .onReceive(traveledStore.$ids) { ids in
+            traveledCountryIds = ids
+        }
+    }
 
-            // 2) Try to refresh from API
-            if let fresh = await CountryAPI.refreshCountriesIfNeeded(minInterval: 60), !fresh.isEmpty {
-                countries = fresh
-                return
-            }
+    @MainActor
+    private func loadVisitedListIfNeeded() async {
+        if countries.isEmpty,
+           let cached = CountryAPI.loadCachedCountries(),
+           !cached.isEmpty {
+            countries = cached
+        }
 
-            // Fetch traveled countries for current user (identity-scoped)
-            if let userId = sessionManager.userId {
-                let service = ProfileService(supabase: SupabaseManager.shared)
-                if let traveled = try? await service.fetchTraveledCountries(userId: userId) {
-                    traveledCountryIds = traveled
-                }
+        if traveledCountryIds.isEmpty || !hasLoadedOnce {
+            traveledCountryIds = traveledStore.ids
+        }
+
+        let shouldShowBlockingLoad = !hasLoadedOnce && countries.isEmpty && traveledCountryIds.isEmpty
+        isLoading = shouldShowBlockingLoad
+        hasLoadedOnce = true
+
+        async let freshCountriesTask = CountryAPI.refreshCountriesIfNeeded(minInterval: 60)
+
+        if let userId = sessionManager.userId {
+            let service = ProfileService(supabase: SupabaseManager.shared)
+            if let traveled = try? await service.fetchTraveledCountries(userId: userId) {
+                traveledCountryIds = traveled
+                traveledStore.replace(with: traveled)
             }
         }
+
+        if let fresh = await freshCountriesTask, !fresh.isEmpty {
+            countries = fresh
+        }
+
+        isLoading = false
     }
 }
 

@@ -14,66 +14,50 @@ extension ProfileViewModel {
     // MARK: - Relationship refresh
     
     func refreshRelationshipState() async throws {
-        print("🔄 [\(instanceId)] refreshRelationshipState CALLED")
-        print("   bound userId:", userId as Any)
-        print("   supabase.currentUserId:", supabase.currentUserId as Any)
-        logPublishedState("before relationship evaluation")
         isRelationshipLoading = true
+        defer {
+            isRelationshipLoading = false
+        }
+
         let userId = self.userId
+
+        // Ensure session is hydrated (helps avoid nil currentUserId on cold start)
+        _ = try? await supabase.client.auth.session
+
         guard let currentUserId = supabase.currentUserId else {
-            isRelationshipLoading = false
+            errorMessage = "Not authenticated. Please log in again."
+            print("❌ refreshRelationshipState abort — currentUserId nil")
             return
         }
-        
-        // Viewing own profile
-        if currentUserId == userId {
-            print("   👤 Viewing own profile — setting selfProfile")
-            relationshipState = .selfProfile
-            logPublishedState("set selfProfile")
-            isFriend = false
-            isRelationshipLoading = false
-            return
-        }
-        
-        // Friends?
-        if try await friendService.isFriend(
+
+        let resolvedState = try await friendService.fetchRelationshipState(
             currentUserId: currentUserId,
             otherUserId: userId
-        ) {
-            print("   🤝 Users are friends — setting .friends")
-            relationshipState = .friends
-            logPublishedState("set friends")
-            isFriend = true
-            isRelationshipLoading = false
-            return
-        }
-        
-        // Request already sent?
-        if try await friendService.hasSentRequest(from: currentUserId, to: userId) {
-            print("   📤 Friend request already sent — setting .requestSent")
-            relationshipState = .requestSent
-            logPublishedState("set requestSent")
-            isFriend = false
-            isRelationshipLoading = false
-            return
-        }
-        
-        print("   🚫 No relationship found — setting .none")
-        // No relationship
-        relationshipState = .none
-        logPublishedState("set none")
-        isFriend = false
-        isRelationshipLoading = false
+        )
+
+        relationshipState = resolvedState
+        isFriend = resolvedState == .friends
     }
     
     // MARK: - Friend actions
     
     func toggleFriend() async {
-        print("🎬 [\(instanceId)] toggleFriend CALLED")
-        print("   relationshipState:", relationshipState as Any)
-        print("   profile?.id:", profile?.id as Any)
-        logPublishedState("before toggleFriend")
-        guard let profileId = profile?.id else { return }
+        // 
+
+        // Ensure session is hydrated so currentUserId is available
+        _ = try? await supabase.client.auth.session
+
+        guard let currentUserId = supabase.currentUserId else {
+            errorMessage = "Not authenticated. Please log in again."
+            print("❌ toggleFriend abort — currentUserId nil")
+            return
+        }
+
+        guard let profileId = profile?.id else {
+            errorMessage = "Profile not loaded yet. Please try again."
+            print("❌ toggleFriend abort — profileId nil")
+            return
+        }
         
         isFriendLoading = true
         defer { isFriendLoading = false }
@@ -82,21 +66,19 @@ extension ProfileViewModel {
             let state = relationshipState
             switch state {
             case .none:
-                print("   ➕ Attempting to send friend request...")
+                
                 do {
-                    guard let currentUserId = supabase.currentUserId else { return }
                     try await friendService.sendFriendRequest(from: currentUserId, to: profileId)
-                    print("📨 Friend request sent:", profileId)
                     
                     // Optimistic UI update
                     relationshipState = .requestSent
                     isFriend = false
-                    logPublishedState("after optimistic requestSent")
+                    // logPublishedState("after optimistic requestSent")
                 } catch {
                     // Handle duplicate request (already sent)
                     if let pgError = error as? PostgrestError,
                        pgError.code == "23505" {
-                        print("ℹ️ Friend request already exists — syncing state")
+                        
                         relationshipState = .requestSent
                         isFriend = false
                     } else {
@@ -109,29 +91,47 @@ extension ProfileViewModel {
                     try? await refreshRelationshipState()
                 }
                 
+            case .requestReceived:
+                
+                try await friendService.acceptRequest(
+                    myUserId: currentUserId,
+                    from: profileId
+                )
+
+                // Small delay to ensure DB trigger commit is visible
+                try await Task.sleep(nanoseconds: 200_000_000) // 0.2s
+
+                // Reload full profile (includes updated friend_count)
+                await reloadProfile()
+
+                
             case .friends:
-                print("   ➖ Attempting to remove friend...")
-                guard let currentUserId = supabase.currentUserId else { return }
+                
                 try await friendService.removeFriend(myUserId: currentUserId, otherUserId: profileId)
-                try await refreshRelationshipState()
-                logPublishedState("after removeFriend refresh")
-                print("➖ Removed friend:", profileId)
+
+                // Reload full profile (includes updated friend_count)
+                await reloadProfile()
+
                 
             case .requestSent:
-                print("   ℹ️ toggleFriend hit .requestSent — no-op")
+                print("   ❌ Cancelling sent friend request...")
+                await cancelFriendRequest()
                 
             case .selfProfile:
                 break
             }
         } catch {
             errorMessage = error.localizedDescription
-            print("❌ Relationship action failed:", error)
+            print("❌ Relationship action failed — raw:", error)
+            print("❌ Relationship action failed — description:", error.localizedDescription)
+            if let pg = error as? PostgrestError {
+                print("❌ PostgrestError code:", pg.code as Any, "message:", pg.message, "detail:", pg.detail as Any, "hint:", pg.hint as Any)
+            }
         }
     }
 
     func cancelFriendRequest() async {
         print("❌ cancelFriendRequest CALLED")
-        print("   current profile?.id:", profile?.id as Any)
         guard let profileId = profile?.id,
               let currentUserId = supabase.currentUserId else { return }
 
@@ -143,7 +143,7 @@ extension ProfileViewModel {
 
             relationshipState = .none
             isFriend = false
-            logPublishedState("after cancelFriendRequest")
+            // logPublishedState("after cancelFriendRequest")
 
             print("❌ Friend request cancelled:", profileId)
         } catch {

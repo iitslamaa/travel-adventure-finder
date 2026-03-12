@@ -21,6 +21,7 @@ final class AuthViewModel: ObservableObject {
 
     // MARK: - Dependencies
     private let supabase = SupabaseManager.shared
+    private let oauthPresenter = OAuthPresenter()
 
     // MARK: - Email OTP
 
@@ -104,11 +105,17 @@ final class AuthViewModel: ObservableObject {
         errorMessage = nil
 
         do {
+            guard let redirectURL = URL(string: "travelscorer://login-callback") else {
+                throw URLError(.badURL)
+            }
+
+            // Supabase iOS SDK handles opening the OAuth URL internally
             try await supabase.client.auth.signInWithOAuth(
                 provider: .google,
-                redirectTo: URL(string: "travelscorer://login-callback")
+                redirectTo: redirectURL
             )
 
+            // After redirect completes, session will be available
             _ = try await supabase.client.auth.session
             try await ensureProfileExists()
 
@@ -138,6 +145,17 @@ final class AuthViewModel: ObservableObject {
                     "email": user.email ?? ""
                 ])
                 .execute()
+        }
+    }
+    // MARK: - OAuth Callback Helper
+
+    func handleOAuthCallback(_ url: URL) async {
+        do {
+            try await supabase.client.auth.session(from: url)
+            _ = try await supabase.client.auth.session
+            try await ensureProfileExists()
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }

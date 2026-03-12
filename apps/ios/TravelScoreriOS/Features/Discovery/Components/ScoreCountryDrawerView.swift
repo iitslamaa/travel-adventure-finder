@@ -12,94 +12,79 @@ struct ScoreCountryDrawerView: View {
     
     let country: Country
     let onDismiss: () -> Void
+
+    private func mapScoreColor(for score: Int) -> Color {
+        switch score {
+        case 80...100:
+            return Color(uiColor: .systemGreen)
+        case 60..<80:
+            return Color(uiColor: .systemYellow)
+        case 40..<60:
+            return Color(uiColor: .systemOrange)
+        default:
+            return Color(uiColor: .systemRed)
+        }
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            
-            // Header
-            HStack {
-                Text(country.name)
-                    .font(.title2)
-                    .bold()
+        NavigationLink {
+            CountryDetailView(country: country)
+        } label: {
+            VStack(spacing: 12) {
                 
-                Spacer()
-                
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
-            
-            // Main Score Pill
-            HStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("TravelAF Score")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    
+                // Header + Score (compact single row)
+                HStack(spacing: 8) {
+                    Text(country.flagEmoji ?? "🌍")
+                        .font(.system(size: 30))
+
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(country.name)
+                            .font(.title3.weight(.semibold))
+
+                        Text("Overall Score")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
                     if let score = country.score {
-                        Text("\(score)")
-                            .font(.largeTitle)
-                            .bold()
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(ScoreColor.background(for: score))
-                            )
-                            .foregroundColor(.white)
-                    } else {
-                        Text("—")
-                            .font(.largeTitle)
-                            .bold()
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(Color.gray.opacity(0.15))
-                            )
-                            .foregroundColor(.primary)
+                        HStack(spacing: 8) {
+                            Text("\(score)")
+                                .font(.title2.weight(.bold))
+                                .fixedSize()
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                                .background(
+                                    Capsule()
+                                        .fill(mapScoreColor(for: score))
+                                )
+                                .foregroundColor(.white)
+
+                            Image(systemName: "chevron.right")
+                                .font(.headline.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 32)
+                                .background(
+                                    Circle()
+                                        .fill(Color(.secondarySystemBackground))
+                                )
+                        }
                     }
                 }
-                
-                Spacer()
             }
-            
-            // Short Description
-            Text(country.advisorySummary ?? "Explore detailed safety, affordability, seasonality, and visa insights for this destination.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            
-            // Full Page Button
-            NavigationLink {
-                CountryDetailView(country: country)
-            } label: {
-                HStack {
-                    Text("View Full Country Page")
-                        .font(.subheadline.weight(.semibold))
-                    Spacer()
-                    Image(systemName: "arrow.right")
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color(.systemGray6))
-                )
-            }
-            .buttonStyle(.plain)
-            
-            Spacer(minLength: 0)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 18)
+            .frame(maxWidth: 380)
+            .background(
+                RoundedRectangle(cornerRadius: 32)
+                    .fill(.ultraThinMaterial)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 32))
+            .shadow(color: .black.opacity(0.25), radius: 25, y: 8)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 28)
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color(.systemBackground))
-                .shadow(radius: 12)
-        )
-        .padding(.horizontal)
-        .padding(.bottom, 20)
+        .buttonStyle(.plain)
     }
 }

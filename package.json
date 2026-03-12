@@ -2,10 +2,6 @@
   "name": "travel-af",
   "private": true,
   "packageManager": "pnpm@9.12.2",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
     "build:shared": "pnpm -F @travel-af/shared build",
     "dev:web": "pnpm -F ./apps/web dev",

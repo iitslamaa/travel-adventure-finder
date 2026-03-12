@@ -1,5 +1,5 @@
 import { View, ActivityIndicator } from 'react-native';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,31 +8,45 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const hasRedirectedRef = useRef(false);
+
   // Not logged in and not guest -> must be on landing/login flow
   useEffect(() => {
+    if (hasRedirectedRef.current) return;
+
     if (!loading && !session && !isGuest) {
-      if (pathname !== '/' && pathname !== '/verify') {
+      const isPublicRoute =
+        pathname === '/' ||
+        pathname === '/verify' ||
+        pathname.startsWith('/login');
+
+      if (!isPublicRoute) {
+        hasRedirectedRef.current = true;
         router.replace('/');
       }
     }
-  }, [loading, session, isGuest, pathname, router]);
+  }, [loading, session, isGuest]);
 
   // Logged in -> enforce onboarding gate (guest bypasses)
   useEffect(() => {
+    if (hasRedirectedRef.current) return;
     if (loading || profileLoading) return;
     if (!session || isGuest) return;
+    if (!profile) return;
 
     const onboarded = profile?.onboarding_completed === true;
 
     if (!onboarded && pathname !== '/onboarding') {
+      hasRedirectedRef.current = true;
       router.replace('/onboarding');
       return;
     }
 
     if (onboarded && pathname === '/onboarding') {
-      router.replace('/home');
+      hasRedirectedRef.current = true;
+      router.replace('/(tabs)/discovery');
     }
-  }, [loading, profileLoading, session, isGuest, profile, pathname]);
+  }, [loading, profileLoading, session, isGuest, profile]);
 
   if (loading || (session && !isGuest && profileLoading)) {
     return (
@@ -42,8 +56,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If we’re not allowed, we render nothing while router redirects.
-  if (!session && !isGuest) return null;
-
+  // Always render children once loading checks pass.
+  // Redirect logic above handles protection.
   return <>{children}</>;
 }

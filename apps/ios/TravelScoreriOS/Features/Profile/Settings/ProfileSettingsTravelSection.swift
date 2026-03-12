@@ -19,34 +19,52 @@ struct ProfileSettingsTravelSection: View {
     var body: some View {
         SectionCard(title: "Travel preferences") {
 
-            Button {
-                showTravelModeDialog = true
-            } label: {
-                HStack {
-                    Text("Travel mode")
-                        .foregroundStyle(.primary)
+            VStack(spacing: 0) {
 
-                    Spacer()
+                Button {
+                    showTravelModeDialog = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Text("Travel mode")
+                            .foregroundStyle(.primary)
 
-                    Text(travelMode?.label ?? "Not set")
-                        .foregroundStyle(travelMode == nil ? .secondary : .primary)
+                        Spacer()
+
+                        Text(travelMode?.label ?? "Not set")
+                            .foregroundStyle(travelMode == nil ? .secondary : .primary)
+
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
+                .buttonStyle(.plain)
 
-            Button {
-                showTravelStyleDialog = true
-            } label: {
-                HStack {
-                    Text("Travel style")
-                        .foregroundStyle(.primary)
+                Divider()
+                    .opacity(0.18)
 
-                    Spacer()
+                Button {
+                    showTravelStyleDialog = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Text("Travel style")
+                            .foregroundStyle(.primary)
 
-                    Text(travelStyle?.label ?? "Not set")
-                        .foregroundStyle(travelStyle == nil ? .secondary : .primary)
+                        Spacer()
+
+                        Text(travelStyle?.label ?? "Not set")
+                            .foregroundStyle(travelStyle == nil ? .secondary : .primary)
+
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .buttonStyle(.plain)
             }
         }
     }

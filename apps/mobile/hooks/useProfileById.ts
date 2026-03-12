@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { getResizedAvatarUrl } from '../utils/avatar';
 
 export type PublicProfile = {
   id: string;
@@ -49,6 +50,7 @@ export function useProfileById(userId?: string | string[]) {
       } else {
         const normalized = {
           ...data,
+          avatar_url: getResizedAvatarUrl(data?.avatar_url ?? null),
           lived_countries: Array.isArray(data?.lived_countries)
             ? data.lived_countries
             : [],

@@ -7,14 +7,12 @@ import {
   Pressable,
   TouchableOpacity,
   useColorScheme,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { lightColors, darkColors } from '../../theme/colors';
 import { getScoreColor } from '../../utils/seasonColor';
 import { useCountries } from '../../hooks/useCountries';
-
-const { height } = Dimensions.get('window');
 
 type Props = {
   visible: boolean;
@@ -31,6 +29,7 @@ export default function CountryDetailPreviewDrawer({
 }: Props) {
   const scheme = useColorScheme();
   const colors = scheme === 'dark' ? darkColors : lightColors;
+  const { height } = useWindowDimensions();
   const { countries } = useCountries();
 
   const resolvedCountry = useMemo(() => {
@@ -54,7 +53,13 @@ export default function CountryDetailPreviewDrawer({
 
   const handleNavigate = () => {
     onClose();
-    router.push(`/country/${resolvedCountry?.iso2}`);
+    router.push({
+      pathname: '/country/[iso2]',
+      params: {
+        iso2: resolvedCountry?.iso2,
+        name: resolvedCountry?.name,
+      },
+    });
   };
 
   if (!country) return null;
@@ -67,7 +72,10 @@ export default function CountryDetailPreviewDrawer({
         <View
           style={[
             styles.drawer,
-            { backgroundColor: colors.card },
+            {
+              backgroundColor: colors.card,
+              maxHeight: height * 0.75,
+            },
           ]}
         >
           <View style={styles.dragIndicator} />
@@ -144,7 +152,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   drawer: {
-    maxHeight: height * 0.75,
     padding: 20,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,

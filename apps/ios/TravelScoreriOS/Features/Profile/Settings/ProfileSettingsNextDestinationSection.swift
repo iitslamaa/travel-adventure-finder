@@ -19,7 +19,7 @@ struct ProfileSettingsNextDestinationSection: View {
             Button {
                 showNextDestinationPicker = true
             } label: {
-                HStack {
+                HStack(spacing: 12) {
                     Text("Next destination")
                         .foregroundStyle(.primary)
 
@@ -27,15 +27,25 @@ struct ProfileSettingsNextDestinationSection: View {
 
                     Text(displayValue)
                         .foregroundStyle(nextDestination == nil ? .secondary : .primary)
+
+                    Image(systemName: "chevron.right")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
         }
     }
 
     private var displayValue: String {
         guard let nextDestination else { return "Not set" }
-        return flag(for: nextDestination)
+
+        let upper = nextDestination.uppercased()
+        let locale = Locale(identifier: "en_US")
+        let countryName = locale.localizedString(forRegionCode: upper) ?? upper
+
+        return "\(countryName) \(flag(for: upper))"
     }
 
     private func flag(for code: String) -> String {

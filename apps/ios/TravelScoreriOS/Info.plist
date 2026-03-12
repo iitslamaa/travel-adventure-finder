@@ -2,36 +2,32 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-
-    <key>NSAppTransportSecurity</key>
-    <dict>
-    </dict>
-
-    <key>API_BASE_URL</key>
-    <string>https://travel-af.vercel.app</string>
-
-    <key>SUPABASE_URL</key>
-    <string>https://rnzznnhddvnrhxtlvcfe.supabase.co</string>
-
-    <key>SUPABASE_ANON_KEY</key>
-    <string>sb_publishable_I4wj-S64nvDxUBhuyH2FDw_OTOKaRc4</string>
-
-    <key>APP_REVIEW_MODE</key>
-    <false/>
-
-    <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleURLName</key>
-            <string>com.iitslamaa.TravelScoreriOS</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>travelscorer</string>
-            </array>
-        </dict>
-    </array>
-
+	<key>NSAppTransportSecurity</key>
+	<dict/>
+	<key>API_BASE_URL</key>
+	<string>https://travel-scorer.vercel.app</string>
+	<key>SUPABASE_URL</key>
+	<string>https://rnzznnhddvnrhxtlvcfe.supabase.co</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>sb_publishable_I4wj-S64nvDxUBhuyH2FDw_OTOKaRc4</string>
+	<key>APP_REVIEW_MODE</key>
+	<false/>
+	<key>CFBundleDisplayName</key>
+	<string>Travel Adventure Finder</string>
+	<key>CFBundleName</key>
+	<string>Travel Adventure Finder</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.iitslamaa.TravelScoreriOS</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>travelscorer</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

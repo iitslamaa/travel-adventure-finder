@@ -12,13 +12,24 @@ struct Profile: Codable, Identifiable {
     var fullName: String
     var avatarUrl: String?
 
-    var languages: [String]
+    // NEW: structured language storage
+    struct LanguageJSON: Codable {
+        var code: String
+        var proficiency: String
+    }
+
+    var languages: [LanguageJSON]
     var livedCountries: [String]
     var travelStyle: [String]
     var travelMode: [String]
     var nextDestination: String?
 
+    // NEW FIELDS
+    var currentCountry: String?
+    var favoriteCountries: [String]?
+
     var onboardingCompleted: Bool?
+    var friendCount: Int
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -30,10 +41,13 @@ struct Profile: Codable, Identifiable {
         case travelStyle = "travel_style"
         case travelMode = "travel_mode"
         case nextDestination = "next_destination"
+        case currentCountry = "current_country"
+        case favoriteCountries = "favorite_countries"
         case onboardingCompleted = "onboarding_completed"
+        case friendCount = "friend_count"
     }
 
-    private struct LanguageObject: Decodable {
+    private struct LegacyLanguageObject: Decodable {
         let name: String
         let proficiency: String?
     }
@@ -46,11 +60,20 @@ struct Profile: Codable, Identifiable {
         fullName = try container.decodeIfPresent(String.self, forKey: .fullName) ?? ""
         avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
 
-        // 🔥 Flexible language decoding
+        // Flexible decoding: support legacy string array OR JSON objects
         if let stringArray = try? container.decode([String].self, forKey: .languages) {
-            languages = stringArray
-        } else if let objectArray = try? container.decode([LanguageObject].self, forKey: .languages) {
-            languages = objectArray.map { $0.name }
+            languages = stringArray.map {
+                LanguageJSON(code: $0, proficiency: "Fluent")
+            }
+        } else if let objectArray = try? container.decode([LanguageJSON].self, forKey: .languages) {
+            languages = objectArray
+        } else if let legacyObjects = try? container.decode([LegacyLanguageObject].self, forKey: .languages) {
+            languages = legacyObjects.map {
+                LanguageJSON(
+                    code: $0.name,
+                    proficiency: $0.proficiency ?? "Fluent"
+                )
+            }
         } else {
             languages = []
         }
@@ -59,6 +82,11 @@ struct Profile: Codable, Identifiable {
         travelStyle = try container.decodeIfPresent([String].self, forKey: .travelStyle) ?? []
         travelMode = try container.decodeIfPresent([String].self, forKey: .travelMode) ?? []
         nextDestination = try container.decodeIfPresent(String.self, forKey: .nextDestination)
+
+        currentCountry = try container.decodeIfPresent(String.self, forKey: .currentCountry)
+        favoriteCountries = try container.decodeIfPresent([String].self, forKey: .favoriteCountries)
+
         onboardingCompleted = try container.decodeIfPresent(Bool.self, forKey: .onboardingCompleted)
+        friendCount = try container.decodeIfPresent(Int.self, forKey: .friendCount) ?? 0
     }
 }

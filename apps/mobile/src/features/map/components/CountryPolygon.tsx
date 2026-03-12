@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Polygon, LatLng } from 'react-native-maps';
 import { CountryFeatureOverlay } from '../types/map.types';
 
@@ -9,7 +9,7 @@ type Props = {
   onPress?: (iso: string) => void;
 };
 
-export function CountryPolygon({
+function CountryPolygonComponent({
   coordinates,
   iso,
   overlay,
@@ -26,3 +26,6 @@ export function CountryPolygon({
     />
   );
 }
+
+export const CountryPolygon = memo(CountryPolygonComponent);
+CountryPolygon.displayName = 'CountryPolygon';

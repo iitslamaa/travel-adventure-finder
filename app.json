@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "15f7364f-8826-45d4-baa5-dbd9ea311072"
+      }
+    },
+    "android": {
+      "package": "com.iitslama.travelaf"
+    }
+  }
+}

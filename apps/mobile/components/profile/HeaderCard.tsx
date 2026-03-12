@@ -3,11 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   useColorScheme,
   Animated,
 } from 'react-native';
+import { Image } from 'expo-image';
 import CountryFlag from 'react-native-country-flag';
+import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
   name: string;
@@ -42,15 +43,17 @@ export default function HeaderCard({
         {/* Avatar */}
         <View style={styles.avatarContainer}>
           {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+            <Image
+              source={avatarUrl}
+              style={styles.avatar}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+            />
           ) : (
-            <View
-              style={[
-                styles.avatarFallback,
-                isDark
-                  ? styles.avatarFallbackDark
-                  : styles.avatarFallbackLight,
-              ]}
+            <Ionicons
+              name="person-circle"
+              size={118}
+              color={isDark ? '#444' : '#D1D5DB'}
             />
           )}
         </View>

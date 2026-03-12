@@ -9,24 +9,24 @@ import Foundation
 import SwiftUI
 
 struct FriendsSection: View {
-    
     let relationshipState: RelationshipState
     let friendCount: Int
     let onToggleFriend: () -> Void
     let onCancelRequest: () -> Void
     let onViewFriends: () -> Void
-    
+
     @State private var showUnfriendConfirmation = false
-    
+
     var body: some View {
         drawerView
             .presentationDetents([.medium])
+            .presentationBackground(.clear)
+            .presentationCornerRadius(30)
     }
-    
+
     private var drawerView: some View {
         VStack(spacing: 20) {
 
-            // Title
             Text("Friends")
                 .font(.title2.bold())
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -40,12 +40,15 @@ struct FriendsSection: View {
                         .font(.headline)
                     Spacer()
                     Text("\(friendCount)")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.black.opacity(0.55))
                     Image(systemName: "chevron.right")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.black.opacity(0.55))
                 }
                 .padding()
-                .background(Color(.secondarySystemBackground))
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.white.opacity(0.52))
+                )
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
@@ -61,7 +64,7 @@ struct FriendsSection: View {
                         Spacer()
                     }
                     .padding()
-                    .background(Color.red.opacity(0.1))
+                    .background(Color.red.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
@@ -77,7 +80,7 @@ struct FriendsSection: View {
                         Spacer()
                     }
                     .padding()
-                    .background(Color.red.opacity(0.1))
+                    .background(Color.red.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
@@ -85,6 +88,12 @@ struct FriendsSection: View {
             Spacer()
         }
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .foregroundStyle(.black)
+        .background(
+            Theme.themedSheetBackground(corner: 30)
+                .ignoresSafeArea()
+        )
         .alert("Unfriend?", isPresented: $showUnfriendConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Confirm", role: .destructive) {

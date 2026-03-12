@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Supabase
+import Auth
 
 extension ProfileViewModel {
 
@@ -13,11 +15,7 @@ extension ProfileViewModel {
 
     func load(generation: UUID) async {
         let startingUserId = userId
-
-        print("🟣 load() START — instance:", instanceId)
-        print("   generation:", generation)
-        print("   current loadGeneration:", loadGeneration)
-        print("   userId at start:", startingUserId)
+        let isOwnProfile = startingUserId == supabase.currentUserId
 
         // Only show full-screen loading during initial load,
         // NOT during pull-to-refresh.
@@ -32,137 +30,42 @@ extension ProfileViewModel {
         errorMessage = nil
 
         do {
-            let fetchedProfile =
-                try await profileService.fetchOrCreateProfile(userId: startingUserId)
+            async let fetchedProfileTask: Profile = isOwnProfile
+                ? profileService.fetchOrCreateProfile(userId: startingUserId)
+                : profileService.fetchMyProfile(userId: startingUserId)
+            async let traveledTask = profileService.fetchTraveledCountries(userId: startingUserId)
+            async let bucketTask = profileService.fetchBucketListCountries(userId: startingUserId)
+            async let relationshipTask = resolvedRelationshipState(for: startingUserId)
+
+            let fetchedProfile = try await fetchedProfileTask
+            let traveled = try await traveledTask
+            let bucket = try await bucketTask
+            let resolvedRelationship = try await relationshipTask
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                print("🛑 ABORT after fetchProfile (identity changed)")
                 return
             }
 
-            print("🟢 assigning profile id:", fetchedProfile.id)
             profile = fetchedProfile
-            logPublishedState("after profile assignment")
-
-            let fetchedFriends =
-                try await friendService.fetchFriends(for: startingUserId)
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                print("🛑 ABORT after fetchFriends (identity changed)")
-                return
-            }
-
-            friends = fetchedFriends
-            friendCount = fetchedFriends.count
-            logPublishedState("after friends assignment")
-
-            let traveled =
-                try await profileService.fetchTraveledCountries(userId: startingUserId)
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                print("🛑 ABORT after fetchTraveled (identity changed)")
-                return
-            }
-
             viewedTraveledCountries = traveled
-            logPublishedState("after traveled assignment")
-
-            let bucket =
-                try await profileService.fetchBucketListCountries(userId: startingUserId)
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                print("🛑 ABORT after fetchBucket (identity changed)")
-                return
-            }
-
             viewedBucketListCountries = bucket
-            logPublishedState("after bucket assignment")
-
-            // Reset mutuals before computing
+            relationshipState = resolvedRelationship
+            isFriend = resolvedRelationship == .friends
+            mutualLanguages = []
             mutualBucketCountries = []
             mutualTraveledCountries = []
-
             computeOrderedLists()
-            logPublishedState("after computeOrderedLists")
-
-            // If viewing a friend, compute mutual country intersections
-            if startingUserId != supabase.currentUserId {
-                if let currentUserId = supabase.currentUserId {
-                    let myTraveled =
-                        try await profileService.fetchTraveledCountries(userId: currentUserId)
-
-                    let myBucket =
-                        try await profileService.fetchBucketListCountries(userId: currentUserId)
-
-                    let normalizedMyTraveled = Set(
-                        myTraveled.map {
-                            $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                        }
-                    )
-
-                    let normalizedMyBucket = Set(
-                        myBucket.map {
-                            $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                        }
-                    )
-
-                    let normalizedViewedTraveled = Set(
-                        viewedTraveledCountries.map {
-                            $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                        }
-                    )
-
-                    let normalizedViewedBucket = Set(
-                        viewedBucketListCountries.map {
-                            $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                        }
-                    )
-
-                    mutualTraveledCountries =
-                        Array(normalizedMyTraveled.intersection(normalizedViewedTraveled))
-
-                    mutualBucketCountries =
-                        Array(normalizedMyBucket.intersection(normalizedViewedBucket))
-
-                    logPublishedState("after mutual computation")
-                }
-            }
+            hasLoadedCoreData = true
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
-                print("🛑 ABORT after computeOrderedLists")
                 return
             }
 
-            isRelationshipLoading = true
-            try await refreshRelationshipState()
-            isRelationshipLoading = false
-            logPublishedState("after refreshRelationshipState")
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                print("🛑 ABORT after refreshRelationshipState")
-                return
+            Task { [weak self] in
+                await self?.loadSecondaryData(generation: generation)
             }
-
-            await loadPendingRequestCount()
-            logPublishedState("after loadPendingRequestCount")
-
-            guard generation == loadGeneration,
-                  self.userId == startingUserId else {
-                print("🛑 ABORT after loadPendingRequestCount")
-                return
-            }
-
-            await loadMutualFriends()
-            logPublishedState("after loadMutualFriends")
-
-            print("✅ load() COMPLETE — instance:", instanceId, "user:", startingUserId)
-            logPublishedState("load complete")
 
         } catch {
             print("❌ load() failed:", error)
@@ -177,5 +80,18 @@ extension ProfileViewModel {
         loadTask = Task { [weak self] in
             await self?.load(generation: generation)
         }
+    }
+
+    private func resolvedRelationshipState(for viewedUserId: UUID) async throws -> RelationshipState {
+        _ = try? await supabase.client.auth.session
+
+        guard let currentUserId = supabase.currentUserId else {
+            return .none
+        }
+
+        return try await friendService.fetchRelationshipState(
+            currentUserId: currentUserId,
+            otherUserId: viewedUserId
+        )
     }
 }

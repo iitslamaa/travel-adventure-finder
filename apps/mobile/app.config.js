@@ -1,14 +1,13 @@
 export default ({ config }) => ({
   ...config,
-  name: "mobile",
+  name: "Travel Adventure Finder",
   slug: "mobile",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
-  scheme: "mobile",
+  scheme: "travelaf",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
-
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.lamayassine.travelaf",
@@ -55,6 +54,12 @@ export default ({ config }) => ({
 
   experiments: {
     typedRoutes: true,
-    reactCompiler: true,
+  },
+  extra: {
+    supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    eas: {
+      projectId: "93f107b6-3588-44e1-88bc-74b5ad9f0af8",
+    },
   },
 });

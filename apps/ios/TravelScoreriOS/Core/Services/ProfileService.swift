@@ -25,11 +25,13 @@ struct ProfileUpdate: Encodable {
     let username: String?
     let fullName: String?
     let avatarUrl: String?
-    let languages: [String]?
+    let languages: [[String: String]]?
     let livedCountries: [String]?
     let travelStyle: [String]?
     let travelMode: [String]?
     let nextDestination: String?
+    let currentCountry: String?
+    let favoriteCountries: [String]?
     let onboardingCompleted: Bool?
 
     enum CodingKeys: String, CodingKey {
@@ -41,6 +43,8 @@ struct ProfileUpdate: Encodable {
         case travelStyle = "travel_style"
         case travelMode = "travel_mode"
         case nextDestination = "next_destination"
+        case currentCountry = "current_country"
+        case favoriteCountries = "favorite_countries"
         case onboardingCompleted = "onboarding_completed"
     }
 }
@@ -63,25 +67,37 @@ private struct CountryRow: Decodable {
 @MainActor
 final class ProfileService {
 
+    private static var profileCache: [UUID: Profile] = [:]
+    private static var traveledCache: [UUID: Set<String>] = [:]
+    private static var bucketCache: [UUID: Set<String>] = [:]
+
     private let supabase: SupabaseManager
 
     init(supabase: SupabaseManager) {
         self.supabase = supabase
     }
 
+    func cachedProfile(userId: UUID) -> Profile? {
+        Self.profileCache[userId]
+    }
+
+    func cachedTraveledCountries(userId: UUID) -> Set<String>? {
+        Self.traveledCache[userId]
+    }
+
+    func cachedBucketListCountries(userId: UUID) -> Set<String>? {
+        Self.bucketCache[userId]
+    }
+
     // MARK: - Fetch
 
     func fetchMyProfile(userId: UUID) async throws -> Profile {
-        print("📥 fetchMyProfile called for userId:", userId)
-        print("   🧠 ProfileService instance:", ObjectIdentifier(self))
         let response: PostgrestResponse<[Profile]> = try await supabase.client
             .from("profiles")
             .select()
             .eq("id", value: userId)
             .limit(1)
             .execute()
-        print("   📦 fetchMyProfile raw count:", response.value.count)
-        print("   📦 fetchMyProfile ids:", response.value.map { $0.id })
 
         guard let profile = response.value.first else {
             throw NSError(
@@ -91,7 +107,8 @@ final class ProfileService {
             )
         }
 
-        print("✅ fetchMyProfile returning profile id:", profile.id)
+        Self.profileCache[userId] = profile
+
         return profile
     }
 
@@ -100,8 +117,6 @@ final class ProfileService {
         defaultUsername: String? = nil,
         defaultAvatarUrl: String? = nil
     ) async throws {
-        print("🛠 ensureProfileExists called for:", userId)
-        print("   🧠 ProfileService instance:", ObjectIdentifier(self))
 
         // Try fetch first
         do {
@@ -110,7 +125,6 @@ final class ProfileService {
         } catch let error as NSError {
             // Only create profile if it's truly 404 (not found)
             if error.code == 404 {
-                print("🟡 Profile truly missing, creating one for:", userId)
             } else {
                 // Rethrow network / decoding / timeout errors
                 throw error
@@ -132,19 +146,62 @@ final class ProfileService {
             metadata["name"]?.stringValue ??
             "User"
 
+        // Generate a safe default username if none provided
+        let generatedUsername: String = {
+            if let provided = defaultUsername,
+               !provided.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return provided
+            }
+            // e.g. user_925948
+            let shortId = userId.uuidString
+                .replacingOccurrences(of: "-", with: "")
+                .prefix(6)
+            return "user_\(shortId)".lowercased()
+        }()
+
         let createPayload = ProfileCreate(
             id: userId,
-            username: defaultUsername ?? "",
+            username: generatedUsername,
             avatar_url: defaultAvatarUrl ?? "",
             full_name: fullName
         )
 
-        try await supabase.client
-            .from("profiles")
-            .insert(createPayload)
-            .execute()
+        // Insert can transiently fail right after signup if auth.users row isn't visible yet.
+        // Retry a few times on FK violation (23503) before giving up.
+        let delays: [UInt64] = [0, 200_000_000, 500_000_000, 1_000_000_000] // 0s, 0.2s, 0.5s, 1.0s
 
-        print("✅ Profile created with full_name:", fullName)
+        var lastError: Error?
+
+        for (idx, delay) in delays.enumerated() {
+            if delay > 0 {
+                try? await Task.sleep(nanoseconds: delay)
+            }
+
+            do {
+                try await supabase.client
+                    .from("profiles")
+                    .insert(createPayload)
+                    .execute()
+
+                return
+
+            } catch {
+                lastError = error
+
+                if let pg = error as? PostgrestError, pg.code == "23503" {
+                    print("⚠️ ensureProfileExists FK violation (23503) — retry \(idx + 1)/\(delays.count)")
+                    continue
+                }
+
+                throw error
+            }
+        }
+
+        throw lastError ?? NSError(
+            domain: "ProfileService",
+            code: 1,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to create profile after retries"]
+        )
     }
 
     func fetchOrCreateProfile(
@@ -152,8 +209,6 @@ final class ProfileService {
         defaultUsername: String? = nil,
         defaultAvatarUrl: String? = nil
     ) async throws -> Profile {
-        print("📥 fetchOrCreateProfile called for userId:", userId)
-        print("   🧠 ProfileService instance:", ObjectIdentifier(self))
         do {
             return try await fetchMyProfile(userId: userId)
         } catch let error as NSError where error.code == 404 {
@@ -210,34 +265,30 @@ final class ProfileService {
 
     /// Traveled countries for any viewed user
     func fetchTraveledCountries(userId: UUID) async throws -> Set<String> {
-        print("🌍 fetchTraveledCountries for userId:", userId)
-        print("   🧠 ProfileService instance:", ObjectIdentifier(self))
         let response: PostgrestResponse<[CountryRow]> = try await supabase.client
             .from("user_traveled")
             .select("country_id")
             .eq("user_id", value: userId.uuidString)
             .limit(1000)
             .execute()
-        print("   📦 traveled raw rows count:", response.value.count)
-        print("   📦 traveled countryIds:", response.value.map { $0.countryId })
 
-        return Set(response.value.map { $0.countryId })
+        let traveled = Set(response.value.map { $0.countryId })
+        Self.traveledCache[userId] = traveled
+        return traveled
     }
 
     /// Bucket list countries for any viewed user
     func fetchBucketListCountries(userId: UUID) async throws -> Set<String> {
-        print("🪣 fetchBucketListCountries for userId:", userId)
-        print("   🧠 ProfileService instance:", ObjectIdentifier(self))
         let response: PostgrestResponse<[CountryRow]> = try await supabase.client
             .from("user_bucket_list")
             .select("country_id")
             .eq("user_id", value: userId.uuidString)
             .limit(1000)
             .execute()
-        print("   📦 bucket raw rows count:", response.value.count)
-        print("   📦 bucket countryIds:", response.value.map { $0.countryId })
 
-        return Set(response.value.map { $0.countryId })
+        let bucket = Set(response.value.map { $0.countryId })
+        Self.bucketCache[userId] = bucket
+        return bucket
     }
 
     // MARK: - Bucket List Mutations
@@ -257,12 +308,10 @@ final class ProfileService {
             country_id: countryCode
         )
 
-        print("📡 INSERT user:", userId.uuidString, "country:", countryCode)
         try await supabase.client
             .from("user_bucket_list")
             .insert(payload)
             .execute()
-        print("✅ INSERT completed for:", countryCode)
     }
 
     func removeFromBucketList(
@@ -270,13 +319,11 @@ final class ProfileService {
         countryCode: String
     ) async throws {
 
-        print("📡 DELETE user:", userId.uuidString, "country:", countryCode)
         try await supabase.client
             .from("user_bucket_list")
             .delete()
             .eq("user_id", value: userId.uuidString)
             .eq("country_id", value: countryCode)
             .execute()
-        print("✅ DELETE completed for:", countryCode)
     }
 }

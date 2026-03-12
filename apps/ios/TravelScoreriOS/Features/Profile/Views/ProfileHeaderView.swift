@@ -1,108 +1,214 @@
 import SwiftUI
+import NukeUI
+import Nuke
 
 struct ProfileHeaderView: View {
-    private let instanceId = UUID()
     let profile: Profile?
     let username: String
     let homeCountryCodes: [String]
     let relationshipState: RelationshipState?
-    let friendCount: Int
     let onToggleFriend: () -> Void
+    @State private var showFavoriteTripsSheet = false
 
     private var effectiveState: RelationshipState {
         relationshipState ?? .none
     }
 
-    var body: some View {
-        let _ = print("🧾 ProfileHeaderView BODY — instance:", instanceId,
-                      " profile.id:", profile?.id as Any,
-                      " relationshipState:", relationshipState as Any,
-                      " effectiveState:", effectiveState,
-                      " friendCount:", friendCount)
-        VStack(alignment: .leading, spacing: 16) {
+    private var favoriteCountries: [String] {
+        profile?.favoriteCountries ?? []
+    }
 
-            HStack(alignment: .center, spacing: 20) {
+    private var visibleFavoriteCountries: [String] {
+        Array(favoriteCountries.prefix(4))
+    }
+
+    private var showsFavoriteTripsOverflow: Bool {
+        favoriteCountries.count > visibleFavoriteCountries.count
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 28) {
+
+            // LEFT COLUMN — Identity
+            VStack(alignment: .center, spacing: 12) {
 
                 avatarView
-                    .frame(width: 110, height: 110)
+                    .frame(width: 104, height: 104)
 
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .center, spacing: 6) {
 
                     Text(profile?.fullName ?? "")
                         .font(.title2)
-                        .fontWeight(.bold)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.black)
+                        .multilineTextAlignment(.center)
 
-                    if !username.isEmpty {
+                    if effectiveState != .selfProfile, !username.isEmpty {
+                        ctaButton
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    } else if !username.isEmpty {
                         Text("@\(username)")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.black)
+                            .multilineTextAlignment(.center)
                     }
 
                     if !homeCountryCodes.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 6) {
-                                ForEach(homeCountryCodes, id: \.self) { code in
-                                    Text(flagEmoji(for: code))
-                                        .font(.title3)
-                                }
+                        HStack(spacing: 6) {
+                            ForEach(homeCountryCodes, id: \.self) { code in
+                                Text(flagEmoji(for: code))
+                                    .font(.title3)
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .center)
                     }
+                }
+            }
+            .frame(width: 140)
+            .frame(maxHeight: .infinity, alignment: .center)
 
-                    if effectiveState != .selfProfile {
+            // RIGHT COLUMN — Improved countries block (always show fields with fallback)
+            VStack(alignment: .leading, spacing: 20) {
 
-                        Button(action: {
-                            print("🔘 Friend button tapped — instance:", instanceId,
-                                  " profile.id:", profile?.id as Any,
-                                  " currentState:", effectiveState,
-                                  " friendCount:", friendCount)
-                            onToggleFriend()
-                        }) {
-                            HStack(spacing: 6) {
+                // Current Country
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Current")
+                        .font(.callout.weight(.semibold))
+                        .foregroundColor(.black)
 
-                                if effectiveState == .friends {
-                                    Image(systemName: "checkmark")
-                                }
-
-                                Text(buttonLabel(for: effectiveState))
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 9)
-                            .background(
-                                Capsule()
-                                    .fill(
-                                        effectiveState == .friends
-                                        ? Color.blue.opacity(0.18)
-                                        : Color.blue.opacity(0.12)
-                                    )
-                            )
-                        }
+                    if let country = profile?.currentCountry,
+                       !country.isEmpty {
+                        Text(formattedCountry(country))
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(.black)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.6)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text("Not set")
+                            .font(.subheadline)
+                            .foregroundColor(.black)
                     }
                 }
 
-                Spacer()
+                // Next Destination
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Next")
+                        .font(.callout.weight(.semibold))
+                        .foregroundColor(.black)
+
+                    if let destination = profile?.nextDestination,
+                       !destination.isEmpty {
+                        Text(formattedCountry(destination))
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(.black)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.6)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text("Not set")
+                            .font(.subheadline)
+                            .foregroundColor(.black)
+                    }
+                }
+
+                // Favorites
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text("Favorite trips")
+                            .font(.callout.weight(.semibold))
+                            .foregroundColor(.black)
+
+                        if showsFavoriteTripsOverflow {
+                            Button {
+                                showFavoriteTripsSheet = true
+                            } label: {
+                                Image(systemName: "chevron.right.circle.fill")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.black.opacity(0.65))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    if !favoriteCountries.isEmpty {
+                        HStack(spacing: 6) {
+                            ForEach(visibleFavoriteCountries, id: \.self) { code in
+                                Text(flagEmoji(for: code.uppercased()))
+                                    .font(.title3)
+                            }
+
+                            if showsFavoriteTripsOverflow {
+                                Text("+\(favoriteCountries.count - visibleFavoriteCountries.count)")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundColor(.black)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    } else {
+                        Text("Not set")
+                            .font(.subheadline)
+                            .foregroundColor(.black)
+                    }
+                }
             }
-        }
-        .onChange(of: profile?.id) { oldValue, newValue in
-            print("🔁 ProfileHeaderView profile.id changed — instance:", instanceId,
-                  " old:", oldValue as Any,
-                  " new:", newValue as Any)
-        }
-        .onChange(of: relationshipState) { oldValue, newValue in
-            print("🔁 ProfileHeaderView relationshipState changed — instance:", instanceId,
-                  " old:", oldValue as Any,
-                  " new:", newValue as Any)
-        }
-        .onChange(of: friendCount) { oldValue, newValue in
-            print("🔁 ProfileHeaderView friendCount changed — instance:", instanceId,
-                  " old:", oldValue,
-                  " new:", newValue)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxHeight: .infinity, alignment: .center)
+            .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color(.systemBackground))
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background(
+            Image("profile_header")
+                .resizable()
+                .scaledToFill()
+                .clipped()
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+        .sheet(isPresented: $showFavoriteTripsSheet) {
+            FavoriteTripsSheet(countryCodes: favoriteCountries)
+        }
+    }
+
+    private var ctaButton: some View {
+        Button(action: {
+            onToggleFriend()
+        }) {
+            HStack(spacing: 6) {
+                switch effectiveState {
+                case .friends:
+                    Image(systemName: "checkmark")
+                case .requestSent:
+                    Image(systemName: "clock")
+                case .requestReceived:
+                    Image(systemName: "checkmark.circle.fill")
+                case .none:
+                    Image(systemName: "person.badge.plus")
+                case .selfProfile:
+                    EmptyView()
+                }
+
+                Text(buttonLabel(for: effectiveState))
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(
+                Capsule()
+                    .fill(backgroundColor(for: effectiveState))
+            )
+            .foregroundStyle(foregroundColor(for: effectiveState))
+        }
+        .padding(.top, 2)
     }
 
     // MARK: - Avatar
@@ -112,56 +218,86 @@ struct ProfileHeaderView: View {
             if let urlString = profile?.avatarUrl,
                let url = URL(string: urlString) {
 
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
+                LazyImage(url: url) { state in
+                    if let image = state.image {
                         image
                             .resizable()
                             .scaledToFill()
-
-                    case .failure(_):
+                    } else if state.error != nil {
                         Image(systemName: "person.crop.circle.fill")
                             .resizable()
                             .scaledToFill()
-                            .foregroundStyle(.gray)
-
-                    case .empty:
+                            .foregroundColor(.black)
+                    } else {
                         ZStack {
                             Circle()
                                 .fill(Color.gray.opacity(0.15))
                             ProgressView()
                         }
-
-                    @unknown default:
-                        EmptyView()
                     }
                 }
+                .processors([
+                    ImageProcessors.Resize(size: CGSize(width: 300, height: 300))
+                ])
+                .priority(.high)
 
             } else {
                 Image(systemName: "person.crop.circle.fill")
                     .resizable()
                     .scaledToFill()
-                    .foregroundStyle(.gray)
+                    .foregroundColor(.black)
             }
         }
         .clipShape(Circle())
         .overlay(
             Circle()
-                .stroke(Color(.systemBackground), lineWidth: 3)
+                .stroke(.white.opacity(0.8), lineWidth: 3)
         )
         .shadow(radius: 6)
     }
 
     private func buttonLabel(for state: RelationshipState) -> String {
+        if !username.isEmpty {
+            return "@\(username)"
+        }
+
         switch state {
         case .none:
             return "Add Friend"
         case .requestSent:
             return "Request Sent"
+        case .requestReceived:
+            return "Accept"
         case .friends:
-            return friendCount == 1 ? "1 Friend" : "\(friendCount) Friends"
+            return "Friends"
         case .selfProfile:
             return ""
+        }
+    }
+
+    private func backgroundColor(for state: RelationshipState) -> Color {
+        switch state {
+        case .none:
+            return Color.blue.opacity(0.12)
+        case .requestSent:
+            return Color.gray.opacity(0.15)
+        case .requestReceived:
+            return Color.green.opacity(0.18)
+        case .friends:
+            return Color.blue.opacity(0.18)
+        case .selfProfile:
+            return .clear
+        }
+    }
+
+    private func foregroundColor(for state: RelationshipState) -> Color {
+        switch state {
+        case .requestSent:
+            return .gray
+        case .requestReceived:
+            return .green
+        default:
+            return .blue
         }
     }
 
@@ -172,5 +308,106 @@ struct ProfileHeaderView: View {
             .compactMap { UnicodeScalar(127397 + $0.value) }
             .map { String($0) }
             .joined()
+    }
+
+    private func formattedCountry(_ code: String) -> String {
+        let upper = code.uppercased()
+        let locale = Locale(identifier: "en_US")
+        let name = locale.localizedString(forRegionCode: upper) ?? upper
+        return "\(name) \(flagEmoji(for: upper))"
+    }
+}
+
+private struct FavoriteTripsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let countryCodes: [String]
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.pageBackground("travel4")
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    Theme.titleBanner("Favorite Trips")
+
+                    ScrollView {
+                        LazyVStack(spacing: 14) {
+                            ForEach(countryCodes, id: \.self) { code in
+                                HStack(spacing: 14) {
+                                    Text(flagEmoji(for: code))
+                                        .font(.title2)
+
+                                    Text(countryName(for: code))
+                                        .font(.headline)
+                                        .foregroundStyle(.black)
+
+                                    Spacer()
+                                }
+                                .padding(16)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                .stroke(.white.opacity(0.35), lineWidth: 1)
+                                        )
+                                )
+                                .shadow(color: .black.opacity(0.08), radius: 5, y: 3)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.top, 14)
+                        .padding(.bottom, 24)
+                    }
+                    .background(
+                        Image("country-list")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 26, style: .continuous)
+                            .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+
+                    Spacer()
+                }
+            }
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
+            .overlay(alignment: .topLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.black)
+                        .frame(width: 36, height: 36)
+                }
+                .buttonStyle(.plain)
+                .padding(.leading, 16)
+                .padding(.top, 12)
+            }
+        }
+        .presentationDragIndicator(.visible)
+    }
+
+    private func flagEmoji(for countryCode: String) -> String {
+        countryCode
+            .uppercased()
+            .unicodeScalars
+            .compactMap { UnicodeScalar(127397 + $0.value) }
+            .map { String($0) }
+            .joined()
+    }
+
+    private func countryName(for countryCode: String) -> String {
+        Locale(identifier: "en_US").localizedString(forRegionCode: countryCode.uppercased()) ?? countryCode.uppercased()
     }
 }

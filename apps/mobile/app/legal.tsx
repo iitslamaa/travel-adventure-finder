@@ -1,5 +1,3 @@
-
-
 import { ScrollView, View, Text, StyleSheet, useColorScheme } from 'react-native';
 import AuthGate from '../components/AuthGate';
 
@@ -18,34 +16,62 @@ export default function LegalScreen() {
         contentContainerStyle={styles.content}
       >
         <View style={styles.section}>
-          <Text style={[styles.title, { color: titleColor }]}>Legal & Disclaimers</Text>
+          <Text style={[styles.title, { color: titleColor }]}>Legal, Privacy & Disclaimers</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.heading, { color: titleColor }]}>General Information</Text>
+          <Text style={[styles.heading, { color: titleColor }]}>Informational Use Only</Text>
           <Text style={[styles.body, { color: bodyColor }]}>
-            Travel Adventure Finder provides informational travel insights only. All scores, advisories, and recommendations are intended for general guidance and educational purposes. Seasonality insights are based on historical climate averages and typical travel patterns.
+            Travel Adventure Finder provides travel insights, scores, and recommendations for informational purposes only. All content, including travelability scores, advisories, affordability indicators, and seasonality insights, is based on publicly available data and historical patterns. Information may change without notice.
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.heading, { color: titleColor }]}>Advisories & Safety Scores</Text>
+          <Text style={[styles.heading, { color: titleColor }]}>No Government Affiliation</Text>
           <Text style={[styles.body, { color: bodyColor }]}>
-            Safety advisories and scores are derived from publicly available sources and third-party data. Conditions may change rapidly, and Travel Adventure Finder does not guarantee accuracy, completeness, or timeliness.
+            Travel Adventure Finder is not affiliated with any government agency. Users should consult official government travel advisories and local authorities before making travel decisions.
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={[styles.heading, { color: titleColor }]}>No Professional Advice</Text>
           <Text style={[styles.body, { color: bodyColor }]}>
-            Travel Adventure Finder does not provide legal, medical, or governmental advice. Users should verify information with official sources before making travel decisions.
+            This app does not provide legal, medical, immigration, financial, or governmental advice. Users are responsible for verifying all information independently.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.heading, { color: titleColor }]}>User Accounts & Data</Text>
+          <Text style={[styles.body, { color: bodyColor }]}>
+            When you create an account, we may collect your email address and basic profile information for authentication and personalization. We store country preferences and saved destinations to enhance your experience. We do not sell personal data.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.heading, { color: titleColor }]}>Account Deletion</Text>
+          <Text style={[styles.body, { color: bodyColor }]}>
+            You may request deletion of your account and associated data at any time through the Profile section of the app. Account deletion permanently removes your stored preferences and profile information.
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={[styles.heading, { color: titleColor }]}>Limitation of Liability</Text>
           <Text style={[styles.body, { color: bodyColor }]}>
-            Travel Adventure Finder is not responsible for decisions made based on information presented in the app. Use of this app is at your own discretion.
+            Travel Adventure Finder is not responsible for decisions made based on information presented in the app. Use of this application is at your own discretion and risk.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.heading, { color: titleColor }]}>Privacy Policy</Text>
+          <Text style={[styles.body, { color: bodyColor }]}>
+            A full privacy policy is available at: https://iitslamaa.github.io/travel-adventure-finder/privacy.html
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.heading, { color: titleColor }]}>Contact</Text>
+          <Text style={[styles.body, { color: bodyColor }]}>
+            For questions regarding legal matters or privacy, contact: travelaf@gmail.com
           </Text>
         </View>
 

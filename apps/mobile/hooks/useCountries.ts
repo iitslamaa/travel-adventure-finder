@@ -26,10 +26,12 @@ export function useCountries() {
           }
         );
 
-        const text = await res.text();
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`API error: ${res.status}`);
+        }
 
-        const data = JSON.parse(text);
-        console.log('SAMPLE COUNTRY:', Array.isArray(data) ? data[0] : data);
+        const data = await res.json();
 
         const mapped = Array.isArray(data)
           ? data.map((c: any) => ({
@@ -41,7 +43,6 @@ export function useCountries() {
 
         setCountries(mapped);
       } catch (error) {
-        console.log('Countries fetch error:', error);
       } finally {
         setLoading(false);
       }

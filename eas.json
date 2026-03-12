@@ -1,0 +1,26 @@
+{
+  "cli": {
+    "version": ">= 18.0.5",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true,
+      "node": "20.11.1",
+      "pnpm": "9.12.2",
+      "env": {
+        "EXPO_NO_FROZEN_LOCKFILE": "1"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

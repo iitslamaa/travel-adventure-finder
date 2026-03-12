@@ -1,72 +1,126 @@
 import SwiftUI
+import NukeUI
+import Nuke
 
 struct FriendsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var socialNav: SocialNavigationController
     private let userId: UUID
+    private let showsBackButton: Bool
     @StateObject private var friendsVM = FriendsViewModel()
     @State private var displayName: String = ""
-    @State private var showFriendRequests: Bool = false
+    @FocusState private var isSearchFocused: Bool
+    @Environment(\.floatingTabBarInset) private var floatingTabBarInset
 
-    init(userId: UUID) {
+    private var isOwnFriendsPage: Bool {
+        SupabaseManager.shared.currentUserId == userId
+    }
+
+    private var displayedProfiles: [Profile] {
+        let query = friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !query.isEmpty else { return friendsVM.friends }
+
+        if isOwnFriendsPage {
+            return friendsVM.searchResults
+        }
+
+        let lowered = query.lowercased()
+        return friendsVM.friends.filter { profile in
+            profile.username.lowercased().contains(lowered) ||
+            profile.fullName.lowercased().contains(lowered)
+        }
+    }
+
+    init(userId: UUID, showsBackButton: Bool = false) {
         self.userId = userId
-        print("👥 FriendsView INIT")
-        print("   userId:", userId)
+        self.showsBackButton = showsBackButton
     }
 
     var body: some View {
-        contentView
-            .navigationTitle(
-                displayName.isEmpty
-                ? "Friends"
-                : "\(displayName)'s Friends"
-            )
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                if SupabaseManager.shared.currentUserId == userId {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+        ZStack {
+            VStack(spacing: 0) {
+                Theme.titleBanner("Friends")
+
+                contentView
+                    .padding(.top, 12)
+                    .padding(.bottom, 12)
+            }
+
+            VStack {
+                HStack {
+                    if showsBackButton {
                         Button {
-                            showFriendRequests = true
+                            dismiss()
                         } label: {
                             ZStack {
-                                Circle()
-                                    .fill(Color(.systemGray5))
-                                    .frame(width: 36, height: 36)
-
-                                Image(systemName: "person.crop.circle.badge.plus")
+                                Theme.chromeIconButtonBackground(size: 40)
+                                Image(systemName: "chevron.left")
                                     .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(.primary)
-
-                                if friendsVM.incomingRequestCount > 0 {
-                                    Text("\(min(friendsVM.incomingRequestCount, 9))")
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundStyle(.white)
-                                        .frame(width: 16, height: 16)
-                                        .background(Circle().fill(.red))
-                                        .offset(x: 10, y: -10)
-                                }
+                                    .foregroundStyle(.black)
                             }
-                            .contentShape(Circle())
                         }
                         .buttonStyle(.plain)
                     }
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+                Spacer()
+            }
+
+            if isOwnFriendsPage {
+                VStack {
+                    HStack {
+                        Spacer()
+
+                        NavigationLink(value: SocialRoute.friendRequests) {
+                            ZStack {
+                                Theme.chromeIconButtonBackground(size: 40)
+
+                                Image(systemName: "person.crop.circle.badge.plus")
+                                    .font(TAFTypography.title(.bold))
+                                    .foregroundStyle(.black)
+
+                                if friendsVM.incomingRequestCount > 0 {
+                                    Text("\(min(friendsVM.incomingRequestCount, 9))")
+                                        .font(TAFTypography.caption(.bold))
+                                        .foregroundStyle(.white)
+                                        .frame(width: 18, height: 18)
+                                        .background(Circle().fill(.red))
+                                        .offset(x: 12, y: -12)
+                                }
+                            }
+                            .frame(width: 40, height: 40)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.leading, 16)
+                    .padding(.trailing, 24)
+                    .padding(.top, 12)
+
+                    Spacer()
                 }
             }
-            .sheet(isPresented: $showFriendRequests) {
-                NavigationStack {
-                    FriendRequestsView()
-                }
-            }
-            .searchable(text: $friendsVM.searchText, prompt: "Search by username")
+        }
+        .background(
+            Theme.pageBackground("travel3")
+                .ignoresSafeArea()
+        )
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .onChange(of: friendsVM.searchText) { _ in
+                guard isOwnFriendsPage else { return }
                 Task { await friendsVM.searchUsers() }
             }
             .alert("Error", isPresented: .constant(friendsVM.errorMessage != nil)) {
                 Button("OK") { friendsVM.errorMessage = nil }
             } message: {
                 Text(friendsVM.errorMessage ?? "")
-            }
-            // ✅ CRITICAL: destination attached at same level as the List/NavigationLink
-            .navigationDestination(for: UUID.self) { destinationUserId in
-                ProfileView(userId: destinationUserId)
             }
             .task(id: userId) {
                 await friendsVM.loadFriends(for: userId, forceRefresh: false)
@@ -76,60 +130,150 @@ struct FriendsView: View {
                     displayName = friendsVM.displayName
                 }
 
-                if SupabaseManager.shared.currentUserId == userId {
+                if isOwnFriendsPage {
                     await friendsVM.loadIncomingRequestCount()
                 }
             }
     }
 
     private var contentView: some View {
-        List {
-            let data = friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                ? friendsVM.friends
-                : friendsVM.searchResults
+        GeometryReader { geo in
+            ScrollViewReader { proxy in
+                ZStack {
+                    Theme.notebookListBackground(corner: 22)
+                        .allowsHitTesting(false)
 
-            ForEach(data) { profile in
-                NavigationLink(value: profile.id) {
-                    HStack(spacing: 14) {
-                        if let urlString = profile.avatarUrl,
-                           let url = URL(string: urlString) {
-                            AsyncImage(url: url) { image in
-                                image.resizable().scaledToFill()
-                            } placeholder: {
-                                Image(systemName: "person.crop.circle.fill")
-                                    .resizable()
-                                    .scaledToFill()
-                                    .foregroundStyle(.secondary)
+                    VStack(spacing: 14) {
+                        searchBar
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
+
+                        ScrollView {
+                            LazyVStack(spacing: 18) {
+                                ForEach(displayedProfiles, id: \.id) { profile in
+                                    Button {
+                                        socialNav.push(.profile(profile.id))
+                                    } label: {
+                                        HStack(spacing: 14) {
+                                            if let urlString = profile.avatarUrl,
+                                               let url = URL(string: urlString) {
+                                                LazyImage(url: url) { state in
+                                                    if let image = state.image {
+                                                        image
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                    } else {
+                                                        Image(systemName: "person.crop.circle.fill")
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                            .foregroundColor(.gray)
+                                                    }
+                                                }
+                                                .processors([
+                                                    ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
+                                                ])
+                                                .priority(.high)
+                                                .frame(width: 44, height: 44)
+                                                .clipShape(Circle())
+                                            } else {
+                                                Image(systemName: "person.crop.circle.fill")
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .foregroundColor(.gray)
+                                                    .frame(width: 44, height: 44)
+                                            }
+
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(profile.fullName)
+                                                    .font(.headline)
+                                                    .foregroundColor(.black)
+                                                Text("@\(profile.username)")
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.black)
+                                            }
+
+                                            Spacer()
+
+                                            Image(systemName: "chevron.right")
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundColor(.black.opacity(0.35))
+                                        }
+                                        .padding(16)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 18)
+                                                .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                        .stroke(.white.opacity(0.35), lineWidth: 1)
+                                                )
+                                        )
+                                        .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
-                            .frame(width: 44, height: 44)
-                            .clipShape(Circle())
-                        } else {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .scaledToFill()
-                                .foregroundStyle(.secondary)
-                                .frame(width: 44, height: 44)
+                            .id("friendsListTop")
+                            .padding(.horizontal, 16)
+                            .padding(.top, 6)
+                            .padding(.bottom, floatingTabBarInset + 20)
                         }
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(profile.fullName).font(.headline)
-                            Text("@\(profile.username)")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Spacer()
                     }
-                    .padding(.vertical, 6)
+                    .refreshable {
+                        await friendsVM.loadFriends(for: userId, forceRefresh: true)
+                        if isOwnFriendsPage {
+                            await friendsVM.loadIncomingRequestCount()
+                        }
+                    }
+                }
+                .frame(width: min(max(geo.size.width - 36, 0), 720))
+                .frame(maxWidth: .infinity)
+                .padding(.top, 18)
+                .padding(.horizontal, 18)
+                .padding(.bottom, floatingTabBarInset + 18)
+            }
+        }
+    }
+
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.black)
+
+            TextField(
+                "",
+                text: $friendsVM.searchText,
+                prompt: Text("Search by username")
+                    .foregroundStyle(.black.opacity(0.55))
+            )
+                .textFieldStyle(.plain)
+                .foregroundStyle(.black)
+                .tint(.black)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .submitLabel(.search)
+                .focused($isSearchFocused)
+                .frame(maxWidth: .infinity)
+                .frame(height: 34)
+
+            if !friendsVM.searchText.isEmpty {
+                Button {
+                    friendsVM.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.black)
                 }
             }
         }
-        .refreshable {
-            await friendsVM.loadFriends(for: userId, forceRefresh: true)
-            if SupabaseManager.shared.currentUserId == userId {
-                await friendsVM.loadIncomingRequestCount()
-            }
-        }
-        .listStyle(.insetGrouped)
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(red: 0.94, green: 0.92, blue: 0.86))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color.black.opacity(0.05), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
     }
 }

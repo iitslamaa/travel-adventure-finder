@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
-import { View, StyleSheet, Dimensions, Animated, Pressable, Text } from "react-native";
-import MapView, { Polygon } from "react-native-maps";
+import { View, StyleSheet, Pressable, Text, useWindowDimensions } from "react-native";
+import MapView, { Polygon, PROVIDER_GOOGLE } from "react-native-maps";
 import { useRouter } from "expo-router";
 import { useCountries } from "../../hooks/useCountries";
 import worldGeo from "../../src/assets/geo/world.geo.json";
@@ -16,8 +16,6 @@ const mutedMapStyle = [
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e1626" }] },
 ];
 
-const { width, height } = Dimensions.get("window");
-
 function getScoreColor(score?: number) {
   if (score == null) return "rgba(180,180,180,0.15)";
   if (score >= 80) return "rgba(52,168,83,0.6)";
@@ -30,6 +28,7 @@ export default function ScoreWorldMap() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const { countries } = useCountries();
+  const { height } = useWindowDimensions();
 
   const [selected, setSelected] = useState<any>(null);
 
@@ -42,13 +41,6 @@ export default function ScoreWorldMap() {
     });
     return map;
   }, [countries]);
-
-  const scoreStats = useMemo(() => {
-    const values = Object.values(scoreLookup);
-    const nonZero = values.filter((v) => (v ?? 0) > 0).length;
-    const max = values.length ? Math.max(...values) : 0;
-    return { total: values.length, nonZero, max };
-  }, [scoreLookup]);
 
   const handlePress = (feature: any) => {
     if (!feature) return;
@@ -96,21 +88,16 @@ export default function ScoreWorldMap() {
     mapRef.current?.animateToRegion({
       latitude: centerLat,
       longitude: centerLng,
-      latitudeDelta: Math.max(5, (maxLat - minLat) * 1.5),
-      longitudeDelta: Math.max(5, (maxLng - minLng) * 1.5),
+      latitudeDelta: Math.max(2, (maxLat - minLat) * 1.2),
+      longitudeDelta: Math.max(2, (maxLng - minLng) * 1.2),
     });
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.debugPill}>
-        <Text style={styles.debugText}>
-          Scores: {scoreStats.nonZero}/{scoreStats.total} non-zero (max {scoreStats.max})
-        </Text>
-      </View>
       <MapView
         ref={mapRef}
-        style={StyleSheet.absoluteFill}
+        style={{ flex: 1 }}
         initialRegion={{
           latitude: 20,
           longitude: 0,
@@ -118,7 +105,7 @@ export default function ScoreWorldMap() {
           longitudeDelta: 60,
         }}
         mapType="standard"
-        provider={undefined}
+        provider={PROVIDER_GOOGLE}
         customMapStyle={mutedMapStyle}
       >
         {worldGeo.features.map((feature: any, index: number) => {
@@ -162,14 +149,30 @@ export default function ScoreWorldMap() {
       </MapView>
 
       {selected && (
-        <View style={styles.card}>
+        <View
+          style={[
+            styles.card,
+            {
+              maxHeight: height * 0.5,
+              alignSelf: 'center',
+              width: '100%',
+              maxWidth: 720,
+            },
+          ]}
+        >
           <Text style={styles.title}>{selected.name}</Text>
           <Text style={styles.score}>Score: {selected.score ?? "N/A"}</Text>
 
           <Pressable
             style={styles.button}
             onPress={() => {
-              router.push(`/country/${selected.iso2}`);
+              router.push({
+                pathname: "/country/[iso2]",
+                params: {
+                  iso2: selected.iso2,
+                  name: selected.name,
+                },
+              });
             }}
           >
             <Text style={{ color: "white" }}>View Full Country Page →</Text>
@@ -182,26 +185,9 @@ export default function ScoreWorldMap() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "black" },
-  debugPill: {
-    position: "absolute",
-    top: 14,
-    left: 14,
-    zIndex: 999,
-    backgroundColor: "rgba(0,0,0,0.65)",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 14,
-  },
-  debugText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "600",
-  },
   card: {
     position: "absolute",
     bottom: 40,
-    left: 20,
-    right: 20,
     backgroundColor: "#111",
     padding: 20,
     borderRadius: 20,

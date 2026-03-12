@@ -8,12 +8,15 @@ import SwiftUI
 struct ProfileLoadingView: View {
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Theme.pageBackground("travel4")
                 .ignoresSafeArea()
 
-            ProgressView()
-                .progressViewStyle(.circular)
-                .scaleEffect(1.2)
+            VStack(spacing: 0) {
+                Theme.titleBanner("Profile")
+
+                ProfileSkeletonView()
+                    .padding(.top, 6)
+            }
         }
     }
 }

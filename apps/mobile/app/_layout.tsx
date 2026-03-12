@@ -1,20 +1,39 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Stack, useSegments } from 'expo-router';
+import React, { useMemo } from 'react';
+import { View, StyleSheet, useColorScheme } from 'react-native';
+import { Stack } from 'expo-router';
 import { Video, ResizeMode } from 'expo-av';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { useTheme } from '../hooks/useTheme';
+import * as WebBrowser from 'expo-web-browser';
+
+WebBrowser.maybeCompleteAuthSession();
 
 function RootLayoutInner() {
-  const segments = useSegments();
+  const scheme = useColorScheme();
+  const colors = useTheme();
 
-  const isAuthRoute =
-    segments.length === 0 ||
-    segments[0] === 'login' ||
-    segments[0] === 'verify';
+  const { session, isGuest, loading } = useAuth();
+
+  const showAuthBackground = useMemo(() => {
+    // Do NOT decide auth UI until initial session check finishes
+    if (loading) return false;
+    if (isGuest) return false;
+    return session === null;
+  }, [session, isGuest, loading]);
 
   return (
-    <View style={styles.root}>
-      {isAuthRoute ? (
+    <SafeAreaView
+      style={[styles.root, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right']}
+    >
+      <StatusBar
+        style={scheme === 'dark' ? 'light' : 'dark'}
+        backgroundColor={colors.background}
+      />
+
+      {showAuthBackground && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <Video
             source={require('../assets/auth_loop.mp4')}
@@ -26,23 +45,31 @@ function RootLayoutInner() {
           />
           <View style={styles.overlay} />
         </View>
-      ) : null}
+      )}
 
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: 'transparent' },
+          animation: 'fade',
+          animationDuration: 220,
+          contentStyle: {
+            backgroundColor: showAuthBackground
+              ? 'transparent'
+              : colors.background,
+          },
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutInner />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <RootLayoutInner />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -52,6 +79,6 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
 });

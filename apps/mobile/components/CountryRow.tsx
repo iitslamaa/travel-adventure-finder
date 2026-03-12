@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Country } from '../types/Country';
+import { useTheme } from '../hooks/useTheme';
 
 type Props = {
   country: Country;
@@ -33,19 +34,27 @@ export default function CountryRow({
   isVisited,
   onToggleVisited,
 }: Props) {
-  const score = country.facts?.scoreTotal ?? 0;
-  const advisoryLevel = country.facts?.advisoryLevel;
+  const colors = useTheme();
+  const score = country.scoreTotal ?? 0;
+  const advisoryLevel = country.advisory?.level;
   const color = getScoreColor(score);
 
   return (
-    <Pressable onPress={onPress} style={styles.container}>
+    <Pressable
+      onPress={onPress}
+      style={[styles.container, { borderColor: colors.border }]}
+    >
       <View style={styles.left}>
         <Text style={styles.flag}>{isoToFlag(country.iso2)}</Text>
 
         <View>
-          <Text style={styles.name}>{country.name}</Text>
+          <Text style={[styles.name, { color: colors.textPrimary }]}>
+            {country.name}
+          </Text>
           {advisoryLevel !== undefined && (
-            <Text style={styles.level}>Level {advisoryLevel}</Text>
+            <Text style={[styles.level, { color: colors.textSecondary }]}>
+              Level {advisoryLevel}
+            </Text>
           )}
         </View>
       </View>
@@ -67,7 +76,7 @@ export default function CountryRow({
           <Ionicons
             name={isBucketed ? 'bookmark' : 'bookmark-outline'}
             size={22}
-            color={isBucketed ? '#111827' : '#C7C7CC'}
+            color={isBucketed ? colors.primary : colors.textMuted}
           />
         </Pressable>
 
@@ -83,11 +92,11 @@ export default function CountryRow({
           <Ionicons
             name={isVisited ? 'checkmark-circle' : 'checkmark-circle-outline'}
             size={22}
-            color={isVisited ? '#4CAF50' : '#C7C7CC'}
+            color={isVisited ? colors.primary : colors.textMuted}
           />
         </Pressable>
 
-        <Text style={styles.chevron}>›</Text>
+        <Text style={[styles.chevron, { color: colors.textMuted }]}>›</Text>
       </View>
     </Pressable>
   );
@@ -98,8 +107,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 18,
-    borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
   },
   left: {
     flexDirection: 'row',
@@ -120,7 +127,6 @@ const styles = StyleSheet.create({
   },
   level: {
     fontSize: 13,
-    color: '#8E8E93',
     marginTop: 2,
   },
   scorePill: {
@@ -138,6 +144,5 @@ const styles = StyleSheet.create({
   },
   chevron: {
     fontSize: 20,
-    color: '#C7C7CC',
   },
 });

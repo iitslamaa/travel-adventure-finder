@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { ScrollView, View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { useTheme } from "../../hooks/useTheme";
 import MonthSelector from "../../components/whenToGo/MonthSelector";
 import SummaryPills from "../../components/whenToGo/SummaryPills";
 import SeasonSection from "../../components/whenToGo/SeasonSection";
@@ -10,6 +11,8 @@ export default function WhenToGoScreen() {
   const [selectedMonth, setSelectedMonth] = useState(1); // 0 = Jan
 
   const { countries, loading } = useCountries();
+
+  const colors = useTheme();
 
   const { peak, shoulder } = useMemo(() => {
     return getWhenToGoBuckets(countries, selectedMonth);
@@ -23,15 +26,15 @@ export default function WhenToGoScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ActivityIndicator />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>When to Go</Text>
-      <Text style={styles.subtitle}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.header, { color: colors.textPrimary }]}>When to Go</Text>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         Select a month to explore where it’s peak or shoulder season.
       </Text>
 
@@ -42,8 +45,8 @@ export default function WhenToGoScreen() {
 
       <View style={styles.summaryRow}>
         <View>
-          <Text style={styles.muted}>Selected month</Text>
-          <Text style={styles.month}>
+          <Text style={[styles.muted, { color: colors.textSecondary }]}>Selected month</Text>
+          <Text style={[styles.month, { color: colors.textPrimary }]}>
             {monthLabels[selectedMonth]}
           </Text>
         </View>
@@ -85,7 +88,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   subtitle: {
-    opacity: 0.6,
     marginVertical: 8,
   },
   summaryRow: {
@@ -96,7 +98,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   muted: {
-    opacity: 0.6,
     marginBottom: 4,
   },
   month: {

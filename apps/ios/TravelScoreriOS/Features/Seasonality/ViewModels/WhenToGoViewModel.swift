@@ -12,22 +12,33 @@ import Combine
 @MainActor
 final class WhenToGoViewModel: ObservableObject {
 
-    @Published var selectedMonthIndex: Int = 1 {
+    static var currentMonth: Int {
+        Calendar.current.component(.month, from: Date())
+    }
+
+    @Published var selectedMonthIndex: Int = WhenToGoViewModel.currentMonth {
         didSet {
             recalculateForSelectedMonth()
         }
     }
-    @Published var selectedCountry: WhenToGoItem? = nil
 
+    @Published var selectedCountry: WhenToGoItem? = nil
     @Published private(set) var countriesForSelectedMonth: [WhenToGoItem] = []
 
     private let weightsStore: ScoreWeightsStore
-
     private let allCountries: [Country]
+    private var cancellables = Set<AnyCancellable>()
 
     init(countries: [Country], weightsStore: ScoreWeightsStore) {
         self.allCountries = countries
         self.weightsStore = weightsStore
+
+        weightsStore.$weights
+            .sink { [weak self] _ in
+                self?.recalculateForSelectedMonth()
+            }
+            .store(in: &cancellables)
+
         recalculateForSelectedMonth()
     }
 
@@ -54,13 +65,17 @@ final class WhenToGoViewModel: ObservableObject {
     var totalCount: Int { peakCount + shoulderCount }
 
     func recalculateForSelectedMonth() {
-        countriesForSelectedMonth = allCountries.compactMap { country in
+        countriesForSelectedMonth = allCountries.compactMap { country -> WhenToGoItem? in
             guard let seasonType = computeSeasonType(for: country),
                   let seasonalityScore = computeSeasonalityScore(for: country)
             else { return nil }
 
+            var adjustedCountry = country
+            let computedOverall = weightedScore(for: adjustedCountry)
+            adjustedCountry.score = Int(computedOverall.rounded())
+
             return WhenToGoItem(
-                country: country,
+                country: adjustedCountry,
                 seasonType: seasonType,
                 seasonalityScore: seasonalityScore
             )
@@ -69,16 +84,14 @@ final class WhenToGoViewModel: ObservableObject {
 
     private func computeSeasonType(for country: Country) -> SeasonType? {
         guard let bestMonths = country.seasonalityBestMonths,
-              !bestMonths.isEmpty,
-              let score = country.seasonalityScore
+              !bestMonths.isEmpty
         else { return nil }
 
         if bestMonths.contains(selectedMonthIndex) {
             return .peak
         }
 
-        // If not peak but has a seasonality score, treat as shoulder
-        if score > 0 {
+        if country.seasonalityScore ?? 0 > 0 {
             return .shoulder
         }
 
@@ -86,9 +99,18 @@ final class WhenToGoViewModel: ObservableObject {
     }
 
     private func computeSeasonalityScore(for country: Country) -> Int? {
-        return country.seasonalityScore
+        guard let bestMonths = country.seasonalityBestMonths,
+              !bestMonths.isEmpty
+        else { return nil }
+
+        if bestMonths.contains(selectedMonthIndex) {
+            return 100
+        }
+
+        return 0
     }
 
+    // ✅ Pure weighted average — no multiplier
     private func weightedScore(for country: Country) -> Double {
         let weights = weightsStore.weights
 
@@ -102,28 +124,15 @@ final class WhenToGoViewModel: ObservableObject {
             components.append((Double(visa), weights.visa))
         }
 
-        if let affordabilityRaw = country.dailySpendTotalUsd {
-            let affordability = Double(min(max(affordabilityRaw, 0), 100))
-            components.append((affordability, weights.affordability))
+        if let affordabilityScore = country.affordabilityScore {
+            components.append((Double(affordabilityScore), weights.affordability))
         }
 
-        let baseScore: Double
-        if components.isEmpty {
-            baseScore = 0
-        } else {
-            let totalWeight = components.reduce(0) { $0 + $1.weight }
-            let weightedSum = components.reduce(0) { $0 + ($1.value * $1.weight) }
-            baseScore = totalWeight > 0 ? weightedSum / totalWeight : 0
-        }
+        guard !components.isEmpty else { return 0 }
 
-        guard let seasonalityScore = country.seasonalityScore else {
-            return baseScore
-        }
+        let totalWeight = components.reduce(0) { $0 + $1.weight }
+        let weightedSum = components.reduce(0) { $0 + ($1.value * $1.weight) }
 
-        // Subtle seasonality multiplier (0.9 – 1.1 range)
-        let normalizedSeasonality = Double(seasonalityScore) / 100.0
-        let modifier = 0.9 + (0.2 * normalizedSeasonality)
-
-        return baseScore * modifier
+        return totalWeight > 0 ? weightedSum / totalWeight : 0
     }
 }

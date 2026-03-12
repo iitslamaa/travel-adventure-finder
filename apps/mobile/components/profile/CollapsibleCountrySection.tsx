@@ -3,8 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  Pressable,
-  LayoutAnimation,
+  TouchableOpacity,
   UIManager,
   Platform,
   useColorScheme,
@@ -28,7 +27,7 @@ export default function CollapsibleCountrySection({
   title,
   countries = [],
 }: Props) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [selectedIso, setSelectedIso] = useState<string | null>(null);
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
@@ -42,7 +41,6 @@ export default function CollapsibleCountrySection({
   );
 
   const toggle = () => {
-    LayoutAnimation.easeInEaseOut();
     setExpanded((prev) => !prev);
   };
 
@@ -61,7 +59,15 @@ export default function CollapsibleCountrySection({
         },
       ]}
     >
-      <Pressable style={styles.header} onPress={toggle}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={toggle}
+        style={[
+          styles.header,
+          expanded && styles.headerExpanded,
+        ]}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
         <View style={styles.headerLeft}>
           <Ionicons
             name={expanded ? 'chevron-down' : 'chevron-forward'}
@@ -76,7 +82,7 @@ export default function CollapsibleCountrySection({
         <Text style={[styles.count, { color: mutedColor }]}> 
           {sortedCountries.length}
         </Text>
-      </Pressable>
+      </TouchableOpacity>
 
       {expanded && (
         <View style={styles.content}>
@@ -96,7 +102,8 @@ export default function CollapsibleCountrySection({
                   const isSelected = selectedIso === item;
 
                   return (
-                    <Pressable
+                    <TouchableOpacity
+                      activeOpacity={0.85}
                       onPress={() => setSelectedIso(item)}
                       style={[
                         styles.flagWrapper,
@@ -104,7 +111,7 @@ export default function CollapsibleCountrySection({
                       ]}
                     >
                       <CountryFlag isoCode={item} size={26} />
-                    </Pressable>
+                    </TouchableOpacity>
                   );
                 }}
               />
@@ -137,6 +144,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerExpanded: {
+    marginTop: -6,
+    marginBottom: 6,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -157,7 +170,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   mapContainer: {
-    height: 250,
+    width: '100%',
+    aspectRatio: 1.6,
+    minHeight: 200,
+    maxHeight: 400,
     marginTop: 16,
     borderRadius: 16,
     overflow: 'hidden',

@@ -1,10 +1,12 @@
 import {
   ScrollView,
   useColorScheme,
+  View,
+  ActivityIndicator,
+  Text,
 } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useCountries } from '../../../hooks/useCountries';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import HeaderCard from './components/HeaderCard';
 import AdvisoryCard from './components/AdvisoryCard';
 import SeasonalityCard from './components/SeasonalityCard';
@@ -12,16 +14,43 @@ import VisaCard from './components/VisaCard';
 import { lightColors, darkColors } from '../../../theme/colors';
 
 export default function CountryDetailScreen() {
-  const { iso2 } = useLocalSearchParams<{ iso2: string }>();
+  const { iso2, name } = useLocalSearchParams<{ iso2: string; name?: string }>();
   const navigation = useNavigation();
-  const { countries } = useCountries();
 
   const scheme = useColorScheme();
   const colors = scheme === 'dark' ? darkColors : lightColors;
 
-  const country = useMemo(() => {
-    return countries?.find?.(c => c.iso2 === iso2);
-  }, [countries, iso2]);
+  const [country, setCountry] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (name) {
+      navigation.setOptions({
+        title: name,
+      });
+    }
+  }, [navigation, name]);
+
+  useEffect(() => {
+    if (!iso2) return;
+
+    const fetchCountry = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `https://travel-scorer.vercel.app/api/country/${iso2}`
+        );
+        const data = await res.json();
+        setCountry(data);
+      } catch (e) {
+        console.log('Country detail fetch error:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCountry();
+  }, [iso2]);
 
   useEffect(() => {
     if (!country?.name) return;
@@ -31,11 +60,23 @@ export default function CountryDetailScreen() {
     });
   }, [navigation, country?.name]);
 
-  if (!countries) return null;
-  if (!country) return null;
-  console.log('FLAG EMOJI:', (country as any).flagEmoji);
+  if (loading || !country) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.background,
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
-  const score = country.facts?.scoreTotal ?? 0;
+  const score = country.scoreTotal ?? country.facts?.scoreTotal ?? 0;
   const advisoryLevel = country.facts?.advisoryLevel ?? '—';
 
   const advisoryScore =
@@ -72,10 +113,10 @@ export default function CountryDetailScreen() {
       />
 
       <SeasonalityCard
-        score={country.facts?.seasonality ?? 0}
+        score={country.facts?.seasonality ?? 50}
         bestMonths={country.facts?.fmSeasonalityBestMonths ?? []}
         description={country.facts?.fmSeasonalityNotes}
-        normalizedLabel={`Normalized: ${country.facts?.seasonality ?? 0}`}
+        normalizedLabel={`Normalized: ${country.facts?.seasonality ?? 50}`}
         weightOnlyLabel={'Weight: 5%'}
       />
 

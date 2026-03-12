@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "Canonical ISO 3166-1 alpha-2 universe for TravelAF",
+  "iso2": [
+    "US",
+    "GB",
+    "FR",
+    "NL",
+    "TC",
+    "FK",
+    "GI"
+  ]
+}

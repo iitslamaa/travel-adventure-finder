@@ -8,6 +8,9 @@ export function useUserCounts(userId?: string | string[]) {
   const [bucketCount, setBucketCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const [traveledIsoCodes, setTraveledIsoCodes] = useState<string[]>([]);
+  const [bucketIsoCodes, setBucketIsoCodes] = useState<string[]>([]);
+
   useEffect(() => {
     if (!id) return;
 
@@ -15,25 +18,33 @@ export function useUserCounts(userId?: string | string[]) {
       setLoading(true);
 
       const [
-        { count: traveledCountRes, error: traveledErr },
-        { count: bucketCountRes, error: bucketErr },
+        traveledRes,
+        bucketRes,
       ] = await Promise.all([
         supabase
           .from('user_traveled')
-          .select('*', { count: 'exact', head: true })
+          .select('country_id', { count: 'exact' })
           .eq('user_id', id),
 
         supabase
           .from('user_bucket_list')
-          .select('*', { count: 'exact', head: true })
+          .select('country_id', { count: 'exact' })
           .eq('user_id', id),
       ]);
 
-      if (traveledErr) console.error(traveledErr);
-      if (bucketErr) console.error(bucketErr);
+      if (traveledRes.error) console.error(traveledRes.error);
+      if (bucketRes.error) console.error(bucketRes.error);
 
-      setTraveledCount(traveledCountRes ?? 0);
-      setBucketCount(bucketCountRes ?? 0);
+      setTraveledCount(traveledRes.count ?? 0);
+      setBucketCount(bucketRes.count ?? 0);
+
+      setTraveledIsoCodes(
+        traveledRes.data?.map((r: any) => r.country_id) ?? []
+      );
+
+      setBucketIsoCodes(
+        bucketRes.data?.map((r: any) => r.country_id) ?? []
+      );
 
       setLoading(false);
     }
@@ -41,5 +52,11 @@ export function useUserCounts(userId?: string | string[]) {
     run();
   }, [id]);
 
-  return { traveledCount, bucketCount, loading };
+  return {
+    traveledCount,
+    bucketCount,
+    traveledIsoCodes,
+    bucketIsoCodes,
+    loading,
+  };
 }
