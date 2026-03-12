@@ -109,6 +109,8 @@ struct WorldGeoJSONLoader {
 
                 // RN-style layered ISO resolution
                 let nameOverrides: [String: String] = [
+                    "SOMALILAND": "SO",
+                    "SOMALIA": "SO",
                     "TAIWAN": "TW",
                     "FRENCH GUIANA": "GF",
                     "MARTINIQUE": "MQ",
@@ -137,6 +139,10 @@ struct WorldGeoJSONLoader {
 
                 if iso == nil {
                     iso = normalizeIso(rawIso)
+                }
+
+                if featureName == "SOMALILAND" {
+                    name = "Somalia"
                 }
             }
 

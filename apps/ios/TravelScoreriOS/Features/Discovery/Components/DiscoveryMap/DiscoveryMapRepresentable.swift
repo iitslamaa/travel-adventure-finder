@@ -177,6 +177,12 @@ struct DiscoveryMapRepresentable: UIViewRepresentable {
                 span: MKCoordinateSpan(latitudeDelta: 8.0, longitudeDelta: 8.0)
             ),
 
+            // United States (mainland focus – further zoomed out)
+            "US": MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 39.8, longitude: -98.6),
+                span: MKCoordinateSpan(latitudeDelta: 40.0, longitudeDelta: 70.0)
+            ),
+
             // Singapore
             "SG": MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 1.35, longitude: 103.82),
@@ -202,6 +208,7 @@ struct DiscoveryMapRepresentable: UIViewRepresentable {
                 context.coordinator.lastZoomedISO = iso
             } else {
                 context.coordinator.zoomToCountry(iso: iso)
+                context.coordinator.lastZoomedISO = iso
             }
         }
     }

@@ -8,6 +8,22 @@ import SwiftUI
 import MapKit
 
 enum DiscoveryMapRenderer {
+    private static func legacyMapColor(for score: Int?) -> UIColor {
+        guard let score else {
+            return UIColor.systemGray.withAlphaComponent(0.15)
+        }
+
+        switch score {
+        case 80...100:
+            return .systemGreen
+        case 60..<80:
+            return .systemYellow
+        case 40..<60:
+            return .systemOrange
+        default:
+            return .systemRed
+        }
+    }
     
     // MARK: - Public Renderer Factory
     
@@ -62,8 +78,7 @@ enum DiscoveryMapRenderer {
         
         if let id = identifier,
            let country = countryLookup[id] {
-            
-            let baseColor = UIColor(ScoreColor.background(for: country.score))
+            let baseColor = legacyMapColor(for: country.score)
             
             renderer.fillColor = isSelected
                 ? baseColor.withAlphaComponent(0.85)

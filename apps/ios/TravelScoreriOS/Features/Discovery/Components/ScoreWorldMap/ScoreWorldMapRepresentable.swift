@@ -191,6 +191,7 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
                 context.coordinator.lastZoomedISO = iso
             } else {
                 context.coordinator.zoomToCountry(iso: iso)
+                context.coordinator.lastZoomedISO = iso
             }
         }
     }
