@@ -1,7 +1,42 @@
-require('dotenv').config({ override: true });
+try {
+  require("dotenv").config({ override: true });
+} catch {
+  // Fall back to loading .env manually when dotenv is not installed.
+  loadEnvFile();
+}
 
-const cheerio = require("cheerio");
-const { createClient } = require("@supabase/supabase-js");
+function loadEnvFile() {
+  const fs = require("fs");
+  const path = require("path");
+  const envPath = path.join(__dirname, "..", ".env");
+
+  if (!fs.existsSync(envPath)) {
+    return;
+  }
+
+  const raw = fs.readFileSync(envPath, "utf8");
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const eqIndex = trimmed.indexOf("=");
+    if (eqIndex === -1) continue;
+
+    const key = trimmed.slice(0, eqIndex).trim();
+    let value = trimmed.slice(eqIndex + 1).trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+}
+
+const COUNTRY_SEEDS = require("../apps/web/data/seeds/countries.json");
 
 console.log("Starting visa sync script...");
 
@@ -13,28 +48,142 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
 const WIKI_URL =
   "https://en.wikipedia.org/wiki/Visa_requirements_for_United_States_citizens";
 
 function normalize(text) {
-  return text
+  return String(text || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\[[^\]]+\]/g, " ")
     .replace(/&/g, "and")
+    .replace(/['’]/g, "")
     .replace(/[^\w\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
+function cleanDisplayName(text) {
+  return String(text || "")
+    .replace(/\[[^\]]+\]/g, " ")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function splitAliasTokens(text) {
+  return String(text || "")
+    .split(/,| and |\/|;/i)
+    .map((s) => cleanDisplayName(s))
+    .filter(Boolean);
+}
+
+const MANUAL_ALIASES_BY_NORM = {
+  bahamas: ["the bahamas", "commonwealth of the bahamas"],
+  gambia: ["the gambia", "republic of the gambia"],
+  taiwan: ["republic of china taiwan", "taiwan province of china"],
+  curacao: ["curaçao"],
+  "aland islands": ["aland", "aaland", "åland islands"],
+  "saint martin": ["st martin", "saint martin french part"],
+  "sint maarten": ["saint maarten", "sint maarten dutch part"],
+  reunion: ["réunion"],
+  "holy see": ["vatican", "vatican city", "holy see vatican city state"],
+  "south korea": ["republic of korea", "korea south"],
+  laos: ["lao", "lao peoples democratic republic"],
+  palestine: ["palestinian territories", "palestinian territory"],
+  "turks and caicos islands": ["turks and caicos"],
+  "cote divoire": ["cote d ivoire", "ivory coast"],
+};
+
+const aliasToSeed = (() => {
+  const map = new Map();
+
+  for (const seed of COUNTRY_SEEDS) {
+    const labels = [
+      seed.name,
+      seed.officialName,
+      ...(Array.isArray(seed.aliases) ? seed.aliases : []),
+    ]
+      .filter(Boolean)
+      .filter((value) => value !== "undefined");
+
+    for (const label of labels) {
+      const key = normalize(label);
+      if (key && !map.has(key)) {
+        map.set(key, seed);
+      }
+    }
+  }
+
+  return map;
+})();
+
+function findSeedForVisitor(visitorToRaw) {
+  const raw = cleanDisplayName(visitorToRaw);
+  const candidates = new Set([
+    raw,
+    raw.replace(/\s*\([^)]*\)/g, " ").replace(/\s+/g, " ").trim(),
+  ]);
+
+  const parenMatch = raw.match(/\(([^)]+)\)/);
+  if (parenMatch) {
+    splitAliasTokens(parenMatch[1]).forEach((token) => candidates.add(token));
+  }
+
+  if (raw.includes(" - ")) {
+    raw.split(" - ").forEach((part) => candidates.add(cleanDisplayName(part)));
+  }
+
+  if (raw.includes(",")) {
+    raw.split(",").forEach((part) => candidates.add(cleanDisplayName(part)));
+  }
+
+  for (const candidate of candidates) {
+    const key = normalize(candidate);
+    if (aliasToSeed.has(key)) {
+      return aliasToSeed.get(key);
+    }
+  }
+
+  return null;
+}
+
+function findSeedsForGroupedVisitor(visitorToRaw) {
+  const raw = cleanDisplayName(visitorToRaw);
+  const results = [];
+  const seen = new Set();
+
+  const addCandidate = (candidate) => {
+    const cleaned = cleanDisplayName(candidate);
+    if (!cleaned) return;
+    const key = normalize(cleaned);
+    const seed = aliasToSeed.get(key);
+    if (!seed || seen.has(seed.iso2)) return;
+    seen.add(seed.iso2);
+    results.push(seed);
+  };
+
+  const parenMatch = raw.match(/\(([^)]+)\)/);
+  if (parenMatch) {
+    splitAliasTokens(parenMatch[1]).forEach(addCandidate);
+  }
+
+  if (raw.includes(" - ")) {
+    const rhs = raw.split(" - ").slice(1).join(" - ");
+    splitAliasTokens(rhs.replace(/\(([^)]+)\)/g, " ")).forEach(addCandidate);
+  }
+
+  return results;
+}
+
 function extractAliases(visitorToRaw) {
-  const aliases = [];
+  const aliases = new Set();
   let parentNorm = null;
   let isSpecialSubregion = false;
 
-  const raw = visitorToRaw.trim();
+  const raw = cleanDisplayName(visitorToRaw);
+  const seed = findSeedForVisitor(raw);
 
   // Detect "Parent - Subregion"
   if (raw.includes(" - ")) {
@@ -42,24 +191,59 @@ function extractAliases(visitorToRaw) {
     if (parts.length === 2) {
       parentNorm = normalize(parts[0]);
       isSpecialSubregion = true;
-      aliases.push(parts[1]);
+      splitAliasTokens(parts[1]).forEach((alias) => aliases.add(alias));
     }
   }
 
   // Extract names inside parentheses
   const parenMatch = raw.match(/\(([^)]+)\)/);
   if (parenMatch) {
-    const inside = parenMatch[1];
-    inside
-      .split(/,| and /)
-      .map((s) => s.trim())
-      .forEach((name) => {
-        if (name) aliases.push(name);
-      });
+    splitAliasTokens(parenMatch[1]).forEach((alias) => aliases.add(alias));
   }
 
+  if (seed) {
+    const seedLabels = [
+      seed.name,
+      seed.officialName,
+      ...(Array.isArray(seed.aliases) ? seed.aliases : []),
+      ...(MANUAL_ALIASES_BY_NORM[normalize(seed.name)] || []),
+    ]
+      .filter(Boolean)
+      .filter((value) => value !== "undefined");
+
+    seedLabels.forEach((label) => aliases.add(cleanDisplayName(label)));
+  }
+
+  const visitorNorm = normalize(raw);
+  const aliasesNorm = [...aliases]
+    .map(normalize)
+    .filter(Boolean)
+    .filter((alias) => alias !== visitorNorm)
+    .filter((alias, index, array) => array.indexOf(alias) === index);
+
   return {
-    aliasesNorm: aliases.map(normalize),
+    aliasesNorm,
+    parentNorm,
+    isSpecialSubregion,
+  };
+}
+
+function buildRowPayload({
+  visitorToRaw,
+  requirement,
+  allowedStay,
+  notes,
+  aliasesNorm,
+  parentNorm,
+  isSpecialSubregion,
+}) {
+  return {
+    visitorToRaw,
+    visitorToNorm: normalize(visitorToRaw),
+    requirement,
+    allowedStay,
+    notes,
+    aliasesNorm,
     parentNorm,
     isSpecialSubregion,
   };
@@ -68,38 +252,117 @@ function extractAliases(visitorToRaw) {
 async function fetchWikiTable() {
   const res = await fetch(WIKI_URL);
   const html = await res.text();
-  const $ = cheerio.load(html);
-
   const rows = [];
+  const seen = new Set();
 
-  $("table.wikitable tbody tr").each((_, row) => {
-    const cells = $(row).find("td");
+  const tableMatches = [...html.matchAll(/<table[^>]*class="[^"]*wikitable[^"]*"[^>]*>([\s\S]*?)<\/table>/gi)];
+  if (!tableMatches.length) {
+    throw new Error("Could not find visa requirements wikitable on Wikipedia page");
+  }
 
-    if (cells.length >= 4) {
-      const rawName = $(cells[0]).text().trim();
-      // Remove citation markers like [478][479]
-      const visitorTo = rawName.replace(/\[\d+\]/g, '').trim();
-      const requirement = $(cells[1]).text().trim();
-      const allowedStay = $(cells[2]).text().trim();
-      const notes = $(cells[3]).text().trim();
+  const cleanHtml = (value) =>
+    cleanDisplayName(
+      String(value || "")
+        .replace(/<sup[\s\S]*?<\/sup>/gi, " ")
+        .replace(/<style[\s\S]*?<\/style>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+    );
 
-      if (visitorTo) {
-        const { aliasesNorm, parentNorm, isSpecialSubregion } =
-          extractAliases(visitorTo);
+  for (const tableMatch of tableMatches) {
+    const tableHtml = tableMatch[1];
+    const rowMatches = [...tableHtml.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)];
 
-        rows.push({
-          visitorToRaw: visitorTo,
-          visitorToNorm: normalize(visitorTo),
-          requirement,
-          allowedStay,
-          notes,
-          aliasesNorm,
-          parentNorm,
-          isSpecialSubregion,
-        });
+    for (const rowMatch of rowMatches) {
+      const rowHtml = rowMatch[1];
+      const isHeaderRow = /<th[\s\S]*<\/th>/i.test(rowHtml) && !/<td/i.test(rowHtml);
+      if (isHeaderRow) continue;
+
+      const thName = rowHtml.match(/<th[^>]*>([\s\S]*?)<\/th>/i)?.[1] ?? "";
+      const tdCells = [...rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((cell) => cell[1]);
+
+      if (!thName && tdCells.length < 4) continue;
+      if (thName && tdCells.length < 3) continue;
+
+      const visitorTo = cleanHtml(thName || tdCells[0] || "");
+      const requirement = cleanHtml(tdCells[thName ? 0 : 1] || "");
+      const allowedStay = cleanHtml(tdCells[thName ? 1 : 2] || "");
+      const notes = cleanHtml(tdCells[thName ? 2 : 3] || "");
+
+      if (!visitorTo || !requirement) continue;
+
+      const groupedSeeds = findSeedsForGroupedVisitor(visitorTo);
+      const shouldExplodeGroupedRow = visitorTo.includes(" - ") && groupedSeeds.length > 0;
+
+      if (shouldExplodeGroupedRow) {
+        const parentNorm = normalize(visitorTo.split(" - ")[0]);
+
+        for (const seed of groupedSeeds) {
+          const seedLabels = [
+            seed.name,
+            seed.officialName,
+            ...(Array.isArray(seed.aliases) ? seed.aliases : []),
+            ...(MANUAL_ALIASES_BY_NORM[normalize(seed.name)] || []),
+          ]
+            .filter(Boolean)
+            .filter((value) => value !== "undefined");
+
+          const aliasesNorm = seedLabels
+            .map(cleanDisplayName)
+            .map(normalize)
+            .filter(Boolean)
+            .filter((alias) => alias !== normalize(seed.name))
+            .filter((alias, index, array) => array.indexOf(alias) === index);
+
+          const payload = buildRowPayload({
+            visitorToRaw: seed.name,
+            requirement,
+            allowedStay,
+            notes,
+            aliasesNorm,
+            parentNorm,
+            isSpecialSubregion: true,
+          });
+
+          const fingerprint = [
+            payload.visitorToNorm,
+            normalize(requirement),
+            normalize(allowedStay),
+            normalize(notes),
+          ].join("|");
+
+          if (seen.has(fingerprint)) continue;
+          seen.add(fingerprint);
+          rows.push(payload);
+        }
+
+        continue;
       }
+
+      const { aliasesNorm, parentNorm, isSpecialSubregion } =
+        extractAliases(visitorTo);
+
+      const payload = buildRowPayload({
+        visitorToRaw: visitorTo,
+        requirement,
+        allowedStay,
+        notes,
+        aliasesNorm,
+        parentNorm,
+        isSpecialSubregion,
+      });
+
+      const fingerprint = [
+        payload.visitorToNorm,
+        normalize(requirement),
+        normalize(allowedStay),
+        normalize(notes),
+      ].join("|");
+
+      if (seen.has(fingerprint)) continue;
+      seen.add(fingerprint);
+      rows.push(payload);
     }
-  });
+  }
 
   return rows;
 }
@@ -112,18 +375,24 @@ async function run() {
 
   console.log(`Parsed ${rows.length} rows`);
 
-  const { data: latestRun } = await supabase
-    .from("visa_sync_runs")
-    .select("version")
-    .order("version", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const latestRuns = await supabaseRest("visa_sync_runs", {
+    searchParams: {
+      select: "version",
+      order: "version.desc",
+      limit: "1",
+    },
+  });
+
+  const latestRun = latestRuns[0] || null;
 
   const newVersion = (latestRun?.version ?? 0) + 1;
 
-  await supabase.from("visa_sync_runs").insert({
-    version: newVersion,
-    row_count: rows.length,
+  await supabaseRest("visa_sync_runs", {
+    method: "POST",
+    body: {
+      version: newVersion,
+      row_count: rows.length,
+    },
   });
 
   const inserts = rows.map((row) => ({
@@ -139,16 +408,57 @@ async function run() {
     source: "wikipedia",
   }));
 
-  const { error } = await supabase
-    .from("visa_requirements")
-    .insert(inserts);
-
-  if (error) {
-    console.error("Insert error:", error);
-    process.exit(1);
-  }
+  await supabaseRest("visa_requirements", {
+    method: "POST",
+    body: inserts,
+  });
 
   console.log("Sync complete. Version:", newVersion);
+}
+
+async function supabaseRest(table, options = {}) {
+  const {
+    method = "GET",
+    searchParams = null,
+    body = undefined,
+  } = options;
+
+  const url = new URL(`/rest/v1/${table}`, SUPABASE_URL);
+
+  if (searchParams) {
+    for (const [key, value] of Object.entries(searchParams)) {
+      if (value != null) {
+        url.searchParams.set(key, value);
+      }
+    }
+  }
+
+  const headers = {
+    apikey: SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+  };
+
+  if (method !== "GET") {
+    headers["Content-Type"] = "application/json";
+    headers["Prefer"] = "return=representation";
+  }
+
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+
+  const text = await response.text();
+  const parsed = text ? JSON.parse(text) : null;
+
+  if (!response.ok) {
+    throw new Error(
+      `Supabase REST ${method} ${table} failed (${response.status}): ${text}`
+    );
+  }
+
+  return parsed;
 }
 
 run().catch((err) => {

@@ -78,7 +78,6 @@ export async function loadFacts(iso2List: string[], advisories: Advisory[]): Pro
     gdp,
     epi,
     visaRaw,
-    travelSafe,
     sfti,
     reddit,
     seasonalityRaw,
@@ -89,7 +88,6 @@ export async function loadFacts(iso2List: string[], advisories: Advisory[]): Pro
     readJson<Record<string, number>>('gdp_ppp.json').catch(() => ({} as Record<string, number>)),
     readJson<Record<string, number>>('english_epi.json').catch(() => ({} as Record<string, number>)),
     readJson<Record<string, VisaEase>>('visa_us.json').catch(() => ({} as Record<string, VisaEase>)),
-    readJson<Record<string, number>>('travelsafe_overall.json').catch(() => ({} as Record<string, number>)),
     readJson<Record<string, number>>('sfti_overall.json').catch(() => ({} as Record<string, number>)),
     readJson<Record<string, { score: number; n: number; updatedAt?: string }>>('reddit_composite.json').catch(() => ({} as Record<string, { score: number; n: number; updatedAt?: string }>)),
     // seasonality can be either a 0..100 score OR an array of best months [1..12]
@@ -139,7 +137,6 @@ export async function loadFacts(iso2List: string[], advisories: Advisory[]): Pro
       advisoryUrl: adv?.url ?? undefined,
 
       // safety & sentiment
-      travelSafeOverall: Number.isFinite(travelSafe[iso2]) ? clamp(travelSafe[iso2]) : undefined,
       soloFemaleIndex: Number.isFinite(sfti[iso2]) ? clamp(sfti[iso2]) : undefined,
       redditComposite: Number.isFinite(r?.score) ? clamp(r!.score) : undefined,
       redditN: r?.n ?? 0,

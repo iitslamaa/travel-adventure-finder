@@ -11,6 +11,8 @@ struct DiscoveryCountryListView: View {
 
     @EnvironmentObject private var profileVM: ProfileViewModel
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var weightsStore: ScoreWeightsStore
+    @StateObject private var visaStore = VisaRequirementsStore.shared
 
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
@@ -20,9 +22,15 @@ struct DiscoveryCountryListView: View {
     @State private var didRunInitialLoad = false
 
     @MainActor
+    private func applyCurrentWeightsAndVisa(to countries: [Country]) async -> [Country] {
+        let visaHydrated = await visaStore.hydrate(countries: countries)
+        return visaHydrated.map { $0.applyingOverallScore(using: weightsStore.weights) }
+    }
+
+    @MainActor
     private func reloadCountries() async {
         if let fresh = CountryAPI.loadCachedCountries(), !fresh.isEmpty {
-            countries = fresh
+            countries = await applyCurrentWeightsAndVisa(to: fresh)
         }
         await profileVM.loadIfNeeded()
     }
@@ -35,7 +43,7 @@ struct DiscoveryCountryListView: View {
             if delay > 0 { try? await Task.sleep(nanoseconds: delay) }
 
             if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
-                countries = cached
+                countries = await applyCurrentWeightsAndVisa(to: cached)
                 return
             }
         }
@@ -92,8 +100,11 @@ struct DiscoveryCountryListView: View {
             await profileVM.loadIfNeeded()
 
             if countries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
-                countries = cached
+                countries = await applyCurrentWeightsAndVisa(to: cached)
             }
+        }
+        .onReceive(weightsStore.$weights) { _ in
+            countries = countries.map { $0.applyingOverallScore(using: weightsStore.weights) }
         }
         .onDisappear {
             isSearchFocused = false
@@ -108,7 +119,9 @@ struct DiscoveryView: View {
     @State private var showingWeights = false
 
     private var countries: [Country] {
-        CountryAPI.loadCachedCountries() ?? []
+        (CountryAPI.loadCachedCountries() ?? []).map {
+            $0.applyingOverallScore(using: weightsStore.weights)
+        }
     }
 
     var body: some View {

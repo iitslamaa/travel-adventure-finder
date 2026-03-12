@@ -8,7 +8,6 @@ export type FactsForScoring = (
     advisoryLevel: 1 | 2 | 3 | 4;
     visaEase: number;               // 0..100
     redditComposite: number;        // 0..100
-    travelSafeOverall: number;      // 0..100
     seasonality: number;            // 0..100
     infrastructure: number;         // 0..100
   }>
@@ -20,7 +19,6 @@ export const WEIGHTS = {
   affordability: 0.20,
   visa: 0.10,
   reddit: 0.20,
-  travelSafe: 0.10,
   seasonality: 0.05,
   infrastructure: 0.05,
 } as const;
@@ -41,7 +39,6 @@ export function computeCountryScore(
     affordability: affordabilityScore(facts as AffordabilityInput),
     visa: visaScore(typeof facts.visaEase === 'number' ? facts.visaEase : undefined),
     reddit: safeNumber(facts.redditComposite),
-    travelSafe: safeNumber(facts.travelSafeOverall),
     seasonality: safeNumber(facts.seasonality),
     infrastructure: safeNumber(facts.infrastructure),
   };

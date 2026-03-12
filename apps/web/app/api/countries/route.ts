@@ -41,7 +41,6 @@ const ADVISORY_FALLBACK_BY_ISO2: Record<string, { level: 1|2|3|4; summary: strin
 
 // Local type to avoid any
 type FactsExtraServer = Partial<CountryFacts> & {
-  travelSafeOverall?: number;
   soloFemaleIndex?: number;
   redditComposite?: number;
   seasonality?: number;
@@ -472,7 +471,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // Load and attach facts (TravelSafe, SFTI, Reddit, visa, seasonality, flights, infrastructure, affordability)
+  // Load and attach facts (advisory, SFTI, Reddit, visa, seasonality, flights, infrastructure, affordability)
   if (lite) {
     merged.sort((x, y) => x.name.localeCompare(y.name));
 

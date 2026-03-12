@@ -28,7 +28,7 @@ function summary(raw?: number) {
 export function SoloFemaleSection({ raw }: Props) {
   return (
     <>
-      {/* headline lives under the section header, like Visa/TravelSafe */}
+      {/* headline lives under the section header, like Visa/Advisory */}
       <div className="mt-2 flex items-center gap-2">
         {/* the pill is already rendered in the table; keep this area text-only */}
         <span className="text-sm font-semibold">👩‍🧳 {headline(raw)}</span>

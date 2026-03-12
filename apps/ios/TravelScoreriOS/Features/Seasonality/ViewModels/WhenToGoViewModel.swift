@@ -116,7 +116,7 @@ final class WhenToGoViewModel: ObservableObject {
 
         var components: [(value: Double, weight: Double)] = []
 
-        if let advisory = country.travelSafeScore {
+        if let advisory = country.advisoryScore {
             components.append((Double(advisory), weights.advisory))
         }
 

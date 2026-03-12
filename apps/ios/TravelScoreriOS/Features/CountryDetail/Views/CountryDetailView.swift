@@ -8,10 +8,14 @@
 import SwiftUI
 
 struct CountryDetailView: View {
-    private let isTravelSafetyEnabled = false
     @State var country: Country
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
+    @StateObject private var visaStore = VisaRequirementsStore.shared
     @State private var scrollAnchor: String? = nil
+
+    private var displayedCountry: Country {
+        country.applyingOverallScore(using: weightsStore.weights)
+    }
     
     var body: some View {
         ScrollViewReader { proxy in
@@ -20,7 +24,7 @@ struct CountryDetailView: View {
                 LazyVStack(spacing: 28) {
                     
                     // Header polaroid style
-                    CountryHeaderCard(country: country)
+                    CountryHeaderCard(country: displayedCountry)
                         .padding()
                         .background(
                             Theme.countryDetailCardBackground(corner: 20)
@@ -30,7 +34,7 @@ struct CountryDetailView: View {
                     // Advisory card stack
                     scrapbookSection {
                         CountryAdvisoryCard(
-                            country: country,
+                            country: displayedCountry,
                             weightPercentage: weightsStore.advisoryPercentage
                         )
                     }
@@ -38,7 +42,7 @@ struct CountryDetailView: View {
                     // Seasonality card stack
                     scrapbookSection {
                         CountrySeasonalityCard(
-                            country: country,
+                            country: displayedCountry,
                             weightPercentage: 0
                         )
                     }
@@ -46,16 +50,16 @@ struct CountryDetailView: View {
                     // Visa card stack
                     scrapbookSection {
                         CountryVisaCard(
-                            country: country,
+                            country: displayedCountry,
                             weightPercentage: weightsStore.visaPercentage
                         )
                     }
                     
                     // Affordability card stack
-                    if country.affordabilityScore != nil {
+                    if displayedCountry.affordabilityScore != nil {
                         scrapbookSection {
                             CountryAffordabilityCard(
-                                country: country,
+                                country: displayedCountry,
                                 weightPercentage: weightsStore.affordabilityPercentage
                             )
                         }
@@ -91,6 +95,9 @@ struct CountryDetailView: View {
             }
         )
         .preferredColorScheme(.light)
+        .task(id: country.iso2.uppercased()) {
+            country = await visaStore.hydrate(country: country)
+        }
     }
     
     private func scrapbookSection<Content: View>(@ViewBuilder content: () -> Content) -> some View {

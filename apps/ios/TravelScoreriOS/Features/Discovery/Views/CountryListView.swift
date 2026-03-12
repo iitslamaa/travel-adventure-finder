@@ -45,43 +45,8 @@ struct CountryListView: View {
     }
 
     private func scheduleRecomputeVisible() {
-
-        var recalculatedCountries: [Country] = []
         let weights = weightsStore.weights
-
-        for country in countries {
-            var updated = country
-
-            var components: [(value: Double, weight: Double)] = []
-
-            if let advisory = country.travelSafeScore {
-                components.append((Double(advisory), weights.advisory))
-            }
-
-            if let visa = country.visaEaseScore {
-                components.append((Double(visa), weights.visa))
-            }
-
-            if let affordabilityScore = country.affordabilityScore {
-                components.append((Double(affordabilityScore), weights.affordability))
-            }
-
-            if components.isEmpty {
-                updated.score = nil
-            } else {
-                let totalWeight = components.reduce(0) { $0 + $1.weight }
-                let weightedSum = components.reduce(0) { $0 + ($1.value * $1.weight) }
-
-                if totalWeight > 0 {
-                    let normalizedScore = weightedSum / totalWeight
-                    updated.score = Int(normalizedScore.rounded())
-                } else {
-                    updated.score = nil
-                }
-            }
-
-            recalculatedCountries.append(updated)
-        }
+        let recalculatedCountries = countries.map { $0.applyingOverallScore(using: weights) }
 
         let snapshotSearch = searchText
         let snapshotSort = sort

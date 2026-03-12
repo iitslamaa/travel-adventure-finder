@@ -2,7 +2,6 @@ import type { CountryFacts, Weights } from './types';
 
 export const DEFAULT_WEIGHTS: Weights = {
   advisorySafety: 0.30,
-  travelSafe: 0.15,
   soloFemale: 0.10,
   redditComposite: 0.20,
   seasonality: 0.05,
@@ -31,9 +30,6 @@ export function computeScoreFromFacts(
 
   const advisory = advisoryToPct(f.advisoryLevel);
   if (advisory != null) components.push({ value: advisory, weight: w.advisorySafety });
-
-  if (f.travelSafeOverall != null)
-    components.push({ value: f.travelSafeOverall, weight: w.travelSafe });
 
   if (f.soloFemaleIndex != null)
     components.push({ value: f.soloFemaleIndex, weight: w.soloFemale });

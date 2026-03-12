@@ -21,6 +21,8 @@ enum CountryVisaHelpers {
             return "Visa on arrival available"
         case "evisa":
             return "eVisa available online"
+        case "entry_permit":
+            return "Entry permit required"
         case "visa_required":
             return "Visa required before travel"
         case "ban":
@@ -46,6 +48,8 @@ enum CountryVisaHelpers {
             return "Visa is issued on arrival; expect to handle paperwork and possible fees at the border."
         case "evisa":
             return "You’ll usually need to apply and pay online before travel."
+        case "entry_permit":
+            return "You may need advance authorization or a permit before entry is approved."
         case "visa_required":
             return "You must secure a visa in advance through a consulate or official channel."
         case "ban":
