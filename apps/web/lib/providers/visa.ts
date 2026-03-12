@@ -305,8 +305,8 @@ export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
 
     const candidateNorms = new Set<string>(
       [seed.name, seed.officialName, ...(Array.isArray(seed.aliases) ? seed.aliases : [])]
-        .filter(Boolean)
-        .map((label: string) => normalize(label))
+        .filter((label): label is string => typeof label === 'string' && label.length > 0)
+        .map(label => normalize(label))
         .filter(Boolean)
     );
 
