@@ -18,6 +18,27 @@ import {
   type CountrySeasonalityDefinition,
 } from '../../../../../../packages/data/src/countrySeasonality';
 
+type CountryRouteFacts = Partial<CountryFacts> & {
+  visaType?: string;
+  visaAllowedDays?: number;
+  visaFeeUsd?: number;
+  visaNotes?: string;
+  visaSource?: string;
+  gdpPerCapitaUsd?: number;
+  fxLocalPerUSD?: number;
+  costOfLivingIndex?: number;
+  foodCostIndex?: number;
+  housingCostIndex?: number;
+  transportCostIndex?: number;
+  dailySpend?: DailySpend;
+  fmSeasonalityBestMonths?: number[];
+  fmSeasonalityShoulderMonths?: number[];
+  fmSeasonalityGoodMonths?: number[];
+  fmSeasonalityAvoidMonths?: number[];
+  fmSeasonalityTodayScore?: number;
+  fmSeasonalityTodayLabel?: 'best' | 'good' | 'shoulder' | 'poor';
+};
+
 function clusterConsecutiveMonths(months: number[]): number[][] {
   if (!months.length) return [];
   const sorted = [...new Set(months.filter(m => m >= 1 && m <= 12))].sort((a, b) => a - b);
@@ -104,14 +125,7 @@ export async function GET(
   const facts = factsByIso2[isoUpper] as CountryFacts | undefined;
 
   const enriched: typeof seed & {
-    facts: Partial<CountryFacts> & {
-      fmSeasonalityBestMonths?: number[];
-      fmSeasonalityShoulderMonths?: number[];
-      fmSeasonalityGoodMonths?: number[];
-      fmSeasonalityAvoidMonths?: number[];
-      fmSeasonalityTodayScore?: number;
-      fmSeasonalityTodayLabel?: 'best' | 'good' | 'shoulder' | 'poor';
-    };
+    facts: CountryRouteFacts;
     advisory?: { iso2?: string; level?: number };
   } = {
     ...seed,
