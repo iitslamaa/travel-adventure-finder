@@ -12,6 +12,19 @@ struct ScoreCountryDrawerView: View {
     
     let country: Country
     let onDismiss: () -> Void
+
+    private func mapScoreColor(for score: Int) -> Color {
+        switch score {
+        case 80...100:
+            return Color(uiColor: .systemGreen)
+        case 60..<80:
+            return Color(uiColor: .systemYellow)
+        case 40..<60:
+            return Color(uiColor: .systemOrange)
+        default:
+            return Color(uiColor: .systemRed)
+        }
+    }
     
     var body: some View {
         NavigationLink {
@@ -44,7 +57,7 @@ struct ScoreCountryDrawerView: View {
                                 .padding(.vertical, 10)
                                 .background(
                                     Capsule()
-                                        .fill(ScoreColor.background(for: score))
+                                        .fill(mapScoreColor(for: score))
                                 )
                                 .foregroundColor(.white)
 
