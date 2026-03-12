@@ -156,6 +156,9 @@ private enum VisaRowMatcher {
 
     static func matchRow(for country: Country, in rows: [VisaRequirementRow]) -> VisaRequirementRow? {
         let candidates = Set(([country.name] + aliases(forISO2: country.iso2)).map(normalize))
+        let containsCandidates = candidates.filter { candidate in
+            candidate.count >= 4 && candidate.range(of: "^[a-z]{2,3}$", options: .regularExpression) == nil
+        }
 
         if let exact = rows.first(where: { candidates.contains($0.visitorToNorm) }) {
             return exact
@@ -174,7 +177,7 @@ private enum VisaRowMatcher {
                 return false
             }
 
-            return candidates.contains(where: { candidate in
+            return containsCandidates.contains(where: { candidate in
                 row.visitorToNorm.contains(candidate) || candidate.contains(row.visitorToNorm)
             })
         }

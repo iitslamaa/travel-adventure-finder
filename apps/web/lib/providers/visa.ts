@@ -309,6 +309,9 @@ export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
         .map(label => normalize(label))
         .filter(Boolean)
     );
+    const containsCandidateNorms = [...candidateNorms].filter(candidateNorm =>
+      candidateNorm.length >= 4 && !/^[a-z]{2,3}$/.test(candidateNorm)
+    );
 
     let matchedRow: VisaRequirementDbRow | null = null;
 
@@ -329,7 +332,7 @@ export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
         if (r.is_special_subregion) return false;
         if (r.parent_norm && candidateNorms.has(normalize(r.parent_norm))) return false;
         const visitorNorm = normalize(r.visitor_to_norm ?? '');
-        return [...candidateNorms].some(candidateNorm => visitorNorm.includes(candidateNorm));
+        return containsCandidateNorms.some(candidateNorm => visitorNorm.includes(candidateNorm));
       }) ?? null;
     }
 
