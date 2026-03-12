@@ -23,12 +23,7 @@ struct CountryDetailView: View {
                     CountryHeaderCard(country: country)
                         .padding()
                         .background(
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .fill(.ultraThinMaterial)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                            Theme.countryDetailCardBackground(corner: 20)
                         )
                         .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
                     
@@ -95,18 +90,14 @@ struct CountryDetailView: View {
                 .ignoresSafeArea()
             }
         )
+        .preferredColorScheme(.light)
     }
     
     private func scrapbookSection<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color.white.opacity(0.82))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                Theme.countryDetailCardBackground(corner: 20)
             )
             .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
     }

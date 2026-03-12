@@ -31,8 +31,6 @@ struct CollapsibleCountrySection: View {
         self.mutualCountries = mutualCountries
     }
 
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
 
         VStack(alignment: .leading, spacing: 12) {
@@ -130,7 +128,14 @@ struct CollapsibleCountrySection: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(.ultraThinMaterial)
+                            .background(
+                                Capsule()
+                                    .fill(.ultraThinMaterial)
+                                    .overlay(
+                                        Capsule()
+                                            .fill(Color.white.opacity(0.24))
+                                    )
+                            )
                             .clipShape(Capsule())
                             .padding(.bottom, 12)
                         }
@@ -143,9 +148,7 @@ struct CollapsibleCountrySection: View {
             }
         }
         .padding(16)
-        .background(colorScheme == .dark ? .ultraThinMaterial : .regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
+        .background(Theme.profileCardBackground(corner: 20))
         .onAppear {
         }
         .onDisappear {

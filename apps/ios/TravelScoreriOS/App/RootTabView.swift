@@ -11,6 +11,7 @@ import SwiftUI
 enum SocialRoute: Hashable {
     case profile(UUID)
     case friends(UUID)
+    case friendRequests
 }
 
 @MainActor
@@ -256,7 +257,10 @@ private func socialDestination(_ route: SocialRoute, navigator: SocialNavigation
         ProfileView(userId: userId, showsBackButton: true)
             .environmentObject(navigator)
     case .friends(let userId):
-        FriendsListView(userId: userId)
+        FriendsView(userId: userId, showsBackButton: true)
+            .environmentObject(navigator)
+    case .friendRequests:
+        FriendRequestsView()
             .environmentObject(navigator)
     }
 }

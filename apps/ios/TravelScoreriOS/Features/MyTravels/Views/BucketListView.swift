@@ -40,52 +40,61 @@ struct BucketListView: View {
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List {
-                    ForEach(bucketedCountries) { country in
-                        NavigationLink {
-                            CountryDetailView(country: country)
-                        } label: {
-                            HStack(spacing: 12) {
-                                Text(country.flagEmoji)
-                                    .font(.largeTitle)
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        ForEach(bucketedCountries) { country in
+                            NavigationLink {
+                                CountryDetailView(country: country)
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Text(country.flagEmoji)
+                                        .font(.largeTitle)
 
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(country.name)
-                                        .font(.headline)
-                                        .foregroundColor(Theme.textPrimary)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(country.name)
+                                            .font(.headline)
+                                            .foregroundColor(Theme.textPrimary)
+                                    }
+
+                                    Spacer()
+
+                                    if let score = country.score {
+                                        ScorePill(score: score)
+                                    } else {
+                                        Text("—")
+                                            .font(.caption.bold())
+                                            .foregroundColor(Theme.textPrimary)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(
+                                                Capsule()
+                                                    .fill(Color.gray.opacity(0.15))
+                                            )
+                                            .overlay(
+                                                Capsule()
+                                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                            )
+                                    }
                                 }
-
-                                Spacer()
-
-                                if let score = country.score {
-                                    ScorePill(score: score)
-                                } else {
-                                    Text("—")
-                                        .font(.caption.bold())
-                                        .foregroundColor(Theme.textPrimary)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(
-                                            Capsule()
-                                                .fill(Color.gray.opacity(0.15))
-                                        )
+                                .padding(16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.94))
                                         .overlay(
-                                            Capsule()
-                                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                                .stroke(.white.opacity(0.34), lineWidth: 1)
                                         )
-                                }
+                                )
+                                .shadow(color: .black.opacity(0.10), radius: 8, y: 5)
                             }
-                            .padding(16)
-                            .background(Theme.cardBackground())
+                            .buttonStyle(.plain)
                         }
-                        .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, floatingTabBarInset + 12)
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .padding(.bottom, floatingTabBarInset)
+                .scrollIndicators(.hidden)
             }
         }
         .navigationTitle("🪣 Bucket List")

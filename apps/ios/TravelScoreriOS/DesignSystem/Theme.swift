@@ -228,12 +228,132 @@ enum Theme {
 
     static func listCardBackground(corner: CGFloat = 28) -> some View {
         RoundedRectangle(cornerRadius: corner, style: .continuous)
-            .fill(.white.opacity(0.76))
+            .fill(Color(red: 0.95, green: 0.91, blue: 0.84).opacity(0.88))
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(Color(red: 0.99, green: 0.97, blue: 0.92).opacity(0.62), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 18, y: 10)
+    }
+
+    static func profileCardBackground(corner: CGFloat = 24) -> some View {
+        RoundedRectangle(cornerRadius: corner, style: .continuous)
+            .fill(.ultraThinMaterial)
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(Color.white.opacity(0.36))
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: corner, style: .continuous)
                     .stroke(.white.opacity(0.34), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.12), radius: 18, y: 10)
+            .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
+    }
+
+    static func profileNotebookBackground(corner: CGFloat = 24) -> some View {
+        Image("profile_header")
+            .resizable(
+                capInsets: EdgeInsets(top: 80, leading: 80, bottom: 80, trailing: 80),
+                resizingMode: .stretch
+            )
+            .scaledToFill()
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(Color.white.opacity(0.54))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(.white.opacity(0.34), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
+    }
+
+    static func profileHeaderImageBackground(corner: CGFloat = 24) -> some View {
+        Image("profile_header")
+            .resizable(
+                capInsets: EdgeInsets(top: 80, leading: 80, bottom: 80, trailing: 80),
+                resizingMode: .stretch
+            )
+            .scaledToFill()
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(Color.white.opacity(0.18))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(.white.opacity(0.28), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
+    }
+
+    static func notebookListBackground(corner: CGFloat = 22) -> some View {
+        ZStack {
+            Image("friends-scroll")
+                .resizable(
+                    capInsets: EdgeInsets(top: 140, leading: 90, bottom: 180, trailing: 90),
+                    resizingMode: .stretch
+                )
+                .scaledToFill()
+
+            LinearGradient(
+                gradient: Gradient(colors: [Color.white.opacity(0.16), Color.clear]),
+                startPoint: .top,
+                endPoint: .center
+            )
+        }
+        .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: corner, style: .continuous)
+                .stroke(.white.opacity(0.18), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
+    }
+
+    static func themedSheetBackground(corner: CGFloat = 28) -> some View {
+        ZStack {
+            Image("travel4")
+                .resizable()
+                .scaledToFill()
+
+            RoundedRectangle(cornerRadius: corner, style: .continuous)
+                .fill(.ultraThinMaterial)
+
+            RoundedRectangle(cornerRadius: corner, style: .continuous)
+                .fill(Color(red: 0.95, green: 0.91, blue: 0.84).opacity(0.58))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: corner, style: .continuous)
+                .stroke(.white.opacity(0.26), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.16), radius: 16, y: 10)
+    }
+
+    static func countryDetailCardBackground(corner: CGFloat = 20) -> some View {
+        RoundedRectangle(cornerRadius: corner, style: .continuous)
+            .fill(Color(red: 0.95, green: 0.94, blue: 0.92).opacity(0.88))
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(Color.white.opacity(0.26))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(.white.opacity(0.34), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.10), radius: 12, y: 8)
+    }
+
+    static func chromeIconButtonBackground(size: CGFloat = 40) -> some View {
+        Circle()
+            .fill(Color(red: 0.96, green: 0.93, blue: 0.87).opacity(0.92))
+            .frame(width: size, height: size)
+            .overlay(
+                Circle()
+                    .stroke(.white.opacity(0.6), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
     }
 
     // MARK: - Scrapbook Collage Layout
@@ -276,11 +396,11 @@ enum Theme {
         HStack(spacing: 16) {
             ZStack {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(.white.opacity(0.58))
+                    .fill(Color(red: 0.96, green: 0.93, blue: 0.87).opacity(0.90))
                     .frame(width: 60, height: 60)
                     .overlay(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(.white.opacity(0.42), lineWidth: 1)
+                            .stroke(Color(red: 0.99, green: 0.97, blue: 0.92).opacity(0.66), lineWidth: 1)
                     )
 
                 Image(systemName: icon)
@@ -309,7 +429,7 @@ enum Theme {
                 .frame(width: 42, height: 42)
                 .background(
                     Circle()
-                        .fill(.white.opacity(0.54))
+                        .fill(Color(red: 0.96, green: 0.93, blue: 0.87).opacity(0.88))
                 )
         }
         .padding(.horizontal, 20)
