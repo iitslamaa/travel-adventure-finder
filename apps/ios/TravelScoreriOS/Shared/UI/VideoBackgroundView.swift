@@ -10,17 +10,20 @@ struct VideoBackgroundView: UIViewRepresentable {
     let videoName: String
     let videoType: String
     let loop: Bool
-    var onFinished: (() -> Void)? = nil   // NEW
+    var fadeOutOnFinish: Bool = false
+    var onFinished: (() -> Void)? = nil
 
     func makeUIView(context: Context) -> PlayerUIView {
         let view = PlayerUIView()
-        view.onFinished = onFinished      // NEW
+        view.onFinished = onFinished
+        view.fadeOutOnFinish = fadeOutOnFinish
         view.load(videoName: videoName, videoType: videoType, loop: loop)
         return view
     }
 
     func updateUIView(_ uiView: PlayerUIView, context: Context) {
-        uiView.onFinished = onFinished    // keep closure updated
+        uiView.onFinished = onFinished
+        uiView.fadeOutOnFinish = fadeOutOnFinish
         uiView.updateIfNeeded(videoName: videoName, videoType: videoType, loop: loop)
     }
 }
@@ -32,6 +35,7 @@ final class PlayerUIView: UIView {
     private var currentItem: AVPlayerItem?
     private var shouldLoop: Bool = false
 
+    var fadeOutOnFinish: Bool = false
     var onFinished: (() -> Void)?
 
     override init(frame: CGRect) {
@@ -108,10 +112,10 @@ final class PlayerUIView: UIView {
 
         player?.pause()
 
-        // Trigger routing immediately
         onFinished?()
 
-        // Fade out in parallel (prevents perceived lag)
+        guard fadeOutOnFinish else { return }
+
         UIView.animate(withDuration: 0.15) {
             self.alpha = 0
         }

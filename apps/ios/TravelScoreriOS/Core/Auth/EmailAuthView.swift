@@ -11,6 +11,13 @@ import CryptoKit
 
 // MARK: - Reusable Button Wrapper
 
+private let authPanelBackground = Color(red: 0.94, green: 0.92, blue: 0.88)
+private let authFieldBackground = Color(red: 0.97, green: 0.95, blue: 0.91)
+private let authPrimaryFill = Color(red: 0.16, green: 0.14, blue: 0.12)
+private let authPrimaryText = Color.white
+private let authSecondaryText = Color(red: 0.24, green: 0.21, blue: 0.18)
+private let authMutedText = Color(red: 0.47, green: 0.41, blue: 0.34)
+
 struct TranslucentAuthButton<Content: View>: View {
     let content: Content
 
@@ -24,10 +31,14 @@ struct TranslucentAuthButton<Content: View>: View {
             .frame(height: 52)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white)
+                    .fill(Color.white.opacity(0.96))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.black.opacity(0.08), lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 6)
+            .shadow(color: Color.black.opacity(0.12), radius: 10, x: 0, y: 6)
     }
 }
 
@@ -150,7 +161,7 @@ struct EmailAuthView: View {
                 // MARK: - Enter Email
 
                 if showEmailFlow && step == .enterEmail {
-                    FrostedCard {
+                    AuthPanelCard {
                         VStack(spacing: 14) {
 
                             // Back button (EMAIL SCREEN ONLY)
@@ -161,6 +172,7 @@ struct EmailAuthView: View {
 
                             Text("Enter your email address")
                                 .font(.headline)
+                                .foregroundStyle(authPrimaryFill)
 
                             TextField("Email address", text: $vm.email)
                                 .textInputAutocapitalization(.never)
@@ -171,8 +183,9 @@ struct EmailAuthView: View {
                                 .padding(12)
                                 .background(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.white.opacity(0.25))
+                                        .fill(authFieldBackground)
                                 )
+                                .foregroundStyle(authPrimaryFill)
                                 .focused($focusedField, equals: .email)
                                 .onAppear {
                                     focusedField = nil
@@ -202,17 +215,12 @@ struct EmailAuthView: View {
                                     }
                                 }
                             } label: {
-                                if isSending {
-                                    ProgressView()
-                                } else {
-                                    Text(
-                                        cooldownSeconds > 0
-                                        ? "Resend in \(cooldownSeconds)s"
-                                        : "Send code"
-                                    )
-                                }
+                                authActionLabel(
+                                    title: cooldownSeconds > 0 ? "Resend in \(cooldownSeconds)s" : "Send code",
+                                    isLoading: isSending,
+                                    isEnabled: !vm.email.isEmpty && cooldownSeconds == 0
+                                )
                             }
-                            .buttonStyle(.borderedProminent)
                             .disabled(vm.email.isEmpty || cooldownSeconds > 0)
 
                             Button {
@@ -227,7 +235,7 @@ struct EmailAuthView: View {
                             } label: {
                                 Text("Use Bypass Code")
                                     .font(.footnote)
-                                    .foregroundColor(.white.opacity(0.8))
+                                    .foregroundColor(authMutedText)
                             }
                             .padding(.top, 4)
                         }
@@ -238,7 +246,7 @@ struct EmailAuthView: View {
                 // MARK: - Enter Code
 
                 if step == .enterCode {
-                    FrostedCard {
+                    AuthPanelCard {
                         VStack(spacing: 14) {
 
                             // Back button (CODE SCREEN ONLY)
@@ -249,7 +257,7 @@ struct EmailAuthView: View {
 
                             Text("Enter the 6-digit code sent to your email, or enter your password")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(authMutedText)
 
                             TextField("6-digit code or password", text: $vm.otp)
                                 .keyboardType(.asciiCapable)
@@ -260,8 +268,9 @@ struct EmailAuthView: View {
                                 .padding(12)
                                 .background(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.white.opacity(0.25))
+                                        .fill(authFieldBackground)
                                 )
+                                .foregroundStyle(authPrimaryFill)
                                 .focused($focusedField, equals: .code)
 
                             Button {
@@ -275,13 +284,12 @@ struct EmailAuthView: View {
                                     }
                                 }
                             } label: {
-                                if vm.isLoading {
-                                    ProgressView()
-                                } else {
-                                    Text("Verify")
-                                }
+                                authActionLabel(
+                                    title: "Verify",
+                                    isLoading: vm.isLoading,
+                                    isEnabled: !vm.otp.isEmpty
+                                )
                             }
-                            .buttonStyle(.borderedProminent)
                             .disabled(vm.otp.isEmpty)
                         }
                     }
@@ -326,8 +334,31 @@ struct EmailAuthView: View {
                 Text("Back")
             }
             .font(.headline)
-            .foregroundColor(.white)
+            .foregroundColor(authMutedText)
         }
+    }
+
+    @ViewBuilder
+    private func authActionLabel(title: String, isLoading: Bool, isEnabled: Bool) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(isEnabled ? Color(red: 0.42, green: 0.31, blue: 0.20) : Color(red: 0.82, green: 0.78, blue: 0.72))
+                .frame(width: 210, height: 52)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke((isEnabled ? Color(red: 0.30, green: 0.21, blue: 0.14) : Color.white.opacity(0.55)), lineWidth: 1)
+                )
+
+            if isLoading {
+                ProgressView()
+                    .tint(authPrimaryText)
+            } else {
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(isEnabled ? authPrimaryText : authMutedText)
+            }
+        }
+        .shadow(color: Color.black.opacity(isEnabled ? 0.14 : 0.08), radius: 10, x: 0, y: 6)
     }
 
     // MARK: - Helpers
@@ -368,5 +399,27 @@ struct EmailAuthView: View {
         let data = Data(input.utf8)
         let hash = SHA256.hash(data: data)
         return hash.map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+private struct AuthPanelCard<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(authPanelBackground.opacity(0.98))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(Color(red: 0.77, green: 0.71, blue: 0.60).opacity(0.5), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 14, x: 0, y: 8)
     }
 }

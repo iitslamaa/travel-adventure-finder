@@ -14,6 +14,26 @@ extension ProfileViewModel {
     // MARK: - Load
 
     func load(generation: UUID) async {
+        if isGuestMode {
+            guard generation == loadGeneration else { return }
+            profile = nil
+            viewedTraveledCountries = []
+            viewedBucketListCountries = []
+            relationshipState = .none
+            isFriend = false
+            mutualLanguages = []
+            mutualBucketCountries = []
+            mutualTraveledCountries = []
+            mutualFriends = []
+            friends = []
+            pendingRequestCount = 0
+            computeOrderedLists()
+            hasLoadedCoreData = true
+            isLoading = false
+            errorMessage = nil
+            return
+        }
+
         let startingUserId = userId
         let isOwnProfile = startingUserId == supabase.currentUserId
 
@@ -83,6 +103,10 @@ extension ProfileViewModel {
     }
 
     private func resolvedRelationshipState(for viewedUserId: UUID) async throws -> RelationshipState {
+        if isGuestMode {
+            return .none
+        }
+
         _ = try? await supabase.client.auth.session
 
         guard let currentUserId = supabase.currentUserId else {

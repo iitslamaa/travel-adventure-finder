@@ -62,6 +62,7 @@ final class ProfileViewModel: ObservableObject {
     let profileService: ProfileService
     let friendService: FriendService
     let supabase = SupabaseManager.shared
+    let isGuestMode: Bool
 
     // ✅ Identity is now immutable (no rebinding)
     let userId: UUID
@@ -73,11 +74,13 @@ final class ProfileViewModel: ObservableObject {
     init(
         userId: UUID,
         profileService: ProfileService,
-        friendService: FriendService
+        friendService: FriendService,
+        isGuestMode: Bool = false
     ) {
         self.userId = userId
         self.profileService = profileService
         self.friendService = friendService
+        self.isGuestMode = isGuestMode
     }
     
     // MARK: - Pull to Refresh Support

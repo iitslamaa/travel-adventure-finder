@@ -43,7 +43,6 @@
 		170C21492F4790E00090BA78 /* MetaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EA2F4790E00090BA78 /* MetaService.swift */; };
 		170C214A2F4790E00090BA78 /* ProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EB2F4790E00090BA78 /* ProfileService.swift */; };
 		170C214B2F4790E00090BA78 /* SeasonalityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EC2F4790E00090BA78 /* SeasonalityService.swift */; };
-		17F9A0012F60000100AA0001 /* VisaRequirementsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */; };
 		170C214C2F4790E00090BA78 /* BucketListStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EE2F4790E00090BA78 /* BucketListStore.swift */; };
 		170C214D2F4790E00090BA78 /* MetaStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20EF2F4790E00090BA78 /* MetaStore.swift */; };
 		170C214E2F4790E00090BA78 /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20F12F4790E00090BA78 /* AppRootView.swift */; };
@@ -97,6 +96,7 @@
 		171EC56D2F5358A700FCB4AB /* travelaf.world.simplified.geo.json in Resources */ = {isa = PBXBuildFile; fileRef = 171EC56B2F5358A700FCB4AB /* travelaf.world.simplified.geo.json */; };
 		171EC56F2F53590600FCB4AB /* GeoJsonLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 171EC56E2F53590600FCB4AB /* GeoJsonLoader.swift */; };
 		172A74C92F357340003EF4DF /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172A74C82F357340003EF4DF /* SessionManager.swift */; };
+		1732C3C82F633D970096ABC1 /* intro-video.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 1732C3C72F633D970096ABC1 /* intro-video.mp4 */; };
 		1758A77E2F57F16800F7AC02 /* WeightPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758A77D2F57F16500F7AC02 /* WeightPreset.swift */; };
 		1758A7872F5808E900F7AC02 /* ThemePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758A7862F58081000F7AC02 /* ThemePreviewView.swift */; };
 		1758A7882F5808F400F7AC02 /* TAFButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1758A7842F5807FC00F7AC02 /* TAFButtonStyle.swift */; };
@@ -148,6 +148,7 @@
 		17F063852F32734800F1F4F3 /* EmailAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F063842F32734800F1F4F3 /* EmailAuthView.swift */; };
 		17F063882F32747D00F1F4F3 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 17F063872F32747D00F1F4F3 /* Supabase */; };
 		17F2E1602F4C3C27009A7E6D /* CountryScoreSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F2E15F2F4C3C27009A7E6D /* CountryScoreSection.swift */; };
+		17F9A0012F60000100AA0001 /* VisaRequirementsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -187,7 +188,6 @@
 		170C20EA2F4790E00090BA78 /* MetaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaService.swift; sourceTree = "<group>"; };
 		170C20EB2F4790E00090BA78 /* ProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileService.swift; sourceTree = "<group>"; };
 		170C20EC2F4790E00090BA78 /* SeasonalityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeasonalityService.swift; sourceTree = "<group>"; };
-		17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisaRequirementsStore.swift; sourceTree = "<group>"; };
 		170C20EE2F4790E00090BA78 /* BucketListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketListStore.swift; sourceTree = "<group>"; };
 		170C20EF2F4790E00090BA78 /* MetaStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaStore.swift; sourceTree = "<group>"; };
 		170C20F12F4790E00090BA78 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
@@ -243,6 +243,7 @@
 		171EC56B2F5358A700FCB4AB /* travelaf.world.simplified.geo.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = travelaf.world.simplified.geo.json; path = "/Users/lamayassine/travel-af/apps/mobile/assets/geo/travelaf.world.simplified.geo.json"; sourceTree = "<absolute>"; };
 		171EC56E2F53590600FCB4AB /* GeoJsonLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoJsonLoader.swift; sourceTree = "<group>"; };
 		172A74C82F357340003EF4DF /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
+		1732C3C72F633D970096ABC1 /* intro-video.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "intro-video.mp4"; sourceTree = "<group>"; };
 		1758A77D2F57F16500F7AC02 /* WeightPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightPreset.swift; sourceTree = "<group>"; };
 		1758A7812F5807D300F7AC02 /* TAFColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TAFColor.swift; sourceTree = "<group>"; };
 		1758A7822F5807DE00F7AC02 /* TAFTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TAFTypography.swift; sourceTree = "<group>"; };
@@ -291,6 +292,7 @@
 		17F063822F32732F00F1F4F3 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		17F063842F32734800F1F4F3 /* EmailAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailAuthView.swift; sourceTree = "<group>"; };
 		17F2E15F2F4C3C27009A7E6D /* CountryScoreSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryScoreSection.swift; sourceTree = "<group>"; };
+		17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisaRequirementsStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -829,6 +831,7 @@
 		170C227D2F47A77B0090BA78 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				1732C3C72F633D970096ABC1 /* intro-video.mp4 */,
 				1776C9622F50FCE300AFC488 /* global_languages.json */,
 				170C21102F4790E00090BA78 /* intro.mp4 */,
 			);
@@ -1060,6 +1063,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				170C217C2F4790E00090BA78 /* Assets.xcassets in Resources */,
+				1732C3C82F633D970096ABC1 /* intro-video.mp4 in Resources */,
 				1776C9632F50FCE800AFC488 /* global_languages.json in Resources */,
 				170C217D2F4790E00090BA78 /* auth_loop.mp4 in Resources */,
 				170C217E2F4790E00090BA78 /* countries.geojson in Resources */,
