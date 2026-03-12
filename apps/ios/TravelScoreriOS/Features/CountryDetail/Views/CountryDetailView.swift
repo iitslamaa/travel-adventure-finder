@@ -14,7 +14,7 @@ struct CountryDetailView: View {
     @State private var scrollAnchor: String? = nil
 
     private var displayedCountry: Country {
-        country.applyingOverallScore(using: weightsStore.weights)
+        country.applyingOverallScore(using: weightsStore.weights, selectedMonth: weightsStore.selectedMonth)
     }
     
     var body: some View {
@@ -43,7 +43,7 @@ struct CountryDetailView: View {
                     scrapbookSection {
                         CountrySeasonalityCard(
                             country: displayedCountry,
-                            weightPercentage: 0
+                            weightPercentage: weightsStore.seasonalityPercentage
                         )
                     }
                     

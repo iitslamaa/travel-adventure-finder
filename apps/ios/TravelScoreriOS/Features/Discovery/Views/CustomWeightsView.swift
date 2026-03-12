@@ -16,16 +16,14 @@ struct CustomWeightsView: View {
     private let originalWeights: ScoreWeights
     @State private var isSaving: Bool = false
     @State private var draftWeights: ScoreWeights
+    @State private var draftSelectedMonth: Int
     @State private var hasSaved: Bool = false
 
-    init(userId: UUID?, initialWeights: ScoreWeights) {
+    init(userId: UUID?, initialWeights: ScoreWeights, initialSelectedMonth: Int) {
         self.userId = userId
-
-        var sanitized = initialWeights
-        sanitized.seasonality = 0
-
-        self.originalWeights = sanitized
-        _draftWeights = State(initialValue: sanitized)
+        self.originalWeights = initialWeights
+        _draftWeights = State(initialValue: initialWeights)
+        _draftSelectedMonth = State(initialValue: initialSelectedMonth)
     }
     
     // MARK: - Derived State
@@ -33,7 +31,8 @@ struct CustomWeightsView: View {
     private var totalWeight: Double {
         draftWeights.advisory +
         draftWeights.visa +
-        draftWeights.affordability
+        draftWeights.affordability +
+        draftWeights.seasonality
     }
     
     private var isZeroSum: Bool {
@@ -43,7 +42,9 @@ struct CustomWeightsView: View {
     private var isDirty: Bool {
         originalWeights.advisory != draftWeights.advisory ||
         originalWeights.visa != draftWeights.visa ||
-        originalWeights.affordability != draftWeights.affordability
+        originalWeights.affordability != draftWeights.affordability ||
+        originalWeights.seasonality != draftWeights.seasonality ||
+        weightsStore.selectedMonth != draftSelectedMonth
     }
     
     var body: some View {
@@ -101,6 +102,8 @@ struct CustomWeightsView: View {
                                     value: binding(for: \.advisory)
                                 )
 
+                                seasonalityWeightControl
+
                             }
                         }
 
@@ -123,12 +126,8 @@ struct CustomWeightsView: View {
 
                                 Button {
                                     let defaults = ScoreWeights.default
-                                    draftWeights = ScoreWeights(
-                                        affordability: defaults.affordability,
-                                        visa: defaults.visa,
-                                        advisory: defaults.advisory,
-                                        seasonality: 0
-                                    )
+                                    draftWeights = defaults
+                                    draftSelectedMonth = weightsStore.selectedMonth
                                 } label: {
                                     Text("Reset to Default")
                                         .font(.headline)
@@ -176,9 +175,7 @@ struct CustomWeightsView: View {
     
     private func presetButton(title: String, preset: WeightPreset) -> some View {
         Button {
-            var newWeights = preset.weights
-            newWeights.seasonality = 0
-            draftWeights = newWeights
+            draftWeights = preset.weights
         } label: {
             Text(title)
                 .font(.subheadline.weight(.medium))
@@ -234,6 +231,77 @@ struct CustomWeightsView: View {
         .padding(.vertical, 6)
     }
 
+    private var seasonalityWeightControl: some View {
+        let value = binding(for: \.seasonality)
+        let percentage: Double = totalWeight > 0
+            ? (value.wrappedValue / totalWeight) * 100
+            : 0
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                Text("Seasonality")
+                    .font(.headline)
+                    .foregroundStyle(.black)
+
+                Spacer()
+
+                Text(String(format: "%.0f%%", percentage))
+                    .font(.headline)
+                    .foregroundStyle(Color.black.opacity(0.55))
+            }
+
+            Slider(
+                value: Binding(
+                    get: { value.wrappedValue },
+                    set: { newValue in
+                        let clamped = min(max(newValue, 0), 1)
+                        value.wrappedValue = clamped
+                    }
+                ),
+                in: 0...1,
+                step: 0.05
+            )
+            .tint(Color(red: 0.76, green: 0.48, blue: 0.31))
+
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(allMonthsMeta) { month in
+                            Button {
+                                draftSelectedMonth = month.id
+                            } label: {
+                                Text(month.short)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.black)
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 12)
+                                    .background(
+                                        Capsule()
+                                            .fill(draftSelectedMonth == month.id ? Color.white.opacity(0.78) : Color.clear)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .id(month.id)
+                        }
+                    }
+                }
+                .onAppear {
+                    proxy.scrollTo(draftSelectedMonth, anchor: .center)
+                }
+                .onChange(of: draftSelectedMonth) { _, month in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        proxy.scrollTo(month, anchor: .center)
+                    }
+                }
+            }
+
+            Text("Uses your selected travel month. Changing it here also updates When To Go.")
+                .font(.caption)
+                .foregroundStyle(Color.black.opacity(0.52))
+        }
+        .padding(.vertical, 6)
+    }
+
     private var topBanner: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Travel Preferences")
@@ -282,7 +350,10 @@ struct CustomWeightsView: View {
         isSaving = true
         defer { isSaving = false }
 
-        weightsStore.weights = draftWeights
+        weightsStore.updatePreferences(
+            weights: draftWeights,
+            selectedMonth: draftSelectedMonth
+        )
         hasSaved = true
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -309,6 +380,7 @@ struct CustomWeightsView: View {
             struct PreferencesRow: Encodable {
                 let user_id: UUID
                 let advisory: Double
+                let seasonality: Double
                 let visa: Double
                 let affordability: Double
             }
@@ -316,6 +388,7 @@ struct CustomWeightsView: View {
             let row = PreferencesRow(
                 user_id: userId,
                 advisory: draftWeights.advisory,
+                seasonality: draftWeights.seasonality,
                 visa: draftWeights.visa,
                 affordability: draftWeights.affordability
             )

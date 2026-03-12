@@ -91,7 +91,7 @@ struct WhenToGoCountryDrawerView: View {
 
                     Spacer()
 
-                    if let seasonalityScore = country.country.seasonalityScore {
+                    if let seasonalityScore = country.country.resolvedSeasonalityScore(for: weightsStore.selectedMonth) {
                         Text("\(seasonalityScore)")
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .padding(.horizontal, 12)
@@ -121,11 +121,11 @@ struct WhenToGoCountryDrawerView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(CountrySeasonalityHelpers.headline(for: country.country))
+                    Text(CountrySeasonalityHelpers.headline(for: country.country, selectedMonth: weightsStore.selectedMonth))
                         .font(.subheadline)
                         .fontWeight(.semibold)
 
-                    Text(CountrySeasonalityHelpers.body(for: country.country))
+                    Text(CountrySeasonalityHelpers.body(for: country.country, selectedMonth: weightsStore.selectedMonth))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)

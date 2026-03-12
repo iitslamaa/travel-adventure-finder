@@ -14,9 +14,9 @@ struct ScoreWeights: Codable {
     var seasonality: Double
     
     static let `default` = ScoreWeights(
-        affordability: 1.0,
-        visa: 1.0,
-        advisory: 1.0,
-        seasonality: 1.0
+        affordability: 0.2,
+        visa: 0.2,
+        advisory: 0.4,
+        seasonality: 0.2
     )
 }

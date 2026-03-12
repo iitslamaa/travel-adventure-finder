@@ -41,8 +41,6 @@ const ADVISORY_FALLBACK_BY_ISO2: Record<string, { level: 1|2|3|4; summary: strin
 
 // Local type to avoid any
 type FactsExtraServer = Partial<CountryFacts> & {
-  soloFemaleIndex?: number;
-  redditComposite?: number;
   seasonality?: number;
   visaEase?: number;
   visaType?: 'visa_free' | 'voa' | 'evisa' | 'visa_required' | 'entry_permit' | 'ban';
@@ -74,6 +72,9 @@ type FactsExtraServer = Partial<CountryFacts> & {
   scoreTotal?: number;
   // FM (Frequent Miler) seasonality enrichments
   fmSeasonalityBestMonths?: number[];            // 1..12
+  fmSeasonalityShoulderMonths?: number[];
+  fmSeasonalityGoodMonths?: number[];
+  fmSeasonalityAvoidMonths?: number[];
   fmSeasonalityAreas?: { area?: string; months: number[] }[];
   fmSeasonalityHasDualPeak?: boolean;
   fmSeasonalityTodayScore?: number;              // 0..100
@@ -267,6 +268,13 @@ type CountryOut = CountrySeed & {
   facts?: FactsExtraServer;
 };
 
+type UserScorePreferencesRow = {
+  advisory?: number | null;
+  seasonality?: number | null;
+  visa?: number | null;
+  affordability?: number | null;
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const lite = searchParams.get('lite') === '1';
@@ -309,12 +317,14 @@ export async function GET(request: Request) {
         .maybeSingle();
 
       if (data) {
+        const prefs = data as UserScorePreferencesRow;
+
         userWeights = {
           // Domain expects `travelGov`; DB stores this as `advisory`
-          travelGov: (data as any).advisory ?? DEFAULT_WEIGHTS.travelGov,
-          seasonality: (data as any).seasonality ?? DEFAULT_WEIGHTS.seasonality,
-          visa: (data as any).visa ?? DEFAULT_WEIGHTS.visa,
-          affordability: (data as any).affordability ?? DEFAULT_WEIGHTS.affordability,
+          travelGov: prefs.advisory ?? DEFAULT_WEIGHTS.travelGov,
+          seasonality: prefs.seasonality ?? DEFAULT_WEIGHTS.seasonality,
+          visa: prefs.visa ?? DEFAULT_WEIGHTS.visa,
+          affordability: prefs.affordability ?? DEFAULT_WEIGHTS.affordability,
         };
 
         console.log('[countries] loaded userWeights', {
@@ -681,6 +691,9 @@ export async function GET(request: Request) {
           else todayScore = 50;                   // neutral fallback when month is unclassified
 
           fxFacts.fmSeasonalityBestMonths = allMonths;
+          fxFacts.fmSeasonalityShoulderMonths = override.shoulder ?? [];
+          fxFacts.fmSeasonalityGoodMonths = override.good ?? [];
+          fxFacts.fmSeasonalityAvoidMonths = override.avoid ?? [];
           fxFacts.fmSeasonalityAreas = fxFacts.fmSeasonalityAreas ?? [];
           fxFacts.fmSeasonalityHasDualPeak = dualPeak;
           fxFacts.fmSeasonalityTodayScore = todayScore;
@@ -753,7 +766,7 @@ export async function GET(request: Request) {
 
       fxFacts.affordabilityCategory = category;
       fxFacts.affordability = score;
-      (fxFacts as any).affordabilityScore = score;
+      (fxFacts as FactsExtraServer & { affordabilityScore?: number }).affordabilityScore = score;
       fxFacts.affordabilityBand = affordabilityBandFromCategory(category);
 
       fxFacts.affordabilityExplanation =
@@ -785,7 +798,7 @@ export async function GET(request: Request) {
   // Expose scoreTotal at top level for Discovery list
   const listPayload = merged.map((row) => ({
     ...row,
-    scoreTotal: (row.facts as any)?.scoreTotal ?? 0,
+    scoreTotal: row.facts?.scoreTotal ?? 0,
   }));
 
   return NextResponse.json(listPayload);

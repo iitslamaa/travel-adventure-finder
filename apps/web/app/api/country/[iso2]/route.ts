@@ -103,7 +103,17 @@ export async function GET(
 
   const facts = factsByIso2[isoUpper] as CountryFacts | undefined;
 
-  const enriched: any = {
+  const enriched: typeof seed & {
+    facts: Partial<CountryFacts> & {
+      fmSeasonalityBestMonths?: number[];
+      fmSeasonalityShoulderMonths?: number[];
+      fmSeasonalityGoodMonths?: number[];
+      fmSeasonalityAvoidMonths?: number[];
+      fmSeasonalityTodayScore?: number;
+      fmSeasonalityTodayLabel?: 'best' | 'good' | 'shoulder' | 'poor';
+    };
+    advisory?: { iso2?: string; level?: number };
+  } = {
     ...seed,
     facts: facts ?? {},
   };
@@ -119,8 +129,8 @@ export async function GET(
     const advRes = await fetch(advUrl, { cache: 'no-store' });
 
     if (advRes.ok) {
-      const advisories = await advRes.json();
-      const advisory = advisories.find((a: any) => a.iso2 === isoUpper);
+      const advisories = (await advRes.json()) as Array<{ iso2?: string; level?: number }>;
+      const advisory = advisories.find((a) => a.iso2 === isoUpper);
 
       if (advisory?.level) {
         enriched.facts.advisoryLevel = advisory.level;
@@ -180,6 +190,18 @@ export async function GET(
       else if (inGood) todayScore = 40;
       else if (inAvoid) todayScore = 0;
       else todayScore = 50;
+
+      enriched.facts.fmSeasonalityBestMonths = allMonths;
+      enriched.facts.fmSeasonalityShoulderMonths = override.shoulder ?? [];
+      enriched.facts.fmSeasonalityGoodMonths = override.good ?? [];
+      enriched.facts.fmSeasonalityAvoidMonths = override.avoid ?? [];
+      enriched.facts.fmSeasonalityTodayScore = todayScore;
+      enriched.facts.fmSeasonalityTodayLabel =
+        inBest ? 'best' :
+        inShoulder ? 'shoulder' :
+        inGood ? 'good' :
+        inAvoid ? 'poor' :
+        'shoulder';
 
       enriched.facts.seasonality = todayScore;
     }

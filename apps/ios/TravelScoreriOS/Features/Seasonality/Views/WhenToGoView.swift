@@ -10,6 +10,7 @@ import SwiftUI
 
 struct WhenToGoView: View {
     @StateObject private var viewModel: WhenToGoViewModel
+    @EnvironmentObject private var weightsStore: ScoreWeightsStore
     @Environment(\.floatingTabBarInset) private var floatingTabBarInset
     
     init(countries: [Country], weightsStore: ScoreWeightsStore) {
@@ -65,7 +66,7 @@ struct WhenToGoView: View {
                                 month: month,
                                 isSelected: viewModel.selectedMonthIndex == month.id
                             ) {
-                                viewModel.selectedMonthIndex = month.id
+                                weightsStore.selectedMonth = month.id
                             }
                             .id(month.id)
                         }

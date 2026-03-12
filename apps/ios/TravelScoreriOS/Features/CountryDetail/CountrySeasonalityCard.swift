@@ -9,10 +9,13 @@ import Foundation
 import SwiftUI
 
 struct CountrySeasonalityCard: View {
+    @EnvironmentObject private var weightsStore: ScoreWeightsStore
     let country: Country
     let weightPercentage: Int
 
     var body: some View {
+        let displayedSeasonalityScore = country.resolvedSeasonalityScore(for: weightsStore.selectedMonth)
+
         VStack(alignment: .leading, spacing: 12) {
 
             // Title row
@@ -20,14 +23,14 @@ struct CountrySeasonalityCard: View {
                 Text("Seasonality")
                     .font(.headline)
                 Spacer()
-                Text("Today · \(weightPercentage)%")
+                Text("\(weightsStore.selectedMonthShortName) · \(weightPercentage)%")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
 
             // Score pill + description
             HStack(spacing: 12) {
-                if let seasonalityScore = country.seasonalityScore {
+                if let seasonalityScore = displayedSeasonalityScore {
                     Text("\(seasonalityScore)")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
@@ -56,11 +59,11 @@ struct CountrySeasonalityCard: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(CountrySeasonalityHelpers.headline(for: country))
+                    Text(CountrySeasonalityHelpers.headline(for: country, selectedMonth: weightsStore.selectedMonth))
                         .font(.subheadline)
                         .fontWeight(.semibold)
 
-                    Text(CountrySeasonalityHelpers.body(for: country))
+                    Text(CountrySeasonalityHelpers.body(for: country, selectedMonth: weightsStore.selectedMonth))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -88,7 +91,7 @@ struct CountrySeasonalityCard: View {
             }
 
             HStack(spacing: 12) {
-                if let seasonalityScore = country.seasonalityScore {
+                if let seasonalityScore = displayedSeasonalityScore {
                     Text("Normalized: \(seasonalityScore)")
                 }
                 Text("Weight: \(weightPercentage)%")

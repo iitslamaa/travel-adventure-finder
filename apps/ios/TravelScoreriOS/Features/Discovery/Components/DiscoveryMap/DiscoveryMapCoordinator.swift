@@ -40,7 +40,7 @@ final class DiscoveryMapCoordinator: NSObject, MKMapViewDelegate {
     weak var mapView: MKMapView?
     
     var lastZoomedISO: String?
-    private let countryLookup: [String: Country]
+    private var countryLookup: [String: Country]
     
     // MARK: - Init
     
@@ -49,14 +49,24 @@ final class DiscoveryMapCoordinator: NSObject, MKMapViewDelegate {
         highlightedISOs: [String]
     ) {
         self.highlightedISOs = highlightedISOs.map { $0.uppercased() }
+        self.countryLookup = DiscoveryMapCoordinator.buildCountryLookup(from: countries)
 
+        super.init()
+    }
+
+    private static func buildCountryLookup(from countries: [Country]) -> [String: Country] {
         var lookup: [String: Country] = [:]
         for country in countries {
             lookup[country.id.uppercased()] = country
         }
-        self.countryLookup = lookup
+        return lookup
+    }
 
-        super.init()
+    func updateCountries(_ countries: [Country]) {
+        let nextLookup = Self.buildCountryLookup(from: countries)
+        guard nextLookup != countryLookup else { return }
+        countryLookup = nextLookup
+        rebuildOverlays()
     }
     
     // MARK: - Tap Handling

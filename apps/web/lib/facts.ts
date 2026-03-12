@@ -74,22 +74,14 @@ export async function loadFacts(iso2List: string[], advisories: Advisory[]): Pro
 
   // Load all sources (gracefully fallback to empty objects if missing)
   const [
-    homicides,
     gdp,
-    epi,
     visaRaw,
-    sfti,
-    reddit,
     seasonalityRaw,
     directFlightRaw,
     infrastructureRaw,
   ] = await Promise.all([
-    readJson<Record<string, number>>('homicides.json').catch(() => ({} as Record<string, number>)),
     readJson<Record<string, number>>('gdp_ppp.json').catch(() => ({} as Record<string, number>)),
-    readJson<Record<string, number>>('english_epi.json').catch(() => ({} as Record<string, number>)),
     readJson<Record<string, VisaEase>>('visa_us.json').catch(() => ({} as Record<string, VisaEase>)),
-    readJson<Record<string, number>>('sfti_overall.json').catch(() => ({} as Record<string, number>)),
-    readJson<Record<string, { score: number; n: number; updatedAt?: string }>>('reddit_composite.json').catch(() => ({} as Record<string, { score: number; n: number; updatedAt?: string }>)),
     // seasonality can be either a 0..100 score OR an array of best months [1..12]
     readJson<Record<string, number | number[]>>('seasonality.json').catch(() => ({} as Record<string, number | number[]>)),
     // boolean/binary or 0..100 is okay; treat 1/true => 100, 0/false => 40 baseline
@@ -119,9 +111,6 @@ export async function loadFacts(iso2List: string[], advisories: Advisory[]): Pro
       : (Number.isFinite(dfVal as number) ? clamp(dfVal as number) : undefined);
 
     const infra = Number.isFinite(infrastructureRaw[iso2]) ? clamp(infrastructureRaw[iso2]) : undefined;
-
-    const r = reddit[iso2];
-
     // compute advisory score safely
     const advisoryScore =
       adv?.level != null
@@ -135,11 +124,6 @@ export async function loadFacts(iso2List: string[], advisories: Advisory[]): Pro
       advisoryScore,
       advisorySummary: adv?.summary ?? undefined,
       advisoryUrl: adv?.url ?? undefined,
-
-      // safety & sentiment
-      soloFemaleIndex: Number.isFinite(sfti[iso2]) ? clamp(sfti[iso2]) : undefined,
-      redditComposite: Number.isFinite(r?.score) ? clamp(r!.score) : undefined,
-      redditN: r?.n ?? 0,
 
       // logistics & experience
       seasonality: season,
