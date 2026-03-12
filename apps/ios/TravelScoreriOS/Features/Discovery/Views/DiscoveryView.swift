@@ -34,8 +34,12 @@ struct DiscoveryCountryListView: View {
 
     @MainActor
     private func reloadCountries() async {
-        if let fresh = CountryAPI.loadCachedCountries(), !fresh.isEmpty {
-            countries = await applyCurrentWeightsAndVisa(to: fresh)
+        if let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 0), !refreshed.isEmpty {
+            countries = await applyCurrentWeightsAndVisa(to: refreshed)
+        } else if let fetched = try? await CountryAPI.fetchCountries(), !fetched.isEmpty {
+            countries = await applyCurrentWeightsAndVisa(to: fetched)
+        } else if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
+            countries = await applyCurrentWeightsAndVisa(to: cached)
         }
         await profileVM.loadIfNeeded()
     }

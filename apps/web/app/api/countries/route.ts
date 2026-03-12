@@ -4,7 +4,6 @@ import { headers, cookies } from 'next/headers';
 import type { CountrySeed } from '@/lib/types';
 import { loadFacts } from '@/lib/facts';
 import type { CountryFacts } from '@travel-af/shared';
-import { nameToIso2 } from '@/lib/countryMatch';
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -20,23 +19,6 @@ import { estimateDailySpendHotel } from '@/lib/providers/costs';
 import type { DailySpend } from '@/lib/providers/costs';
 import { buildRows, DEFAULT_WEIGHTS } from '@travel-af/domain/src/scoring';
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
-
-// --- Explicit advisory fallbacks (LAST RESORT ONLY)
-// Used ONLY when RSS/snapshot cannot be resolved deterministically.
-// These are sovereign states verified to have U.S. advisories.
-const ADVISORY_FALLBACK_BY_ISO2: Record<string, { level: 1|2|3|4; summary: string }> = {
-  RW: { level: 2, summary: 'Exercise increased caution in Rwanda.' },
-  GM: { level: 2, summary: 'Exercise increased caution in The Gambia.' },
-  BZ: { level: 2, summary: 'Exercise increased caution in Belize.' },
-  VC: { level: 1, summary: 'Exercise normal precautions in Saint Vincent and the Grenadines.' },
-  BS: { level: 2, summary: 'Exercise increased caution in The Bahamas.' },
-  KG: { level: 2, summary: 'Exercise increased caution in Kyrgyzstan.' },
-  PS: { level: 4, summary: 'Do not travel to the Palestinian Territories.' },
-
-  MC: { level: 1, summary: 'Exercise normal precautions in Monaco.' },
-  AF: { level: 4, summary: 'Do not travel to Afghanistan.' },
-  VA: { level: 1, summary: 'Exercise normal precautions in Vatican City.' },
-};
 
 
 // Local type to avoid any
@@ -84,17 +66,6 @@ type FactsExtraServer = Partial<CountryFacts> & {
 };
 
 
-// --- Name normalization & alias index (to recover missing iso2 from names) ---
-function normalizeName(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // strip accents
-    .replace(/\s*\(.*?\)\s*/g, ' ')                  // drop parentheticals
-    .replace(/[^a-z0-9]+/g, ' ')                     // collapse punctuation
-    .trim()
-    .replace(/\s+/g, ' ');                           // collapse spaces
-}
-
 function decodeHtmlEntitiesServer(input?: string): string | undefined {
   if (!input) return input;
 
@@ -139,23 +110,6 @@ function inheritMicrostateAdvisory(
   return undefined;
 }
 
-// Build a lookup from normalized official names and aliases → ISO2
-const NAME_INDEX: Map<string, string> = (() => {
-  const m = new Map<string, string>();
-  for (const seed of COUNTRY_SEEDS) {
-    const push = (label?: string) => {
-      if (!label) return;
-      const key = normalizeName(label);
-      if (key && !m.has(key)) m.set(key, seed.iso2.toUpperCase());
-    };
-    push(seed.name);
-    if (Array.isArray(seed.aliases)) {
-      for (const a of seed.aliases) push(a);
-    }
-  }
-  return m;
-})();
-
 // --- Frequent Miler helpers -------------------------------------------------
 function clusterConsecutiveMonths(months: number[]): number[][] {
   if (!months.length) return [];
@@ -183,14 +137,6 @@ function fmTodayLabel(score?: number): 'best'|'good'|'shoulder'|'poor' {
   return 'poor';
 }
 
-function clamp01(x: number) { return Math.max(0, Math.min(1, x)); }
-function toNum(x: unknown): number | undefined { const n = Number(x); return Number.isFinite(n) ? n : undefined; }
-function scale100(value: number, min: number, max: number, invert = false) {
-  if (min === max) return 50;
-  const t = clamp01((value - min) / (max - min));
-  const y = invert ? 1 - t : t;
-  return Math.round(y * 100);
-}
 function advisoryToScore(level?: 1|2|3|4) {
   if (!level) return 50; // neutral when missing
   return ((5 - level) / 4) * 100;
@@ -356,9 +302,6 @@ export async function GET(request: Request) {
       summary: string;
     }>;
 
-    const getStr = (v: unknown): string | undefined =>
-      typeof v === 'string' ? v : undefined;
-
     const raw: AdvRaw[] = Array.isArray(rawUnknown) ? (rawUnknown as AdvRaw[]) : [];
 
     advisories = raw.flatMap((r) => {
@@ -423,23 +366,6 @@ export async function GET(request: Request) {
     // 3) Microstate inheritance (ONLY if no direct advisory)
     if (!adv) {
       adv = inheritMicrostateAdvisory(iso2, overlay);
-    }
-
-    // 4) Absolute last-resort fallback (sovereign states only)
-    if (!adv && !seed.territory) {
-      const fb = ADVISORY_FALLBACK_BY_ISO2[iso2];
-      if (fb) {
-        return {
-          ...seed,
-          advisory: {
-            level: fb.level,
-            score: advisoryToScore(fb.level),
-            updatedAt: '',
-            url: 'https://travel.state.gov/',
-            summary: fb.summary,
-          },
-        };
-      }
     }
 
     return {
