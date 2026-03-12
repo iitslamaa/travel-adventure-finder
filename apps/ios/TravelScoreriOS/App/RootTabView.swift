@@ -279,7 +279,7 @@ struct RootTabView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, Theme.pageHorizontalInset)
 
                 Spacer()
             }
@@ -362,7 +362,7 @@ struct MoreView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, Theme.pageHorizontalInset)
                     .padding(.top, 18)
                     .padding(.bottom, 120)
                 }

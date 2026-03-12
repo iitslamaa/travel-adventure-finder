@@ -63,7 +63,7 @@ struct ListsView: View {
                     }
                     .id("planningListTop")
                     .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, Theme.pageHorizontalInset)
                     .padding(.top, 18)
                 }
                 .scrollContentBackground(.hidden)
