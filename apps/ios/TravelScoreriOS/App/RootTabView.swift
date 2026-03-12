@@ -21,6 +21,10 @@ final class SocialNavigationController: ObservableObject {
     func push(_ route: SocialRoute) {
         path.append(route)
     }
+
+    func reset() {
+        path = NavigationPath()
+    }
 }
 
 private struct FloatingTabBarInsetPreferenceKey: PreferenceKey {
@@ -65,10 +69,10 @@ struct RootTabView: View {
     @State private var selectedTab: Tab = .discovery
     @State private var floatingTabBarInset: CGFloat = 0
 
-var body: some View {
-    let _ = print("🧪 DEBUG: RootTabView body recomputed")
+    var body: some View {
+        let _ = print("🧪 DEBUG: RootTabView body recomputed")
 
-    TabView(selection: $selectedTab) {
+        TabView(selection: $selectedTab) {
         // Discovery
         NavigationStack(path: $discoveryPath) {
             DiscoveryView()
@@ -95,30 +99,11 @@ var body: some View {
                     FriendsView(userId: userId)
                         .environmentObject(friendsSocialNav)
                 } else {
-                    VStack(spacing: 20) {
-                        Spacer()
-
-                        Text("Create an account to add your friends!")
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-
-                        Button {
-                            sessionManager.didContinueAsGuest = false
-                            sessionManager.bumpAuthScreen()
-                        } label: {
-                            Text("Create Account / Log In")
-                                .fontWeight(.semibold)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                        }
-                        .padding(.horizontal, 40)
-
-                        Spacer()
-                    }
+                    guestLockedState(
+                        title: "Friends",
+                        message: "Create an account to add your friends!",
+                        backgroundImage: "travel3"
+                    )
                 }
             }
             .navigationDestination(for: SocialRoute.self) { route in
@@ -136,30 +121,11 @@ var body: some View {
                         .id(userId)
                         .environmentObject(profileSocialNav)
                 } else {
-                    VStack(spacing: 20) {
-                        Spacer()
-
-                        Text("Create an account to customize your profile!")
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-
-                        Button {
-                            sessionManager.didContinueAsGuest = false
-                            sessionManager.bumpAuthScreen()
-                        } label: {
-                            Text("Create Account / Log In")
-                                .fontWeight(.semibold)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(12)
-                        }
-                        .padding(.horizontal, 40)
-
-                        Spacer()
-                    }
+                    guestLockedState(
+                        title: "Profile",
+                        message: "Create an account to customize your profile!",
+                        backgroundImage: "travel4"
+                    )
                 }
             }
             .navigationDestination(for: SocialRoute.self) { route in
@@ -173,124 +139,194 @@ var body: some View {
             MoreView()
         }
         .tag(Tab.more)
-    }
-    .ignoresSafeArea()
-    .overlay(alignment: .bottom) {
-        GeometryReader { geo in
-            customTabBar
-                .background {
-                    GeometryReader { tabGeo in
-                        Color.clear
-                            .preference(
-                                key: FloatingTabBarInsetPreferenceKey.self,
-                                value: geo.safeAreaInsets.bottom + 12
-                            )
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, geo.safeAreaInsets.bottom + 6)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
         .ignoresSafeArea()
-    }
-    .onPreferenceChange(FloatingTabBarInsetPreferenceKey.self) { inset in
-        floatingTabBarInset = inset
-    }
-    .environment(\.floatingTabBarInset, floatingTabBarInset)
-    .onAppear {
-        print("🧪 DEBUG: RootTabView fully appeared")
-    }
-    .toolbarBackground(.hidden, for: .navigationBar)
-    .toolbarColorScheme(.light, for: .navigationBar)
-    .task {
-        guard !hasLoadedCountries else { return }
-        hasLoadedCountries = true
-
-        if let cached = CountryAPI.loadCachedCountries() {
-            countries = cached
+        .overlay(alignment: .bottom) {
+            GeometryReader { geo in
+                customTabBar
+                    .background {
+                        GeometryReader { tabGeo in
+                            Color.clear
+                                .preference(
+                                    key: FloatingTabBarInsetPreferenceKey.self,
+                                    value: geo.safeAreaInsets.bottom + 12
+                                )
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, geo.safeAreaInsets.bottom + 6)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            }
+            .ignoresSafeArea()
         }
+        .onPreferenceChange(FloatingTabBarInsetPreferenceKey.self) { inset in
+            floatingTabBarInset = inset
+        }
+        .environment(\.floatingTabBarInset, floatingTabBarInset)
+        .onAppear {
+            print("🧪 DEBUG: RootTabView fully appeared")
+        }
+        .onChange(of: sessionManager.isAuthenticated) { _, isAuthenticated in
+            guard !isAuthenticated else { return }
+            resetNavigationState()
+        }
+        .onChange(of: sessionManager.userId) { _, userId in
+            guard userId == nil else { return }
+            resetNavigationState()
+        }
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarColorScheme(.light, for: .navigationBar)
+        .task {
+            guard !hasLoadedCountries else { return }
+            hasLoadedCountries = true
 
-        if let refreshed = await CountryAPI.refreshCountriesIfNeeded() {
-            countries = refreshed
-        } else if countries.isEmpty {
-            do {
-                countries = try await CountryAPI.fetchCountries()
-            } catch {
-                print("❌ Failed to fetch countries:", error)
+            if let cached = CountryAPI.loadCachedCountries() {
+                countries = cached
+            }
+
+            if let refreshed = await CountryAPI.refreshCountriesIfNeeded() {
+                countries = refreshed
+            } else if countries.isEmpty {
+                do {
+                    countries = try await CountryAPI.fetchCountries()
+                } catch {
+                    print("❌ Failed to fetch countries:", error)
+                }
             }
         }
     }
-}
-
-private var customTabBar: some View {
-    HStack(spacing: 10) {
-        tabButton(.discovery, title: "Discover", systemImage: "globe.americas.fill")
-        tabButton(.planning, title: "Plan", systemImage: "list.bullet")
-        tabButton(.friends, title: "Friends", systemImage: "person.2.fill")
-        tabButton(.profile, title: "Profile", systemImage: "person.crop.circle")
-        tabButton(.more, title: "More", systemImage: "ellipsis")
+    
+    private func resetNavigationState() {
+        selectedTab = .discovery
+        discoveryPath = NavigationPath()
+        planningPath = NavigationPath()
+        morePath = NavigationPath()
+        friendsSocialNav.reset()
+        profileSocialNav.reset()
     }
-    .padding(.horizontal, 10)
-    .padding(.vertical, 10)
-    .background {
-        ZStack {
-            Image("country")
-                .resizable()
-                .scaledToFill()
 
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(.black.opacity(0.18))
+    private var customTabBar: some View {
+        HStack(spacing: 10) {
+            tabButton(.discovery, title: "Discover", systemImage: "globe.americas.fill")
+            tabButton(.planning, title: "Plan", systemImage: "list.bullet")
+            tabButton(.friends, title: "Friends", systemImage: "person.2.fill")
+            tabButton(.profile, title: "Profile", systemImage: "person.crop.circle")
+            tabButton(.more, title: "More", systemImage: "ellipsis")
         }
-    }
-    .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-    .overlay(
-        RoundedRectangle(cornerRadius: 30, style: .continuous)
-            .stroke(.white.opacity(0.18), lineWidth: 1)
-    )
-    .shadow(color: .black.opacity(0.18), radius: 14, y: 8)
-}
-
-@ViewBuilder
-private func socialDestination(_ route: SocialRoute, navigator: SocialNavigationController) -> some View {
-    switch route {
-    case .profile(let userId):
-        ProfileView(userId: userId, showsBackButton: true)
-            .environmentObject(navigator)
-    case .friends(let userId):
-        FriendsView(userId: userId, showsBackButton: true)
-            .environmentObject(navigator)
-    case .friendRequests:
-        FriendRequestsView()
-            .environmentObject(navigator)
-    }
-}
-
-@ViewBuilder
-private func tabButton(_ tab: Tab, title: String, systemImage: String) -> some View {
-    let isSelected = selectedTab == tab
-
-    Button {
-        selectedTab = tab
-    } label: {
-        VStack(spacing: 4) {
-            Image(systemName: systemImage)
-                .font(TAFTypography.title(.bold))
-            Text(title)
-                .font(TAFTypography.caption(.bold))
-                .lineLimit(1)
-        }
-        .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.72))
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 10)
         .padding(.vertical, 10)
         .background {
-            if isSelected {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(.white.opacity(0.16))
+            ZStack {
+                Image("country")
+                    .resizable()
+                    .scaledToFill()
+
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .fill(.black.opacity(0.18))
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .stroke(.white.opacity(0.18), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.18), radius: 14, y: 8)
+    }
+
+    private func guestLockedState(title: String, message: String, backgroundImage: String) -> some View {
+        ZStack {
+            Theme.pageBackground(backgroundImage)
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Theme.titleBanner(title)
+
+                Spacer(minLength: 20)
+
+                VStack(spacing: 24) {
+                    Theme.featureCard(
+                        icon: title == "Friends" ? "person.2.fill" : "person.crop.circle",
+                        title: title == "Friends" ? "Friends are waiting" : "Build your profile",
+                        subtitle: message,
+                        minHeight: 138
+                    ) {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.black)
+                    }
+
+                    Button {
+                        sessionManager.didContinueAsGuest = false
+                        sessionManager.bumpAuthScreen()
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "paperplane.fill")
+                                .font(.system(size: 16, weight: .bold))
+                            Text("Create Account / Log In")
+                                .font(.system(size: 18, weight: .bold))
+                        }
+                        .foregroundColor(Color(red: 0.19, green: 0.15, blue: 0.12))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .fill(Color(red: 0.90, green: 0.84, blue: 0.72).opacity(0.96))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.14), radius: 10, y: 6)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 24)
+
+                Spacer()
             }
         }
     }
-    .buttonStyle(.plain)
-}
+
+    @ViewBuilder
+    private func socialDestination(_ route: SocialRoute, navigator: SocialNavigationController) -> some View {
+        switch route {
+        case .profile(let userId):
+            ProfileView(userId: userId, showsBackButton: true)
+                .environmentObject(navigator)
+        case .friends(let userId):
+            FriendsView(userId: userId, showsBackButton: true)
+                .environmentObject(navigator)
+        case .friendRequests:
+            FriendRequestsView()
+                .environmentObject(navigator)
+        }
+    }
+
+    @ViewBuilder
+    private func tabButton(_ tab: Tab, title: String, systemImage: String) -> some View {
+        let isSelected = selectedTab == tab
+
+        Button {
+            selectedTab = tab
+        } label: {
+            VStack(spacing: 4) {
+                Image(systemName: systemImage)
+                    .font(TAFTypography.title(.bold))
+                Text(title)
+                    .font(TAFTypography.caption(.bold))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.72))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(.white.opacity(0.16))
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
 }
 
 struct MoreView: View {

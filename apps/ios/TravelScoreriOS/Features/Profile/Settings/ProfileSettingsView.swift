@@ -61,6 +61,7 @@ struct ProfileSettingsView: View {
     @State private var showSaveSuccess = false
     @State private var isSavingProfile = false
     @State private var usernameError: String? = nil
+    @State private var isLoggingOut = false
 
     private var isFormValid: Bool {
         let trimmedName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -350,7 +351,19 @@ struct ProfileSettingsView: View {
             isUploadingAvatar: isUploadingAvatar,
             shouldRemoveAvatar: shouldRemoveAvatar,
             usernameError: usernameError,
-            onRemoveAvatar: { markAvatarForRemoval() }
+            onRemoveAvatar: { markAvatarForRemoval() },
+            onLogout: {
+                guard !isLoggingOut else { return }
+                isLoggingOut = true
+                dismiss()
+                Task {
+                    await sessionManager.signOut()
+                    await MainActor.run {
+                        isLoggingOut = false
+                    }
+                }
+            },
+            isLoggingOut: isLoggingOut
         )
         .background(
             Theme.pageBackground("travel4")
@@ -438,6 +451,8 @@ struct SettingsScrollContent: View {
     let shouldRemoveAvatar: Bool
     let usernameError: String?
     let onRemoveAvatar: () -> Void
+    let onLogout: () -> Void
+    let isLoggingOut: Bool
 
     var body: some View {
         ScrollView {
@@ -548,9 +563,7 @@ struct SettingsScrollContent: View {
                     VStack(spacing: 16) {
 
                         Button(role: .destructive) {
-                            Task {
-                                await sessionManager.signOut()
-                            }
+                            onLogout()
                         } label: {
                             HStack {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")
@@ -560,6 +573,7 @@ struct SettingsScrollContent: View {
                             }
                             .padding(.vertical, 8)
                         }
+                        .disabled(isLoggingOut)
 
                         Divider()
 

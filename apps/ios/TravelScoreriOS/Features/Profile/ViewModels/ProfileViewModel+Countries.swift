@@ -13,6 +13,17 @@ extension ProfileViewModel {
     // MARK: - Bucket Toggle
 
     func toggleBucket(_ countryId: String) async {
+        if isGuestMode {
+            let wasInBucket = viewedBucketListCountries.contains(countryId)
+            if wasInBucket {
+                viewedBucketListCountries.remove(countryId)
+            } else {
+                viewedBucketListCountries.insert(countryId)
+            }
+            computeOrderedLists()
+            return
+        }
+
         guard let currentUserId = supabase.currentUserId else {
             print("❌ toggleBucket: No current user")
             return
@@ -59,6 +70,17 @@ extension ProfileViewModel {
     // MARK: - Traveled Toggle
 
     func toggleTraveled(_ countryId: String) async {
+        if isGuestMode {
+            let wasVisited = viewedTraveledCountries.contains(countryId)
+            if wasVisited {
+                viewedTraveledCountries.remove(countryId)
+            } else {
+                viewedTraveledCountries.insert(countryId)
+            }
+            computeOrderedLists()
+            return
+        }
+
         let currentUserId = self.userId
 
         let wasVisited = viewedTraveledCountries.contains(countryId)
