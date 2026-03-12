@@ -16,6 +16,7 @@ struct WorldMapView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
+        mapView.overrideUserInterfaceStyle = .unspecified
 
         mapView.mapType = .mutedStandard
         mapView.isRotateEnabled = false

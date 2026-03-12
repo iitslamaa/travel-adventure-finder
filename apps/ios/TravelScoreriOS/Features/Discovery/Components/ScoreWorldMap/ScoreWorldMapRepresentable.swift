@@ -19,7 +19,7 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
     
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
-        mapView.overrideUserInterfaceStyle = .light
+        mapView.overrideUserInterfaceStyle = .unspecified
         mapView.backgroundColor = .clear
         mapView.isOpaque = false
         

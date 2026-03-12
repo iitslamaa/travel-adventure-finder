@@ -27,9 +27,11 @@ struct AppRootView: View {
         ZStack {
             Color.clear
                 .ignoresSafeArea()
-            
+
             // MAIN APP CONTENT
-            if sessionManager.isAuthSuppressed {
+            if !sessionManager.hasResolvedInitialAuthState {
+                ProgressView()
+            } else if sessionManager.isAuthSuppressed {
                 AuthLandingView()
                     .onAppear {
                     }

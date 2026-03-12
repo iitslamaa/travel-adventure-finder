@@ -121,6 +121,7 @@ struct TravelScoreriOSApp: App {
                 .environmentObject(bucketListStore)
                 .environmentObject(traveledStore)
                 .environmentObject(scoreWeightsStore)
+                .preferredColorScheme(.light)
             .task {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     print("🧪 DEBUG: Active windows count: \(UIApplication.shared.windows.count)")

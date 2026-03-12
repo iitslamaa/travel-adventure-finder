@@ -69,6 +69,11 @@ final class ListSyncService {
                     .execute()
             }
         } catch {
+            if add,
+               let pg = error as? PostgrestError,
+               pg.code == "23505" {
+                return
+            }
             print("❌ [ListSync:", instanceId, "] setBucket failed:", error)
         }
     }
@@ -96,6 +101,11 @@ final class ListSyncService {
                     .execute()
             }
         } catch {
+            if add,
+               let pg = error as? PostgrestError,
+               pg.code == "23505" {
+                return
+            }
             print("❌ [ListSync:", instanceId, "] setTraveled failed:", error)
         }
     }

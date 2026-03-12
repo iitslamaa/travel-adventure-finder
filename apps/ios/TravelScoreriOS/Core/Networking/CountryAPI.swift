@@ -157,6 +157,10 @@ extension CountryAPI {
         let now = Date().timeIntervalSince1970
         let last = UserDefaults.standard.double(forKey: CountriesCache.lastRefreshKey)
 
+        if last > 0, (now - last) < minInterval {
+            return nil
+        }
+
         do {
             let data = try await fetchCountriesData()
             CountriesCache.saveData(data)

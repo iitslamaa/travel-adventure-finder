@@ -148,11 +148,20 @@ struct ProfileSettingsView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
                     dismiss()
+                } label: {
+                    ZStack {
+                        Theme.chromeIconButtonBackground(size: 40)
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.black)
+                    }
                 }
+                .buttonStyle(.plain)
             }
 
             ToolbarItem(placement: .confirmationAction) {
@@ -200,13 +209,24 @@ struct ProfileSettingsView: View {
                         }
                     }
                 } label: {
-                    if isSavingProfile {
-                        ProgressView()
-                    } else {
-                        Text("Save")
+                    Group {
+                        if isSavingProfile {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("Save")
+                                .font(.subheadline.weight(.semibold))
+                        }
                     }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(
+                        Capsule()
+                            .fill(hasChanges && isFormValid ? Theme.accent : Color.gray.opacity(0.55))
+                    )
                 }
-                .tint(hasChanges && isFormValid ? .blue : .gray)
+                .buttonStyle(.plain)
                 .disabled(!hasChanges || !isFormValid || isSavingProfile)
                 .opacity(hasChanges && isFormValid ? 1 : 0.5)
             }

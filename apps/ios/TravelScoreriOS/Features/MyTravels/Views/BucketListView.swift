@@ -7,6 +7,7 @@ import SwiftUI
 
 struct BucketListView: View {
     @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var bucketListStore: BucketListStore
     @Environment(\.floatingTabBarInset) private var floatingTabBarInset
     @State private var countries: [Country] = []
     @State private var bucketCountryIds: Set<String> = []
@@ -101,37 +102,42 @@ struct BucketListView: View {
         .task {
             await loadBucketListIfNeeded()
         }
+        .onReceive(bucketListStore.$ids) { ids in
+            bucketCountryIds = ids
+        }
     }
 
     @MainActor
     private func loadBucketListIfNeeded() async {
-        let shouldShowBlockingLoad = !hasLoadedOnce && countries.isEmpty && bucketCountryIds.isEmpty
-
-        if shouldShowBlockingLoad {
-            isLoading = true
-        }
-
-        defer {
-            isLoading = false
-            hasLoadedOnce = true
-        }
-
         if countries.isEmpty,
            let cached = CountryAPI.loadCachedCountries(),
            !cached.isEmpty {
             countries = cached
         }
 
-        if let fresh = await CountryAPI.refreshCountriesIfNeeded(minInterval: 60), !fresh.isEmpty {
-            countries = fresh
+        if bucketCountryIds.isEmpty || !hasLoadedOnce {
+            bucketCountryIds = bucketListStore.ids
         }
+
+        let shouldShowBlockingLoad = !hasLoadedOnce && countries.isEmpty && bucketCountryIds.isEmpty
+        isLoading = shouldShowBlockingLoad
+        hasLoadedOnce = true
+
+        async let freshCountriesTask = CountryAPI.refreshCountriesIfNeeded(minInterval: 60)
 
         if let userId = sessionManager.userId {
             let service = ProfileService(supabase: SupabaseManager.shared)
             if let bucket = try? await service.fetchBucketListCountries(userId: userId) {
                 bucketCountryIds = bucket
+                bucketListStore.replace(with: bucket)
             }
         }
+
+        if let fresh = await freshCountriesTask, !fresh.isEmpty {
+            countries = fresh
+        }
+
+        isLoading = false
     }
 }
 

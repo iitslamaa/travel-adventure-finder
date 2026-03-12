@@ -10,7 +10,7 @@ import SwiftUI
 import Supabase
 
 struct CustomWeightsView: View {
-    
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
     let userId: UUID?
     private let originalWeights: ScoreWeights
@@ -144,6 +144,28 @@ struct CustomWeightsView: View {
                     .frame(width: geo.size.width - 40)
                     .padding(.top, 18)
                     .padding(.bottom, 36)
+                }
+
+                VStack {
+                    HStack {
+                        Spacer()
+
+                        Button {
+                            dismiss()
+                        } label: {
+                            ZStack {
+                                Theme.chromeIconButtonBackground(size: 40)
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.black)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+
+                    Spacer()
                 }
             }
         }

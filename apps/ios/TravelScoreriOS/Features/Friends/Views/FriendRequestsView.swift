@@ -87,24 +87,28 @@ struct FriendRequestsView: View {
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ZStack {
-                Theme.notebookListBackground(corner: 24)
-                    .allowsHitTesting(false)
+            GeometryReader { geo in
+                ZStack {
+                    Theme.notebookListBackground(corner: 24)
+                        .allowsHitTesting(false)
 
-                ScrollView {
-                    LazyVStack(spacing: 18) {
-                        ForEach(vm.incomingRequests) { profile in
-                            requestRow(for: profile)
+                    ScrollView {
+                        LazyVStack(spacing: 18) {
+                            ForEach(vm.incomingRequests) { profile in
+                                requestRow(for: profile)
+                            }
                         }
+                        .padding(.horizontal, 14)
+                        .padding(.top, 14)
+                        .padding(.bottom, 28)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.top, 14)
-                    .padding(.bottom, 28)
                 }
+                .frame(width: min(max(geo.size.width - 36, 0), 720))
+                .frame(maxWidth: .infinity)
+                .padding(.top, 14)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 24)
             }
-            .padding(.top, 14)
-            .padding(.horizontal, 22)
-            .padding(.bottom, 24)
         }
     }
 

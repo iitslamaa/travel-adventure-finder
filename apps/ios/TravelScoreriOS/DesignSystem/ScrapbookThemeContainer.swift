@@ -8,10 +8,6 @@
 import SwiftUI
 
 struct ScrapbookThemeContainer: View {
-
-    @Environment(\.colorScheme) private var colorScheme
-
-
     private var backgroundGradient: LinearGradient {
         LinearGradient(
             colors: [
@@ -25,7 +21,7 @@ struct ScrapbookThemeContainer: View {
     }
 
     var body: some View {
-        let _ = print("🧪 DEBUG: ScrapbookThemeContainer.body recomputed. colorScheme=\(colorScheme)")
+        let _ = print("🧪 DEBUG: ScrapbookThemeContainer.body recomputed.")
         backgroundGradient
             .ignoresSafeArea()
             .onAppear {

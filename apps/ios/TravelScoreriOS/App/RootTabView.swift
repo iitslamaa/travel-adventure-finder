@@ -309,7 +309,7 @@ struct MoreView: View {
                         } label: {
                             MoreCard(
                                 title: "Send Feedback",
-                                subtitle: "Tell us what feels off",
+                                subtitle: "Let us know what you think",
                                 icon: "bubble.left.and.bubble.right"
                             )
                         }
