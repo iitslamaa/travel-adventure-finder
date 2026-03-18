@@ -10,11 +10,23 @@ import SwiftUI
 struct CountryDetailView: View {
     @State var country: Country
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
+    @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var profileVM: ProfileViewModel
+    @EnvironmentObject private var bucketListStore: BucketListStore
+    @EnvironmentObject private var traveledStore: TraveledStore
     @StateObject private var visaStore = VisaRequirementsStore.shared
     @State private var scrollAnchor: String? = nil
 
     private var displayedCountry: Country {
         country.applyingOverallScore(using: weightsStore.weights, selectedMonth: weightsStore.selectedMonth)
+    }
+
+    private var isBucketed: Bool {
+        bucketListStore.ids.contains(country.id)
+    }
+
+    private var isVisited: Bool {
+        traveledStore.ids.contains(country.id)
     }
 
     @MainActor
@@ -115,6 +127,23 @@ struct CountryDetailView: View {
             }
         )
         .preferredColorScheme(.light)
+        .overlay(alignment: .topTrailing) {
+            VStack(spacing: 10) {
+                PlanningListActionButton(kind: .bucket, isActive: isBucketed) {
+                    Task {
+                        await toggleBucket()
+                    }
+                }
+
+                PlanningListActionButton(kind: .visited, isActive: isVisited) {
+                    Task {
+                        await toggleVisited()
+                    }
+                }
+            }
+            .padding(.top, 18)
+            .padding(.trailing, 18)
+        }
         .task(id: country.iso2.uppercased()) {
             await refreshCountryIfAvailable()
             country = await visaStore.hydrate(country: country)
@@ -128,5 +157,35 @@ struct CountryDetailView: View {
                 Theme.countryDetailCardBackground(corner: 20)
             )
             .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+    }
+
+    @MainActor
+    private func toggleBucket() async {
+        if sessionManager.isAuthenticated {
+            if profileVM.viewedBucketListCountries != bucketListStore.ids {
+                profileVM.viewedBucketListCountries = bucketListStore.ids
+                profileVM.computeOrderedLists()
+            }
+
+            await profileVM.toggleBucket(country.id)
+            bucketListStore.replace(with: profileVM.viewedBucketListCountries)
+        } else {
+            bucketListStore.toggle(country.id)
+        }
+    }
+
+    @MainActor
+    private func toggleVisited() async {
+        if sessionManager.isAuthenticated {
+            if profileVM.viewedTraveledCountries != traveledStore.ids {
+                profileVM.viewedTraveledCountries = traveledStore.ids
+                profileVM.computeOrderedLists()
+            }
+
+            await profileVM.toggleTraveled(country.id)
+            traveledStore.replace(with: profileVM.viewedTraveledCountries)
+        } else {
+            traveledStore.toggle(country.id)
+        }
     }
 }

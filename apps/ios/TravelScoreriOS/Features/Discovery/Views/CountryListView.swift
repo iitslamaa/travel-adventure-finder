@@ -12,6 +12,16 @@ enum SortOrder {
     case descending
 }
 
+enum CountryListMode {
+    case discovery
+    case picker(
+        kind: PlanningListKind,
+        selectedIds: Set<String>,
+        otherSelectedIds: Set<String>,
+        onSelect: (Country) -> Void
+    )
+}
+
 struct CountryListView: View {
 
     let showsSearchBar: Bool
@@ -19,9 +29,13 @@ struct CountryListView: View {
     let countries: [Country]
     @Binding var sort: CountrySort
     @Binding var sortOrder: SortOrder
+    var mode: CountryListMode = .discovery
 
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
     @EnvironmentObject private var profileVM: ProfileViewModel
+    @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var bucketListStore: BucketListStore
+    @EnvironmentObject private var traveledStore: TraveledStore
     @Environment(\.floatingTabBarInset) private var floatingTabBarInset
 
     @State private var visibleCountries: [Country] = []
@@ -136,30 +150,10 @@ struct CountryListView: View {
     private var countryScroll: some View {
         List {
             ForEach(visibleCountries, id: \.id) { country in
-                SwipeableCountryRow(
-                    country: country,
-                    isBucketed: profileVM.viewedBucketListCountries.contains(country.id),
-                    isVisited: profileVM.viewedTraveledCountries.contains(country.id),
-                    showConfirm: quickConfirmByCountryId[country.id] != nil,
-                    onTap: {
-                        selectedCountry = country
-                    },
-                    onBucket: {
-                        Task {
-                            await profileVM.toggleBucket(country.id)
-                            flashConfirm(.bucket, for: country.id)
-                        }
-                    },
-                    onVisited: {
-                        Task {
-                            await profileVM.toggleTraveled(country.id)
-                            flashConfirm(.visited, for: country.id)
-                        }
-                    }
-                )
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
-                .listRowBackground(Color.clear)
+                row(for: country)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+                    .listRowBackground(Color.clear)
             }
         }
         .frame(maxHeight: .infinity)
@@ -172,6 +166,75 @@ struct CountryListView: View {
         Image("country-list")
             .resizable()
             .aspectRatio(contentMode: .fill)
+    }
+
+    @ViewBuilder
+    private func row(for country: Country) -> some View {
+        switch mode {
+        case .discovery:
+            SwipeableCountryRow(
+                country: country,
+                isBucketed: bucketListStore.ids.contains(country.id),
+                isVisited: traveledStore.ids.contains(country.id),
+                showConfirm: quickConfirmByCountryId[country.id] != nil,
+                onTap: {
+                    selectedCountry = country
+                },
+                onBucket: {
+                    Task {
+                        await toggleBucket(country.id)
+                        flashConfirm(.bucket, for: country.id)
+                    }
+                },
+                onVisited: {
+                    Task {
+                        await toggleVisited(country.id)
+                        flashConfirm(.visited, for: country.id)
+                    }
+                }
+            )
+        case let .picker(kind, selectedIds, otherSelectedIds, onSelect):
+            PlanningSelectableCountryRow(
+                country: country,
+                kind: kind,
+                isInTargetList: selectedIds.contains(country.id),
+                isInOtherList: otherSelectedIds.contains(country.id),
+                onTap: {
+                    guard !selectedIds.contains(country.id) else { return }
+                    onSelect(country)
+                }
+            )
+        }
+    }
+
+    @MainActor
+    private func toggleBucket(_ countryId: String) async {
+        if sessionManager.isAuthenticated {
+            if profileVM.viewedBucketListCountries != bucketListStore.ids {
+                profileVM.viewedBucketListCountries = bucketListStore.ids
+                profileVM.computeOrderedLists()
+            }
+
+            await profileVM.toggleBucket(countryId)
+            bucketListStore.replace(with: profileVM.viewedBucketListCountries)
+        } else {
+            bucketListStore.toggle(countryId)
+        }
+    }
+
+    @MainActor
+    private func toggleVisited(_ countryId: String) async {
+        if sessionManager.isAuthenticated {
+            if profileVM.viewedTraveledCountries != traveledStore.ids {
+                profileVM.viewedTraveledCountries = traveledStore.ids
+                profileVM.computeOrderedLists()
+            }
+
+            await profileVM.toggleTraveled(countryId)
+            traveledStore.replace(with: profileVM.viewedTraveledCountries)
+        } else {
+            traveledStore.toggle(countryId)
+        }
     }
 }
 
@@ -278,10 +341,85 @@ private struct SwipeableCountryRow: View {
             .tint(.green)
 
             Button(action: onBucket) {
-                Label("Bucket", systemImage: isBucketed ? "star.fill" : "star")
+                VStack(spacing: 4) {
+                    Text("🪣")
+                        .font(.system(size: 20))
+                    Text("Bucket")
+                        .font(.system(size: 11, weight: .semibold))
+                }
             }
             .tint(.yellow)
         }
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 58)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+}
+
+private struct PlanningSelectableCountryRow: View {
+    let country: Country
+    let kind: PlanningListKind
+    let isInTargetList: Bool
+    let isInOtherList: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                Text(country.flagEmoji)
+                    .font(.system(size: 22))
+                    .frame(width: 28, alignment: .leading)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(country.name)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.black)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+
+                    if isInOtherList {
+                        Text(kind.otherListLabel)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.black.opacity(0.72))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(Color.black.opacity(0.08))
+                            )
+                    }
+                }
+
+                Spacer(minLength: 12)
+
+                if isInTargetList {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(.green)
+                } else if let score = country.score {
+                    ScorePill(score: score)
+                } else {
+                    Image(systemName: kind.icon)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.6))
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color.white.opacity(isInTargetList ? 0.52 : 0.80))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(Color.black.opacity(isInTargetList ? 0.05 : 0.03), lineWidth: 1)
+            )
+            .opacity(isInTargetList ? 0.72 : 1.0)
+            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(isInTargetList)
         .frame(maxWidth: .infinity)
         .frame(minHeight: 58)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
