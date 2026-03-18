@@ -238,7 +238,7 @@ struct ProfileSettingsView: View {
             case .home:
                 CountryMultiSelectView(
                     title: "Home Countries",
-                    subtitle: "Add any flag that represents you!",
+                    subtitle: "Add any flag that represents you! (countries you've lived in, background, ethnicity, etc.)",
                     selection: $homeCountries
                 )
 
