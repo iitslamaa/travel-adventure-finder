@@ -157,6 +157,15 @@ struct FriendsView: View {
                     await friendsVM.loadIncomingRequestCount()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .friendshipUpdated)) { _ in
+                Task {
+                    await friendsVM.loadFriends(for: userId, forceRefresh: true)
+
+                    if isOwnFriendsPage {
+                        await friendsVM.loadIncomingRequestCount()
+                    }
+                }
+            }
     }
 
     private func contentView(contentWidth: CGFloat) -> some View {
