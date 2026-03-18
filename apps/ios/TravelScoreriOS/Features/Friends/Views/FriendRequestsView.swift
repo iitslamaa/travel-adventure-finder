@@ -42,8 +42,6 @@ struct FriendRequestsView: View {
 
                 VStack(spacing: 0) {
                     Theme.titleBanner("Friend Requests")
-                        .frame(width: min(contentWidth, 560))
-                        .frame(maxWidth: .infinity)
 
                     contentView(contentWidth: contentWidth)
                         .padding(.top, 14)

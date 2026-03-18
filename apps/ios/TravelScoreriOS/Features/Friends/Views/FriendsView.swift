@@ -62,8 +62,6 @@ struct FriendsView: View {
             ZStack {
                 VStack(spacing: 0) {
                     Theme.titleBanner("Friends")
-                        .frame(width: min(contentWidth, 560))
-                        .frame(maxWidth: .infinity)
 
                     contentView(contentWidth: contentWidth)
                         .padding(.top, 12)
