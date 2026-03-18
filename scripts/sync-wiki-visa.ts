@@ -110,6 +110,7 @@ const MANUAL_ALIASES_BY_NORM = {
   "south korea": ["republic of korea", "korea south"],
   laos: ["lao", "lao peoples democratic republic"],
   palestine: ["palestinian territories", "palestinian territory"],
+  turkiye: ["turkey"],
   "turks and caicos islands": ["turks and caicos"],
   "cote divoire": ["cote d ivoire", "ivory coast"],
   "united states virgin islands": [

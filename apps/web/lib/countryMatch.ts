@@ -38,6 +38,7 @@ const OVERRIDES: Record<string, string> = {
   belize: 'BZ',
   turksandcaicos: 'TC',
   turksandcaicosislands: 'TC',
+  turkey: 'TR',
 
   // Eastern Europe & Balkans
   bosniaandherzegovina: 'BA',
