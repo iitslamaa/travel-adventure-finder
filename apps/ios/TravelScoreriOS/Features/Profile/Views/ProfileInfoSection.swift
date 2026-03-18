@@ -37,7 +37,7 @@ struct ProfileInfoSection: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
-        .padding(.bottom, 48)
+        .padding(.bottom, 20)
     }
 
     // MARK: - Languages
@@ -263,6 +263,22 @@ struct ProfileInfoSection: View {
 
     private func countryName(for countryCode: String) -> String {
         let upper = countryCode.uppercased()
+        switch upper {
+        case "US":
+            return "USA"
+        case "GB":
+            return "UK"
+        case "PS":
+            return "Palestine"
+        case "AE":
+            return "UAE"
+        case "CD":
+            return "DRC"
+        case "CF":
+            return "CAR"
+        default:
+            break
+        }
         let locale = Locale(identifier: "en_US")
         return locale.localizedString(forRegionCode: upper) ?? upper
     }

@@ -8,6 +8,7 @@ struct ProfileHeaderView: View {
     let homeCountryCodes: [String]
     let relationshipState: RelationshipState?
     let onToggleFriend: () -> Void
+    let onOpenCountry: (String) -> Void
     @State private var showFavoriteTripsSheet = false
     @State private var showHomeFlagsSheet = false
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -63,6 +64,8 @@ struct ProfileHeaderView: View {
                         .font(.title2)
                         .fontWeight(.semibold)
                         .foregroundColor(.black)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.72)
                         .multilineTextAlignment(.center)
 
                     if effectiveState != .selfProfile, !username.isEmpty {
@@ -78,8 +81,13 @@ struct ProfileHeaderView: View {
                     if !homeCountryCodes.isEmpty {
                         HStack(spacing: 6) {
                             ForEach(visibleHomeCountryCodes, id: \.self) { code in
-                                Text(flagEmoji(for: code))
-                                    .font(.title3)
+                                Button {
+                                    onOpenCountry(code)
+                                } label: {
+                                    Text(flagEmoji(for: code))
+                                        .font(.title3)
+                                }
+                                .buttonStyle(.plain)
                             }
 
                             if showsHomeFlagsOverflow {
@@ -107,7 +115,7 @@ struct ProfileHeaderView: View {
             .frame(maxHeight: .infinity, alignment: .center)
 
             // RIGHT COLUMN — Improved countries block (always show fields with fallback)
-            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 20) {
 
                 // Current Country
                 VStack(alignment: .leading, spacing: 2) {
@@ -117,13 +125,7 @@ struct ProfileHeaderView: View {
 
                     if let country = profile?.currentCountry,
                        !country.isEmpty {
-                        Text(formattedCountry(country))
-                            .font(.title3.weight(.semibold))
-                            .foregroundColor(.black)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.6)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
+                        countryLink(code: country)
                     } else {
                         Text("Not set")
                             .font(.subheadline)
@@ -139,13 +141,7 @@ struct ProfileHeaderView: View {
 
                     if let destination = profile?.nextDestination,
                        !destination.isEmpty {
-                        Text(formattedCountry(destination))
-                            .font(.title3.weight(.semibold))
-                            .foregroundColor(.black)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.6)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
+                        countryLink(code: destination)
                     } else {
                         Text("Not set")
                             .font(.subheadline)
@@ -175,8 +171,13 @@ struct ProfileHeaderView: View {
                     if !favoriteCountries.isEmpty {
                         HStack(spacing: 6) {
                             ForEach(visibleFavoriteCountries, id: \.self) { code in
-                                Text(flagEmoji(for: code.uppercased()))
-                                    .font(.title3)
+                                Button {
+                                    onOpenCountry(code)
+                                } label: {
+                                    Text(flagEmoji(for: code.uppercased()))
+                                        .font(.title3)
+                                }
+                                .buttonStyle(.plain)
                             }
 
                             if showsFavoriteTripsOverflow {
@@ -211,10 +212,10 @@ struct ProfileHeaderView: View {
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
         .sheet(isPresented: $showFavoriteTripsSheet) {
-            CountryCodesSheet(title: "Favorite Trips", countryCodes: favoriteCountries)
+            CountryCodesSheet(title: "Favorite Trips", countryCodes: favoriteCountries, onOpenCountry: onOpenCountry)
         }
         .sheet(isPresented: $showHomeFlagsSheet) {
-            CountryCodesSheet(title: "Home Flags", countryCodes: homeCountryCodes)
+            CountryCodesSheet(title: "Home Flags", countryCodes: homeCountryCodes, onOpenCountry: onOpenCountry)
         }
     }
 
@@ -352,11 +353,49 @@ struct ProfileHeaderView: View {
             .joined()
     }
 
-    private func formattedCountry(_ code: String) -> String {
+    private func countryName(for code: String) -> String {
         let upper = code.uppercased()
+        switch upper {
+        case "US":
+            return "USA"
+        case "GB":
+            return "UK"
+        case "PS":
+            return "Palestine"
+        case "AE":
+            return "UAE"
+        case "CD":
+            return "DRC"
+        case "CF":
+            return "CAR"
+        default:
+            break
+        }
         let locale = Locale(identifier: "en_US")
-        let name = locale.localizedString(forRegionCode: upper) ?? upper
-        return "\(name) \(flagEmoji(for: upper))"
+        return locale.localizedString(forRegionCode: upper) ?? upper
+    }
+
+    private func countryLink(code: String) -> some View {
+        Button {
+            onOpenCountry(code)
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(countryName(for: code))
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.black)
+                    .lineLimit(1)
+                    .minimumScaleFactor(1)
+                    .multilineTextAlignment(.leading)
+                    .layoutPriority(1)
+
+                Text(flagEmoji(for: code))
+                    .font(.system(size: 18))
+                    .fixedSize()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -364,6 +403,7 @@ private struct CountryCodesSheet: View {
     @Environment(\.dismiss) private var dismiss
     let title: String
     let countryCodes: [String]
+    let onOpenCountry: (String) -> Void
 
     var body: some View {
         NavigationStack {
@@ -377,27 +417,39 @@ private struct CountryCodesSheet: View {
                     ScrollView {
                         LazyVStack(spacing: 14) {
                             ForEach(countryCodes, id: \.self) { code in
-                                HStack(spacing: 14) {
-                                    Text(flagEmoji(for: code))
-                                        .font(.title2)
+                                Button {
+                                    dismiss()
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                        onOpenCountry(code)
+                                    }
+                                } label: {
+                                    HStack(spacing: 14) {
+                                        Text(flagEmoji(for: code))
+                                            .font(.title2)
 
-                                    Text(countryName(for: code))
-                                        .font(.headline)
-                                        .foregroundStyle(.black)
+                                        Text(countryName(for: code))
+                                            .font(.headline)
+                                            .foregroundStyle(.black)
 
-                                    Spacer()
+                                        Spacer()
+
+                                        Image(systemName: "chevron.right")
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundStyle(.black.opacity(0.45))
+                                    }
+                                    .padding(16)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                            .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                    .stroke(.white.opacity(0.35), lineWidth: 1)
+                                            )
+                                    )
+                                    .shadow(color: .black.opacity(0.08), radius: 5, y: 3)
                                 }
-                                .padding(16)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                                .stroke(.white.opacity(0.35), lineWidth: 1)
-                                        )
-                                )
-                                .shadow(color: .black.opacity(0.08), radius: 5, y: 3)
+                                .buttonStyle(.plain)
                             }
                         }
                         .padding(.horizontal, 12)
@@ -451,6 +503,22 @@ private struct CountryCodesSheet: View {
     }
 
     private func countryName(for countryCode: String) -> String {
-        Locale(identifier: "en_US").localizedString(forRegionCode: countryCode.uppercased()) ?? countryCode.uppercased()
+        let upper = countryCode.uppercased()
+        switch upper {
+        case "US":
+            return "USA"
+        case "GB":
+            return "UK"
+        case "PS":
+            return "Palestine"
+        case "AE":
+            return "UAE"
+        case "CD":
+            return "DRC"
+        case "CF":
+            return "CAR"
+        default:
+            return Locale(identifier: "en_US").localizedString(forRegionCode: upper) ?? upper
+        }
     }
 }

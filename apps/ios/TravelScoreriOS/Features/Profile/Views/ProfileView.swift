@@ -34,6 +34,7 @@ extension Notification.Name {
 
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.floatingTabBarInset) private var floatingTabBarInset
     @EnvironmentObject private var socialNav: SocialNavigationController
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var bucketList: BucketListStore
@@ -43,6 +44,7 @@ struct ProfileView: View {
     private let showsBackButton: Bool
     @State private var showFriendsDrawer = false
     @State private var scrollAnchor: String? = nil
+    @State private var selectedCountry: Country? = nil
 
     init(userId: UUID, showsBackButton: Bool = false) {
         self.userId = userId
@@ -109,12 +111,30 @@ struct ProfileView: View {
         "Profile"
     }
 
+    private func resolveCountry(for isoCode: String) -> Country {
+        let normalizedISO = isoCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+
+        if let cached = CountryAPI.loadCachedCountries()?.first(where: { $0.iso2.uppercased() == normalizedISO }) {
+            return cached
+        }
+
+        let locale = Locale(identifier: "en_US")
+        let countryName = locale.localizedString(forRegionCode: normalizedISO) ?? normalizedISO
+
+        return Country(
+            iso2: normalizedISO,
+            name: countryName,
+            score: nil
+        )
+    }
+
 
     var body: some View {
         GeometryReader { geometry in
             let isCompactWidth = geometry.size.width < 390
             let cardWrapperPadding: CGFloat = isCompactWidth ? 10 : 16
             let contentHorizontalPadding: CGFloat = isCompactWidth ? 14 : 20
+            let bottomContentInset = max(floatingTabBarInset + 8, 28)
 
             ZStack {
                 Color.clear
@@ -155,6 +175,9 @@ struct ProfileView: View {
                                                 case .selfProfile:
                                                     break
                                                 }
+                                            },
+                                            onOpenCountry: { isoCode in
+                                                selectedCountry = resolveCountry(for: isoCode)
                                             }
                                         )
                                         .padding(cardWrapperPadding)
@@ -202,12 +225,14 @@ struct ProfileView: View {
                                 .id("profileTop")
                                 .padding(.horizontal, contentHorizontalPadding)
                                 .padding(.top, 6)
-                                .padding(.bottom, 100)
+                                .padding(.bottom, bottomContentInset)
                             }
                             .refreshable {
                                 await profileVM.reloadProfile()
                             }
-                            .safeAreaPadding(.bottom, 110)
+                            .navigationDestination(item: $selectedCountry) { country in
+                                CountryDetailView(country: country)
+                            }
                             .background(Color.clear)
                             .sheet(isPresented: $showFriendsDrawer) {
                                 FriendsSection(
