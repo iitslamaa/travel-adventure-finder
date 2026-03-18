@@ -18,6 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
+import { normalizeForSearch } from '../../utils/search';
 
 export default function DiscoveryScreen() {
   const { countries, loading } = useCountries();
@@ -34,13 +35,18 @@ export default function DiscoveryScreen() {
 
   const filteredCountries = useMemo(() => {
     let data = [...countries];
+    const normalizedSearch = normalizeForSearch(search);
 
     // Search filter
-    if (search) {
-      data = data.filter(c =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.iso2.toLowerCase().includes(search.toLowerCase())
-      );
+    if (normalizedSearch) {
+      data = data.filter(c => {
+        const normalizedName = normalizeForSearch(c.name);
+        const normalizedIso2 = normalizeForSearch(c.iso2);
+        return (
+          normalizedName.includes(normalizedSearch) ||
+          normalizedIso2.includes(normalizedSearch)
+        );
+      });
     }
 
     // Sorting

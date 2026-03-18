@@ -362,4 +362,25 @@ extension String {
 
         return String(scalars)
     }
+
+    var normalizedSearchKey: String {
+        let specialCharacterMap: [Character: String] = [
+            "æ": "ae",
+            "œ": "oe",
+            "ß": "ss",
+            "ø": "o",
+            "đ": "d",
+            "ł": "l",
+            "ı": "i"
+        ]
+
+        let lowered = self.lowercased()
+        let remapped = lowered.map { specialCharacterMap[$0] ?? String($0) }.joined()
+        let strippedDiacritics = remapped.folding(options: .diacriticInsensitive, locale: .current)
+        return strippedDiacritics.replacingOccurrences(
+            of: "[^a-z0-9]",
+            with: "",
+            options: .regularExpression
+        )
+    }
 }

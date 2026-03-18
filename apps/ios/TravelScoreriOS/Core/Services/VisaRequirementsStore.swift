@@ -95,6 +95,7 @@ private enum VisaRowMatcher {
         case "RE": return ["reunion", "réunion"]
         case "SX": return ["sint maarten", "saint maarten"]
         case "TC": return ["turks and caicos", "turks and caicos islands"]
+        case "TR": return ["turkey", "turkiye", "türkiye", "republic of turkey", "republic of türkiye"]
         case "TW": return ["taiwan", "republic of china taiwan", "taiwan province of china"]
         case "VA": return ["vatican", "vatican city", "holy see"]
         case "VI": return ["u s virgin islands", "us virgin islands", "virgin islands u s", "virgin islands us"]

@@ -61,8 +61,9 @@ struct CountryListView: View {
         if snapshotSearch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             filtered = recalculatedCountries
         } else {
+            let normalizedSearch = snapshotSearch.normalizedSearchKey
             filtered = recalculatedCountries.filter {
-                $0.name.localizedCaseInsensitiveContains(snapshotSearch)
+                $0.name.normalizedSearchKey.contains(normalizedSearch)
             }
         }
 

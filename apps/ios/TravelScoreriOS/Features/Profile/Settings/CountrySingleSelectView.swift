@@ -47,8 +47,9 @@ struct CountrySingleSelectView: View {
 
     private var filteredCountries: [(code: String, name: String)] {
         guard !searchText.isEmpty else { return countries }
+        let normalizedSearch = searchText.normalizedSearchKey
         return countries.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText)
+            $0.name.normalizedSearchKey.contains(normalizedSearch)
         }
     }
 
