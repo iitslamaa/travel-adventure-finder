@@ -9,6 +9,8 @@ struct ProfileHeaderView: View {
     let relationshipState: RelationshipState?
     let onToggleFriend: () -> Void
     @State private var showFavoriteTripsSheet = false
+    @State private var showHomeFlagsSheet = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var effectiveState: RelationshipState {
         relationshipState ?? .none
@@ -16,6 +18,26 @@ struct ProfileHeaderView: View {
 
     private var favoriteCountries: [String] {
         profile?.favoriteCountries ?? []
+    }
+
+    private var isCompactLayout: Bool {
+        horizontalSizeClass == .compact
+    }
+
+    private var headerSpacing: CGFloat {
+        isCompactLayout ? 18 : 28
+    }
+
+    private var identityColumnWidth: CGFloat {
+        isCompactLayout ? 128 : 140
+    }
+
+    private var visibleHomeCountryCodes: [String] {
+        Array(homeCountryCodes.prefix(3))
+    }
+
+    private var showsHomeFlagsOverflow: Bool {
+        homeCountryCodes.count > visibleHomeCountryCodes.count
     }
 
     private var visibleFavoriteCountries: [String] {
@@ -27,7 +49,7 @@ struct ProfileHeaderView: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 28) {
+        HStack(alignment: .center, spacing: headerSpacing) {
 
             // LEFT COLUMN — Identity
             VStack(alignment: .center, spacing: 12) {
@@ -55,16 +77,33 @@ struct ProfileHeaderView: View {
 
                     if !homeCountryCodes.isEmpty {
                         HStack(spacing: 6) {
-                            ForEach(homeCountryCodes, id: \.self) { code in
+                            ForEach(visibleHomeCountryCodes, id: \.self) { code in
                                 Text(flagEmoji(for: code))
                                     .font(.title3)
+                            }
+
+                            if showsHomeFlagsOverflow {
+                                Button {
+                                    showHomeFlagsSheet = true
+                                } label: {
+                                    Image(systemName: "chevron.right.circle.fill")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.black.opacity(0.65))
+                                }
+                                .buttonStyle(.plain)
+
+                                if homeCountryCodes.count - visibleHomeCountryCodes.count > 0 {
+                                    Text("+\(homeCountryCodes.count - visibleHomeCountryCodes.count)")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundColor(.black)
+                                }
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
             }
-            .frame(width: 140)
+            .frame(width: identityColumnWidth)
             .frame(maxHeight: .infinity, alignment: .center)
 
             // RIGHT COLUMN — Improved countries block (always show fields with fallback)
@@ -172,7 +211,10 @@ struct ProfileHeaderView: View {
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
         .sheet(isPresented: $showFavoriteTripsSheet) {
-            FavoriteTripsSheet(countryCodes: favoriteCountries)
+            CountryCodesSheet(title: "Favorite Trips", countryCodes: favoriteCountries)
+        }
+        .sheet(isPresented: $showHomeFlagsSheet) {
+            CountryCodesSheet(title: "Home Flags", countryCodes: homeCountryCodes)
         }
     }
 
@@ -318,8 +360,9 @@ struct ProfileHeaderView: View {
     }
 }
 
-private struct FavoriteTripsSheet: View {
+private struct CountryCodesSheet: View {
     @Environment(\.dismiss) private var dismiss
+    let title: String
     let countryCodes: [String]
 
     var body: some View {
@@ -329,7 +372,7 @@ private struct FavoriteTripsSheet: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    Theme.titleBanner("Favorite Trips")
+                    Theme.titleBanner(title)
 
                     ScrollView {
                         LazyVStack(spacing: 14) {
