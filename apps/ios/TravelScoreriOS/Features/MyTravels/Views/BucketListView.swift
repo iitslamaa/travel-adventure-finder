@@ -8,11 +8,14 @@ import SwiftUI
 struct BucketListView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var bucketListStore: BucketListStore
+    @EnvironmentObject private var profileVM: ProfileViewModel
+    @EnvironmentObject private var traveledStore: TraveledStore
     @Environment(\.floatingTabBarInset) private var floatingTabBarInset
     @State private var countries: [Country] = []
     @State private var bucketCountryIds: Set<String> = []
     @State private var isLoading: Bool = true
     @State private var hasLoadedOnce: Bool = false
+    @State private var showingAddCountries = false
 
     private var bucketedCountries: [Country] {
         countries
@@ -35,9 +38,9 @@ struct BucketListView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if bucketedCountries.isEmpty {
                 ContentUnavailableView(
-                    "No Bucket List Yet",
-                    systemImage: "bookmark",
-                    description: Text("Swipe left on a country and tap 🪣 Bucket to save it here.")
+                    PlanningListKind.bucket.emptyTitle,
+                    systemImage: PlanningListKind.bucket.emptySystemImage,
+                    description: Text(PlanningListKind.bucket.emptyDescription)
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -99,6 +102,33 @@ struct BucketListView: View {
             }
         }
         .navigationTitle("🪣 Bucket List")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingAddCountries = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.black)
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddCountries) {
+            NavigationStack {
+                PlanningCountryPickerView(
+                    kind: .bucket,
+                    countries: countries,
+                    selectedIds: bucketCountryIds,
+                    otherSelectedIds: traveledStore.ids,
+                    onSelect: { country in
+                        Task {
+                            await addBucketCountry(country.id)
+                        }
+                    }
+                )
+            }
+            .presentationDragIndicator(.visible)
+        }
         .task {
             await loadBucketListIfNeeded()
         }
@@ -125,6 +155,10 @@ struct BucketListView: View {
 
         async let freshCountriesTask = CountryAPI.refreshCountriesIfNeeded(minInterval: 60)
 
+        if sessionManager.isAuthenticated {
+            await profileVM.loadIfNeeded()
+        }
+
         if let userId = sessionManager.userId {
             let service = ProfileService(supabase: SupabaseManager.shared)
             if let bucket = try? await service.fetchBucketListCountries(userId: userId) {
@@ -138,6 +172,27 @@ struct BucketListView: View {
         }
 
         isLoading = false
+    }
+
+    @MainActor
+    private func addBucketCountry(_ countryId: String) async {
+        guard !bucketCountryIds.contains(countryId) else { return }
+
+        if sessionManager.isAuthenticated {
+            if profileVM.viewedBucketListCountries != bucketCountryIds {
+                profileVM.viewedBucketListCountries = bucketCountryIds
+                profileVM.computeOrderedLists()
+            }
+
+            await profileVM.toggleBucket(countryId)
+            let updated = profileVM.viewedBucketListCountries
+            bucketCountryIds = updated
+            bucketListStore.replace(with: updated)
+        } else {
+            let updated = bucketCountryIds.union([countryId])
+            bucketCountryIds = updated
+            bucketListStore.replace(with: updated)
+        }
     }
 }
 

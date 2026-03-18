@@ -8,11 +8,14 @@ import SwiftUI
 struct MyTravelsView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var traveledStore: TraveledStore
+    @EnvironmentObject private var profileVM: ProfileViewModel
+    @EnvironmentObject private var bucketListStore: BucketListStore
     @Environment(\.floatingTabBarInset) private var floatingTabBarInset
     @State private var countries: [Country] = []
     @State private var traveledCountryIds: Set<String> = []
     @State private var isLoading: Bool = true
     @State private var hasLoadedOnce: Bool = false
+    @State private var showingAddCountries = false
 
     private var visitedCountries: [Country] {
         countries
@@ -35,9 +38,9 @@ struct MyTravelsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if visitedCountries.isEmpty {
                 ContentUnavailableView(
-                    "No trips yet",
-                    systemImage: "backpack",
-                    description: Text("Swipe left on a country and tap 📝 Visited to track places you’ve already been.")
+                    PlanningListKind.visited.emptyTitle,
+                    systemImage: PlanningListKind.visited.emptySystemImage,
+                    description: Text(PlanningListKind.visited.emptyDescription)
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -99,6 +102,33 @@ struct MyTravelsView: View {
             }
         }
         .navigationTitle("🎒 My Travels")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingAddCountries = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.black)
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddCountries) {
+            NavigationStack {
+                PlanningCountryPickerView(
+                    kind: .visited,
+                    countries: countries,
+                    selectedIds: traveledCountryIds,
+                    otherSelectedIds: bucketListStore.ids,
+                    onSelect: { country in
+                        Task {
+                            await addVisitedCountry(country.id)
+                        }
+                    }
+                )
+            }
+            .presentationDragIndicator(.visible)
+        }
         .task {
             await loadVisitedListIfNeeded()
         }
@@ -125,6 +155,10 @@ struct MyTravelsView: View {
 
         async let freshCountriesTask = CountryAPI.refreshCountriesIfNeeded(minInterval: 60)
 
+        if sessionManager.isAuthenticated {
+            await profileVM.loadIfNeeded()
+        }
+
         if let userId = sessionManager.userId {
             let service = ProfileService(supabase: SupabaseManager.shared)
             if let traveled = try? await service.fetchTraveledCountries(userId: userId) {
@@ -138,6 +172,27 @@ struct MyTravelsView: View {
         }
 
         isLoading = false
+    }
+
+    @MainActor
+    private func addVisitedCountry(_ countryId: String) async {
+        guard !traveledCountryIds.contains(countryId) else { return }
+
+        if sessionManager.isAuthenticated {
+            if profileVM.viewedTraveledCountries != traveledCountryIds {
+                profileVM.viewedTraveledCountries = traveledCountryIds
+                profileVM.computeOrderedLists()
+            }
+
+            await profileVM.toggleTraveled(countryId)
+            let updated = profileVM.viewedTraveledCountries
+            traveledCountryIds = updated
+            traveledStore.replace(with: updated)
+        } else {
+            let updated = traveledCountryIds.union([countryId])
+            traveledCountryIds = updated
+            traveledStore.replace(with: updated)
+        }
     }
 }
 
