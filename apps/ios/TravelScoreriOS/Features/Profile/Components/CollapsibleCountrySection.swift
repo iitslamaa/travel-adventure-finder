@@ -32,6 +32,22 @@ struct CollapsibleCountrySection: View {
     }
 
     var body: some View {
+        let normalizedMutuals = Set(
+            mutualCountries?.map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            } ?? []
+        )
+        let orderedFlags = countryCodes.filter { code in
+            normalizedMutuals.contains(
+                code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            )
+        }
+        +
+        countryCodes.filter { code in
+            !normalizedMutuals.contains(
+                code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            )
+        }
 
         VStack(alignment: .leading, spacing: 12) {
 
@@ -62,42 +78,35 @@ struct CollapsibleCountrySection: View {
                     let normalizedISOs = countryCodes
                         .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
 
-                    ScrollView(.horizontal, showsIndicators: false) {
-
-                        // Ensure mutual countries appear first (stable order)
-                        let normalizedMutuals = Set(
-                            mutualCountries?.map {
-                                $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                            } ?? []
-                        )
-
-                        let orderedFlags =
-                            countryCodes.filter { code in
-                                normalizedMutuals.contains(
-                                    code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                                )
+                    ScrollViewReader { proxy in
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            FlagStrip(
+                                flags: orderedFlags,
+                                fontSize: 30,
+                                spacing: 10,
+                                showsTooltip: false,
+                                selectedISO: selectedCountryISO,
+                                onFlagTap: {
+                                    let normalized = $0
+                                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                                        .uppercased()
+                                    selectedCountryISO = normalized
+                                },
+                                mutualCountries: mutualCountries
+                            )
+                        }
+                        .onAppear {
+                            scrollToSelectedCountry(with: proxy, animated: false)
+                        }
+                        .onChange(of: isExpanded) { _, expanded in
+                            guard expanded else { return }
+                            DispatchQueue.main.async {
+                                scrollToSelectedCountry(with: proxy, animated: false)
                             }
-                            +
-                            countryCodes.filter { code in
-                                !normalizedMutuals.contains(
-                                    code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-                                )
-                            }
-
-                        FlagStrip(
-                            flags: orderedFlags,
-                            fontSize: 30,
-                            spacing: 10,
-                            showsTooltip: false,
-                            selectedISO: selectedCountryISO,
-                            onFlagTap: {
-                                let normalized = $0
-                                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                                    .uppercased()
-                                selectedCountryISO = normalized
-                            },
-                            mutualCountries: mutualCountries
-                        )
+                        }
+                        .onChange(of: selectedCountryISO) {
+                            scrollToSelectedCountry(with: proxy, animated: true)
+                        }
                     }
 
                     ZStack(alignment: .bottom) {
@@ -154,10 +163,35 @@ struct CollapsibleCountrySection: View {
         }
         .onDisappear {
         }
-        .onChange(of: countryCodes) { _ in
+        .onChange(of: countryCodes) {
             isExpanded = false
             hasLoadedMap = false
-            selectedCountryISO = nil
+            let normalizedCodes = orderedFlags.map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            }
+            if let selectedCountryISO,
+               !normalizedCodes.contains(selectedCountryISO) {
+                self.selectedCountryISO = nil
+            }
+        }
+    }
+
+    private func scrollToSelectedCountry(
+        with proxy: ScrollViewProxy,
+        animated: Bool
+    ) {
+        guard let selectedCountryISO else { return }
+
+        let scrollAction = {
+            proxy.scrollTo(selectedCountryISO, anchor: .center)
+        }
+
+        if animated {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                scrollAction()
+            }
+        } else {
+            scrollAction()
         }
     }
 
@@ -237,6 +271,7 @@ struct FlagStrip: View {
                             )
                     )
                     .contentShape(Rectangle())
+                    .id(normalizedCode)
                     .onTapGesture {
                         onFlagTap?(normalizedCode)
                     }
