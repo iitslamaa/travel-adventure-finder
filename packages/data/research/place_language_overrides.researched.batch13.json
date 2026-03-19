@@ -1,0 +1,77 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "BE",
+    "override_reason": "multiofficial_language_with_common_english_override",
+    "notes": "Belgium should give full credit to Dutch, French, and German as official languages while also giving meaningful English credit because Belgian government travel guidance says English is frequently spoken.",
+    "languages": [
+      { "code": "nl", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "de", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.6 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "FPS Foreign Affairs: Country facts",
+        "url": "https://taipei.diplomatie.belgium.be/en/travel-belgium/country-facts",
+        "note": "Belgian foreign affairs guidance says Dutch, French, and German are the official languages and that English is frequently spoken."
+      },
+      {
+        "kind": "government_reference",
+        "title": "FPS Health: Languages in Belgium",
+        "url": "https://www.health.belgium.be/sites/default/files/uploads/fields/fpshealth_theme_file/01_spain_icd10be_eng_20140530_0.pdf",
+        "note": "Belgian federal documentation describes the country's Dutch-, French-, and German-speaking communities."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CA",
+    "override_reason": "coofficial_english_and_french_override",
+    "notes": "Canada should give full credit to both English and French because they are the country's two official languages and are institutionally supported nationwide, even though city and province differences will matter later.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Canada.ca: Official Languages Day",
+        "url": "https://www.canada.ca/en/canadian-heritage/campaigns/official-languages-day.html",
+        "note": "Government of Canada guidance says French and English are Canada's two official languages."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Canada.ca: Official Languages Act and you",
+        "url": "https://www.canada.ca/en/treasury-board-secretariat/services/values-ethics/official-languages/official-languages-act-and-you.html",
+        "note": "Government guidance explains that English and French are Canada's official languages and have equal status in federal institutions."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CY",
+    "override_reason": "coofficial_greek_and_turkish_with_high_english_override",
+    "notes": "Cyprus should recognize Greek and Turkish as official while giving strong English credit because official tourism guidance says English is widely spoken across the island.",
+    "languages": [
+      { "code": "el", "type": "official", "coverage": 1.0 },
+      { "code": "tr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Cyprus: Languages & Religions",
+        "url": "https://www.visitcyprus.com/index.php/en/practical-info/languages-religions",
+        "note": "Visit Cyprus says the official languages are Greek and Turkish and that English is widely spoken."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Cyprus: Licensed Guides",
+        "url": "https://www.visitcyprus.com/fr/fr-tourist-guides/kaimaki-eftychia/",
+        "note": "Official tourism guide listings regularly show multilingual guiding in English, French, German, and Greek."
+      }
+    ]
+  }
+]

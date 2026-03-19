@@ -1,0 +1,99 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AU",
+    "override_reason": "english_primary_with_indigenous_language_note_override",
+    "notes": "Australia should score English as fully compatible for travelers. Indigenous languages remain culturally important across the country, but exact-code regional assignment for them belongs in the later city and reconciliation passes rather than a country-level override.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Australia.com: Facts about Australia",
+        "url": "https://www.australia.com/en/facts-and-planning/facts-about-australia.html",
+        "note": "Australia's official tourism guidance says the national language is English and describes the country's multicultural setting."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Australia.gov.au: About Australia",
+        "url": "https://www.australia.gov.au/about-australia",
+        "note": "Government of Australia guidance describes English as the national language used across the country."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NZ",
+    "override_reason": "english_primary_with_maori_official_override",
+    "notes": "New Zealand should give full credit to English as the primary everyday language for travelers while also giving meaningful credit to Māori because it is an official language and visible in public life, culture, and signage.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "mi", "type": "official", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "100% Pure New Zealand: About New Zealand",
+        "url": "https://www.newzealand.com/int/feature/new-zealand-travel-guide/",
+        "note": "Official tourism guidance says the primary language is English and highlights Māori as part of New Zealand's core identity and visitor experience."
+      },
+      {
+        "kind": "government_reference",
+        "title": "NZHistory: Māori Language Act 1987",
+        "url": "https://nzhistory.govt.nz/culture/maori-language-week/history-of-the-maori-language",
+        "note": "New Zealand government history guidance explains that Māori became an official language in 1987."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SE",
+    "override_reason": "official_swedish_with_very_high_english_override",
+    "notes": "Sweden should score Swedish as the national language while giving very high English credit because official Sweden guidance says almost everyone speaks English and official tourism services are built around that expectation.",
+    "languages": [
+      { "code": "sv", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.9 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Sweden.se: The Swedish language",
+        "url": "https://sweden.se/life/society/the-swedish-language",
+        "note": "Official Sweden guidance says Swedish is the main language and that almost everyone in Sweden speaks English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Sweden: Sweden travel FAQs",
+        "url": "https://visitsweden.com/about-sweden/sweden-faq/",
+        "note": "Official tourism guidance is written for international travelers in English and reinforces Sweden's high English accessibility."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SG",
+    "override_reason": "multiofficial_language_with_english_default_override",
+    "notes": "Singapore should recognize English, Malay, Mandarin Chinese, and Tamil as official while giving English full practical credit because it is the main working language and default language of most public-facing travel interactions.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "ms", "type": "official", "coverage": 1.0 },
+      { "code": "zh", "type": "official", "coverage": 1.0 },
+      { "code": "ta", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Singapore: Do's and Don'ts in Singapore",
+        "url": "https://www.visitsingapore.com/travel-guide-tips/travel-information/do-and-dont-singapore/",
+        "note": "Official tourism guidance says Singapore has four official languages and that English is the main language used in business and administration."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Singapore Government: Learn about Singapore",
+        "url": "https://www.gov.sg/article/learn-about-singapore",
+        "note": "Government guidance identifies Singapore's official languages and explains English as the working language."
+      }
+    ]
+  }
+]

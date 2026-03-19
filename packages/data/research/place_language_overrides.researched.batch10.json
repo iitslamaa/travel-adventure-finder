@@ -1,0 +1,121 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "CR",
+    "override_reason": "official_spanish_with_high_tourism_english_override",
+    "notes": "Costa Rica should score Spanish as the official and dominant language while also giving strong English credit because official travel guidance says many Costa Ricans speak English well, especially across the tourism economy.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Costa Rica: Tips",
+        "url": "https://www.visitcostarica.com/planning-your-trip/tips",
+        "note": "Official tourism guidance says the native tongue is Spanish and that many Costa Ricans speak English quite well."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Costa Rica languages",
+        "url": "https://www.britannica.com/place/Costa-Rica/Languages",
+        "note": "Britannica identifies Spanish as the national language and also notes English-based creole speech in Limón."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CU",
+    "override_reason": "official_spanish_with_tourism_english_override",
+    "notes": "Cuba should score Spanish as fully dominant while giving meaningful English credit because official tourism guidance says a good part of the population speaks English and the tourist sector frequently does so.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.6 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Cuba Travel: Society",
+        "url": "https://www.cuba.travel/en/",
+        "note": "Official tourism guidance says the official language in Cuba is Spanish and that a good part of the population also speaks English, especially in the tourist sector."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Cuba Travel: Tourist Information Centers",
+        "url": "https://www.cuba.travel/en/useful-information/tourist-information-centers-in-cuba/1000",
+        "note": "Official tourism information centers say they provide assistance in several languages for travelers."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "HN",
+    "override_reason": "official_spanish_with_limited_tourism_english_override",
+    "notes": "Honduras should score Spanish as the dominant traveler language. English gets only limited credit because official travel guidance regularly warns that many local guides and offices work primarily in Spanish outside the most tourist-oriented areas.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.2 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Honduras Travel: Talgua Caves",
+        "url": "https://hondurastravel.com/honduras-destinations/olancho/the-talgua-caves/",
+        "note": "Official tourism guidance says local guides there do not speak English and recommends Spanish to enjoy the visit fully."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Honduras Travel: Cuero y Salado Wildlife Refuge",
+        "url": "https://hondurastravel.com/national-parks/overnight-at-the-cuero-y-salado-wildlife-refuge-facilities/",
+        "note": "Official tourism guidance says it is best if travelers speak Spanish because English-speaking help is not always available."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NI",
+    "override_reason": "official_spanish_with_caribbean_english_use_override",
+    "notes": "Nicaragua should score Spanish as the dominant national language while giving modest English credit because official tourism guidance says English is used along parts of the Caribbean coast.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Nicaragua: Fast Facts",
+        "url": "https://visitnicaragua.us/about-nicaragua/fast-facts/",
+        "note": "Official tourism guidance says Spanish is the official language and that English and indigenous languages are used along the Caribbean coast and Atlantic plain."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Nicaragua: Languages of Nicaragua's Caribbean Coast",
+        "url": "https://visitnicaragua.us/2022/02/languages-of-nicaraguas-caribbean-coast/",
+        "note": "Official tourism guidance explains the multilingual Caribbean coast and supports giving English some regional but not nationwide credit."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SV",
+    "override_reason": "official_spanish_with_indigenous_language_note_override",
+    "notes": "El Salvador should score Spanish as the clear traveler language. Nahuat remains locally meaningful in some communities, but exact-code reconciliation for that language will be handled in the final cleanup pass.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: El Salvador",
+        "url": "https://www.britannica.com/place/El-Salvador",
+        "note": "Britannica identifies Spanish as the official language of El Salvador."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "El Salvador Travel: Cascadas El Escuco",
+        "url": "https://elsalvador.travel/esp/en/destination/cascadas-el-escuco/",
+        "note": "Official tourism guidance notes that Nahuat is still spoken in some local communities, which supports a later indigenous-language reconciliation pass."
+      }
+    ]
+  }
+]

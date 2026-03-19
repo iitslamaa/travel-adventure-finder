@@ -1,0 +1,74 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "DE",
+    "override_reason": "official_german_with_high_english_override",
+    "notes": "Germany should score German as the official language while giving strong English credit because the national tourism board explicitly says a large proportion of the population speaks English and that language barriers should not pose a problem for many visitors.",
+    "languages": [
+      { "code": "de", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Germany Travel: Information on Germany",
+        "url": "https://www.germany.travel/en/information-on-germany.html",
+        "note": "Germany's national tourism board says the official language is German and that a large proportion of the population also speaks English, so language barriers should not pose a problem for many international visitors."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Germany",
+        "url": "https://www.britannica.com/place/Germany",
+        "note": "Britannica identifies German as the official language of Germany."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NL",
+    "override_reason": "official_dutch_with_very_high_english_override",
+    "notes": "The Netherlands should score Dutch as the national language while giving very high English credit because official visitor guidance says English is widely spoken throughout the country and around 90% of the population speaks it.",
+    "languages": [
+      { "code": "nl", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.9 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Government of the Netherlands: Civic integration",
+        "url": "https://www.government.nl/topics/integration-in-the-netherlands/civic-integration-in-the-netherlands",
+        "note": "Government guidance treats Dutch as the standard language newcomers are expected to learn, supporting Dutch as the national default language."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "I amsterdam: Visitor information",
+        "url": "https://www.iamsterdam.com/en/travel-stay/visitor-information",
+        "note": "Official visitor guidance says English is widely spoken in Amsterdam and throughout the Netherlands, with approximately 90% of the population speaking it."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NO",
+    "override_reason": "official_norwegian_with_high_english_override",
+    "notes": "Norway should score Norwegian as the national language while giving strong English credit because official travel guidance says most Norwegians speak English.",
+    "languages": [
+      { "code": "no", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Norway: Travel tips A-Z",
+        "url": "https://www.visitnorway.com/plan-your-trip/travel-tips-a-z/",
+        "note": "Visit Norway says most Norwegians speak English, especially younger people."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Norway",
+        "url": "https://www.britannica.com/place/Norway",
+        "note": "Britannica identifies Norwegian as the principal language of Norway."
+      }
+    ]
+  }
+]

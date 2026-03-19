@@ -1,0 +1,50 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "CZ",
+    "override_reason": "official_czech_with_high_english_override",
+    "notes": "Czechia should score Czech as the official language while giving meaningful English credit because official tourism guidance says tourists will usually make themselves understood in English and recent national tourism materials explicitly describe Czechia as a place where visitors can get by in English.",
+    "languages": [
+      { "code": "cs", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "VisitCzechia: Language",
+        "url": "https://www.visitczechia.com/en-us/travel-info/language",
+        "note": "Official tourism guidance says the official language is Czech and that tourists will usually make themselves understood in English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "VisitCzechia: Czechia in the Top 15 Best Countries for Digital Nomads",
+        "url": "https://www.visitczechia.com/en-us/news/2025/03/n-czechia-in-the-top-15-best-countries-for-digital",
+        "note": "Official tourism guidance says visitors can get by with English in Czechia and cites the country's high level of English proficiency."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "EE",
+    "override_reason": "official_estonian_with_high_english_override",
+    "notes": "Estonia should score Estonian as the national language while giving strong English credit because the official tourism system is built extensively in English and major visitor services are routinely delivered in English across the country.",
+    "languages": [
+      { "code": "et", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Estonia: About us",
+        "url": "https://visitestonia.com/en/about-us",
+        "note": "Estonia's official tourism portal highlights its English-language platform as a central planning tool for foreign visitors."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Estonia: Official Tallinn Sightseeing Tour",
+        "url": "https://visitestonia.com/en/official-tallinn-sightseeing-tour",
+        "note": "Official tourism listings show core guided experiences being offered in English and several other languages."
+      }
+    ]
+  }
+]

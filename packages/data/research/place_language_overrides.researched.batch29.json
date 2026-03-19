@@ -1,0 +1,51 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "BW",
+    "override_reason": "official_english_with_setswana_national_language_override",
+    "notes": "Botswana should give full credit to English as the official language while also giving strong credit to Setswana as the national language that travelers will hear and encounter throughout daily life.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "tn", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Botswana Tourism: Language",
+        "url": "https://botswanatourism.co.bw/language",
+        "note": "Official tourism guidance says Setswana is the national language and English is the official business language, widely spoken in urban areas."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Botswana Tourism: At a Glance",
+        "url": "https://botswanatourism.co.bw/glance",
+        "note": "Official tourism guidance lists Setswana as the national language and English as the official language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MU",
+    "override_reason": "english_official_with_french_and_creole_everyday_use_override",
+    "notes": "Mauritius should score English as the official administrative language while also giving strong practical credit to French and Mauritian Creole, both of which are deeply embedded in everyday island life and tourism.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "mfe", "type": "widely_spoken", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Mauritius: Language",
+        "url": "https://app-staging.visitmauritius.com/mauritius",
+        "note": "Official Mauritius tourism guidance says English serves government, administration, education, and business; French has a strong presence; and the majority of the population speaks Mauritian Creole."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Mauritius Now: Explore the Languages Spoken in Mauritius",
+        "url": "https://mauritiusnow.com/blog/things-to-do/mauritius-language-learn-some-creole/",
+        "note": "Official destination-marketing guidance says English, French, and Mauritian Creole are the three languages widely spoken on the island."
+      }
+    ]
+  }
+]
