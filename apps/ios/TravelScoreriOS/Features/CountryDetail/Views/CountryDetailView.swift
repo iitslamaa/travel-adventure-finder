@@ -449,7 +449,7 @@ private struct CountryFriendEngagementPreviewCard: View {
                         .foregroundStyle(.secondary)
 
                     if isLoading {
-                        Text("Checking who knows \(country.name)")
+                        Text(country.name)
                             .font(TAFTypography.body(.semibold))
                             .foregroundStyle(.primary)
 
@@ -457,7 +457,7 @@ private struct CountryFriendEngagementPreviewCard: View {
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     } else {
-                        Text(primaryCopy)
+                        Text(country.name)
                             .font(TAFTypography.body(.semibold))
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.leading)
@@ -482,22 +482,6 @@ private struct CountryFriendEngagementPreviewCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.countryDetailCardBackground(corner: 14))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-
-    private var primaryCopy: String {
-        if !engagement.visited.isEmpty {
-            return "See who's been to \(country.name)"
-        }
-        if !engagement.fromHere.isEmpty {
-            return "See who's from \(country.name)"
-        }
-        if !engagement.bucketList.isEmpty {
-            return "See who wants to go to \(country.name)"
-        }
-        if engagement.totalFriends == 0 {
-            return "See what your friends know about \(country.name)"
-        }
-        return "See which friends know \(country.name)"
     }
 
     private var secondaryCopy: String {
