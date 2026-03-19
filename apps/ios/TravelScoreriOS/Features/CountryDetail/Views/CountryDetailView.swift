@@ -202,23 +202,29 @@ struct CountryDetailView: View {
         .task(id: country.iso2.uppercased()) {
             isPreparingContent = true
 
-            async let profileReload: Void = sessionManager.isAuthenticated ? profileVM.reloadProfile() : ()
+            if sessionManager.isAuthenticated {
+                Task {
+                    await profileVM.reloadProfile()
+                }
+            }
+
+            Task {
+                await engagementVM.load(
+                    countryCode: country.iso2,
+                    currentUserId: sessionManager.userId,
+                    isAuthenticated: sessionManager.isAuthenticated
+                )
+            }
+
             async let countryRefresh: Void = refreshCountryIfAvailable()
             async let languageProfileRefresh: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
-            async let engagementRefresh: Void = engagementVM.load(
-                countryCode: country.iso2,
-                currentUserId: sessionManager.userId,
-                isAuthenticated: sessionManager.isAuthenticated
-            )
 
-            _ = await profileReload
             _ = await countryRefresh
             country = await visaStore.hydrate(country: country)
             countryLanguageProfile = await languageProfileRefresh
-            _ = await engagementRefresh
             isPreparingContent = false
         }
-        .sheet(item: $activeSheet) { sheet in
+        .fullScreenCover(item: $activeSheet) { sheet in
             switch sheet {
             case .engagement:
                 CountryFriendEngagementSheet(
@@ -725,6 +731,7 @@ private struct FriendAvatarView: View {
 private struct CountryFriendProfileSheet: View {
     let userId: UUID
 
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var socialNav = SocialNavigationController()
 
     var body: some View {
@@ -733,6 +740,17 @@ private struct CountryFriendProfileSheet: View {
                 .environmentObject(socialNav)
                 .navigationDestination(for: SocialRoute.self) { route in
                     socialDestination(route)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(.black)
+                        }
+                    }
                 }
         }
     }
@@ -762,38 +780,64 @@ private struct CountryFriendEngagementSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 18) {
-                    CountryFriendEngagementCard(
-                        country: country,
-                        engagement: engagement,
-                        onSelectProfile: { userId in
-                            selectedProfile = SelectedFriendProfile(id: userId)
-                        }
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 20)
-                    .padding(.bottom, 24)
-                }
-            }
-            .background(
+            ZStack(alignment: .topTrailing) {
                 Theme.pageBackground("travel3", tint: 0.10)
                     .ignoresSafeArea()
-            )
-            .navigationTitle(country.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") {
-                        dismiss()
+
+                ScrollView {
+                    VStack(spacing: 18) {
+                        CountryFriendEngagementCard(
+                            country: country,
+                            engagement: engagement,
+                            onSelectProfile: { userId in
+                                selectedProfile = SelectedFriendProfile(id: userId)
+                            }
+                        )
+                        .padding(.horizontal)
+                        .padding(.top, 76)
+                        .padding(.bottom, 24)
                     }
                 }
+
+                Button {
+                    dismiss()
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(.ultraThinMaterial)
+                            .frame(width: 40, height: 40)
+
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.black)
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 14)
+                .padding(.trailing, 18)
             }
+            .safeAreaInset(edge: .top) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(country.name)
+                            .font(TAFTypography.title(.bold))
+                            .foregroundStyle(.black)
+
+                        Text("Friends")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+            }
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $selectedProfile) { selectedProfile in
                 CountryFriendProfileSheet(userId: selectedProfile.id)
             }
         }
-        .presentationDetents([.medium, .large])
     }
 }
 
