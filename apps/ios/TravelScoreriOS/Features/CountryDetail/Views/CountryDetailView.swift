@@ -562,11 +562,8 @@ private struct CountryFriendEngagementCard: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Friends who know \(country.name)")
-                            .font(TAFTypography.section(.semibold))
-
                         Text("See who has visited, wants to go, or is from here.")
-                            .font(.footnote)
+                            .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -589,19 +586,19 @@ private struct CountryFriendEngagementCard: View {
                     engagementGroup(
                         title: "Visited",
                         symbol: "checkmark.circle.fill",
-                        tint: .green,
+                        tint: Color(red: 0.38, green: 0.56, blue: 0.34),
                         profiles: engagement.visited
                     )
                     engagementGroup(
                         title: "Bucket list",
                         symbol: "bookmark.fill",
-                        tint: Color(red: 0.84, green: 0.51, blue: 0.18),
+                        tint: Color(red: 0.72, green: 0.46, blue: 0.20),
                         profiles: engagement.bucketList
                     )
                     engagementGroup(
                         title: "From here",
                         symbol: "house.fill",
-                        tint: Color(red: 0.24, green: 0.44, blue: 0.72),
+                        tint: Color(red: 0.46, green: 0.47, blue: 0.60),
                         profiles: engagement.fromHere
                     )
                 }
@@ -788,60 +785,47 @@ private struct CountryFriendEngagementSheet: View {
 
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .topTrailing) {
-                ZStack {
-                    Theme.pageBackground("travel3", tint: 0.04)
-                        .ignoresSafeArea()
+            ZStack {
+                Theme.pageBackground("travel3", tint: 0.08)
+                    .ignoresSafeArea()
 
-                    Color(red: 0.95, green: 0.91, blue: 0.84)
-                        .opacity(0.22)
-                        .ignoresSafeArea()
-                }
+                VStack(spacing: 0) {
+                    ZStack(alignment: .topTrailing) {
+                        Theme.titleBanner(country.name)
 
-                ScrollView {
-                    VStack(spacing: 18) {
-                        CountryFriendEngagementCard(
-                            country: country,
-                            engagement: engagement,
-                            onSelectProfile: { userId in
-                                selectedProfile = SelectedFriendProfile(id: userId)
+                        Button {
+                            dismiss()
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                                    .frame(width: 40, height: 40)
+
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundStyle(.black)
                             }
-                        )
-                        .padding(.horizontal)
-                        .padding(.top, 76)
-                        .padding(.bottom, 24)
-                    }
-                }
-
-                Button {
-                    dismiss()
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(.ultraThinMaterial)
-                            .frame(width: 40, height: 40)
-
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(.black)
-                    }
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 14)
-                .padding(.trailing, 18)
-            }
-            .safeAreaInset(edge: .top) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(country.name)
-                            .font(TAFTypography.largeTitle(.semibold))
-                            .foregroundStyle(.black)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 14)
+                        .padding(.trailing, 18)
                     }
 
-                    Spacer()
+                    ScrollView {
+                        VStack(spacing: 18) {
+                            CountryFriendEngagementCard(
+                                country: country,
+                                engagement: engagement,
+                                onSelectProfile: { userId in
+                                    selectedProfile = SelectedFriendProfile(id: userId)
+                                }
+                            )
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                            .padding(.bottom, 24)
+                        }
+                    }
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
             }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $selectedProfile) { selectedProfile in
