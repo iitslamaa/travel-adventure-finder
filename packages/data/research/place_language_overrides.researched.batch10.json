@@ -75,10 +75,11 @@
     "place_type": "country",
     "place_code": "NI",
     "override_reason": "official_spanish_with_caribbean_english_use_override",
-    "notes": "Nicaragua should score Spanish as the dominant national language while giving modest English credit because official tourism guidance says English is used along parts of the Caribbean coast.",
+    "notes": "Nicaragua should score Spanish as the dominant national language while giving modest English credit because official tourism guidance says English is used along parts of the Caribbean coast. Nicaragua Creole English should also count as a minor exact local match because it exists in the picker catalog.",
     "languages": [
       { "code": "es", "type": "official", "coverage": 1.0 },
-      { "code": "en", "type": "minor", "coverage": 0.3 }
+      { "code": "en", "type": "minor", "coverage": 0.3 },
+      { "code": "bzk", "type": "minor", "coverage": 0.35 }
     ],
     "evidence": [
       {

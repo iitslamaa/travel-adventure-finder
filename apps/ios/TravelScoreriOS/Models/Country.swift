@@ -50,6 +50,7 @@ struct Country: Identifiable, Hashable {
     let affordabilityScore: Int?
     let affordabilityBand: String?
     let affordabilityExplanation: String?
+    let languageCompatibilityScore: Int?
 
 
     var affordabilityHeadline: String? {
@@ -106,7 +107,8 @@ struct Country: Identifiable, Hashable {
         affordabilityCategory: Int? = nil,
         affordabilityScore: Int? = nil,
         affordabilityBand: String? = nil,
-        affordabilityExplanation: String? = nil
+        affordabilityExplanation: String? = nil,
+        languageCompatibilityScore: Int? = nil
     ) {
         self.iso2 = iso2
         self.name = name
@@ -138,6 +140,7 @@ struct Country: Identifiable, Hashable {
         self.affordabilityScore = affordabilityScore
         self.affordabilityBand = affordabilityBand
         self.affordabilityExplanation = affordabilityExplanation
+        self.languageCompatibilityScore = languageCompatibilityScore
     }
 
     var flagEmoji: String {
@@ -277,6 +280,10 @@ extension Country {
             components.append((Double(affordability), weights.affordability))
         }
 
+        if let languageCompatibility = languageCompatibilityScore {
+            components.append((Double(languageCompatibility), weights.language))
+        }
+
         guard !components.isEmpty else {
             return nil
         }
@@ -334,7 +341,8 @@ extension Country {
             affordabilityCategory: affordabilityCategory,
             affordabilityScore: affordabilityScore,
             affordabilityBand: affordabilityBand,
-            affordabilityExplanation: affordabilityExplanation
+            affordabilityExplanation: affordabilityExplanation,
+            languageCompatibilityScore: languageCompatibilityScore
         )
     }
 }

@@ -4,10 +4,11 @@ import type { CountryFacts } from '@travel-af/shared';
 
 // --- Weights (sum = 1.0)
 export const W = {
-  travelGov: 0.40,
-  seasonality: 0.20,
-  visa: 0.20,
-  affordability: 0.20,
+  travelGov: 0.35,
+  seasonality: 0.15,
+  visa: 0.15,
+  affordability: 0.15,
+  language: 0.20,
 } as const;
 
 export const DEFAULT_WEIGHTS: ScoreWeights = { ...W };
@@ -31,6 +32,7 @@ export function normalizeWeights(
     seasonality: merged.seasonality / sum,
     visa: merged.visa / sum,
     affordability: merged.affordability / sum,
+    language: merged.language / sum,
   };
 }
 
@@ -74,6 +76,7 @@ type FactsExtra = CountryFacts & {
   localPerUSD?: number;
   usdToLocalRate?: number;
   affordability?: number;
+  languageCompatibilityScore?: number;
 };
 
 export function computeAffordability(
@@ -142,6 +145,11 @@ export function buildRows(
       value:
         fx.affordability ??
         computeAffordability(fx),
+    },
+    {
+      key: 'language',
+      label: 'Language compatibility',
+      value: facts.languageCompatibilityScore,
     },
   ];
 

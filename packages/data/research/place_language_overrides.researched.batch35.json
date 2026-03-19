@@ -148,7 +148,8 @@
     "override_reason": "french_guiana_duplicate_place_override",
     "notes": "French Guiana should score French as the official language and give local credit to Guianese Creole French. This app-specific code is treated as a reviewed territory-level profile.",
     "languages": [
-      { "code": "fr", "type": "official", "coverage": 1.0 }
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "gcr", "type": "widely_spoken", "coverage": 0.7 }
     ],
     "evidence": [
       {

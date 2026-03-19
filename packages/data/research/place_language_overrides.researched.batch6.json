@@ -27,10 +27,11 @@
     "place_type": "country",
     "place_code": "VI",
     "override_reason": "english_primary_with_spanish_traveler_support_override",
-    "notes": "The U.S. Virgin Islands should score English as the practical default for travelers while still giving Spanish partial credit because it is common in day-to-day life and visitor services.",
+    "notes": "The U.S. Virgin Islands should score English as the practical default for travelers while still giving Spanish partial credit because it is common in day-to-day life and visitor services. Virgin Islands Creole English should also count as a minor exact local match because it exists in the picker catalog.",
     "languages": [
       { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
-      { "code": "es", "type": "widely_spoken", "coverage": 0.45 }
+      { "code": "es", "type": "widely_spoken", "coverage": 0.45 },
+      { "code": "vic", "type": "minor", "coverage": 0.4 }
     ],
     "evidence": [
       {

@@ -3,9 +3,10 @@
     "place_type": "country",
     "place_code": "GY",
     "override_reason": "official_english_with_creolese_note_override",
-    "notes": "Guyana should score English as the official national language while recognizing that Creolese and Indigenous languages matter in daily life. English is still the safest country-level traveler language by far.",
+    "notes": "Guyana should score English as the official national language while recognizing that Creolese and Indigenous languages matter in daily life. Guyanese Creole English should also count as a minor exact local match because it exists in the picker catalog.",
     "languages": [
-      { "code": "en", "type": "official", "coverage": 1.0 }
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "gyn", "type": "minor", "coverage": 0.4 }
     ],
     "evidence": [
       {

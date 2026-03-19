@@ -19,6 +19,11 @@ import { estimateDailySpendHotel } from '@/lib/providers/costs';
 import type { DailySpend } from '@/lib/providers/costs';
 import { buildRows, DEFAULT_WEIGHTS } from '@travel-af/domain/src/scoring';
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
+import {
+  computeLanguageCompatibilityScore,
+  parseProfileLanguages,
+  type CountryLanguageCoverage,
+} from '@/lib/languageCompatibility';
 
 
 // Local type to avoid any
@@ -56,6 +61,7 @@ type FactsExtraServer = Partial<CountryFacts> & {
   affordabilityCategory?: number;  // 1 (cheapest) .. 10 (most expensive)
   affordabilityBand?: 'good' | 'warn' | 'bad' | 'danger';  // centralized UI band
   affordabilityExplanation?: string;
+  languageCompatibilityScore?: number;
 
   // server-computed total
   scoreTotal?: number;
@@ -226,6 +232,7 @@ type UserScorePreferencesRow = {
   seasonality?: number | null;
   visa?: number | null;
   affordability?: number | null;
+  language?: number | null;
 };
 
 export async function GET(request: Request) {
@@ -264,8 +271,8 @@ export async function GET(request: Request) {
     if (user) {
       const { data } = await supabase
         .from('user_score_preferences')
-        // DB columns are: affordability, visa, advisory, seasonality
-        .select('advisory, seasonality, visa, affordability')
+        // DB columns are: affordability, visa, advisory, seasonality, language
+        .select('advisory, seasonality, visa, affordability, language')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -278,6 +285,7 @@ export async function GET(request: Request) {
           seasonality: prefs.seasonality ?? DEFAULT_WEIGHTS.seasonality,
           visa: prefs.visa ?? DEFAULT_WEIGHTS.visa,
           affordability: prefs.affordability ?? DEFAULT_WEIGHTS.affordability,
+          language: prefs.language ?? DEFAULT_WEIGHTS.language,
         };
 
         console.log('[countries] loaded userWeights', {
@@ -288,6 +296,39 @@ export async function GET(request: Request) {
     }
   } catch (err) {
     console.warn('[countries] failed to load user weights, using defaults', err);
+  }
+
+  let userProfileLanguages: ReturnType<typeof parseProfileLanguages> = [];
+  try {
+    const cookieStore = await cookies();
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('languages')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      userProfileLanguages = parseProfileLanguages(data?.languages);
+    }
+  } catch (err) {
+    console.warn('[countries] failed to load user profile languages', err);
   }
 
   let advisories: Advisory[] = [];
@@ -707,6 +748,70 @@ export async function GET(request: Request) {
 
       // Recompute total score after affordability injected
       try {
+        const { total } = buildRows(
+          row.facts as CountryFacts,
+          userWeights
+        );
+        fxFacts.scoreTotal = total;
+      } catch {}
+    }
+
+    if (userProfileLanguages.length) {
+      try {
+        const cookieStore = await cookies();
+        const supabase = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            cookies: {
+              get(name: string) {
+                return cookieStore.get(name)?.value;
+              },
+            },
+          }
+        );
+
+        const countryIso2s = merged.map((row) => row.iso2.toUpperCase());
+        const { data: languageRows } = await supabase
+          .from('country_language_profiles')
+          .select('country_iso2,languages')
+          .in('country_iso2', countryIso2s);
+
+        const languageScoreByISO2 = new Map<string, number>();
+
+        for (const languageRow of languageRows ?? []) {
+          const countryISO2 = typeof languageRow.country_iso2 === 'string'
+            ? languageRow.country_iso2.toUpperCase()
+            : null;
+
+          if (!countryISO2) continue;
+
+          const score = computeLanguageCompatibilityScore(
+            userProfileLanguages,
+            languageRow.languages as CountryLanguageCoverage[] | null | undefined
+          );
+
+          if (score != null) {
+            languageScoreByISO2.set(countryISO2, score);
+          }
+        }
+
+        for (const row of merged) {
+          const fxFacts = row.facts as FactsExtraServer | undefined;
+          if (!fxFacts) continue;
+
+          fxFacts.languageCompatibilityScore = languageScoreByISO2.get(row.iso2.toUpperCase());
+        }
+      } catch (err) {
+        console.warn('[countries] failed to attach language compatibility', err);
+      }
+    }
+
+    for (const row of merged) {
+      try {
+        const fxFacts = row.facts as FactsExtraServer | undefined;
+        if (!fxFacts) continue;
+
         const { total } = buildRows(
           row.facts as CountryFacts,
           userWeights

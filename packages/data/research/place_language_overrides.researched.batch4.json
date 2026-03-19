@@ -3,9 +3,10 @@
     "place_type": "country",
     "place_code": "BS",
     "override_reason": "official_language_override",
-    "notes": "The Bahamas should score English as fully compatible for travel. Bahamian speech includes local patois and slang, but standard English remains the practical national language for visitors.",
+    "notes": "The Bahamas should score English as fully compatible for travel. Bahamian speech includes local patois and slang, but standard English remains the practical national language for visitors. Bahamas Creole English should also count as a strong local match because it exists in the picker catalog.",
     "languages": [
-      { "code": "en", "type": "official", "coverage": 1.0 }
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "bah", "type": "widely_spoken", "coverage": 0.85 }
     ],
     "evidence": [
       {
@@ -49,9 +50,10 @@
     "place_type": "country",
     "place_code": "JM",
     "override_reason": "official_language_override",
-    "notes": "Jamaica should score English as fully compatible while acknowledging the strong day-to-day presence of Jamaican Patois.",
+    "notes": "Jamaica should score English as fully compatible while acknowledging the strong day-to-day presence of Jamaican Patois. Jamaican Creole English should also count as a minor exact local match because it exists in the picker catalog.",
     "languages": [
-      { "code": "en", "type": "official", "coverage": 1.0 }
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "jam", "type": "minor", "coverage": 0.45 }
     ],
     "evidence": [
       {

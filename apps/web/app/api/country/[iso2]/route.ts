@@ -12,6 +12,11 @@ import { buildRows, DEFAULT_WEIGHTS } from '@travel-af/domain/src/scoring';
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { headers } from 'next/headers';
+import {
+  computeLanguageCompatibilityScore,
+  parseProfileLanguages,
+  type CountryLanguageCoverage,
+} from '@/lib/languageCompatibility';
 
 import {
   COUNTRY_SEASONALITY_DEFINITIONS,
@@ -37,6 +42,7 @@ type CountryRouteFacts = Partial<CountryFacts> & {
   fmSeasonalityAvoidMonths?: number[];
   fmSeasonalityTodayScore?: number;
   fmSeasonalityTodayLabel?: 'best' | 'good' | 'shoulder' | 'poor';
+  languageCompatibilityScore?: number;
 };
 
 function clusterConsecutiveMonths(months: number[]): number[][] {
@@ -90,7 +96,7 @@ export async function GET(
     if (user) {
       const { data } = await supabase
         .from('user_score_preferences')
-        .select('advisory, seasonality, visa, affordability')
+        .select('advisory, seasonality, visa, affordability, language')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -100,6 +106,7 @@ export async function GET(
           seasonality?: number;
           visa?: number;
           affordability?: number;
+          language?: number;
         };
 
         userWeights = {
@@ -107,8 +114,37 @@ export async function GET(
           seasonality: prefs.seasonality ?? DEFAULT_WEIGHTS.seasonality,
           visa: prefs.visa ?? DEFAULT_WEIGHTS.visa,
           affordability: prefs.affordability ?? DEFAULT_WEIGHTS.affordability,
+          language: prefs.language ?? DEFAULT_WEIGHTS.language,
         };
       }
+    }
+  } catch {}
+
+  let userProfileLanguages: ReturnType<typeof parseProfileLanguages> = [];
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('languages')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      userProfileLanguages = parseProfileLanguages(data?.languages);
     }
   } catch {}
 
@@ -241,6 +277,34 @@ export async function GET(
       enriched.facts.dailySpend = spend;
     }
   } catch {}
+
+  if (userProfileLanguages.length) {
+    try {
+      const cookieStore = await cookies();
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            get(name: string) {
+              return cookieStore.get(name)?.value;
+            },
+          },
+        }
+      );
+
+      const { data } = await supabase
+        .from('country_language_profiles')
+        .select('languages')
+        .eq('country_iso2', isoUpper)
+        .maybeSingle();
+
+      enriched.facts.languageCompatibilityScore = computeLanguageCompatibilityScore(
+        userProfileLanguages,
+        data?.languages as CountryLanguageCoverage[] | null | undefined
+      );
+    } catch {}
+  }
 
   // --- Compute total score with user weights
   try {

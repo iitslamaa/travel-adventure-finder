@@ -2,14 +2,14 @@ import fs from "fs";
 import path from "path";
 
 const ROOT = process.cwd();
-const geoJSONPath = path.join(ROOT, "apps/ios/TravelScoreriOS/countries.geojson");
+const countrySeedsPath = path.join(ROOT, "apps/web/data/seeds/countries.json");
 const researchDir = path.join(ROOT, "packages/data/research");
 const outputPath = path.join(ROOT, "packages/data/research/place_language_review_tracker.csv");
 
-const geoJSON = JSON.parse(fs.readFileSync(geoJSONPath, "utf8"));
+const countrySeeds = JSON.parse(fs.readFileSync(countrySeedsPath, "utf8"));
 const appPlaceCodes = [...new Set(
-  geoJSON.features
-    .map((feature) => String(feature.properties?.ISO_A2 ?? "").trim())
+  countrySeeds
+    .map((country) => String(country.iso2 ?? "").trim().toUpperCase())
     .filter(Boolean)
 )].sort();
 

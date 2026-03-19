@@ -19,6 +19,7 @@ struct CountryDetailView: View {
     @StateObject private var visaStore = VisaRequirementsStore.shared
     @State private var scrollAnchor: String? = nil
     @State private var countryLanguageProfile: CountryLanguageProfile?
+    @State private var isPreparingContent: Bool = true
 
     private var displayedCountry: Country {
         country.applyingOverallScore(using: weightsStore.weights, selectedMonth: weightsStore.selectedMonth)
@@ -67,65 +68,78 @@ struct CountryDetailView: View {
     }
     
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                
-                LazyVStack(spacing: 28) {
-                    
-                    // Header polaroid style
-                    CountryHeaderCard(country: displayedCountry)
-                        .padding()
-                        .background(
-                            Theme.countryDetailCardBackground(corner: 20)
-                        )
-                        .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
-                    
-                    // Advisory card stack
-                    scrapbookSection {
-                        CountryAdvisoryCard(
-                            country: displayedCountry,
-                            weightPercentage: weightsStore.advisoryPercentage
-                        )
-                    }
-                    
-                    // Seasonality card stack
-                    scrapbookSection {
-                        CountrySeasonalityCard(
-                            country: displayedCountry,
-                            weightPercentage: weightsStore.seasonalityPercentage
-                        )
-                    }
-                    
-                    // Visa card stack
-                    scrapbookSection {
-                        CountryVisaCard(
-                            country: displayedCountry,
-                            weightPercentage: weightsStore.visaPercentage
-                        )
-                    }
-                    
-                    // Affordability card stack
-                    if displayedCountry.affordabilityScore != nil {
-                        scrapbookSection {
-                            CountryAffordabilityCard(
-                                country: displayedCountry,
-                                weightPercentage: weightsStore.affordabilityPercentage
-                            )
-                        }
-                    }
+        Group {
+            if isPreparingContent {
+                VStack {
+                    Spacer()
+                    ProgressView()
+                        .scaleEffect(1.1)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        
+                        VStack(spacing: 28) {
+                            
+                            // Header polaroid style
+                            CountryHeaderCard(country: displayedCountry)
+                                .padding()
+                                .background(
+                                    Theme.countryDetailCardBackground(corner: 20)
+                                )
+                                .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+                            
+                            // Advisory card stack
+                            scrapbookSection {
+                                CountryAdvisoryCard(
+                                    country: displayedCountry,
+                                    weightPercentage: weightsStore.advisoryPercentage
+                                )
+                            }
+                            
+                            // Seasonality card stack
+                            scrapbookSection {
+                                CountrySeasonalityCard(
+                                    country: displayedCountry,
+                                    weightPercentage: weightsStore.seasonalityPercentage
+                                )
+                            }
+                            
+                            // Visa card stack
+                            scrapbookSection {
+                                CountryVisaCard(
+                                    country: displayedCountry,
+                                    weightPercentage: weightsStore.visaPercentage
+                                )
+                            }
+                            
+                            // Affordability card stack
+                            if displayedCountry.affordabilityScore != nil {
+                                scrapbookSection {
+                                    CountryAffordabilityCard(
+                                        country: displayedCountry,
+                                        weightPercentage: weightsStore.affordabilityPercentage
+                                    )
+                                }
+                            }
 
-                    if let languageCompatibility {
-                        scrapbookSection {
-                            CountryLanguageCompatibilityCard(
-                                result: languageCompatibility
-                            )
+                            if let languageCompatibility {
+                                scrapbookSection {
+                                    CountryLanguageCompatibilityCard(
+                                        result: languageCompatibility,
+                                        weightPercentage: weightsStore.languagePercentage
+                                    )
+                                }
+                            }
                         }
+                        .id("countryDetailTop")
+                        .padding(.top, 24)
+                        .padding(.horizontal)
+                        .safeAreaPadding(.bottom)
                     }
                 }
-                .id("countryDetailTop")
-                .padding(.top, 24)
-                .padding(.horizontal)
-                .safeAreaPadding(.bottom)
             }
         }
         .background(
@@ -170,12 +184,17 @@ struct CountryDetailView: View {
             .padding(.trailing, 18)
         }
         .task(id: country.iso2.uppercased()) {
-            if sessionManager.isAuthenticated {
-                await profileVM.reloadProfile()
-            }
-            await refreshCountryIfAvailable()
+            isPreparingContent = true
+
+            async let profileReload: Void = sessionManager.isAuthenticated ? profileVM.reloadProfile() : ()
+            async let countryRefresh: Void = refreshCountryIfAvailable()
+            async let languageProfileRefresh: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
+
+            _ = await profileReload
+            _ = await countryRefresh
             country = await visaStore.hydrate(country: country)
-            countryLanguageProfile = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
+            countryLanguageProfile = await languageProfileRefresh
+            isPreparingContent = false
         }
     }
     
@@ -338,6 +357,19 @@ private enum CountryLanguageCompatibilityScorer {
         userLanguages: [Profile.LanguageJSON],
         countryProfile: CountryLanguageProfile
     ) -> CountryLanguageCompatibilityResult? {
+        let evidence = countryProfile.evidence.first(where: { $0.url != nil && $0.kind?.lowercased() != "inference" })
+            ?? countryProfile.evidence.first(where: { $0.url != nil })
+
+        if countryProfile.languages.isEmpty {
+            return CountryLanguageCompatibilityResult(
+                score: 0,
+                headline: "A normal language score does not really apply here.",
+                detail: "This territory has no permanent settled population, so there is no typical resident language environment to score against.",
+                primaryLanguageCode: "",
+                evidence: evidence
+            )
+        }
+
         let normalizedUserLanguages = userLanguages.map { language in
             ScoredUserLanguage(
                 code: LanguageRepository.shared.canonicalLanguageCode(for: language.code)
@@ -382,15 +414,13 @@ private enum CountryLanguageCompatibilityScorer {
                 headline: "Language may be a barrier here.",
                 detail: nil,
                 primaryLanguageCode: "",
-                evidence: nil
+                evidence: evidence
             )
         }
 
         let score = normalizedScore(for: strongestMatch.compatibility)
         let headline = headline(for: strongestMatch, score: score)
         let detail = detailText(for: strongestMatch, allMatches: exactMatches)
-        let evidence = countryProfile.evidence.first(where: { $0.url != nil && $0.kind?.lowercased() != "inference" })
-            ?? countryProfile.evidence.first(where: { $0.url != nil })
 
         return CountryLanguageCompatibilityResult(
             score: score,
@@ -471,6 +501,7 @@ private enum CountryLanguageCompatibilityScorer {
 
 private struct CountryLanguageCompatibilityCard: View {
     let result: CountryLanguageCompatibilityResult
+    let weightPercentage: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -480,7 +511,7 @@ private struct CountryLanguageCompatibilityCard: View {
 
                 Spacer()
 
-                Text("Your languages")
+                Text("Your languages · \(weightPercentage)%")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

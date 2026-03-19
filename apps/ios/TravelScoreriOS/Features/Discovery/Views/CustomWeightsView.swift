@@ -32,7 +32,8 @@ struct CustomWeightsView: View {
         draftWeights.advisory +
         draftWeights.visa +
         draftWeights.affordability +
-        draftWeights.seasonality
+        draftWeights.seasonality +
+        draftWeights.language
     }
     
     private var isZeroSum: Bool {
@@ -44,6 +45,7 @@ struct CustomWeightsView: View {
         originalWeights.visa != draftWeights.visa ||
         originalWeights.affordability != draftWeights.affordability ||
         originalWeights.seasonality != draftWeights.seasonality ||
+        originalWeights.language != draftWeights.language ||
         weightsStore.selectedMonth != draftSelectedMonth
     }
     
@@ -102,6 +104,11 @@ struct CustomWeightsView: View {
                                     value: binding(for: \.advisory)
                                 )
 
+                                weightSlider(
+                                    title: "Language",
+                                    value: binding(for: \.language)
+                                )
+
                                 seasonalityWeightControl
 
                             }
@@ -140,7 +147,7 @@ struct CustomWeightsView: View {
                             }
                         }
                     }
-                    .frame(width: geo.size.width - 40)
+                    .frame(width: max(geo.size.width - 40, 0))
                     .padding(.top, 18)
                     .padding(.bottom, 36)
                 }
@@ -362,20 +369,6 @@ struct CustomWeightsView: View {
 
         guard let userId else { return }
 
-        guard
-            let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
-            let anonKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String,
-            let url = URL(string: urlString)
-        else {
-            print("❌ Missing Supabase config")
-            return
-        }
-
-        let client = SupabaseClient(
-            supabaseURL: url,
-            supabaseKey: anonKey
-        )
-
         do {
             struct PreferencesRow: Encodable {
                 let user_id: UUID
@@ -383,6 +376,7 @@ struct CustomWeightsView: View {
                 let seasonality: Double
                 let visa: Double
                 let affordability: Double
+                let language: Double
             }
 
             let row = PreferencesRow(
@@ -390,10 +384,11 @@ struct CustomWeightsView: View {
                 advisory: draftWeights.advisory,
                 seasonality: draftWeights.seasonality,
                 visa: draftWeights.visa,
-                affordability: draftWeights.affordability
+                affordability: draftWeights.affordability,
+                language: draftWeights.language
             )
 
-            try await client
+            try await SupabaseManager.shared.client
                 .from("user_score_preferences")
                 .upsert(row)
                 .execute()

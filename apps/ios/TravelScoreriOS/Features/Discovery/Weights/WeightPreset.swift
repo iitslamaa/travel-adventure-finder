@@ -22,8 +22,9 @@ extension WeightPreset {
         weights: ScoreWeights(
             affordability: 0.2,
             visa: 0.2,
-            advisory: 0.4,
-            seasonality: 0.2
+            advisory: 0.2,
+            seasonality: 0.2,
+            language: 0.2
         )
     )
 
@@ -31,10 +32,11 @@ extension WeightPreset {
         name: "Budget",
         description: "Prioritize cheaper destinations",
         weights: ScoreWeights(
-            affordability: 0.55,
-            visa: 0.15,
+            affordability: 0.45,
+            visa: 0.1,
             advisory: 0.15,
-            seasonality: 0.15
+            seasonality: 0.1,
+            language: 0.2
         )
     )
 
@@ -42,10 +44,11 @@ extension WeightPreset {
         name: "Easy Travel",
         description: "Visa-free and convenient destinations",
         weights: ScoreWeights(
-            affordability: 0.15,
-            visa: 0.45,
-            advisory: 0.25,
-            seasonality: 0.15
+            affordability: 0.1,
+            visa: 0.3,
+            advisory: 0.2,
+            seasonality: 0.1,
+            language: 0.3
         )
     )
 
@@ -55,8 +58,9 @@ extension WeightPreset {
         weights: ScoreWeights(
             affordability: 0.1,
             visa: 0.15,
-            advisory: 0.6,
-            seasonality: 0.15
+            advisory: 0.5,
+            seasonality: 0.1,
+            language: 0.15
         )
     )
 
