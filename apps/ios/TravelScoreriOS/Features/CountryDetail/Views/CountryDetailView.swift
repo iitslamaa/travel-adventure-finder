@@ -8,6 +8,7 @@
 import SwiftUI
 import PostgREST
 import Supabase
+import Combine
 
 struct CountryDetailView: View {
     @State var country: Country
@@ -20,6 +21,8 @@ struct CountryDetailView: View {
     @State private var scrollAnchor: String? = nil
     @State private var countryLanguageProfile: CountryLanguageProfile?
     @State private var isPreparingContent: Bool = true
+    @StateObject private var engagementVM = CountryFriendEngagementViewModel()
+    @State private var activeSheet: CountryDetailSheet?
 
     private var displayedCountry: Country {
         country.applyingOverallScore(using: weightsStore.weights, selectedMonth: weightsStore.selectedMonth)
@@ -90,6 +93,19 @@ struct CountryDetailView: View {
                                     Theme.countryDetailCardBackground(corner: 20)
                                 )
                                 .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+
+                            if sessionManager.isAuthenticated {
+                                scrapbookSection {
+                                    CountryFriendEngagementPreviewCard(
+                                        country: displayedCountry,
+                                        engagement: engagementVM.engagement,
+                                        isLoading: engagementVM.isLoading,
+                                        onOpen: {
+                                            activeSheet = .engagement
+                                        }
+                                    )
+                                }
+                            }
                             
                             // Advisory card stack
                             scrapbookSection {
@@ -186,15 +202,38 @@ struct CountryDetailView: View {
         .task(id: country.iso2.uppercased()) {
             isPreparingContent = true
 
-            async let profileReload: Void = sessionManager.isAuthenticated ? profileVM.reloadProfile() : ()
+            if sessionManager.isAuthenticated {
+                Task {
+                    await profileVM.reloadProfile()
+                }
+            }
+
+            Task {
+                await engagementVM.load(
+                    countryCode: country.iso2,
+                    currentUserId: sessionManager.userId,
+                    isAuthenticated: sessionManager.isAuthenticated
+                )
+            }
+
             async let countryRefresh: Void = refreshCountryIfAvailable()
             async let languageProfileRefresh: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
 
-            _ = await profileReload
             _ = await countryRefresh
             country = await visaStore.hydrate(country: country)
             countryLanguageProfile = await languageProfileRefresh
             isPreparingContent = false
+        }
+        .fullScreenCover(item: $activeSheet) { sheet in
+            switch sheet {
+            case .engagement:
+                CountryFriendEngagementSheet(
+                    country: displayedCountry,
+                    engagement: engagementVM.engagement
+                )
+            case .profile(let userId):
+                CountryFriendProfileSheet(userId: userId)
+            }
         }
     }
     
@@ -234,6 +273,564 @@ struct CountryDetailView: View {
             traveledStore.replace(with: profileVM.viewedTraveledCountries)
         } else {
             traveledStore.toggle(country.id)
+        }
+    }
+}
+
+private enum CountryDetailSheet: Identifiable {
+    case engagement
+    case profile(UUID)
+
+    var id: String {
+        switch self {
+        case .engagement:
+            return "engagement"
+        case .profile(let userId):
+            return "profile-\(userId.uuidString)"
+        }
+    }
+}
+
+private struct SelectedFriendProfile: Identifiable {
+    let id: UUID
+}
+
+private struct CountryFriendEngagement {
+    let totalFriends: Int
+    let visited: [Profile]
+    let bucketList: [Profile]
+    let fromHere: [Profile]
+
+    static let empty = CountryFriendEngagement(
+        totalFriends: 0,
+        visited: [],
+        bucketList: [],
+        fromHere: []
+    )
+
+    var hasMatches: Bool {
+        !visited.isEmpty || !bucketList.isEmpty || !fromHere.isEmpty
+    }
+}
+
+@MainActor
+private final class CountryFriendEngagementViewModel: ObservableObject {
+    @Published private(set) var engagement: CountryFriendEngagement = .empty
+    @Published private(set) var isLoading = false
+
+    private let service = CountryFriendEngagementService()
+
+    func load(countryCode: String, currentUserId: UUID?, isAuthenticated: Bool) async {
+        guard isAuthenticated, let currentUserId else {
+            engagement = .empty
+            isLoading = false
+            return
+        }
+
+        isLoading = true
+
+        do {
+            engagement = try await service.fetchEngagement(
+                for: countryCode,
+                currentUserId: currentUserId
+            )
+        } catch {
+            print("❌ failed to load country friend engagement:", error)
+            engagement = .empty
+        }
+
+        isLoading = false
+    }
+}
+
+private struct EngagementUserRow: Decodable {
+    let userId: UUID
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+    }
+}
+
+private struct CountryFriendEngagementService {
+    private let supabase = SupabaseManager.shared
+    private let friendService = FriendService(supabase: .shared)
+
+    func fetchEngagement(
+        for countryCode: String,
+        currentUserId: UUID
+    ) async throws -> CountryFriendEngagement {
+        let normalizedCountryCode = countryCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        let friends = try await friendService.fetchFriends(for: currentUserId)
+
+        guard !friends.isEmpty else {
+            return .empty
+        }
+
+        let friendIds = friends.map(\.id)
+        let profilesById = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })
+
+        async let visitedIds = fetchFriendIDs(
+            in: "user_traveled",
+            countryCode: normalizedCountryCode,
+            friendIds: friendIds
+        )
+        async let bucketIds = fetchFriendIDs(
+            in: "user_bucket_list",
+            countryCode: normalizedCountryCode,
+            friendIds: friendIds
+        )
+
+        let fromHere = friends
+            .filter { profile in
+                profile.livedCountries.contains { livedCountry in
+                    livedCountry.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == normalizedCountryCode
+                }
+            }
+            .sorted(by: profileSort)
+
+        return CountryFriendEngagement(
+            totalFriends: friends.count,
+            visited: profiles(for: try await visitedIds, from: profilesById),
+            bucketList: profiles(for: try await bucketIds, from: profilesById),
+            fromHere: fromHere
+        )
+    }
+
+    private func fetchFriendIDs(
+        in table: String,
+        countryCode: String,
+        friendIds: [UUID]
+    ) async throws -> Set<UUID> {
+        let response: PostgrestResponse<[EngagementUserRow]> = try await supabase.client
+            .from(table)
+            .select("user_id")
+            .eq("country_id", value: countryCode)
+            .in("user_id", values: friendIds.map(\.uuidString))
+            .limit(1000)
+            .execute()
+
+        return Set(response.value.map(\.userId))
+    }
+
+    private func profiles(
+        for ids: Set<UUID>,
+        from profilesById: [UUID: Profile]
+    ) -> [Profile] {
+        ids.compactMap { profilesById[$0] }
+            .sorted(by: profileSort)
+    }
+
+    private func profileSort(lhs: Profile, rhs: Profile) -> Bool {
+        let lhsName = lhs.fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rhsName = rhs.fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if lhsName.isEmpty || rhsName.isEmpty {
+            return lhs.username.localizedCaseInsensitiveCompare(rhs.username) == .orderedAscending
+        }
+
+        return lhsName.localizedCaseInsensitiveCompare(rhsName) == .orderedAscending
+    }
+}
+
+private struct CountryFriendEngagementPreviewCard: View {
+    let country: Country
+    let engagement: CountryFriendEngagement
+    let isLoading: Bool
+    let onOpen: () -> Void
+
+    var body: some View {
+        Button(action: onOpen) {
+            HStack(spacing: 14) {
+                friendPreviewStack
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Your friends")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+
+                    if isLoading {
+                        Text(country.name)
+                            .font(TAFTypography.body(.semibold))
+                            .foregroundStyle(.primary)
+
+                        Text("Loading travel signals from your circle")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(country.name)
+                            .font(TAFTypography.body(.semibold))
+                            .foregroundStyle(.primary)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text(secondaryCopy)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary.opacity(0.7))
+            }
+        }
+        .buttonStyle(.plain)
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.countryDetailCardBackground(corner: 14))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var secondaryCopy: String {
+        if engagement.totalFriends == 0 {
+            return "Add friends to unlock travel signals here."
+        }
+
+        let parts = [
+            summaryPart(count: engagement.visited.count, singular: "visited"),
+            summaryPart(count: engagement.bucketList.count, singular: "want to go"),
+            summaryPart(count: engagement.fromHere.count, singular: "from here")
+        ]
+        .compactMap { $0 }
+
+        if parts.isEmpty {
+            return "\(engagement.totalFriends) friends, no travel signals yet"
+        }
+
+        return parts.joined(separator: " • ")
+    }
+
+    private func summaryPart(count: Int, singular: String) -> String? {
+        guard count > 0 else { return nil }
+        return "\(count) \(singular)"
+    }
+
+    private var friendPreviewStack: some View {
+        ZStack(alignment: .leading) {
+            if previewProfiles.isEmpty {
+                Circle()
+                    .fill(Color.black.opacity(0.08))
+                    .frame(width: 48, height: 48)
+                    .overlay {
+                        Image(systemName: "person.2.fill")
+                            .foregroundStyle(.secondary)
+                    }
+            } else {
+                ForEach(Array(previewProfiles.enumerated()), id: \.element.id) { index, profile in
+                    FriendAvatarView(profile: profile)
+                        .frame(width: 42, height: 42)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.9), lineWidth: 2)
+                        )
+                        .offset(x: CGFloat(index) * 22)
+                        .zIndex(Double(previewProfiles.count - index))
+                }
+            }
+        }
+        .frame(width: previewStackWidth, height: 48, alignment: .leading)
+    }
+
+    private var previewProfiles: [Profile] {
+        var seen = Set<UUID>()
+        let combined = engagement.visited + engagement.fromHere + engagement.bucketList
+
+        return combined.filter { profile in
+            seen.insert(profile.id).inserted
+        }
+        .prefix(3)
+        .map { $0 }
+    }
+
+    private var previewStackWidth: CGFloat {
+        previewProfiles.isEmpty ? 48 : CGFloat(42 + max(previewProfiles.count - 1, 0) * 22)
+    }
+}
+
+private struct CountryFriendEngagementCard: View {
+    let country: Country
+    let engagement: CountryFriendEngagement
+    let onSelectProfile: (UUID) -> Void
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Theme.scrapbookBack(corner: 24)
+
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("See who has visited, wants to go, or is from here.")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer()
+
+                    if engagement.totalFriends > 0 {
+                        Text("\(engagement.totalFriends) friends")
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(Color(red: 0.88, green: 0.84, blue: 0.77).opacity(0.78))
+                            )
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 14) {
+                    engagementGroup(
+                        title: "Visited",
+                        symbol: "checkmark.circle.fill",
+                        tint: Color(red: 0.38, green: 0.56, blue: 0.34),
+                        profiles: engagement.visited
+                    )
+                    engagementGroup(
+                        title: "Bucket list",
+                        symbol: "bookmark.fill",
+                        tint: Color(red: 0.72, green: 0.46, blue: 0.20),
+                        profiles: engagement.bucketList
+                    )
+                    engagementGroup(
+                        title: "From here",
+                        symbol: "house.fill",
+                        tint: Color(red: 0.46, green: 0.47, blue: 0.60),
+                        profiles: engagement.fromHere
+                    )
+                }
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color(red: 0.95, green: 0.91, blue: 0.84).opacity(0.68))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .fill(Color.white.opacity(0.14))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(Color.white.opacity(0.26), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.10), radius: 12, y: 8)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+
+            HStack {
+                Theme.tape(width: 68, height: 18)
+                Spacer()
+                Theme.tape(width: 54, height: 16)
+            }
+            .padding(.horizontal, 42)
+            .offset(y: -9)
+        }
+    }
+
+    @ViewBuilder
+    private func engagementGroup(
+        title: String,
+        symbol: String,
+        tint: Color,
+        profiles: [Profile]
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label(title, systemImage: symbol)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(tint)
+
+                Spacer()
+
+                Text("\(profiles.count)")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            if profiles.isEmpty {
+                Text("Nobody yet")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(profiles, id: \.id) { profile in
+                        Button {
+                            onSelectProfile(profile.id)
+                        } label: {
+                            HStack(spacing: 12) {
+                                FriendAvatarView(profile: profile)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(profile.fullName.isEmpty ? profile.username : profile.fullName)
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(.primary)
+
+                                    Text("@\(profile.username)")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right")
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundStyle(.secondary.opacity(0.7))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(Color(red: 0.98, green: 0.95, blue: 0.90).opacity(0.74))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct FriendAvatarView: View {
+    let profile: Profile
+
+    var body: some View {
+        Group {
+            if let avatarURL = profile.avatarUrl,
+               !avatarURL.isEmpty,
+               let url = URL(string: avatarURL) {
+                AsyncImage(url: url) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        fallbackAvatar
+                    }
+                }
+            } else {
+                fallbackAvatar
+            }
+        }
+        .frame(width: 38, height: 38)
+        .clipShape(Circle())
+    }
+
+    private var fallbackAvatar: some View {
+        ZStack {
+            Circle()
+                .fill(Color.black.opacity(0.08))
+
+            Image(systemName: "person.crop.circle.fill")
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(.secondary)
+                .padding(4)
+        }
+    }
+}
+
+private struct CountryFriendProfileSheet: View {
+    let userId: UUID
+
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var socialNav = SocialNavigationController()
+
+    var body: some View {
+        NavigationStack(path: $socialNav.path) {
+            ProfileView(userId: userId, showsBackButton: true)
+                .environmentObject(socialNav)
+                .navigationDestination(for: SocialRoute.self) { route in
+                    socialDestination(route)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(.black)
+                        }
+                    }
+                }
+        }
+    }
+
+    @ViewBuilder
+    private func socialDestination(_ route: SocialRoute) -> some View {
+        switch route {
+        case .profile(let routeUserId):
+            ProfileView(userId: routeUserId, showsBackButton: true)
+                .environmentObject(socialNav)
+        case .friends(let routeUserId):
+            FriendsView(userId: routeUserId, showsBackButton: true)
+                .environmentObject(socialNav)
+        case .friendRequests:
+            FriendRequestsView()
+                .environmentObject(socialNav)
+        }
+    }
+}
+
+private struct CountryFriendEngagementSheet: View {
+    let country: Country
+    let engagement: CountryFriendEngagement
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedProfile: SelectedFriendProfile?
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.pageBackground("travel3", tint: 0.08)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    ZStack(alignment: .topTrailing) {
+                        Theme.titleBanner(country.name)
+
+                        Button {
+                            dismiss()
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                                    .frame(width: 40, height: 40)
+
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundStyle(.black)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 14)
+                        .padding(.trailing, 18)
+                    }
+
+                    ScrollView {
+                        VStack(spacing: 18) {
+                            CountryFriendEngagementCard(
+                                country: country,
+                                engagement: engagement,
+                                onSelectProfile: { userId in
+                                    selectedProfile = SelectedFriendProfile(id: userId)
+                                }
+                            )
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                            .padding(.bottom, 24)
+                        }
+                    }
+                }
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .sheet(item: $selectedProfile) { selectedProfile in
+                CountryFriendProfileSheet(userId: selectedProfile.id)
+            }
         }
     }
 }
