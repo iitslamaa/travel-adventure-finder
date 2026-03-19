@@ -556,57 +556,81 @@ private struct CountryFriendEngagementCard: View {
     let onSelectProfile: (UUID) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Friends who know \(country.name)")
-                        .font(TAFTypography.section(.semibold))
+        ZStack(alignment: .top) {
+            Theme.scrapbookBack(corner: 24)
 
-                    Text("See who has visited, wants to go, or is from here.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Friends who know \(country.name)")
+                            .font(TAFTypography.section(.semibold))
+
+                        Text("See who has visited, wants to go, or is from here.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer()
+
+                    if engagement.totalFriends > 0 {
+                        Text("\(engagement.totalFriends) friends")
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(Color(red: 0.88, green: 0.84, blue: 0.77).opacity(0.78))
+                            )
+                    }
                 }
 
+                VStack(alignment: .leading, spacing: 14) {
+                    engagementGroup(
+                        title: "Visited",
+                        symbol: "checkmark.circle.fill",
+                        tint: .green,
+                        profiles: engagement.visited
+                    )
+                    engagementGroup(
+                        title: "Bucket list",
+                        symbol: "bookmark.fill",
+                        tint: Color(red: 0.84, green: 0.51, blue: 0.18),
+                        profiles: engagement.bucketList
+                    )
+                    engagementGroup(
+                        title: "From here",
+                        symbol: "house.fill",
+                        tint: Color(red: 0.24, green: 0.44, blue: 0.72),
+                        profiles: engagement.fromHere
+                    )
+                }
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color(red: 0.95, green: 0.91, blue: 0.84).opacity(0.68))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .fill(Color.white.opacity(0.14))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(Color.white.opacity(0.26), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.10), radius: 12, y: 8)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+
+            HStack {
+                Theme.tape(width: 68, height: 18)
                 Spacer()
-
-                if engagement.totalFriends > 0 {
-                    Text("\(engagement.totalFriends) friends")
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(
-                            Capsule()
-                                .fill(Color.black.opacity(0.08))
-                        )
-                }
+                Theme.tape(width: 54, height: 16)
             }
-
-            VStack(alignment: .leading, spacing: 14) {
-                engagementGroup(
-                    title: "Visited",
-                    symbol: "checkmark.circle.fill",
-                    tint: .green,
-                    profiles: engagement.visited
-                )
-                engagementGroup(
-                    title: "Bucket list",
-                    symbol: "bookmark.fill",
-                    tint: Color(red: 0.84, green: 0.51, blue: 0.18),
-                    profiles: engagement.bucketList
-                )
-                engagementGroup(
-                    title: "From here",
-                    symbol: "house.fill",
-                    tint: Color(red: 0.24, green: 0.44, blue: 0.72),
-                    profiles: engagement.fromHere
-                )
-            }
+            .padding(.horizontal, 42)
+            .offset(y: -9)
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.countryDetailCardBackground(corner: 14))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     @ViewBuilder
@@ -662,7 +686,7 @@ private struct CountryFriendEngagementCard: View {
                             .padding(.vertical, 10)
                             .background(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(Color.white.opacity(0.52))
+                                    .fill(Color(red: 0.98, green: 0.95, blue: 0.90).opacity(0.74))
                             )
                         }
                         .buttonStyle(.plain)
