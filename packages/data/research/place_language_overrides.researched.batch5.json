@@ -1,0 +1,125 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "JE",
+    "override_reason": "english_primary_with_heritage_language_override",
+    "notes": "Jersey should score English as the practical everyday language for travelers while recognizing Jerriais as a protected heritage language and French as historically significant.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "fr", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Government of Jersey: Improve your English",
+        "url": "https://www.gov.je/lifeevents/movingtojersey/whenyouarrive/pages/improveenglish.aspx",
+        "note": "Government guidance says Jersey is predominantly English speaking, used for government services, businesses, and the majority of signs."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Government of Jersey: Jerriais traditional language",
+        "url": "https://www.gov.je/leisure/jersey/pages/language.aspx",
+        "note": "Government guidance describes Jerriais as Jersey's traditional language and confirms it is not widely spoken today."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GG",
+    "override_reason": "english_primary_with_heritage_language_override",
+    "notes": "Guernsey should score English as the main traveler language while recognizing Guernesiais and French as culturally important but lower-coverage today.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "fr", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Guernsey: Which languages are spoken in Guernsey?",
+        "url": "https://www.visitguernsey.com/articles/2020/which-languages-are-spoken-in-guernsey",
+        "note": "Official tourism content says English is Guernsey's main language today and explains the heritage role of Guernesiais and historical French."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Guernsey: multilingual guide availability",
+        "url": "https://www.visitguernsey.com/experiences/activities/guided-walks/",
+        "note": "Official tourism guidance shows English by default and notes French-language guide availability."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "IM",
+    "override_reason": "english_primary_with_heritage_language_override",
+    "notes": "The Isle of Man should score English as fully usable for travelers while recognizing Manx Gaelic as a heritage language with signage and cultural visibility.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "gv", "type": "minor", "coverage": 0.2 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Isle of Man visitor guide: language",
+        "url": "https://www.isleofman.com/visitor-guide/6472/2823/get-to-know-the-isle-of-man",
+        "note": "Official visitor guidance says English is the spoken and written language of the Isle of Man, while Manx Gaelic is the traditional language."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Isle of Man visitor guide basics",
+        "url": "https://www.isleofman.com/visitor-guide",
+        "note": "Official visitor basics list the island's language as English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "HK",
+    "override_reason": "official_bilingual_and_traveler_usability_override",
+    "notes": "Hong Kong should recognize both English and Chinese as official while acknowledging Cantonese as the dominant spoken variety in daily life.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "zh", "type": "official", "coverage": 1.0 },
+      { "code": "yue", "type": "widely_spoken", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Hong Kong Tourism Board: Good to know",
+        "url": "https://www.discoverhongkong.com/us/plan/traveller-info/good-to-know.html",
+        "note": "Official tourism guidance says Chinese and English are the official languages and that Cantonese is the mother tongue of the majority of residents."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Hong Kong Official Languages Ordinance",
+        "url": "https://www.elegislation.gov.hk/hk/cap5",
+        "note": "Hong Kong law gives Chinese and English equal official status."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MO",
+    "override_reason": "official_multilingual_tourism_override",
+    "notes": "Macao should recognize Chinese and Portuguese as official while giving English meaningful credit for tourism and commerce. Cantonese is the dominant spoken Chinese variety in daily life.",
+    "languages": [
+      { "code": "zh", "type": "official", "coverage": 1.0 },
+      { "code": "pt", "type": "official", "coverage": 1.0 },
+      { "code": "yue", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Macao Government Tourism Office: Language",
+        "url": "https://www.macaotourism.gov.mo/en/article/about-macao/language",
+        "note": "Official tourism guidance says Chinese and Portuguese are official, Cantonese is the most widely spoken, and English is generally used in trade, tourism and commerce."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Macao SAR Government Portal tourism language note",
+        "url": "https://www.gov.mo/en/browse/tourism/",
+        "note": "The Macao SAR government portal publishes official tourism information in Chinese, Portuguese, and English."
+      }
+    ]
+  }
+]

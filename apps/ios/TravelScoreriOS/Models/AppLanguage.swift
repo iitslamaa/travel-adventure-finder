@@ -13,4 +13,5 @@ struct AppLanguage: Identifiable, Codable, Hashable {
     let base: String
 
     var id: String { code }
+    var travelLanguageCode: String { base.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
 }

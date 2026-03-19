@@ -1,0 +1,97 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "BS",
+    "override_reason": "official_language_override",
+    "notes": "The Bahamas should score English as fully compatible for travel. Bahamian speech includes local patois and slang, but standard English remains the practical national language for visitors.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Constitution Commission Report: language in The Bahamas",
+        "url": "https://cdn.bahamas.gov.bs/tenant/tenanttgotb/documents/All%20Documents/ConstitutionCommissionReport20138JULY2013-20240119174548.pdf",
+        "note": "The Constitutional Commission report says English is the primary and perhaps only language of The Bahamas and recommends declaring it the national language."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Bahamas.com slang with translations",
+        "url": "https://www.bahamas.com/blog/bahamian-slang-with-translations",
+        "note": "Official tourism content explains that Bahamians code-switch between professional English and local slang, which supports English as the default traveler language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BB",
+    "override_reason": "official_language_override",
+    "notes": "Barbados should score English as fully compatible. Travelers may hear Bajan speech patterns, but English is the national default for public-facing travel use.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Barbados",
+        "url": "https://www.britannica.com/place/Barbados",
+        "note": "Britannica lists English as Barbados's official language."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Barbados history and culture",
+        "url": "https://www.visitbarbados.org/things-to-do/experiences/history-culture",
+        "note": "Official tourism content says Bajans speak English with a distinct local accent and vocabulary."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "JM",
+    "override_reason": "official_language_override",
+    "notes": "Jamaica should score English as fully compatible while acknowledging the strong day-to-day presence of Jamaican Patois.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Jamaica language guide",
+        "url": "https://www.visitjamaica.com/discover-jamaica/people-heritage/language/",
+        "note": "Official tourism content says Jamaica's official language is English and also explains the role of Jamaican Patois."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Jamaica general information",
+        "url": "https://www.visitjamaica.com/plan-your-adventure/travel-tips/faq/",
+        "note": "Official tourism FAQs say Jamaica officially speaks English and mixes in island patois."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TC",
+    "override_reason": "official_language_override",
+    "notes": "Turks and Caicos should score English as fully compatible. English is the official traveler-facing language, while Spanish, French, and Turks and Caicos Creole English also appear in community and everyday island use.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "tch", "type": "minor", "coverage": 0.35 },
+      { "code": "es", "type": "minor", "coverage": 0.25 },
+      { "code": "fr", "type": "minor", "coverage": 0.2 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Invest Turks and Caicos: businesses in TCI",
+        "url": "https://investturksandcaicos.tc/why-invest-in-turks-and-caicos-islands/businesses-turks-and-caicos/",
+        "note": "The official investment portal says English is the official language of the Turks and Caicos Islands, while Creole, French, and Spanish are also spoken in the expatriate community."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Invest Turks and Caicos brochure",
+        "url": "https://investturksandcaicos.tc/invest-tci-brochure/",
+        "note": "The official government brochure lists English as the language of Turks and Caicos."
+      }
+    ]
+  }
+]

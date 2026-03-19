@@ -14,12 +14,22 @@ struct AddLanguageView: View {
     let onSelect: (LanguageEntry) -> Void
 
     private var languages: [AppLanguage] {
-        let all = LanguageRepository.shared.allLanguages
+        let filtered = LanguageRepository.shared.allLanguages.filter {
+            guard !searchText.isEmpty else { return true }
+            return LanguageRepository.shared.matchesSearchQuery(searchText, language: $0)
+        }
 
-        guard !searchText.isEmpty else { return all }
+        var seenTravelCodes: Set<String> = []
 
-        return all.filter {
-            $0.displayName.localizedCaseInsensitiveContains(searchText)
+        return filtered.compactMap { language in
+            let canonicalCode = LanguageRepository.shared.canonicalLanguageCode(for: language.travelLanguageCode)
+                ?? language.travelLanguageCode
+
+            guard seenTravelCodes.insert(canonicalCode).inserted else {
+                return nil
+            }
+
+            return language
         }
     }
 
@@ -27,10 +37,15 @@ struct AddLanguageView: View {
         NavigationStack {
             List(languages) { language in
                 Button {
-                    onSelect(LanguageEntry(name: language.code, proficiency: "native"))
+                    onSelect(
+                        LanguageEntry(
+                            name: language.travelLanguageCode,
+                            proficiency: LanguageProficiency.fluent.storageValue
+                        )
+                    )
                     dismiss()
                 } label: {
-                    Text(language.displayName)
+                    Text(LanguageRepository.shared.preferredDisplayName(for: language))
                 }
             }
             .searchable(text: $searchText)

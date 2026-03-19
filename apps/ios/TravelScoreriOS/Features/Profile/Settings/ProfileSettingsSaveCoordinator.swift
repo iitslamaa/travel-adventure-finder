@@ -51,8 +51,8 @@ struct ProfileSettingsSaveCoordinator {
                 username: trimmedUsername,
                 homeCountries: Array(homeCountries).sorted(),
                 languages: languages.map { [
-                    "code": $0.name,
-                    "proficiency": $0.proficiency
+                    "code": $0.canonicalCode,
+                    "proficiency": $0.normalizedProficiency.storageValue
                 ] },
                 travelMode: travelMode?.rawValue,
                 travelStyle: travelStyle?.rawValue,

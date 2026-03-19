@@ -1,0 +1,81 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "LB",
+    "override_reason": "dialect_and_traveler_usability_override",
+    "notes": "Lebanese spoken Arabic should match Levantine Arabic for everyday travel comfort. English and French are also practically useful in Lebanon.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "apc", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "fr", "type": "widely_spoken", "coverage": 0.65 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "linguistic_reference",
+        "title": "Glottolog reference linking Lebanese Arabic to North Levantine Spoken [apc]",
+        "url": "https://glottolog.org/resource/reference/id/661333",
+        "note": "Supports mapping Lebanese spoken Arabic to the app language code apc."
+      },
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Lebanon",
+        "url": "https://www.britannica.com/place/Lebanon",
+        "note": "Britannica describes Arabic as the official language and French and English as widely spoken."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "AW",
+    "override_reason": "tourism_language_override",
+    "notes": "Aruba should score highly for English usability in traveler reality, not just official-language baseline.",
+    "languages": [
+      { "code": "pap", "type": "official", "coverage": 1.0 },
+      { "code": "nl", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.9 },
+      { "code": "es", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Aruba.com official travel guide",
+        "url": "https://www.aruba.com/us/blog/the-official-aruba-travel-guide",
+        "note": "Official tourism copy says most Arubans also speak English and Spanish and are happy to help guests in English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Aruba.com Papiamento page",
+        "url": "https://www.aruba.com/uk/our-island/history-and-culture/papiamento",
+        "note": "Official tourism page confirms Papiamento and Dutch as official languages."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "AD",
+    "override_reason": "multilingual_tourism_override",
+    "notes": "Andorra should not behave like a Catalan-only destination. Spanish and French are very present; English is useful in tourism but not as universal as Spanish or French.",
+    "languages": [
+      { "code": "ca", "type": "official", "coverage": 1.0 },
+      { "code": "es", "type": "widely_spoken", "coverage": 0.9 },
+      { "code": "fr", "type": "widely_spoken", "coverage": 0.7 },
+      { "code": "pt", "type": "minor", "coverage": 0.35 },
+      { "code": "en", "type": "tourist", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Andorra essential information",
+        "url": "https://visitandorra.com/en/essential-information-about-andorra/",
+        "note": "Official tourism site says Catalan is official and Spanish, French, and Portuguese are very present."
+      },
+      {
+        "kind": "inference",
+        "title": "Visit Andorra English-language site",
+        "url": "https://visitandorra.com/en/",
+        "note": "English inclusion is a tourism-utility override rather than an official-language claim."
+      }
+    ]
+  }
+]
