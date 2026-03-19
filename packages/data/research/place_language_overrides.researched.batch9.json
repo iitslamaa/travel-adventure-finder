@@ -1,0 +1,128 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "BL",
+    "override_reason": "official_french_with_high_english_tourism_override",
+    "notes": "Saint Barthélemy should recognize French as official while giving strong credit to English because official tourism services are consistently bilingual and English is widely usable in the island's visitor economy.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Saint Barth Tourism Office",
+        "url": "https://www.saintbarth-tourisme.com/localisation-office-de-tourisme/",
+        "note": "The official tourism office operates a bilingual French/English visitor site, supporting strong traveler usability in English."
+      },
+      {
+        "kind": "secondary_reference",
+        "title": "Petit Futé: Saint-Barthélemy population and languages",
+        "url": "https://www.petitfute.co.uk/p221-saint-barthelemy/decouvrir/d470-population/",
+        "note": "This travel reference says French is the official language of Saint Barthélemy and that English is widely spoken."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MF",
+    "override_reason": "official_french_with_widely_spoken_english_override",
+    "notes": "The French side of Saint-Martin should score French as official while giving equally strong practical credit to English because public-facing institutions and the tourism economy operate comfortably in both.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Collectivité de Saint-Martin English pages",
+        "url": "https://www.comstmartin.fr/en/alertes/impot-sur-le-revenu-2024--date-limite-de-declaration-reportee-au-20-juin-2025",
+        "note": "The Collectivité publishes official public information in both French and English, which supports strong functional English usability."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Saint Martin",
+        "url": "https://www.britannica.com/place/Saint-Martin-island-West-Indies",
+        "note": "Britannica says French is the official language on the French side of the island and that English is widely spoken."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MS",
+    "override_reason": "official_english_with_local_creole_note_override",
+    "notes": "Montserrat should score English as fully compatible for travelers. A local English-lexifier creole is also spoken, but exact-code reconciliation for that variety will be handled in the final cleanup pass.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Montserrat: Contact Us",
+        "url": "https://blog.visitmontserrat.com/contact-us/",
+        "note": "Montserrat's official tourism organization presents visitor services entirely in English, supporting English as the practical travel language."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Montserrat",
+        "url": "https://www.britannica.com/place/Montserrat-island-West-Indies",
+        "note": "Britannica says the official language is English, while also noting that most Montserratians speak a Creole language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SR",
+    "override_reason": "official_dutch_with_sranan_lingua_franca_override",
+    "notes": "Suriname should recognize Dutch as the official language while giving very strong practical credit to Sranan Tongo, the country's common lingua franca. English also deserves modest credit because official travel guidance says most Surinamese speak basic English.",
+    "languages": [
+      { "code": "nl", "type": "official", "coverage": 1.0 },
+      { "code": "srn", "type": "widely_spoken", "coverage": 0.9 },
+      { "code": "en", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Suriname Travel: Facts About Suriname",
+        "url": "https://suriname.travel/facts-about-suriname/",
+        "note": "Official tourism guidance says Dutch is the official language, Sranan Tongo is the common language, and most Surinamese speak basic English."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Permanent Mission of Suriname to the United Nations: Country Facts",
+        "url": "https://www.un.int/suriname/suriname/country-facts",
+        "note": "Suriname's UN mission lists Dutch as official, English as widely spoken in Paramaribo, and Sranan Tongo as a national creole language."
+      },
+      {
+        "kind": "reference",
+        "title": "Digital Bible Society: Sranan Tongo [srn]",
+        "url": "https://dbs.org/en/research/languages/srn/",
+        "note": "DBS identifies Sranan Tongo as Suriname's unofficial national language and lingua franca."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "HT",
+    "override_reason": "official_haitian_with_french_formal_use_override",
+    "notes": "Haiti should give full credit to Haitian Creole in everyday compatibility and meaningful secondary credit to French, which remains an official language used more in formal and institutional contexts.",
+    "languages": [
+      { "code": "ht", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "official", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Haiti: Haitian Creole words and expressions",
+        "url": "https://visithaiti.com/fr/haiti-de-pres/mots-et-expressions-en-creole-haitien/",
+        "note": "Official tourism content actively teaches Haitian Creole to visitors, which supports its role as the primary everyday travel language."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Haiti",
+        "url": "https://www.britannica.com/place/Haiti/Climate",
+        "note": "Britannica says Haitian Creole and French are both official, with Creole used in daily life and French used more in formal circumstances."
+      }
+    ]
+  }
+]

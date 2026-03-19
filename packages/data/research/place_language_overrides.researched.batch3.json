@@ -1,0 +1,150 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "BM",
+    "override_reason": "official_language_override",
+    "notes": "Bermuda should score English as fully compatible because English is the official and practical public language for travel.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Bermuda",
+        "url": "https://www.britannica.com/place/Bermuda",
+        "note": "Britannica lists English as Bermuda's official language."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Government of Bermuda immigration English proficiency requirements",
+        "url": "https://www.gov.bm/articles/department-immigration-clarifies-english-language-proficiency-requirements",
+        "note": "Government policy uses English as the required public-language standard for immigration and work-permit purposes."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BQ",
+    "override_reason": "aggregate_territory_language_override",
+    "notes": "Caribbean Netherlands is an app-level aggregate of Bonaire, Sint Eustatius, and Saba. Dutch is the official administrative language, English dominates on Saba and St Eustatius, and Papiamentu is central on Bonaire.",
+    "languages": [
+      { "code": "nl", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "pap", "type": "widely_spoken", "coverage": 0.65 },
+      { "code": "es", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "CBS: Main languages of the Caribbean Netherlands",
+        "url": "https://longreads.cbs.nl/the-caribbean-netherlands-in-numbers-2022/what-percentage-of-the-population-speaks-dutch/",
+        "note": "CBS shows English as the main language on Saba and St Eustatius, while Papiamentu is the main language on Bonaire."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Government.nl: Papiamento on Bonaire officially recognised",
+        "url": "https://www.government.nl/latest/news/2024/01/29/papiamento-on-bonaire-now-officially-recognised-under-the-european-charter-for-regional-and-minority-languages",
+        "note": "The Dutch government formally recognises Papiamento on Bonaire."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "InfoBonaire language guide",
+        "url": "https://infobonaire.com/about-bonaire/languages/",
+        "note": "Tourism guidance for Bonaire says Dutch is official, Papiamentu is the native majority language, and English is also widely spoken."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CW",
+    "override_reason": "multilingual_official_language_override",
+    "notes": "Curaçao is fully multilingual for travelers: Papiamentu, Dutch, and English are official, and Spanish is also commonly usable.",
+    "languages": [
+      { "code": "pap", "type": "official", "coverage": 1.0 },
+      { "code": "nl", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "es", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Curaçao official tourism: native and official languages",
+        "url": "https://www.curacao.com/en/questions/culture/what-is-the-native-language-spoken-in-curacao",
+        "note": "Official tourism content says Dutch, Papiamentu, and English are official languages in Curaçao."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Curaçao official tourism: English is widely spoken",
+        "url": "https://www.curacao.com/en/questions/culture/do-people-speak-english-in-curacao",
+        "note": "Official tourism content says most Curaçaoans speak English, Dutch, Spanish, and Papiamentu."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SX",
+    "override_reason": "multilingual_tourism_override",
+    "notes": "Sint Maarten should not score as Dutch-only. English is official and dominant in daily life, with French and Spanish often usable in tourism-heavy settings.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "nl", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "widely_spoken", "coverage": 0.55 },
+      { "code": "es", "type": "widely_spoken", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit St. Maarten traveler information",
+        "url": "https://www.visitstmaarten.com/traveler-information/",
+        "note": "Official tourism guidance says Dutch is used in government on the Dutch side, English is widely spoken everywhere, and Spanish, Creole, and Papiamento are also widely spoken."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Sint Maarten policy document language profile",
+        "url": "https://www.sintmaartengov.org/Documents/Policies/Spatial%20development%20Strategy%20%2B%20attachements%20-%20Policy%20department%202022%20-%20Final.pdf",
+        "note": "Government planning material lists English and Dutch as official and shows English as the dominant public language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KY",
+    "override_reason": "official_language_override",
+    "notes": "The Cayman Islands should score English as fully compatible because English is the official public language for travelers.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Cayman Islands official tourism FAQs",
+        "url": "https://meet.visitcaymanislands.com/en-us/services-support/faqs",
+        "note": "Official tourism FAQs state that English is the official language of the Cayman Islands."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GI",
+    "override_reason": "official_and_bilingual_usability_override",
+    "notes": "Gibraltar should score English as fully compatible while also recognizing that Spanish is widely usable in everyday local conversation.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "es", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Gibraltar general information",
+        "url": "https://www.visitgibraltar.gi/general-info",
+        "note": "Official tourism guidance says English is the official language and Spanish is widely spoken."
+      },
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Gibraltar",
+        "url": "https://www.britannica.com/place/Gibraltar",
+        "note": "Britannica says most Gibraltarians are bilingual in English and Spanish."
+      }
+    ]
+  }
+]

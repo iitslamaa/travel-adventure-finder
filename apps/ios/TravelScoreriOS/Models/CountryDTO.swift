@@ -56,6 +56,7 @@ struct CountryDTO: Decodable {
 
     /// Canonical affordability explanation from backend
     let affordabilityExplanation: String?
+    let languageCompatibilityScore: Int?
 
 
     var advisoryLevelText: String? {
@@ -126,6 +127,7 @@ struct CountryDTO: Decodable {
         let affordability: Double?
         let affordabilityBand: String?
         let affordabilityExplanation: String?
+        let languageCompatibilityScore: Double?
 
 
         private enum CodingKeys: String, CodingKey {
@@ -151,6 +153,7 @@ struct CountryDTO: Decodable {
             case affordability
             case affordabilityBand
             case affordabilityExplanation
+            case languageCompatibilityScore
         }
 
         init(from decoder: Decoder) throws {
@@ -196,6 +199,13 @@ struct CountryDTO: Decodable {
             }
             affordabilityBand = try? c.decode(String.self, forKey: .affordabilityBand)
             affordabilityExplanation = try? c.decode(String.self, forKey: .affordabilityExplanation)
+            if let d = try? c.decode(Double.self, forKey: .languageCompatibilityScore) {
+                languageCompatibilityScore = d
+            } else if let i = try? c.decode(Int.self, forKey: .languageCompatibilityScore) {
+                languageCompatibilityScore = Double(i)
+            } else {
+                languageCompatibilityScore = nil
+            }
         }
     }
 
@@ -373,5 +383,6 @@ struct CountryDTO: Decodable {
         }
         self.affordabilityBand = facts?.affordabilityBand
         self.affordabilityExplanation = facts?.affordabilityExplanation.map { Self.decodeHTML($0) }
+        self.languageCompatibilityScore = facts?.languageCompatibilityScore.map { Int($0.rounded()) }
     }
 }

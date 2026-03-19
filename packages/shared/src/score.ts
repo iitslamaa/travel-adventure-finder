@@ -1,10 +1,11 @@
 import type { CountryFacts, Weights } from './types';
 
 export const DEFAULT_WEIGHTS: Weights = {
-  travelGov: 0.40,
-  seasonality: 0.20,
-  visaEase: 0.20,
-  affordability: 0.20,
+  travelGov: 0.35,
+  seasonality: 0.15,
+  visaEase: 0.15,
+  affordability: 0.15,
+  language: 0.20,
 };
 
 // Helper functions
@@ -30,6 +31,9 @@ export function computeScoreFromFacts(
 
   if (f.affordability != null)
     components.push({ value: f.affordability, weight: w.affordability });
+
+  if (f.languageCompatibilityScore != null)
+    components.push({ value: f.languageCompatibilityScore, weight: w.language });
 
   if (components.length === 0) return null;
 

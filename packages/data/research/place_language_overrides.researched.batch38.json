@@ -1,0 +1,749 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "CN",
+    "override_reason": "official_mandarin_with_cantonese_and_english_override",
+    "notes": "China should score Mandarin as fully compatible while also giving meaningful credit to Yue Chinese in the south and some English credit in international travel corridors.",
+    "languages": [
+      { "code": "cmn", "type": "official", "coverage": 1.0 },
+      { "code": "yue", "type": "widely_spoken", "coverage": 0.55 },
+      { "code": "en", "type": "minor", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: China",
+        "url": "https://www.britannica.com/place/China",
+        "note": "Britannica identifies Putonghua (Mandarin) as the official national language of China."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Languages of China",
+        "url": "https://www.britannica.com/place/China/Languages",
+        "note": "Britannica describes Yue/Cantonese as one of the most important Sinitic language groups in China."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "ER",
+    "override_reason": "tigrinya_arabic_english_working_language_override",
+    "notes": "Eritrea should score Tigrinya highest, give Arabic meaningful credit, and some English credit because all three appear in public life and education.",
+    "languages": [
+      { "code": "ti", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "ar", "type": "widely_spoken", "coverage": 0.7 },
+      { "code": "en", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Eritrea",
+        "url": "https://www.britannica.com/place/Eritrea",
+        "note": "Britannica describes Tigrinya and Arabic as principal languages in Eritrea and notes the continuing role of English in education."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Eritrea",
+        "url": "https://www.britannica.com/place/Eritrea/People",
+        "note": "Britannica explains the importance of Tigrinya and Arabic in daily and institutional life in Eritrea."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GT",
+    "override_reason": "official_spanish_with_tourism_english_override",
+    "notes": "Guatemala should score Spanish as fully compatible and give English modest tourism credit because Spanish dominates public and traveler-facing life.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Guatemala",
+        "url": "https://www.britannica.com/place/Guatemala",
+        "note": "Britannica identifies Spanish as the official language of Guatemala."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Guatemala",
+        "url": "https://visitguatemala.com/",
+        "note": "Official tourism guidance is published for international travelers, supporting modest English usability in tourism contexts."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GW",
+    "override_reason": "official_portuguese_override",
+    "notes": "Guinea-Bissau should score Portuguese as the formal official language used in government and traveler-facing contexts.",
+    "languages": [
+      { "code": "pt", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Guinea-Bissau",
+        "url": "https://www.britannica.com/place/Guinea-Bissau",
+        "note": "Britannica identifies Portuguese as the official language of Guinea-Bissau."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Guinea-Bissau",
+        "url": "https://www.britannica.com/place/Guinea-Bissau/People",
+        "note": "Britannica describes Portuguese as the state's formal language even though many home languages are spoken locally."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KP",
+    "override_reason": "official_korean_override",
+    "notes": "North Korea should score Korean as fully compatible because it is the country's dominant and practical national language.",
+    "languages": [
+      { "code": "ko", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: North Korea",
+        "url": "https://www.britannica.com/place/North-Korea",
+        "note": "Britannica identifies Korean as the language of North Korea."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of North Korea",
+        "url": "https://www.britannica.com/place/North-Korea/People",
+        "note": "Britannica describes Korea as ethnolinguistically homogeneous, supporting Korean as the primary compatible language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "LS",
+    "override_reason": "coofficial_sesotho_and_english_override",
+    "notes": "Lesotho should score both Southern Sotho and English because both are official, with Sotho strongest in daily life.",
+    "languages": [
+      { "code": "st", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Lesotho",
+        "url": "https://www.britannica.com/place/Lesotho",
+        "note": "Britannica identifies Southern Sotho and English as the official languages of Lesotho."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Lesotho",
+        "url": "https://www.britannica.com/place/Lesotho/People",
+        "note": "Britannica explains that Sesotho is central to everyday life in Lesotho."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "LY",
+    "override_reason": "official_arabic_with_libyan_arabic_override",
+    "notes": "Libya should score Arabic as fully compatible and Libyan Arabic as a strong everyday spoken match.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "ayl", "type": "widely_spoken", "coverage": 0.9 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Libya",
+        "url": "https://www.britannica.com/place/Libya",
+        "note": "Britannica identifies Arabic as the official language of Libya."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Libyan Arabic",
+        "url": "https://www.britannica.com/topic/Arabic-language",
+        "note": "Britannica's Arabic overview supports the use of regional spoken Arabic varieties like Libyan Arabic in everyday communication."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MH",
+    "override_reason": "coofficial_marshallese_and_english_override",
+    "notes": "The Marshall Islands should score both Marshallese and English because both are central to public and everyday life.",
+    "languages": [
+      { "code": "mh", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Marshall Islands",
+        "url": "https://www.britannica.com/place/Marshall-Islands",
+        "note": "Britannica identifies Marshallese and English as key public languages in the Marshall Islands."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Marshall Islands Visitors Authority",
+        "url": "https://www.rmiembassyus.org/visitors",
+        "note": "Official visitor guidance is delivered in English, supporting English as a practical traveler language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MM",
+    "override_reason": "official_burmese_with_tourism_english_override",
+    "notes": "Myanmar should score Burmese as fully compatible and give modest English credit for tourism and institutional contexts.",
+    "languages": [
+      { "code": "my", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Myanmar",
+        "url": "https://www.britannica.com/place/Myanmar",
+        "note": "Britannica identifies Burmese as the official language of Myanmar."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Myanmar",
+        "url": "https://www.britannica.com/place/Myanmar/People",
+        "note": "Britannica describes Burmese as the dominant national language across the country."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MN",
+    "override_reason": "official_mongolian_with_russian_override",
+    "notes": "Mongolia should score Mongolian as fully compatible and give smaller practical credit to Russian because of historical and regional use.",
+    "languages": [
+      { "code": "mn", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Mongolia",
+        "url": "https://www.britannica.com/place/Mongolia",
+        "note": "Britannica identifies Mongolian as the national language of Mongolia."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Mongolia",
+        "url": "https://www.britannica.com/place/Mongolia/People",
+        "note": "Britannica describes Mongolian as the dominant language and notes the historical presence of Russian."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MR",
+    "override_reason": "official_arabic_with_french_and_hassaniyya_override",
+    "notes": "Mauritania should score Arabic as fully compatible, Hassaniyya as a strong spoken match, and French as a meaningful administrative language.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "mey", "type": "widely_spoken", "coverage": 0.85 },
+      { "code": "fr", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Mauritania",
+        "url": "https://www.britannica.com/place/Mauritania",
+        "note": "Britannica identifies Arabic as the official language of Mauritania and notes the role of French."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Mauritania",
+        "url": "https://www.britannica.com/place/Mauritania/People",
+        "note": "Britannica discusses Hassaniyya Arabic as the dominant spoken variety in Mauritania."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MW",
+    "override_reason": "official_english_with_nyanja_override",
+    "notes": "Malawi should score English as fully compatible and Nyanja as a strong widely spoken local match.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "ny", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Malawi",
+        "url": "https://www.britannica.com/place/Malawi",
+        "note": "Britannica identifies English as the official language of Malawi."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Malawi",
+        "url": "https://www.britannica.com/place/Malawi/People",
+        "note": "Britannica explains the widespread everyday role of Nyanja/Chichewa in Malawi."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MZ",
+    "override_reason": "official_portuguese_override",
+    "notes": "Mozambique should score Portuguese as fully compatible because it is the country's official and main traveler-facing language.",
+    "languages": [
+      { "code": "pt", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Mozambique",
+        "url": "https://www.britannica.com/place/Mozambique",
+        "note": "Britannica identifies Portuguese as the official language of Mozambique."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Mozambique",
+        "url": "https://visitmozambique.net/",
+        "note": "Mozambique tourism guidance is anchored in Portuguese-first travel infrastructure."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NC",
+    "override_reason": "official_french_with_tourism_english_override",
+    "notes": "New Caledonia should score French as fully compatible and give English limited tourism credit.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: New Caledonia",
+        "url": "https://www.britannica.com/place/New-Caledonia",
+        "note": "Britannica identifies French as the official language of New Caledonia."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "New Caledonia Tourism",
+        "url": "https://www.newcaledonia.travel/en",
+        "note": "Official tourism guidance is available for international travelers in English, supporting modest English usability."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NE",
+    "override_reason": "official_french_with_hausa_override",
+    "notes": "Niger should score French as fully compatible and Hausa as a strong everyday language with wide reach.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "ha", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Niger",
+        "url": "https://www.britannica.com/place/Niger",
+        "note": "Britannica identifies French as the official language of Niger."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Niger",
+        "url": "https://www.britannica.com/place/Niger/People",
+        "note": "Britannica describes Hausa as one of the most important and widely used languages in Niger."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NF",
+    "override_reason": "official_english_with_pitcairn_norfolk_override",
+    "notes": "Norfolk Island should score English as fully compatible and give strong local credit to Pitcairn-Norfolk.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "pih", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Norfolk Island",
+        "url": "https://www.norfolkisland.com.au/",
+        "note": "Official tourism guidance is delivered in English for visitors."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Norfolk Island",
+        "url": "https://www.britannica.com/place/Norfolk-Island",
+        "note": "Britannica describes Norfolk Island's distinctive local speech alongside English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NG",
+    "override_reason": "official_english_with_major_regional_languages_override",
+    "notes": "Nigeria should score English as fully compatible while also recognizing Hausa, Yoruba, and Igbo as major widely spoken languages.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "ha", "type": "widely_spoken", "coverage": 0.75 },
+      { "code": "yo", "type": "widely_spoken", "coverage": 0.7 },
+      { "code": "ig", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Nigeria",
+        "url": "https://www.britannica.com/place/Nigeria",
+        "note": "Britannica identifies English as the official language of Nigeria."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Nigeria",
+        "url": "https://www.britannica.com/place/Nigeria/People",
+        "note": "Britannica identifies Hausa, Yoruba, and Igbo among Nigeria's largest and most important languages."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NU",
+    "override_reason": "coofficial_niuean_and_english_override",
+    "notes": "Niue should score both Niuean and English because both have strong practical status on the island.",
+    "languages": [
+      { "code": "niu", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.95 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Niue",
+        "url": "https://www.britannica.com/place/Niue-island-South-Pacific-Ocean",
+        "note": "Britannica identifies English and Niuean as the principal public languages of Niue."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Niue Tourism",
+        "url": "https://www.niueisland.com/",
+        "note": "Official tourism guidance is delivered in English, supporting high English usability for travelers."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "OM",
+    "override_reason": "official_arabic_with_high_english_override",
+    "notes": "Oman should score Arabic as fully compatible and English as highly usable because English is widespread in business and tourism.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Experience Oman",
+        "url": "https://www.experienceoman.om/",
+        "note": "Official Omani tourism guidance is published in English for international visitors, supporting strong practical English usability."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Oman",
+        "url": "https://www.britannica.com/place/Oman",
+        "note": "Britannica identifies Arabic as the official language of Oman."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PA",
+    "override_reason": "official_spanish_with_high_english_override",
+    "notes": "Panama should score Spanish as fully compatible and English as highly usable in many traveler and business contexts.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Panama",
+        "url": "https://www.britannica.com/place/Panama",
+        "note": "Britannica identifies Spanish as the official language of Panama."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Panama",
+        "url": "https://www.visitpanama.com/",
+        "note": "Official tourism guidance is built for international visitors in English, supporting strong traveler usability in English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PF",
+    "override_reason": "official_french_with_tahitian_override",
+    "notes": "French Polynesia should score French as fully compatible while also giving strong credit to Tahitian as the best exact local-language match in the picker.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "ty", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: French Polynesia",
+        "url": "https://www.britannica.com/place/French-Polynesia",
+        "note": "Britannica identifies French as the official language and describes Tahitian as a major vernacular in French Polynesia."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Tahiti Tourisme",
+        "url": "https://tahititourisme.com/en-us/",
+        "note": "Official tourism guidance centers Tahiti and French Polynesia for international travelers, reinforcing French plus Tahitian cultural language presence."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PH",
+    "override_reason": "official_filipino_and_english_with_tagalog_override",
+    "notes": "The Philippines should score Filipino and English very highly, while also giving strong practical credit to Tagalog because many users will select it directly in the picker.",
+    "languages": [
+      { "code": "fil", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.95 },
+      { "code": "tl", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Philippines",
+        "url": "https://www.britannica.com/place/Philippines",
+        "note": "Britannica identifies Filipino and English as the official languages of the Philippines."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Languages of the Philippines",
+        "url": "https://www.britannica.com/place/Philippines/Languages",
+        "note": "Britannica explains the central role of Tagalog/Filipino in the Philippines."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PK",
+    "override_reason": "official_urdu_with_high_english_override",
+    "notes": "Pakistan should score Urdu as fully compatible and English as highly usable because both are central to official and traveler-facing communication.",
+    "languages": [
+      { "code": "ur", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Pakistan",
+        "url": "https://www.britannica.com/place/Pakistan",
+        "note": "Britannica identifies Urdu and English as official languages in Pakistan."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Languages of Pakistan",
+        "url": "https://www.britannica.com/place/Pakistan/Languages",
+        "note": "Britannica describes the continuing practical role of English in government, education, and public life."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PM",
+    "override_reason": "official_french_override",
+    "notes": "Saint Pierre and Miquelon should score French as fully compatible because it is the territory's official and daily language.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Saint Pierre and Miquelon",
+        "url": "https://www.britannica.com/place/Saint-Pierre-and-Miquelon",
+        "note": "Britannica identifies French as the language of Saint Pierre and Miquelon."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Saint Pierre et Miquelon Tourisme",
+        "url": "https://www.spm-tourisme.fr/",
+        "note": "Official tourism guidance is published in French, supporting French as the main traveler-facing language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PN",
+    "override_reason": "official_english_with_pitcairn_norfolk_override",
+    "notes": "Pitcairn should score English as fully compatible and give strong local credit to Pitcairn-Norfolk.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "pih", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Pitcairn",
+        "url": "https://visitpitcairn.pn/",
+        "note": "Official visitor guidance is delivered in English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Pitcairn Island",
+        "url": "https://www.britannica.com/place/Pitcairn-Island",
+        "note": "Britannica describes the local Pitcairn speech alongside English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PW",
+    "override_reason": "official_english_with_palauan_override",
+    "notes": "Palau should score English as fully compatible and Palauan as a strong local-language match.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "pau", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Palau",
+        "url": "https://www.britannica.com/place/Palau",
+        "note": "Britannica identifies English as widely used officially in Palau."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Palau",
+        "url": "https://www.britannica.com/place/Palau/People",
+        "note": "Britannica explains the strong role of Palauan in local daily life."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "RU",
+    "override_reason": "official_russian_override",
+    "notes": "Russia should score Russian as fully compatible because it is the dominant national and practical language across the country.",
+    "languages": [
+      { "code": "ru", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Russia",
+        "url": "https://www.britannica.com/place/Russia",
+        "note": "Britannica identifies Russian as the official language of Russia."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Russia",
+        "url": "https://www.britannica.com/place/Russia/People",
+        "note": "Britannica describes Russian as the state's overwhelmingly dominant common language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SA",
+    "override_reason": "official_arabic_with_high_english_override",
+    "notes": "Saudi Arabia should score Arabic as fully compatible and English as strongly usable in many modern business and travel settings.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Saudi",
+        "url": "https://www.visitsaudi.com/en",
+        "note": "Saudi Arabia's official tourism platform is built for international travelers in English, supporting strong practical English usability."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Saudi Arabia",
+        "url": "https://www.britannica.com/place/Saudi-Arabia",
+        "note": "Britannica identifies Arabic as the official language of Saudi Arabia."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SB",
+    "override_reason": "official_english_with_pijin_override",
+    "notes": "The Solomon Islands should score English as official while also giving very strong credit to Pijin as the most practical everyday lingua franca.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "pis", "type": "widely_spoken", "coverage": 0.95 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Solomon Islands",
+        "url": "https://www.britannica.com/place/Solomon-Islands",
+        "note": "Britannica identifies English as the official language of the Solomon Islands."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of the Solomon Islands",
+        "url": "https://www.britannica.com/place/Solomon-Islands/People",
+        "note": "Britannica describes Pijin as the common lingua franca used across the islands."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SC",
+    "override_reason": "triofficial_english_french_and_creole_override",
+    "notes": "Seychelles should score English, French, and Seselwa Creole because all three are official and matter in daily life and travel.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 0.9 },
+      { "code": "fr", "type": "official", "coverage": 0.75 },
+      { "code": "crs", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Seychelles",
+        "url": "https://www.britannica.com/place/Seychelles",
+        "note": "Britannica identifies English, French, and Seychellois Creole as the official languages of Seychelles."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Tourism Seychelles",
+        "url": "https://tourism.gov.sc/",
+        "note": "Official Seychelles tourism guidance is built for international visitors in English while the society remains strongly multilingual."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SD",
+    "override_reason": "official_arabic_with_english_and_sudanese_arabic_override",
+    "notes": "Sudan should score Arabic as fully compatible, Sudanese Arabic as a strong spoken match, and English as a smaller formal/traveler language.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "apd", "type": "widely_spoken", "coverage": 0.9 },
+      { "code": "en", "type": "official", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Sudan",
+        "url": "https://www.britannica.com/place/Sudan",
+        "note": "Britannica identifies Arabic and English as official languages of Sudan."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Sudan",
+        "url": "https://www.britannica.com/place/Sudan/People",
+        "note": "Britannica explains the strong everyday role of Sudanese Arabic across much of the country."
+      }
+    ]
+  }
+]

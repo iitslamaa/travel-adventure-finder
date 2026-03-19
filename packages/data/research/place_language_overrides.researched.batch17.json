@@ -1,0 +1,26 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "MT",
+    "override_reason": "coofficial_maltese_and_english_override",
+    "notes": "Malta should give full credit to both Maltese and English because both are official and used fluently in everyday public life, education, and tourism across the islands.",
+    "languages": [
+      { "code": "mt", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Government of Malta: The Maltese Islands",
+        "url": "https://www.gov.mt/en/About%20Malta/Pages/The%20Maltese%20Islands.aspx",
+        "note": "The Government of Malta says Maltese and English are both official languages."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Malta Incentives: Why Malta?",
+        "url": "https://vmim.visitmalta.com/en/why-malta/",
+        "note": "Official tourism guidance says English is an official language alongside Maltese and that communication is seamless for international visitors."
+      }
+    ]
+  }
+]

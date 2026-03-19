@@ -140,7 +140,7 @@ struct ProfileSettingsView: View {
                             languages = profile.languages.map {
                                 LanguageEntry(
                                     name: $0.code,
-                                    proficiency: $0.proficiency
+                                    proficiency: LanguageProficiency(storageValue: $0.proficiency).storageValue
                                 )
                             }
                         }

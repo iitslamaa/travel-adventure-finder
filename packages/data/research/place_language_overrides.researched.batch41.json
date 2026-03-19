@@ -1,0 +1,250 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AG",
+    "override_reason": "official_english_with_antiguan_creole_override",
+    "notes": "Antigua and Barbuda should score English as fully compatible while also crediting Antigua and Barbuda Creole English because it exists in the picker catalog and is part of everyday speech.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "aig", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Antigua and Barbuda",
+        "url": "https://www.britannica.com/place/Antigua-and-Barbuda",
+        "note": "Britannica identifies English as the official language of Antigua and Barbuda."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Antigua & Barbuda",
+        "url": "https://www.visitantiguabarbuda.com/",
+        "note": "The official tourism authority serves visitors in English, supporting full travel usability in English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GB",
+    "override_reason": "english_primary_with_regional_languages_override",
+    "notes": "The United Kingdom should score English as fully compatible, while also recognizing Welsh and Scottish Gaelic as meaningful regional matches.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "cy", "type": "widely_spoken", "coverage": 0.45 },
+      { "code": "gd", "type": "minor", "coverage": 0.2 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "VisitBritain",
+        "url": "https://www.visitbritain.com/en",
+        "note": "Britain's official tourism site serves international visitors in English, supporting full traveler usability in English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: United Kingdom",
+        "url": "https://www.britannica.com/place/United-Kingdom",
+        "note": "Britannica describes English as dominant across the United Kingdom and notes Welsh and Scottish Gaelic in their regional contexts."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GF",
+    "override_reason": "official_french_with_guianese_creole_override",
+    "notes": "French Guiana should score French as fully compatible, with Guianese Creole French also credited because it exists in the picker catalog and reflects local everyday speech.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "gcr", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: French Guiana",
+        "url": "https://www.britannica.com/place/French-Guiana",
+        "note": "Britannica identifies French as the official language of French Guiana."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Guyane Amazonie",
+        "url": "https://www.guyane-amazonie.fr/",
+        "note": "French Guiana's official tourism site operates primarily in French, supporting French as the main traveler language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "IQ",
+    "override_reason": "coofficial_arabic_and_central_kurdish_with_english_override",
+    "notes": "Iraq should score Arabic and Central Kurdish as official practical matches, with broader Kurdish also credited and English given moderate tourism/business usefulness.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "ckb", "type": "official", "coverage": 1.0 },
+      { "code": "ku", "type": "widely_spoken", "coverage": 0.75 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Iraq summary",
+        "url": "https://www.britannica.com/summary/Iraq",
+        "note": "Britannica identifies Arabic and Kurdish as the official languages of Iraq."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Iraq languages",
+        "url": "https://www.britannica.com/place/Iraq/Arabs",
+        "note": "Britannica explains that Arabic is the main official language while Kurdish is official in the autonomous Kurdish region, with multilingualism common across the country."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PG",
+    "override_reason": "three_official_languages_with_tourism_english_override",
+    "notes": "Papua New Guinea should credit English, Tok Pisin, and Hiri Motu because all three function in public life and Tok Pisin is especially useful in everyday communication.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "tpi", "type": "official", "coverage": 1.0 },
+      { "code": "ho", "type": "official", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Papua New Guinea Travel: Learn the Language",
+        "url": "https://papuanewguinea.travel/learn-the-language/",
+        "note": "Papua New Guinea's official tourism guidance says English is practical for tourists and encourages learning Tok Pisin for local interaction."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Papua New Guinea Travel: Languages spoken in Papua New Guinea",
+        "url": "https://papuanewguinea.travel/travel-tips/languages-spoken-in-papua-new-guinea/",
+        "note": "Official tourism guidance explains the roles of English, Tok Pisin, and Hiri Motu in Papua New Guinea."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "RS",
+    "override_reason": "official_serbian_with_tourism_english_override",
+    "notes": "Serbia should score Serbian as the primary local language while giving strong English credit in travel contexts because official tourism infrastructure serves visitors in English.",
+    "languages": [
+      { "code": "sr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Serbia",
+        "url": "https://www.britannica.com/place/Serbia",
+        "note": "Britannica identifies Serbian as the principal language of Serbia."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "National Tourism Organisation of Serbia",
+        "url": "https://www.serbia.travel/en/contact/",
+        "note": "Serbia's official tourism organization maintains an English-facing visitor site, supporting strong tourism usability in English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SO",
+    "override_reason": "coofficial_somali_and_arabic_with_english_minor_override",
+    "notes": "Somalia should score Somali and Arabic as official core languages, with smaller English credit for international-facing contexts.",
+    "languages": [
+      { "code": "so", "type": "official", "coverage": 1.0 },
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.25 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Somalia",
+        "url": "https://www.britannica.com/place/Somalia",
+        "note": "Britannica identifies Somali and Arabic as the official languages of Somalia."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Semitic languages",
+        "url": "https://www.britannica.com/topic/Semitic-languages",
+        "note": "Britannica lists Arabic as one of Somalia's official languages."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TW",
+    "override_reason": "mandarin_primary_with_taiwanese_hakka_and_english_override",
+    "notes": "Taiwan should score Mandarin Chinese as the main national language, while also crediting Taiwanese/Min Nan, Hakka, and strong English usability in traveler contexts.",
+    "languages": [
+      { "code": "cmn", "type": "official", "coverage": 1.0 },
+      { "code": "zh", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "nan", "type": "widely_spoken", "coverage": 0.75 },
+      { "code": "hak", "type": "minor", "coverage": 0.35 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Taiwan Tourism Administration",
+        "url": "https://eng.taiwan.net.tw/",
+        "note": "Taiwan's official tourism administration maintains a substantial English-language site for foreign visitors, supporting real tourism usability in English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Taiwan",
+        "url": "https://www.britannica.com/place/Taiwan",
+        "note": "Britannica describes Mandarin Chinese as the standard language in Taiwan while also discussing Taiwanese and Hakka usage."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "UM",
+    "override_reason": "english_administrative_special_territory_override",
+    "notes": "The United States Minor Outlying Islands are administered in English. Some islands are uninhabited or restricted, but English is still the practical administrative language tied to the territory.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: United States Minor Outlying Islands",
+        "url": "https://www.britannica.com/place/United-States-Minor-Outlying-Islands",
+        "note": "Britannica describes the territory's special administrative status under the United States."
+      },
+      {
+        "kind": "official_government",
+        "title": "U.S. Department of the Interior: Insular Areas",
+        "url": "https://www.doi.gov/oia/islands/us-minor-outlying-islands",
+        "note": "U.S. government information for the territory is administered in English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "XK",
+    "override_reason": "albanian_primary_with_serbian_and_english_override",
+    "notes": "Kosovo should score Albanian as the main everyday language, with Serbian also counting directly and English given strong visitor usability.",
+    "languages": [
+      { "code": "sq", "type": "official", "coverage": 1.0 },
+      { "code": "sr", "type": "official", "coverage": 0.8 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.6 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Kosovo",
+        "url": "https://www.britannica.com/place/Kosovo",
+        "note": "Britannica identifies Albanian and Serbian as the principal official languages used in Kosovo."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Kosovo tourism site",
+        "url": "https://www.kosovo.travel/",
+        "note": "Kosovo's tourism-facing infrastructure is delivered in English for international visitors, supporting strong tourism usability in English."
+      }
+    ]
+  }
+]

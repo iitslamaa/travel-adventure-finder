@@ -62,6 +62,7 @@ export default function Filters({ onChange }: Props) {
         <div>
           {slider('Travel.gov advisory', 'travelGov' as WeightKey)}
           {slider('Seasonality', 'seasonality' as WeightKey)}
+          {slider('Language', 'language' as WeightKey)}
         </div>
         <div>
           {slider('Visa', 'visa' as WeightKey)}

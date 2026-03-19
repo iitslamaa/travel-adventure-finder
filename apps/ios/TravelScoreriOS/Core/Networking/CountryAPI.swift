@@ -95,7 +95,8 @@ enum CountryAPI {
                 affordabilityCategory: dto.affordabilityCategory,
                 affordabilityScore: dto.affordabilityScore,
                 affordabilityBand: dto.affordabilityBand,
-                affordabilityExplanation: dto.affordabilityExplanation
+                affordabilityExplanation: dto.affordabilityExplanation,
+                languageCompatibilityScore: dto.languageCompatibilityScore
             )
         }
 
@@ -146,7 +147,8 @@ extension CountryAPI {
                     affordabilityCategory: dto.affordabilityCategory,
                     affordabilityScore: dto.affordabilityScore,
                     affordabilityBand: dto.affordabilityBand,
-                    affordabilityExplanation: dto.affordabilityExplanation
+                    affordabilityExplanation: dto.affordabilityExplanation,
+                    languageCompatibilityScore: dto.languageCompatibilityScore
                 )
             }
         } catch {
@@ -223,7 +225,8 @@ extension CountryAPI {
                     affordabilityCategory: dto.affordabilityCategory,
                     affordabilityScore: dto.affordabilityScore,
                     affordabilityBand: dto.affordabilityBand,
-                    affordabilityExplanation: dto.affordabilityExplanation
+                    affordabilityExplanation: dto.affordabilityExplanation,
+                    languageCompatibilityScore: dto.languageCompatibilityScore
                 )
             }
 

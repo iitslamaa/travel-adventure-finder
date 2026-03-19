@@ -1,0 +1,99 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AR",
+    "override_reason": "official_spanish_with_tourism_english_override",
+    "notes": "Argentina should score Spanish as the clear national language while giving moderate English credit because the official tourism platform serves international travelers directly in English and other languages, even though everyday use remains overwhelmingly Spanish.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Argentina English site",
+        "url": "https://www.argentina.travel/en",
+        "note": "Argentina's official tourism platform serves international trip-planning content in English, supporting real English usability in the tourism sector."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Argentina",
+        "url": "https://www.britannica.com/place/Argentina",
+        "note": "Britannica identifies Spanish as the national language of Argentina."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BR",
+    "override_reason": "official_portuguese_with_tourism_english_and_spanish_override",
+    "notes": "Brazil should recognize Portuguese as the official language while giving moderate credit to English and some credit to Spanish because official tourism guidance says both are spoken in many tourist areas and large cities.",
+    "languages": [
+      { "code": "pt", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 },
+      { "code": "es", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Brasil: Idioma",
+        "url": "https://visitbrasil.com/pt/home/about-brazil/lingua/",
+        "note": "Official tourism guidance says Portuguese is the official language and that many people in tourist areas and large cities also speak English and Spanish."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Brazil",
+        "url": "https://www.britannica.com/place/Brazil",
+        "note": "Britannica identifies Portuguese as the official language of Brazil."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CL",
+    "override_reason": "official_spanish_with_multilingual_tourism_support_override",
+    "notes": "Chile should score Spanish as dominant while giving moderate English credit because the official tourism platform and visitor assistance infrastructure are deliberately multilingual, even though everyday national use is primarily Spanish.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Chile Travel multilingual visitor platform",
+        "url": "https://chile.travel/en/",
+        "note": "Chile's official tourism portal is served in English, Spanish, Portuguese, and German, supporting meaningful English usability for trip planning and visitor support."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Chile",
+        "url": "https://www.britannica.com/place/Chile",
+        "note": "Britannica identifies Spanish as the dominant language of Chile."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PY",
+    "override_reason": "coofficial_spanish_and_guarani_override",
+    "notes": "Paraguay should give full credit to both Spanish and Guaraní because both are official and Guaraní is unusually strong as an everyday national language, not just a heritage language.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "gn", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Paraguay: El Festival del País",
+        "url": "https://visitparaguay.travel/events/el-festival-del-pais",
+        "note": "Paraguay's official tourism platform actively publishes cultural content in both castellano and guaraní, reflecting Guaraní's living national status."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Paraguay",
+        "url": "https://www.britannica.com/place/Paraguay",
+        "note": "Britannica states that Spanish and Guaraní are Paraguay's official languages and that Guaraní is more widely spoken than Spanish."
+      }
+    ]
+  }
+]

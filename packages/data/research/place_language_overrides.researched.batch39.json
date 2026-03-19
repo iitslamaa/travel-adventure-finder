@@ -1,0 +1,904 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AQ",
+    "override_reason": "no_settled_population_override",
+    "notes": "Antarctica has no permanent civilian population or single everyday language, so this profile intentionally carries no compatibility languages.",
+    "languages": [],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Antarctica",
+        "url": "https://www.britannica.com/place/Antarctica",
+        "note": "Britannica explains that Antarctica has no permanent residents."
+      },
+      {
+        "kind": "reference",
+        "title": "National Geographic: Antarctica facts",
+        "url": "https://www.nationalgeographic.com/environment/article/antarctica",
+        "note": "National Geographic describes Antarctica as lacking a permanent settled population."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BV",
+    "override_reason": "no_settled_population_override",
+    "notes": "Bouvet Island is uninhabited, so it should not imply any language compatibility score.",
+    "languages": [],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Bouvet Island",
+        "url": "https://www.britannica.com/place/Bouvet-Island",
+        "note": "Britannica describes Bouvet Island as uninhabited."
+      },
+      {
+        "kind": "official_government",
+        "title": "Norwegian Polar Institute: Bouvetoya",
+        "url": "https://www.npolar.no/en/bouvetoya/",
+        "note": "Norway's Polar Institute describes Bouvetoya as a protected, uninhabited dependency."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "EH",
+    "override_reason": "arabic_and_hassaniyya_override",
+    "notes": "Western Sahara should score Arabic as the main formal language and Hassaniyya as a strong everyday spoken match.",
+    "languages": [
+      { "code": "ar", "type": "widely_spoken", "coverage": 0.95 },
+      { "code": "mey", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "es", "type": "minor", "coverage": 0.25 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Western Sahara",
+        "url": "https://www.britannica.com/place/Western-Sahara",
+        "note": "Britannica discusses Arabic and Hassaniya/Hassaniyya usage in Western Sahara."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Sahrawi",
+        "url": "https://www.britannica.com/topic/Sahrawi",
+        "note": "Britannica describes Hassaniyya Arabic as central to Sahrawi identity and everyday speech."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GN",
+    "override_reason": "official_french_with_fulah_override",
+    "notes": "Guinea should score French as official and give strong everyday credit to Fulah/Pular. Guinea Kpelle should also count directly because it exists in the picker catalog.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "ff", "type": "widely_spoken", "coverage": 0.75 },
+      { "code": "gkp", "type": "minor", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Guinea",
+        "url": "https://www.britannica.com/place/Guinea",
+        "note": "Britannica identifies French as the official language of Guinea."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Guinea",
+        "url": "https://www.britannica.com/place/Guinea/People",
+        "note": "Britannica discusses Fulah/Pular as one of the principal languages of Guinea."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GS",
+    "override_reason": "english_administrative_special_territory_override",
+    "notes": "South Georgia and the South Sandwich Islands have no permanent settled population, but English is the practical administrative language for staff, officials, and expedition-style visitors.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_government",
+        "title": "SGSSI official site",
+        "url": "https://www.gov.gs/",
+        "note": "The official government site describes South Georgia and the South Sandwich Islands as having no permanent residents and serves the territory in English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: South Georgia and the South Sandwich Islands",
+        "url": "https://www.britannica.com/place/South-Georgia-and-the-South-Sandwich-Islands",
+        "note": "Britannica describes the territory as lacking a permanent population."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "HM",
+    "override_reason": "no_settled_population_override",
+    "notes": "Heard Island and McDonald Islands are uninhabited, so no language compatibility should be assigned.",
+    "languages": [],
+    "evidence": [
+      {
+        "kind": "official_government",
+        "title": "Australian Antarctic Program: Heard and McDonald Islands",
+        "url": "https://www.antarctica.gov.au/about-antarctica/territory/heard-island-and-mcdonald-islands/",
+        "note": "Australia's Antarctic program describes the islands as uninhabited."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Heard and McDonald Islands",
+        "url": "https://www.britannica.com/place/Heard-and-McDonald-Islands",
+        "note": "Britannica describes the islands as having no permanent population."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "IO",
+    "override_reason": "no_settled_civilian_population_override",
+    "notes": "The British Indian Ocean Territory does not have a normal settled civilian population, so it should not imply a language score for travelers.",
+    "languages": [],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: British Indian Ocean Territory",
+        "url": "https://www.britannica.com/place/British-Indian-Ocean-Territory",
+        "note": "Britannica explains the territory's lack of a normal permanent civilian population."
+      },
+      {
+        "kind": "official_government",
+        "title": "BIOT Administration",
+        "url": "https://biot.gov.io/",
+        "note": "The territory's official administration site reflects its special non-tourist, non-settled status."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NR",
+    "override_reason": "official_english_with_nauruan_unmapped_local_language_note_override",
+    "notes": "Nauru should score English as fully compatible for now. Nauruan is a real local language but is not currently represented in the picker catalog, so it should be picked up in the final leftover-language reconciliation pass if added.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Nauru",
+        "url": "https://www.britannica.com/place/Nauru",
+        "note": "Britannica describes English as central in government and public life in Nauru while also noting Nauruan."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Republic of Nauru travel information",
+        "url": "https://nauru.gov.nr/",
+        "note": "Official government information for visitors is delivered in English, supporting high traveler usability in English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SH",
+    "override_reason": "official_english_override",
+    "notes": "Saint Helena should score English as fully compatible.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Saint Helena Tourism",
+        "url": "https://www.sthelenatourism.com/",
+        "note": "Official tourism guidance is delivered in English for visitors."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Saint Helena",
+        "url": "https://www.britannica.com/place/Saint-Helena-island-Atlantic-Ocean",
+        "note": "Britannica describes Saint Helena as English-speaking."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SJ",
+    "override_reason": "official_norwegian_with_russian_and_english_override",
+    "notes": "Svalbard and Jan Mayen should score Norwegian as primary, with smaller Russian and English credit because of settlement patterns and tourism.",
+    "languages": [
+      { "code": "no", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.45 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Svalbard",
+        "url": "https://en.visitsvalbard.com/",
+        "note": "Official tourism guidance is delivered in English for visitors to Svalbard."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Svalbard and Jan Mayen",
+        "url": "https://www.britannica.com/place/Svalbard-and-Jan-Mayen",
+        "note": "Britannica explains the Norwegian administration of the territory and the presence of Russian-speaking settlements in Svalbard."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SL",
+    "override_reason": "official_english_with_krio_override",
+    "notes": "Sierra Leone should score English as official and Krio as the most practical everyday lingua franca.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "kri", "type": "widely_spoken", "coverage": 0.95 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Sierra Leone",
+        "url": "https://www.britannica.com/place/Sierra-Leone",
+        "note": "Britannica identifies English as the official language of Sierra Leone."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Sierra Leone",
+        "url": "https://www.britannica.com/place/Sierra-Leone/People",
+        "note": "Britannica explains that Krio functions as the country's main lingua franca."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SM",
+    "override_reason": "official_italian_override",
+    "notes": "San Marino should score Italian as fully compatible.",
+    "languages": [
+      { "code": "it", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: San Marino",
+        "url": "https://www.britannica.com/place/San-Marino",
+        "note": "Britannica identifies Italian as the language of San Marino."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit San Marino",
+        "url": "https://www.visitsanmarino.com/pub1/VisitaSM/en/",
+        "note": "Official tourism guidance supports Italian as the core local language while also serving international visitors."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SN",
+    "override_reason": "official_french_with_wolof_override",
+    "notes": "Senegal should score French as official and Wolof as the strongest everyday lingua franca.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "wo", "type": "widely_spoken", "coverage": 0.9 },
+      { "code": "ff", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Senegal",
+        "url": "https://www.britannica.com/place/Senegal",
+        "note": "Britannica identifies French as the official language of Senegal."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Senegal",
+        "url": "https://www.britannica.com/place/Senegal/People",
+        "note": "Britannica describes Wolof as the country's dominant lingua franca and Fulani/Fulah as another major language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SS",
+    "override_reason": "official_english_with_arabic_override",
+    "notes": "South Sudan should score English as official and give Arabic modest practical credit because Arabic varieties continue to be used in trade and cross-community communication.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "ar", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: South Sudan",
+        "url": "https://www.britannica.com/place/South-Sudan",
+        "note": "Britannica identifies English as the official language of South Sudan."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of South Sudan",
+        "url": "https://www.britannica.com/place/South-Sudan/People",
+        "note": "Britannica explains the continued role of Arabic in cross-community communication despite English's official status."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "ST",
+    "override_reason": "official_portuguese_override",
+    "notes": "Sao Tome and Principe should score Portuguese as fully compatible.",
+    "languages": [
+      { "code": "pt", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Sao Tome and Principe",
+        "url": "https://www.britannica.com/place/Sao-Tome-and-Principe",
+        "note": "Britannica identifies Portuguese as the official language of Sao Tome and Principe."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Sao Tome and Principe",
+        "url": "https://visitsaotomeprincipe.st/",
+        "note": "Official visitor guidance supports Portuguese as the main traveler-facing local language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SZ",
+    "override_reason": "coofficial_swati_and_english_override",
+    "notes": "Eswatini should score Swati and English because both are official and both matter in daily life and formal settings.",
+    "languages": [
+      { "code": "ss", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Eswatini",
+        "url": "https://www.britannica.com/place/Eswatini",
+        "note": "Britannica identifies Swati and English as official languages of Eswatini."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Eswatini",
+        "url": "https://www.britannica.com/place/Eswatini/People",
+        "note": "Britannica explains the central role of Swati in everyday life."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TD",
+    "override_reason": "official_french_and_arabic_with_chadian_arabic_override",
+    "notes": "Chad should score French and Arabic as official, with Chadian Arabic as a strong practical spoken match.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 0.9 },
+      { "code": "ar", "type": "official", "coverage": 0.9 },
+      { "code": "shu", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Chad",
+        "url": "https://www.britannica.com/place/Chad",
+        "note": "Britannica identifies French and Arabic as official languages of Chad."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Chad",
+        "url": "https://www.britannica.com/place/Chad/People",
+        "note": "Britannica explains the role of Chadian Arabic as a broad lingua franca."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TF",
+    "override_reason": "no_settled_population_override",
+    "notes": "The French Southern and Antarctic Lands have no permanent civilian population, so no language compatibility should be assigned.",
+    "languages": [],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: French Southern and Antarctic Lands",
+        "url": "https://www.britannica.com/place/French-Southern-and-Antarctic-Lands",
+        "note": "Britannica describes the territory as having no permanent population."
+      },
+      {
+        "kind": "official_government",
+        "title": "TAAF official site",
+        "url": "https://taaf.fr/",
+        "note": "The official territorial administration reflects the territory's non-settled scientific and administrative status."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TG",
+    "override_reason": "official_french_with_ewe_override",
+    "notes": "Togo should score French as official and Ewe as a strong widely spoken local language.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "ee", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Togo",
+        "url": "https://www.britannica.com/place/Togo",
+        "note": "Britannica identifies French as the official language of Togo."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Togo",
+        "url": "https://www.britannica.com/place/Togo/People",
+        "note": "Britannica describes Ewe as one of the main languages in southern Togo."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TJ",
+    "override_reason": "official_tajik_with_russian_override",
+    "notes": "Tajikistan should score Tajik as fully compatible and Russian as an important secondary working language.",
+    "languages": [
+      { "code": "tg", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Tajikistan",
+        "url": "https://www.britannica.com/place/Tajikistan",
+        "note": "Britannica identifies Tajik as the state language of Tajikistan."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Tajikistan",
+        "url": "https://www.britannica.com/place/Tajikistan/People",
+        "note": "Britannica explains the continued practical role of Russian in public life."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TK",
+    "override_reason": "coofficial_tokelau_and_english_override",
+    "notes": "Tokelau should score Tokelauan and English as practical compatible languages.",
+    "languages": [
+      { "code": "tkl", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Tokelau",
+        "url": "https://www.britannica.com/place/Tokelau",
+        "note": "Britannica describes Tokelauan and English as the principal public languages of Tokelau."
+      },
+      {
+        "kind": "official_government",
+        "title": "Tokelau Government",
+        "url": "https://www.tokelau.org.nz/",
+        "note": "Official Tokelau government information is available in English and reflects Tokelau's bilingual setting."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TL",
+    "override_reason": "official_tetum_and_portuguese_override",
+    "notes": "Timor-Leste should score Tetum and Portuguese as the two official languages, with English only as modest external-facing support.",
+    "languages": [
+      { "code": "tet", "type": "official", "coverage": 1.0 },
+      { "code": "pt", "type": "official", "coverage": 0.75 },
+      { "code": "en", "type": "minor", "coverage": 0.25 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Timor-Leste",
+        "url": "https://www.britannica.com/place/East-Timor",
+        "note": "Britannica identifies Tetum and Portuguese as the official languages of Timor-Leste."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Timor-Leste tourism",
+        "url": "https://timorleste.tl/",
+        "note": "Official public information is outward-facing to international audiences, supporting minor English usability without displacing Tetum and Portuguese."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TM",
+    "override_reason": "official_turkmen_with_russian_override",
+    "notes": "Turkmenistan should score Turkmen as fully compatible and Russian as a meaningful secondary language.",
+    "languages": [
+      { "code": "tk", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Turkmenistan",
+        "url": "https://www.britannica.com/place/Turkmenistan",
+        "note": "Britannica identifies Turkmen as the official language of Turkmenistan."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Turkmenistan",
+        "url": "https://www.britannica.com/place/Turkmenistan/People",
+        "note": "Britannica explains the continuing role of Russian in some public and urban contexts."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TO",
+    "override_reason": "coofficial_tongan_and_english_override",
+    "notes": "Tonga should score Tongan and English because both are central to public life and travel.",
+    "languages": [
+      { "code": "to", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Tonga",
+        "url": "https://www.britannica.com/place/Tonga",
+        "note": "Britannica identifies Tongan and English as the principal public languages in Tonga."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Tonga Tourism",
+        "url": "https://www.tongaholiday.com/",
+        "note": "Official tourism guidance is delivered in English for visitors."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TR",
+    "override_reason": "official_turkish_with_tourism_english_override",
+    "notes": "Turkey should score Turkish as fully compatible and English as modestly useful in tourism contexts.",
+    "languages": [
+      { "code": "tr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Turkey",
+        "url": "https://www.britannica.com/place/Turkey",
+        "note": "Britannica identifies Turkish as the official language of Turkey."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "GoTürkiye",
+        "url": "https://goturkiye.com/",
+        "note": "Official tourism guidance is built for international travelers in English, supporting modest practical English usability."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TV",
+    "override_reason": "coofficial_tuvalu_and_english_override",
+    "notes": "Tuvalu should score Tuvaluan and English because both are central to public life.",
+    "languages": [
+      { "code": "tvl", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Tuvalu",
+        "url": "https://www.britannica.com/place/Tuvalu",
+        "note": "Britannica identifies Tuvaluan and English as principal public languages in Tuvalu."
+      },
+      {
+        "kind": "official_government",
+        "title": "Government of Tuvalu",
+        "url": "https://www.gov.tv/",
+        "note": "Official public information for Tuvalu is delivered in English, supporting high practical English usability."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "UA",
+    "override_reason": "official_ukrainian_with_russian_override",
+    "notes": "Ukraine should score Ukrainian as fully compatible and Russian as a meaningful secondary language in many regions and legacy contexts.",
+    "languages": [
+      { "code": "uk", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Ukraine",
+        "url": "https://www.britannica.com/place/Ukraine",
+        "note": "Britannica identifies Ukrainian as the official language of Ukraine."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Ukraine",
+        "url": "https://www.britannica.com/place/Ukraine/People",
+        "note": "Britannica discusses the significant continued presence of Russian in Ukraine."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "UG",
+    "override_reason": "official_english_with_swahili_override",
+    "notes": "Uganda should score English as fully compatible and Swahili as a meaningful widely used regional/trade language.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "sw", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Uganda",
+        "url": "https://www.britannica.com/place/Uganda",
+        "note": "Britannica identifies English as the official language of Uganda."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Uganda",
+        "url": "https://www.britannica.com/place/Uganda/People",
+        "note": "Britannica discusses the role of Swahili as a regional and trade language in Uganda."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "US",
+    "override_reason": "de_facto_english_with_spanish_override",
+    "notes": "The United States should score English as the de facto dominant national language and Spanish as a major widely used secondary language.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "es", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: United States",
+        "url": "https://www.britannica.com/place/United-States",
+        "note": "Britannica describes English as the dominant national language in the United States."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Languages of the United States",
+        "url": "https://www.britannica.com/place/United-States/Languages",
+        "note": "Britannica discusses Spanish as the most important and widely used secondary language in the United States."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "UZ",
+    "override_reason": "official_uzbek_with_russian_override",
+    "notes": "Uzbekistan should score Uzbek as fully compatible and Russian as a meaningful secondary urban/business language.",
+    "languages": [
+      { "code": "uz", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Uzbekistan",
+        "url": "https://www.britannica.com/place/Uzbekistan",
+        "note": "Britannica identifies Uzbek as the official language of Uzbekistan."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Uzbekistan",
+        "url": "https://www.britannica.com/place/Uzbekistan/People",
+        "note": "Britannica explains the continued role of Russian in Uzbekistan."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "VA",
+    "override_reason": "official_italian_with_latin_override",
+    "notes": "Vatican City should score Italian as the practical everyday language and Latin as a culturally important formal language.",
+    "languages": [
+      { "code": "it", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "la", "type": "official", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Vatican City",
+        "url": "https://www.britannica.com/place/Vatican-City",
+        "note": "Britannica discusses the practical role of Italian and the ceremonial importance of Latin in Vatican City."
+      },
+      {
+        "kind": "official_government",
+        "title": "Vatican official site",
+        "url": "https://www.vatican.va/",
+        "note": "The Vatican's official site reflects Latin and Italian institutional usage."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "VE",
+    "override_reason": "official_spanish_with_tourism_english_override",
+    "notes": "Venezuela should score Spanish as fully compatible and English as modestly useful in some traveler settings.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Venezuela",
+        "url": "https://www.britannica.com/place/Venezuela",
+        "note": "Britannica identifies Spanish as the official language of Venezuela."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Languages of Venezuela",
+        "url": "https://www.britannica.com/place/Venezuela/Languages",
+        "note": "Britannica describes Spanish as overwhelmingly dominant in Venezuela."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "VU",
+    "override_reason": "triofficial_bislama_english_french_override",
+    "notes": "Vanuatu should score Bislama, English, and French because all three are official and Bislama is the everyday lingua franca.",
+    "languages": [
+      { "code": "bi", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.8 },
+      { "code": "fr", "type": "official", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Vanuatu",
+        "url": "https://www.britannica.com/place/Vanuatu",
+        "note": "Britannica identifies Bislama, English, and French as official languages of Vanuatu."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Vanuatu",
+        "url": "https://www.britannica.com/place/Vanuatu/People",
+        "note": "Britannica explains that Bislama functions as the common everyday language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "WF",
+    "override_reason": "official_french_with_samoan_override",
+    "notes": "Wallis and Futuna should score French as official and Samoan as a strong local language.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "sm", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Wallis and Futuna",
+        "url": "https://www.britannica.com/place/Wallis-and-Futuna",
+        "note": "Britannica identifies French as official and discusses Polynesian local language use in Wallis and Futuna."
+      },
+      {
+        "kind": "official_government",
+        "title": "Wallis-et-Futuna administration",
+        "url": "https://www.wallis-et-futuna.pref.gouv.fr/",
+        "note": "The official administration operates in French, supporting French as the main formal and traveler-facing language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "WS",
+    "override_reason": "official_samoan_with_english_override",
+    "notes": "Samoa should score Samoan as fully compatible and English as highly useful in government and tourism.",
+    "languages": [
+      { "code": "sm", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Samoa",
+        "url": "https://www.britannica.com/place/Samoa-island-nation-Pacific-Ocean",
+        "note": "Britannica identifies Samoan and English as principal public languages of Samoa."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Samoa Tourism Authority",
+        "url": "https://www.samoa.travel/",
+        "note": "Official tourism guidance is delivered in English for visitors."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "XD",
+    "override_reason": "undof_zone_mirror_syria_override",
+    "notes": "This app-specific UNDOF overlay code should mirror Syria's reviewed language behavior so it does not produce a confusing false zero in the border zone.",
+    "languages": [
+      { "code": "ar", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "apc", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.2 },
+      { "code": "fr", "type": "minor", "coverage": 0.15 }
+    ],
+    "evidence": [
+      {
+        "kind": "inference",
+        "title": "UNDOF Zone app map overlay",
+        "url": "https://www.un.org/peacekeeping/missions/undof",
+        "note": "This is an app map overlay zone inside Syria rather than a separate destination, so it intentionally mirrors the reviewed Syria profile."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Syria",
+        "url": "https://www.britannica.com/place/Syria",
+        "note": "The zone sits within Syria, so Syria's reviewed language realities are the best product fit."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "YE",
+    "override_reason": "official_arabic_with_english_minor_override",
+    "notes": "Yemen should score Arabic as fully compatible and English as a smaller traveler/business language.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.25 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Yemen",
+        "url": "https://www.britannica.com/place/Yemen",
+        "note": "Britannica identifies Arabic as the official language of Yemen."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Yemen",
+        "url": "https://www.britannica.com/place/Yemen/People",
+        "note": "Britannica describes Arabic as the overwhelmingly dominant practical language of Yemen."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "ZW",
+    "override_reason": "official_english_with_shona_and_ndebele_override",
+    "notes": "Zimbabwe should score English highly while also giving strong credit to Shona and Ndebele as the main local languages users are likely to expect to matter.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "sn", "type": "widely_spoken", "coverage": 0.85 },
+      { "code": "nd", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Zimbabwe",
+        "url": "https://www.britannica.com/place/Zimbabwe",
+        "note": "Britannica identifies English as the main official public language of Zimbabwe."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Zimbabwe",
+        "url": "https://www.britannica.com/place/Zimbabwe/People",
+        "note": "Britannica describes Shona and Ndebele as the country's principal local languages."
+      }
+    ]
+  }
+]

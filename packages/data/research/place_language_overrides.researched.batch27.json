@@ -1,0 +1,75 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "FJ",
+    "override_reason": "multilingual_country_with_english_default_override",
+    "notes": "Fiji should give full credit to English because it functions as the main official and traveler-facing language, while also recognizing Fijian and Fiji Hindi as major national languages used widely in daily life.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "fj", "type": "official", "coverage": 0.75 },
+      { "code": "hif", "type": "official", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Tourism Fiji: Need to know",
+        "url": "https://www.fiji.travel/international/need-to-know",
+        "note": "Official tourism guidance says Fiji has three official languages, English, Fijian, and Fiji Hindi."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Fiji",
+        "url": "https://www.britannica.com/place/Fiji-island-country-Pacific-Ocean",
+        "note": "Britannica describes English as an official language alongside Fijian and Hindustani varieties."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GH",
+    "override_reason": "official_english_with_local_language_note_override",
+    "notes": "Ghana should score English as the main national and traveler-facing language. Akan and other Ghanaian languages remain important in daily life, but English is the safest country-level traveler default.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "ak", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Ghana official portal",
+        "url": "https://visitghana.com/",
+        "note": "Ghana's official tourism platform serves international visitors directly in English, supporting English as the main travel language."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Ghana",
+        "url": "https://www.britannica.com/place/Ghana/Languages",
+        "note": "Britannica identifies English as the official language of Ghana and notes Akan as the largest language group."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MV",
+    "override_reason": "official_dhivehi_with_high_tourism_english_override",
+    "notes": "The Maldives should score Dhivehi as the official language while giving strong English credit because the tourism economy is explicitly international and official visitor systems operate broadly in English.",
+    "languages": [
+      { "code": "dv", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Maldives official portal",
+        "url": "https://visitmaldives.com/en",
+        "note": "The Maldives' official tourism authority serves all practical visitor information in English for international travelers."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Maldives",
+        "url": "https://www.britannica.com/place/Maldives",
+        "note": "Britannica identifies Dhivehi as the official language of the Maldives."
+      }
+    ]
+  }
+]

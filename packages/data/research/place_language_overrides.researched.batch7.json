@@ -1,0 +1,229 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AI",
+    "override_reason": "official_english_override",
+    "notes": "Anguilla should score English as fully compatible for travelers because government and visitor-facing information consistently treat it as the island's practical language.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Government of Anguilla: Anguilla Facts",
+        "url": "https://www.gov.ai/service/anguilla-facts",
+        "note": "The Government of Anguilla facts page lists English as the island's language."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Anguilla",
+        "url": "https://www.britannica.com/place/Anguilla-island-West-Indies",
+        "note": "Britannica identifies English as Anguilla's official language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BZ",
+    "override_reason": "official_english_with_kriol_daily_use_override",
+    "notes": "Belize should score English as fully usable for travelers while also giving strong credit to Belize Kriol, which is spoken widely in daily life across the country.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "bzj", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "es", "type": "widely_spoken", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Travel Belize: Facts About Belize",
+        "url": "https://www.travelbelize.org/es/facts-about-belize",
+        "note": "Official tourism guidance says English is Belize's official language and that Belizeans also speak Kriol and Spanish."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Travel Belize: Know Before You Go | 8 Kriol Phrases",
+        "url": "https://www.travelbelize.org/blog/know-you-go-8-kriol-phrases/",
+        "note": "Official tourism content says Kriol is widely and proudly spoken throughout Belize."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CV",
+    "override_reason": "official_portuguese_with_kabuverdianu_majority_use_override",
+    "notes": "Cabo Verde should recognize Portuguese as the official language while giving equally strong practical credit to Kabuverdianu, the mother tongue and everyday language of most residents.",
+    "languages": [
+      { "code": "pt", "type": "official", "coverage": 1.0 },
+      { "code": "kea", "type": "widely_spoken", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Government of Cabo Verde: Língua Portuguesa",
+        "url": "https://www.governo.cv/lancamento-das-olimpiadas-de-lingua-portuguesa/",
+        "note": "Government education policy references Portuguese as the language of formal schooling and public instruction."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Government of Cabo Verde: Língua e Cultura Cabo-verdiana",
+        "url": "https://www.governo.cv/ministerio-da-educacao-decide-suspender-distribuicao-do-manual-de-lingua-e-cultura-cabo-verdiana-do-10o-ano/",
+        "note": "Government education guidance explicitly treats Cabo-verdian language and culture as a distinct language domain in the school system."
+      },
+      {
+        "kind": "reference",
+        "title": "Digital Bible Society: Kabuverdianu [kea]",
+        "url": "https://dbs.org/es/research/languages/kea/",
+        "note": "DBS identifies Kabuverdianu as the primary creole language of Cabo Verde and the native language of virtually all Cape Verdeans."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "DM",
+    "override_reason": "official_english_with_local_creole_note_override",
+    "notes": "Dominica should score English as the main traveler language. Kwéyòl is important locally, but it does not yet have a clean exact-code match in the app's picker catalog, so it will be handled in the final reconciliation pass.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Discover Dominica: Useful Information",
+        "url": "https://discoverdominica.com/en/useful-information",
+        "note": "Official tourism guidance says English is the official language of Dominica and notes that a large portion of the population also speaks Kwéyòl."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Division of Culture Dominica: Kwéyòl",
+        "url": "https://divisionofculture.gov.dm/creole-languages/5-kweyol",
+        "note": "Dominica's culture division documents Kwéyòl as a real living language on the island, which supports a future exact-code reconciliation pass."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "DO",
+    "override_reason": "official_spanish_with_tourist_english_override",
+    "notes": "The Dominican Republic should score Spanish as the dominant traveler language while also giving meaningful English credit because it is widely used in tourist areas, hotels, and guided experiences.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Dominican Republic Tourism: Travel Tips",
+        "url": "https://www.godominicanrepublic.com/en/travel/travel-tips",
+        "note": "Official tourism guidance says Spanish is the official language and that English is widely spoken in tourist areas."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Dominican Republic Tourism: FAQs",
+        "url": "https://www.godominicanrepublic.com/en/travel/faqs",
+        "note": "Official tourism FAQs say visitors who do not speak Spanish can still communicate in big cities and most tourist destinations because hotel, restaurant, and tour staff speak English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GP",
+    "override_reason": "official_french_with_local_creole_override",
+    "notes": "Guadeloupe should recognize French as the official language while also giving strong local credit to Guadeloupean Creole French, which remains widely spoken in daily life and cultural expression.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "gcf", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Guadeloupe Islands: Gwo-Ka",
+        "url": "https://www.guadeloupe-islands.com/gwo-ka/",
+        "note": "Official tourism content describes Guadeloupean Creole as the language used in core local music and cultural performance."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Guadeloupe",
+        "url": "https://www.britannica.com/place/Guadeloupe/People",
+        "note": "Britannica says French is the official language of Guadeloupe and that a local creole is also widely spoken."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MQ",
+    "override_reason": "official_french_with_creole_everyday_use_note_override",
+    "notes": "Martinique should score French as fully usable for travelers. Martinican Creole is spoken widely in local life, but it does not yet map cleanly to an exact picker code in the current app catalog, so it will be included in the final reconciliation pass.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Martinique Tourisme: Martinican Creole",
+        "url": "https://www.martinique.org/en/about/culture/creole",
+        "note": "Official tourism guidance says French is the official language and explains that Martinican Creole is spoken everywhere and by everyone in day-to-day life."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Martinique Tourisme: Culture",
+        "url": "https://www.martinique.org/en/about/culture",
+        "note": "Official tourism content says French is official and that Creole is the language often used in family, community, and cultural settings."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "RE",
+    "override_reason": "official_french_with_reunion_creole_override",
+    "notes": "Réunion should recognize French as official while giving strong practical credit to Réunion Creole French, which is spoken widely across the island and appears throughout local tourism and cultural life.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "rcf", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Île de la Réunion Tourisme: Creole Glossary",
+        "url": "https://en.reunion.fr/organize/useful-information-before-travelling/creole-glossary/",
+        "note": "Official tourism guidance says French is the official language on Réunion and that the population also speaks Creole."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Réunion",
+        "url": "https://www.britannica.com/place/Reunion",
+        "note": "Britannica lists French as the official language and says Réunion French Creole is the language in common use."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "YT",
+    "override_reason": "official_french_with_indigenous_language_override",
+    "notes": "Mayotte should score French as the official administrative language while also giving strong everyday credit to Maore Comorian and some credit to Bushi, both of which remain important in daily communication across the island.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "swb", "type": "widely_spoken", "coverage": 0.9 },
+      { "code": "buc", "type": "minor", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "France.fr: Mayotte",
+        "url": "https://www.france.fr/en/destination/mayotte/",
+        "note": "Official tourism guidance says French is the official language and explains that Shimaore dominates conversations in most regions while Kibushi remains important in parts of the island."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Mayotte",
+        "url": "https://www.britannica.com/place/Mayotte",
+        "note": "Britannica lists French as the official language and says most of the people speak Comorian while some villages use a Malagasy dialect."
+      },
+      {
+        "kind": "reference",
+        "title": "Digital Bible Society: Maore Comorian [swb]",
+        "url": "https://dbs.org/en/research/languages/swb/",
+        "note": "DBS identifies Maore Comorian as the primary indigenous language of Mayotte and ties it directly to the territory code YT."
+      }
+    ]
+  }
+]

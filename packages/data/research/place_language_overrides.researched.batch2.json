@@ -1,0 +1,299 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "SY",
+    "override_reason": "dialect_and_traveler_usability_override",
+    "notes": "Syria should recognize Levantine Arabic for everyday spoken compatibility. English and French remain secondary but present, especially in urban and educated contexts.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "apc", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.2 },
+      { "code": "fr", "type": "minor", "coverage": 0.15 }
+    ],
+    "evidence": [
+      {
+        "kind": "linguistic_reference",
+        "title": "North Levantine Arabic [apc] primary country is Syria",
+        "url": "https://dbs.org/en/research/languages/apc/",
+        "note": "Digital Bible Society language profile states North Levantine Arabic [apc] has Syria as its primary country and is spoken across the Levant."
+      },
+      {
+        "kind": "general_reference",
+        "title": "Britannica Students: Syria",
+        "url": "https://kids.britannica.com/students/article/Syria/277994",
+        "note": "Britannica says Arabic is the official and most widely spoken language and that English and French are also used, especially in urban areas and among the educated."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "JO",
+    "override_reason": "dialect_and_traveler_usability_override",
+    "notes": "Jordan should recognize Levantine Arabic for spoken compatibility, while English is broadly useful in cities and tourism.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "apc", "type": "widely_spoken", "coverage": 0.9 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "linguistic_reference",
+        "title": "North Levantine Arabic [apc] spoken in Jordan",
+        "url": "https://dbs.org/en/research/languages/apc/",
+        "note": "The language profile describes Levantine Arabic [apc] as spoken in Jordan as part of the Levant."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Jordan: Just the facts",
+        "url": "https://international.visitjordan.com/page/16/just-the-facts",
+        "note": "Jordan Tourism Board says Arabic is official and English is widely spoken, especially in cities."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PS",
+    "override_reason": "dialect_and_traveler_usability_override",
+    "notes": "Palestine should treat Levantine Arabic as the practical spoken match. English is useful in many tourism and education contexts but not universal.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "apc", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "en", "type": "tourist", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "linguistic_reference",
+        "title": "North Levantine Arabic [apc] spoken in Palestine",
+        "url": "https://dbs.org/en/research/languages/apc/",
+        "note": "The language profile describes Levantine Arabic [apc] as spoken in Palestine."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Travel Palestine tourism interpretation center",
+        "url": "https://www.travelpalestine.ps/en/Site/67/Tourism-Interpretation-Center",
+        "note": "Official tourism content notes documentary and visitor-facing services in Arabic and English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "IL",
+    "override_reason": "multilingual_traveler_usability_override",
+    "notes": "Israel should score highly for English traveler usability. Hebrew dominates, while Arabic and Levantine Arabic remain important for Arab communities and some traveler interactions.",
+    "languages": [
+      { "code": "he", "type": "official", "coverage": 1.0 },
+      { "code": "ar", "type": "minor", "coverage": 0.35 },
+      { "code": "apc", "type": "minor", "coverage": 0.3 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Israel",
+        "url": "https://www.britannica.com/place/Israel",
+        "note": "Britannica describes Hebrew as official and Arabic as having special status."
+      },
+      {
+        "kind": "general_reference",
+        "title": "Britannica Students: Israel",
+        "url": "https://kids.britannica.com/students/article/Israel/275101",
+        "note": "Britannica says Israeli Arabs speak a dialect of Levantine Arabic and that English is widely spoken."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "AE",
+    "override_reason": "tourism_language_override",
+    "notes": "The UAE should score very highly for English traveler usability. Arabic remains official, but English is deeply embedded in everyday travel and business.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.95 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Experience Abu Dhabi FAQs",
+        "url": "https://www.visitabudhabi.ae/en/faqs",
+        "note": "Official tourism site says English is widely spoken in Abu Dhabi and that most business transactions are conducted in English."
+      },
+      {
+        "kind": "general_reference",
+        "title": "Britannica: United Arab Emirates languages and religion",
+        "url": "https://www.britannica.com/place/United-Arab-Emirates/Languages-and-religion",
+        "note": "Britannica says English is widely spoken in the UAE."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "QA",
+    "override_reason": "tourism_language_override",
+    "notes": "Qatar should score highly for English traveler usability in public-facing contexts while Arabic remains official.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Qatar first-time visitor guide",
+        "url": "https://visitqatar.com/intl-en/plan-your-trip/guides/first-time-visitor-guide",
+        "note": "Official tourism guidance says Arabic is official and English is commonly spoken at public places."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BH",
+    "override_reason": "tourism_language_override",
+    "notes": "Bahrain should score highly for English traveler usability, especially in tourist and commercial settings.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Bahrain Tourism FAQs",
+        "url": "https://www.bahrain.com/en/faqs",
+        "note": "Official tourism FAQs say English is widely spoken, especially in hotels, restaurants, shops, and tourist areas."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "About Bahrain",
+        "url": "https://www.bahrain.com/en/about-bahrain",
+        "note": "Official tourism site says Arabic is official and English is widely spoken, with bilingual signage."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KW",
+    "override_reason": "traveler_usability_override",
+    "notes": "Kuwait should reflect strong Arabic baseline with meaningful English usability in everyday modern services and travel contexts.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.6 }
+    ],
+    "evidence": [
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Kuwait",
+        "url": "https://www.britannica.com/place/Kuwait/Climate",
+        "note": "Britannica says Kuwaitis speak Gulf Arabic and English is the second language taught in public schools."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Kuwait Government Online: Kuwait Finder app",
+        "url": "https://e.gov.kw/sites/kgoenglish/Pages/ApplicationPages/Application-KuwaitFinder.aspx",
+        "note": "Official app documentation highlights Arabic and English support for public navigation services."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "EG",
+    "override_reason": "dialect_and_traveler_usability_override",
+    "notes": "Egypt should match Egyptian Arabic in daily speech and give meaningful credit for English and some French among educated and tourism-facing contexts.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "arz", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 },
+      { "code": "fr", "type": "minor", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Languages of Egypt",
+        "url": "https://www.britannica.com/place/Egypt/Languages",
+        "note": "Britannica explains that Egyptians speak vernacular Egyptian Arabic and that most educated Egyptians are fluent in English or French or both."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Egypt Ministry of Tourism hotline service",
+        "url": "https://egymonuments.gov.eg/news/hot-line-service-19654/",
+        "note": "Official tourism hotline is available in Arabic and English for visitors."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MA",
+    "override_reason": "dialect_and_traveler_usability_override",
+    "notes": "Morocco should match Moroccan Arabic and reflect the strong practical role of French and some Spanish, plus moderate English tourism usability.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "ary", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "fr", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "es", "type": "minor", "coverage": 0.45 },
+      { "code": "en", "type": "tourist", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Morocco language guide",
+        "url": "https://www.visitmorocco.com/en/useful-information/language",
+        "note": "Official tourism guide says Morocco's official languages are Arabic and Amazigh, virtually all Moroccans understand French, and Spanish is widespread in northern and southern Morocco."
+      },
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Tamazight language",
+        "url": "https://www.britannica.com/topic/Tamazight-language",
+        "note": "Britannica notes that French and English are also used in Morocco."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "DZ",
+    "override_reason": "dialect_and_traveler_usability_override",
+    "notes": "Algeria should reflect Algerian Arabic in daily speech and the continued practical importance of French, while English remains lower-coverage.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "arq", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "fr", "type": "widely_spoken", "coverage": 0.7 },
+      { "code": "en", "type": "minor", "coverage": 0.2 }
+    ],
+    "evidence": [
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Languages of Algeria",
+        "url": "https://www.britannica.com/place/Algeria/Languages",
+        "note": "Britannica says most Algerians speak vernacular Arabic and that French has long functioned as a lingua franca."
+      },
+      {
+        "kind": "general_reference",
+        "title": "Britannica summary: Algeria",
+        "url": "https://www.britannica.com/summary/Algeria",
+        "note": "Britannica summary lists Arabic, Tamazight, and French in common national use."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TN",
+    "override_reason": "dialect_and_traveler_usability_override",
+    "notes": "Tunisia should match Tunisian Arabic in speech and reflect the major role of French, with English useful but less universal.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 1.0 },
+      { "code": "aeb", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "fr", "type": "widely_spoken", "coverage": 0.75 },
+      { "code": "en", "type": "minor", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "general_reference",
+        "title": "Britannica: Languages of Tunisia",
+        "url": "https://www.britannica.com/place/Tunisia/Languages",
+        "note": "Britannica says Arabic is official, Tunisian Arabic is the native dialect, French plays an important role, and English also serves as a lingua franca to a lesser extent."
+      },
+      {
+        "kind": "general_reference",
+        "title": "Britannica Students: Tunisia",
+        "url": "https://kids.britannica.com/students/article/Tunisia/277453",
+        "note": "Britannica says French is widely used in commerce and government."
+      }
+    ]
+  }
+]

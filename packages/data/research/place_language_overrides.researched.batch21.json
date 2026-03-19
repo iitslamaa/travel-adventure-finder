@@ -1,0 +1,50 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "GR",
+    "override_reason": "official_greek_with_high_tourism_english_override",
+    "notes": "Greece should score Greek as the official language while giving strong English credit because official tourism guidance says a large majority of people in the tourist industry speak English and that most Greeks have a good command of it.",
+    "languages": [
+      { "code": "el", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Greece FAQ",
+        "url": "https://www.visitgreece.gr/faq/",
+        "note": "Official tourism guidance says Greek is the official language and that a large majority of people in the tourist industry speak English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Greece brochures",
+        "url": "https://www.visitgreece.gr/media-kit/brochures/",
+        "note": "The Greek National Tourism Organisation publishes visitor materials widely in English, reflecting strong English support for travelers."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SI",
+    "override_reason": "official_slovene_with_high_english_override",
+    "notes": "Slovenia should score Slovene as the national language while giving strong English credit because official tourism guidance explicitly says most people in Slovenia speak English.",
+    "languages": [
+      { "code": "sl", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "I Feel Slovenia: Places to go",
+        "url": "https://www.slovenia.info/en/places-to-go",
+        "note": "Official tourism guidance says that, in addition to Slovenian, most people in Slovenia speak English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "I Feel Slovenia homepage",
+        "url": "https://www.slovenia.info/en",
+        "note": "The official tourism homepage repeats that most people in Slovenia speak English."
+      }
+    ]
+  }
+]

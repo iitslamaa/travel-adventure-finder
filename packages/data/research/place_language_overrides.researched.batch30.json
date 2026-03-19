@@ -1,0 +1,49 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "GY",
+    "override_reason": "official_english_with_creolese_note_override",
+    "notes": "Guyana should score English as the official national language while recognizing that Creolese and Indigenous languages matter in daily life. Guyanese Creole English should also count as a minor exact local match because it exists in the picker catalog.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "gyn", "type": "minor", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Guyana Tourism FAQ",
+        "url": "https://guyanatourism.com/faq/",
+        "note": "Official tourism guidance says English is Guyana's official first language and notes that Creolese and several Indigenous dialects are also spoken."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Guyana Tourism multilingual site",
+        "url": "https://guyanatourism.com/plan-your-trip/",
+        "note": "Guyana's tourism authority serves international visitors through a multilingual planning platform while treating English as the primary working language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NA",
+    "override_reason": "official_english_with_multilingual_daily_use_override",
+    "notes": "Namibia should score English as the official language while acknowledging that many people use other local and regional languages in daily life. For country-level travel compatibility, English remains the cleanest default.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Government of Namibia: About Namibia",
+        "url": "https://www.gov.na/aboutnamibia",
+        "note": "The Government of Namibia lists English as the official language."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Constitution of the Republic of Namibia",
+        "url": "https://kavangowestrc.gov.na/documents/2330712/2721183/Constitution%2Bof%2Bthe%2BRepublic%2Bof%2BNamibia.pdf/b92c72f3-712c-2795-1cfd-6e00f925a9ec?t=1692880681519",
+        "note": "Article 3 of the Namibian Constitution states that the official language of Namibia is English."
+      }
+    ]
+  }
+]

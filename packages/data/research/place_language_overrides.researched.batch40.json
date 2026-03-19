@@ -1,0 +1,53 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "BA",
+    "override_reason": "official_bosnian_croatian_serbian_with_tourism_english_override",
+    "notes": "Bosnia and Herzegovina should score Bosnian, Croatian, and Serbian as official/fully usable local languages, with strong English credit for travelers in cities and tourism-facing contexts.",
+    "languages": [
+      { "code": "bs", "type": "official", "coverage": 1.0 },
+      { "code": "hr", "type": "official", "coverage": 1.0 },
+      { "code": "sr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Bosnia and Herzegovina summary",
+        "url": "https://www.britannica.com/summary/Bosnia-and-Herzegovina",
+        "note": "Britannica identifies Bosnian, Serbian, and Croatian as the official languages of Bosnia and Herzegovina."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit BiH bilingual tourism publication",
+        "url": "https://visitbih.ba/en/visit-bih-magazine-celebrates-a-milestone-and-major-success-100-issues-countless-beautiful-stories/",
+        "note": "Official Bosnia and Herzegovina tourism content is published in Bosnian and English, supporting strong English usability for visitors."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GE",
+    "override_reason": "official_georgian_with_tourism_english_and_russian_override",
+    "notes": "Georgia should score Georgian as official while giving high English credit for visitors and moderate Russian credit because official tourism guidance says international guests generally communicate in English and older generations often speak Russian.",
+    "languages": [
+      { "code": "ka", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Georgia Travel: Communication in Georgia",
+        "url": "https://georgia.travel/coming-to-georgia/communication-in-georgia",
+        "note": "Georgia's official tourism authority says Georgian is the official language, older generations often speak Russian, and international guests generally communicate and get around in English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Georgia summary",
+        "url": "https://www.britannica.com/summary/Georgia",
+        "note": "Britannica identifies Georgian as the official language of Georgia."
+      }
+    ]
+  }
+]

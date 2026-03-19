@@ -54,6 +54,15 @@ struct Profile: Codable, Identifiable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let languageRepository = LanguageRepository.shared
+
+        func canonicalLanguage(code rawCode: String, proficiency rawProficiency: String) -> LanguageJSON {
+            LanguageJSON(
+                code: languageRepository.canonicalLanguageCode(for: rawCode)
+                    ?? rawCode.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                proficiency: LanguageProficiency(storageValue: rawProficiency).storageValue
+            )
+        }
 
         id = try container.decode(UUID.self, forKey: .id)
         username = try container.decode(String.self, forKey: .username)
@@ -63,15 +72,17 @@ struct Profile: Codable, Identifiable {
         // Flexible decoding: support legacy string array OR JSON objects
         if let stringArray = try? container.decode([String].self, forKey: .languages) {
             languages = stringArray.map {
-                LanguageJSON(code: $0, proficiency: "Fluent")
+                canonicalLanguage(code: $0, proficiency: LanguageProficiency.fluent.storageValue)
             }
         } else if let objectArray = try? container.decode([LanguageJSON].self, forKey: .languages) {
-            languages = objectArray
+            languages = objectArray.map {
+                canonicalLanguage(code: $0.code, proficiency: $0.proficiency)
+            }
         } else if let legacyObjects = try? container.decode([LegacyLanguageObject].self, forKey: .languages) {
             languages = legacyObjects.map {
-                LanguageJSON(
+                canonicalLanguage(
                     code: $0.name,
-                    proficiency: $0.proficiency ?? "Fluent"
+                    proficiency: $0.proficiency ?? LanguageProficiency.fluent.storageValue
                 )
             }
         } else {

@@ -1,0 +1,499 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "BF",
+    "override_reason": "official_french_with_mossi_widespread_override",
+    "notes": "Burkina Faso should score French as the official language and Mossi as a major widely spoken language used by a large share of the population.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "mos", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Burkina Faso",
+        "url": "https://www.britannica.com/place/Burkina-Faso",
+        "note": "Britannica identifies French as the official language of Burkina Faso."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Burkina Faso",
+        "url": "https://www.britannica.com/place/Burkina-Faso/People",
+        "note": "Britannica identifies Mossi as the largest ethnolinguistic community in Burkina Faso."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BI",
+    "override_reason": "official_kirundi_and_french_with_english_override",
+    "notes": "Burundi should score Kirundi as fully compatible, French as a major official language, and English as a smaller modern official/traveler language.",
+    "languages": [
+      { "code": "rn", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "official", "coverage": 0.8 },
+      { "code": "en", "type": "official", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Burundi",
+        "url": "https://www.britannica.com/place/Burundi",
+        "note": "Britannica identifies Kirundi and French as official languages and notes English's official status."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Burundi",
+        "url": "https://www.britannica.com/place/Burundi/People",
+        "note": "Britannica describes Kirundi as the national language used broadly across Burundi."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BO",
+    "override_reason": "official_spanish_with_quechua_and_aymara_override",
+    "notes": "Bolivia should score Spanish as the main traveler language while also giving strong credit to Quechua and Aymara, both of which remain major indigenous languages.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "qu", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "ay", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Languages of Bolivia",
+        "url": "https://www.britannica.com/place/Bolivia/Languages",
+        "note": "Britannica describes Spanish as dominant while noting Quechua and Aymara as major indigenous languages."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Bolivia Travel",
+        "url": "https://www.bolivia.travel/",
+        "note": "Bolivia's official tourism portal serves international visitors in Spanish and other traveler-facing languages, reinforcing Spanish as the default practical language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CF",
+    "override_reason": "official_french_with_sango_national_language_override",
+    "notes": "The Central African Republic should score French as official and Sango as the main national lingua franca used widely in daily communication.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "sg", "type": "widely_spoken", "coverage": 0.95 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Central African Republic",
+        "url": "https://www.britannica.com/place/Central-African-Republic",
+        "note": "Britannica identifies French as official and Sango as the national language of the Central African Republic."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Sango language",
+        "url": "https://www.britannica.com/topic/Sango-language",
+        "note": "Britannica describes Sango as a major lingua franca in the Central African Republic."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CI",
+    "override_reason": "official_french_with_dyula_and_baoule_override",
+    "notes": "Cote d'Ivoire should score French as fully compatible while also giving meaningful credit to Dyula and Baoule as large widely used languages.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "dyu", "type": "widely_spoken", "coverage": 0.7 },
+      { "code": "bci", "type": "widely_spoken", "coverage": 0.6 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Cote d'Ivoire",
+        "url": "https://www.britannica.com/place/Ivory-Coast",
+        "note": "Britannica identifies French as the official language of Cote d'Ivoire."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Cote d'Ivoire",
+        "url": "https://www.britannica.com/place/Ivory-Coast/People",
+        "note": "Britannica discusses Dyula as an important trade language and Baoule as one of the largest ethnolinguistic communities."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CM",
+    "override_reason": "coofficial_french_and_english_override",
+    "notes": "Cameroon should score both French and English because they are the country's co-official languages and define most formal and traveler-facing communication.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Cameroon",
+        "url": "https://www.britannica.com/place/Cameroon",
+        "note": "Britannica identifies French and English as the official languages of Cameroon."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Cameroon",
+        "url": "https://www.britannica.com/place/Cameroon/People",
+        "note": "Britannica explains the bilingual French-English state structure of Cameroon."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CX",
+    "override_reason": "official_english_with_mandarin_and_malay_override",
+    "notes": "Christmas Island should score English as fully compatible while also recognizing Mandarin Chinese and Malay as important community languages.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "cmn", "type": "widely_spoken", "coverage": 0.6 },
+      { "code": "ms", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Australia.com: Christmas Island",
+        "url": "https://www.australia.com/en/places/perth-and-surrounds/guide-to-christmas-island.html",
+        "note": "Australia's official tourism guidance presents Christmas Island to international visitors in English and highlights its multicultural community."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Christmas Island",
+        "url": "https://www.britannica.com/place/Christmas-Island-territory-Indian-Ocean",
+        "note": "Britannica describes Christmas Island as English-speaking with strong Chinese and Malay community heritage."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "DJ",
+    "override_reason": "official_arabic_and_french_with_afar_and_somali_override",
+    "notes": "Djibouti should score Arabic and French as the formal official languages while also giving strong everyday credit to Somali and Afar.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 0.9 },
+      { "code": "fr", "type": "official", "coverage": 0.9 },
+      { "code": "so", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "aa", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Djibouti",
+        "url": "https://www.britannica.com/place/Djibouti",
+        "note": "Britannica identifies French and Arabic as official languages in Djibouti."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Djibouti",
+        "url": "https://www.britannica.com/place/Djibouti/People",
+        "note": "Britannica says Somali and Afar are the principal native languages spoken in Djibouti."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "EC",
+    "override_reason": "official_spanish_with_quechua_override",
+    "notes": "Ecuador should score Spanish as fully compatible and give meaningful credit to Quechua because it remains the main indigenous language family with visible regional use.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "qu", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Ecuador",
+        "url": "https://www.britannica.com/place/Ecuador",
+        "note": "Britannica identifies Spanish as the dominant national language in Ecuador."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Languages of Ecuador",
+        "url": "https://www.britannica.com/place/Ecuador/Languages",
+        "note": "Britannica explains the continuing role of Quechua in Ecuador."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "ET",
+    "override_reason": "official_amharic_with_oromo_override",
+    "notes": "Ethiopia should score Amharic as the primary federal working language while also giving strong credit to Oromo because it is one of the country's largest languages.",
+    "languages": [
+      { "code": "am", "type": "official", "coverage": 1.0 },
+      { "code": "om", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "en", "type": "minor", "coverage": 0.25 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Ethiopia",
+        "url": "https://www.britannica.com/place/Ethiopia",
+        "note": "Britannica identifies Amharic as the federal working language of Ethiopia."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Ethiopia",
+        "url": "https://www.britannica.com/place/Ethiopia/People",
+        "note": "Britannica describes Oromo as one of the largest and most important languages in Ethiopia."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "FM",
+    "override_reason": "official_english_with_state_languages_override",
+    "notes": "Micronesia should score English as fully compatible while also recognizing Chuukese, Pohnpeian, Yapese, and Kosraean as major state-level languages.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "chk", "type": "widely_spoken", "coverage": 0.75 },
+      { "code": "pon", "type": "widely_spoken", "coverage": 0.65 },
+      { "code": "yap", "type": "widely_spoken", "coverage": 0.55 },
+      { "code": "kos", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Micronesia",
+        "url": "https://www.britannica.com/place/Federated-States-of-Micronesia",
+        "note": "Britannica identifies English as the official language of the Federated States of Micronesia."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Micronesia",
+        "url": "https://www.britannica.com/place/Federated-States-of-Micronesia/People",
+        "note": "Britannica lists Chuukese, Pohnpeian, Yapese, and Kosraean among the major indigenous languages."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GA",
+    "override_reason": "official_french_with_fang_override",
+    "notes": "Gabon should score French as fully compatible while also giving meaningful credit to Fang as one of the most important local languages.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "fan", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Gabon",
+        "url": "https://www.britannica.com/place/Gabon",
+        "note": "Britannica identifies French as the official language of Gabon."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Gabon",
+        "url": "https://www.britannica.com/place/Gabon/People",
+        "note": "Britannica identifies Fang as one of the major peoples and languages in Gabon."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GM",
+    "override_reason": "official_english_with_wolof_and_mandinka_override",
+    "notes": "The Gambia should score English as fully compatible while also recognizing Wolof and Mandinka as major everyday languages used across the country. Gambian Wolof should also count directly because it exists in the picker catalog.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "wo", "type": "widely_spoken", "coverage": 0.7 },
+      { "code": "mnk", "type": "widely_spoken", "coverage": 0.65 },
+      { "code": "wof", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Gambia",
+        "url": "https://www.britannica.com/place/Gambia",
+        "note": "Britannica identifies English as the official language of The Gambia."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Gambia",
+        "url": "https://www.britannica.com/place/Gambia/People",
+        "note": "Britannica describes Wolof and Mandinka among the major languages used in everyday life."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GQ",
+    "override_reason": "official_spanish_with_french_portuguese_and_fang_override",
+    "notes": "Equatorial Guinea should score Spanish as fully compatible while also recognizing French and Portuguese as official languages and Fang as a major local language. Fernando Po Creole English should also count as a minor exact local match because it exists in the picker catalog.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "official", "coverage": 0.6 },
+      { "code": "pt", "type": "official", "coverage": 0.4 },
+      { "code": "fan", "type": "widely_spoken", "coverage": 0.7 },
+      { "code": "fpe", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Equatorial Guinea",
+        "url": "https://www.britannica.com/place/Equatorial-Guinea",
+        "note": "Britannica identifies Spanish, French, and Portuguese as official languages of Equatorial Guinea."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Equatorial Guinea",
+        "url": "https://www.britannica.com/place/Equatorial-Guinea/People",
+        "note": "Britannica discusses Fang as the largest people and language community in Equatorial Guinea."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "IR",
+    "override_reason": "official_persian_with_kurdish_override",
+    "notes": "Iran should score Persian as fully compatible while also giving meaningful regional credit to Kurdish because it is one of the country's large minority language groups.",
+    "languages": [
+      { "code": "fa", "type": "official", "coverage": 1.0 },
+      { "code": "ku", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Iran",
+        "url": "https://www.britannica.com/place/Iran",
+        "note": "Britannica identifies Persian (Farsi) as the official language of Iran."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Iran",
+        "url": "https://www.britannica.com/place/Iran/People",
+        "note": "Britannica discusses Kurdish as one of the major minority languages spoken in Iran."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KI",
+    "override_reason": "coofficial_english_and_gilbertese_override",
+    "notes": "Kiribati should score both English and Gilbertese because both are official and both matter in everyday life.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "gil", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Kiribati",
+        "url": "https://www.britannica.com/place/Kiribati",
+        "note": "Britannica identifies English and Gilbertese as official languages of Kiribati."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Kiribati",
+        "url": "https://www.britannica.com/place/Kiribati/People",
+        "note": "Britannica describes Gilbertese as the main language of daily life in Kiribati."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KM",
+    "override_reason": "official_arabic_and_french_with_ngazidja_comorian_override",
+    "notes": "Comoros should score Arabic and French as official languages while giving the strongest everyday credit to Comorian, represented here with Ngazidja Comorian as the available exact picker code.",
+    "languages": [
+      { "code": "ar", "type": "official", "coverage": 0.85 },
+      { "code": "fr", "type": "official", "coverage": 0.85 },
+      { "code": "zdj", "type": "widely_spoken", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Comoros",
+        "url": "https://www.britannica.com/place/Comoros",
+        "note": "Britannica identifies Arabic, French, and Comorian as official languages of Comoros."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Comoros",
+        "url": "https://www.britannica.com/place/Comoros/People",
+        "note": "Britannica explains the central everyday role of Comorian varieties across the islands."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "LR",
+    "override_reason": "official_english_with_kpelle_override",
+    "notes": "Liberia should score English as fully compatible while also recognizing Kpelle as one of the most important local languages. Liberia Kpelle should also count directly because it exists in the picker catalog.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "kpe", "type": "widely_spoken", "coverage": 0.55 },
+      { "code": "xpe", "type": "minor", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Liberia",
+        "url": "https://www.britannica.com/place/Liberia",
+        "note": "Britannica identifies English as the official language of Liberia."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Liberia",
+        "url": "https://www.britannica.com/place/Liberia/People",
+        "note": "Britannica identifies Kpelle as one of the largest language communities in Liberia."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MG",
+    "override_reason": "official_malagasy_and_french_override",
+    "notes": "Madagascar should score Malagasy as fully compatible while also giving strong credit to French because both remain core languages in public life and travel.",
+    "languages": [
+      { "code": "mg", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "official", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Madagascar",
+        "url": "https://www.britannica.com/place/Madagascar",
+        "note": "Britannica identifies Malagasy and French as official languages of Madagascar."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Madagascar Tourism",
+        "url": "https://madagascar-tourisme.com/en/",
+        "note": "Official tourism guidance is built for international travelers and supports French-facing tourism infrastructure."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "ML",
+    "override_reason": "official_french_with_bambara_override",
+    "notes": "Mali should score French as the official language while also giving strong everyday credit to Bambara, the country's most widely used lingua franca.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "bm", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Mali",
+        "url": "https://www.britannica.com/place/Mali",
+        "note": "Britannica identifies French as the official language of Mali."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Mali",
+        "url": "https://www.britannica.com/place/Mali/People",
+        "note": "Britannica describes Bambara as Mali's most widely understood lingua franca."
+      }
+    ]
+  }
+]

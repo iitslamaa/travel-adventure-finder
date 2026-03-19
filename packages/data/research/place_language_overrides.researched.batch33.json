@@ -1,0 +1,101 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AZ",
+    "override_reason": "official_azerbaijani_with_tourism_english_and_russian_override",
+    "notes": "Azerbaijan should score Azerbaijani as the official national language while giving moderate English credit and strong Russian credit in traveler contexts, especially in Baku and organized tourism.",
+    "languages": [
+      { "code": "az", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.65 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Azerbaijan Tourism Board e-learning platform",
+        "url": "https://azerbaijan.travel/press-media/press-releases/azerbaijan-tourism-board-launches-elearning-platform",
+        "note": "Official tourism guidance says Azerbaijan's travel-agent training platform is available in English and later Russian, supporting meaningful English and Russian usability in tourism."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Azerbaijan event calendar language support",
+        "url": "https://azerbaijan.travel/new-event-calendar/santas-factory-agdash",
+        "note": "Official tourism event listings and planning tools are available in Azerbaijani, Russian, and English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KZ",
+    "override_reason": "official_kazakh_with_high_russian_and_tourism_english_override",
+    "notes": "Kazakhstan should give full credit to Kazakh, very strong credit to Russian, and moderate English credit in tourism. Russian remains extremely practical in everyday use, while English is common in official tourism-facing services and guides.",
+    "languages": [
+      { "code": "kk", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.9 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Kazakhstan state register of guides",
+        "url": "https://guides.kazakhstan.travel/en/registry/2573",
+        "note": "Official tourism guide registry entries commonly list English and Russian, and sometimes Kazakh, supporting real tourism usability for English and very strong day-to-day usability for Russian."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Kazakhstan tourism guide registry example",
+        "url": "https://guides.kazakhstan.travel/en/registry/2348",
+        "note": "Official guide registry entries show Kazakh and English as tourism-facing languages while the platform itself is maintained in Kazakh, Russian, and English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MD",
+    "override_reason": "romanian_primary_with_russian_and_english_override",
+    "notes": "Moldova should score Romanian as the primary national language while also giving strong Russian credit and moderate English credit because official tourism guidance explicitly says visitors can expect communication in all three.",
+    "languages": [
+      { "code": "ro", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.8 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Moldova Travel homepage",
+        "url": "https://moldova.travel/en/",
+        "note": "Official tourism guidance says Moldova communicates in Romanian, Russian, and English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "About Moldova: languages",
+        "url": "https://moldova.travel/en/welcome/",
+        "note": "Official tourism guidance says more than half of Moldovans speak Romanian, almost as many speak Russian, and many also speak English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "NP",
+    "override_reason": "official_nepali_with_tourism_english_override",
+    "notes": "Nepal should score Nepali as the official national language while giving moderate English credit because official tourism systems serve travelers in English and many core trekking and tourism services operate that way, though English is not a nationwide everyday default.",
+    "languages": [
+      { "code": "ne", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Ministry of Culture, Tourism and Civil Aviation",
+        "url": "https://www.tourism.gov.np/",
+        "note": "Nepal's tourism ministry operates an English-facing site for foreign travelers alongside Nepali content, supporting meaningful English usability in the tourism system."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Nepal",
+        "url": "https://www.britannica.com/place/Nepal/Relief",
+        "note": "Britannica identifies Nepali as the official language of Nepal."
+      }
+    ]
+  }
+]

@@ -1,0 +1,75 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "IN",
+    "override_reason": "multilingual_country_with_high_english_and_hindi_override",
+    "notes": "India should give strong credit to both English and Hindi at country level because official tourism guidance says English is widely spoken across all parts of India, while Hindi remains one of the most important everyday languages in large parts of the country.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "hi", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Incredible India FAQs",
+        "url": "https://www.incredibleindia.gov.in/en/faqs",
+        "note": "Official tourism guidance says India embraces linguistic diversity and that English is widely spoken in all parts of India."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Incredible India rural tourism example",
+        "url": "https://www.incredibleindia.gov.in/en/rural-tourism/khokhara",
+        "note": "Official tourism destination content regularly identifies Hindi as the native language in major parts of India."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KH",
+    "override_reason": "official_khmer_with_tourism_english_override",
+    "notes": "Cambodia should score Khmer as the official language while giving meaningful English credit because official tourism guidance says English is commonly communicated in hotels and business settings and is widely used as a second language.",
+    "languages": [
+      { "code": "km", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.5 },
+      { "code": "fr", "type": "minor", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Tourism Cambodia FAQ",
+        "url": "https://www.tourismcambodia.com/faqs/",
+        "note": "Official tourism guidance says Khmer is the national language and that French and English are widely utilized as second languages."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Tourism Cambodia Khmer Languages",
+        "url": "https://www.tourismcambodia.com/about-cambodia/khmer-languages.htm",
+        "note": "Official tourism guidance says English is commonly used in hotels and business compounds and French remains a popular second language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "LA",
+    "override_reason": "official_lao_with_conservative_tourism_english_override",
+    "notes": "Laos should score Lao as the official language while giving only limited English credit at country level. English is useful in parts of the tourism system and at some official travel touchpoints, but it should not be treated as broadly reliable outside those settings.",
+    "languages": [
+      { "code": "lo", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "minor", "coverage": 0.2 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Tourismlaos: Ethnic Diversity",
+        "url": "https://www.tourismlaos.org/welcome/authentic-culture/ethnic-diversity/",
+        "note": "Official tourism guidance says Lao is the official language of Lao PDR."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Digital Arrival Registration system",
+        "url": "https://www.tourismlaos.org/2025/08/28/laos-to-launch-digital-immigration-system-for-foreign-travelers-starting-1-september/",
+        "note": "Official tourism reporting on a government border system says the digital registration process is available in Lao, English, and Chinese, supporting limited official tourism-facing English usability."
+      }
+    ]
+  }
+]

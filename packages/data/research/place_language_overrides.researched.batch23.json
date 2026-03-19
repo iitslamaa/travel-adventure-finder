@@ -1,0 +1,50 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "HR",
+    "override_reason": "official_croatian_with_tourism_english_override",
+    "notes": "Croatia should score Croatian as the official language while giving meaningful English credit because the national tourism system serves visitors broadly in English and multilingual support is standard across core travel services and accommodation platforms.",
+    "languages": [
+      { "code": "hr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Croatia.hr accommodation platform",
+        "url": "https://accommodation.croatia.hr/en-gb/apartments",
+        "note": "Croatia's official tourism accommodation system is designed for foreign travelers in English and many other languages, supporting broad English usability in the tourism sector."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Croatia",
+        "url": "https://www.britannica.com/place/Croatia",
+        "note": "Britannica identifies Croatian as the official language of Croatia."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "HU",
+    "override_reason": "official_hungarian_with_tourism_english_override",
+    "notes": "Hungary should score Hungarian as the official language while giving moderate English credit because the national tourism agency serves travelers extensively in English and other world languages, even though everyday national use remains Hungarian.",
+    "languages": [
+      { "code": "hu", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Hungary English portal",
+        "url": "https://visithungary.com/en",
+        "note": "Hungary's official tourism portal serves trip-planning and practical information in English and many other languages for international visitors."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Hungary multilingual platform",
+        "url": "https://visithungary.com/es/",
+        "note": "The national tourism agency operates the same visitor platform across a broad set of foreign languages, supporting meaningful English-oriented travel usability."
+      }
+    ]
+  }
+]

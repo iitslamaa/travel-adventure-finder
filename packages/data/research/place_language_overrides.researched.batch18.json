@@ -1,0 +1,98 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "ES",
+    "override_reason": "official_spanish_with_tourism_english_override",
+    "notes": "Spain should score Spanish as the official language while giving meaningful English credit because the national tourism system explicitly offers multilingual tourist assistance and safety support in travelers' own languages.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Spain.info: Advice on safety in Spain",
+        "url": "https://www.spain.info/en/travel-tips/safety/",
+        "note": "Spain's official tourism site says the Foreign Tourist Service helps victims in their own language and provides tourist safety materials in English and other major languages."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Spain.info experiences platform",
+        "url": "https://experiences.spain.info/en/",
+        "note": "The official tourism platform serves international visitors directly in English and multiple other languages."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "FR",
+    "override_reason": "official_french_with_tourism_english_override",
+    "notes": "France should score French as the official language while giving moderate English credit because the official tourism board serves international travel content in English and many major tourism touchpoints are built for multilingual visitors.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Explore France official tourism map",
+        "url": "https://www.france.fr/en/map",
+        "note": "France's official tourism board operates a full English-language destination site for international visitors."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Explore France: Cité internationale de la langue française",
+        "url": "https://www.france.fr/en/article/cite-internationale-langue-francaise-go",
+        "note": "Official tourism guidance explains that visitor content and applications are available in English and several other languages at major cultural attractions."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "IT",
+    "override_reason": "official_italian_with_tourism_english_override",
+    "notes": "Italy should score Italian as the official travel language while giving meaningful English credit because the official tourism ministry serves the country internationally in English and many major visitor experiences offer multilingual support.",
+    "languages": [
+      { "code": "it", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Italia.it English portal",
+        "url": "https://www.italia.it/en",
+        "note": "Italy's official tourism portal, operated by the Ministry of Tourism, serves destination content in English for international travelers."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Italia.it: Museo Interattivo delle Migrazioni",
+        "url": "https://www.italia.it/it/veneto/belluno/museo-migrazione-belluno",
+        "note": "Official tourism listings regularly note multilingual visitor materials, including English, at cultural attractions."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PT",
+    "override_reason": "official_portuguese_with_tourism_english_override",
+    "notes": "Portugal should score Portuguese as the official language while giving strong English credit because the national tourism board serves extensive visitor information in English and many tourism-facing services are designed around international use.",
+    "languages": [
+      { "code": "pt", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Portugal English portal",
+        "url": "https://www.visitportugal.com/en",
+        "note": "Portugal's national tourism board operates a full English-language visitor portal for practical planning and destination content."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Portugal",
+        "url": "https://www.britannica.com/place/Portugal",
+        "note": "Britannica identifies Portuguese as the official language of Portugal."
+      }
+    ]
+  }
+]

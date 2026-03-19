@@ -9,16 +9,27 @@ struct DiscoveryMapView: View {
     
     let countries: [Country]
     
+    @EnvironmentObject private var weightsStore: ScoreWeightsStore
+    
     @State private var selectedCountryISO: String? = nil
     @State private var isLoadingMap: Bool = true
     @State private var shouldMountMap: Bool = false
+
+    private var displayedCountries: [Country] {
+        countries.map {
+            $0.applyingOverallScore(
+                using: weightsStore.weights,
+                selectedMonth: weightsStore.selectedMonth
+            )
+        }
+    }
     
     var body: some View {
         ZStack(alignment: .bottom) {
             
             if shouldMountMap {
                 DiscoveryMapRepresentable(
-                    countries: countries,
+                    countries: displayedCountries,
                     highlightedISOs: [],
                     selectedCountryISO: $selectedCountryISO,
                     isLoading: $isLoadingMap
@@ -60,7 +71,7 @@ struct DiscoveryMapView: View {
     }
     
     private func matchedCountry(for iso: String) -> Country? {
-        countries.first { $0.iso2.uppercased() == iso.uppercased() }
-        ?? countries.first { $0.name == iso }
+        displayedCountries.first { $0.iso2.uppercased() == iso.uppercased() }
+        ?? displayedCountries.first { $0.name == iso }
     }
 }

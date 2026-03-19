@@ -14,10 +14,7 @@ struct ProfileSettingsLanguagesSection: View {
     @Binding var showAddLanguage: Bool
 
     private func displayName(for entry: LanguageEntry) -> String {
-        LanguageRepository.shared.allLanguages
-            .first(where: { $0.code == entry.name })?
-            .displayName
-            ?? entry.name
+        LanguageRepository.shared.displayName(for: entry.canonicalCode)
     }
 
     var body: some View {
@@ -56,9 +53,9 @@ struct ProfileSettingsLanguagesSection: View {
                                     set: { languages[index].proficiency = $0 }
                                 )
                             ) {
-                                Text("Beginner").tag("Beginner")
-                                Text("Conversational").tag("Conversational")
-                                Text("Fluent").tag("Fluent")
+                                ForEach(LanguageProficiency.allCases) { proficiency in
+                                    Text(proficiency.label).tag(proficiency.storageValue)
+                                }
                             }
                             .pickerStyle(.segmented)
                         }

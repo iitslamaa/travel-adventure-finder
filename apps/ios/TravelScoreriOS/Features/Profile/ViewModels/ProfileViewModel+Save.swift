@@ -73,7 +73,11 @@ extension ProfileViewModel {
                 current.languages = languages.compactMap { dict in
                     guard let code = dict["code"],
                           let proficiency = dict["proficiency"] else { return nil }
-                    return Profile.LanguageJSON(code: code, proficiency: proficiency)
+                    return Profile.LanguageJSON(
+                        code: LanguageRepository.shared.canonicalLanguageCode(for: code)
+                            ?? code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                        proficiency: LanguageProficiency(storageValue: proficiency).storageValue
+                    )
                 }
             }
             current.travelStyle = travelStyle.map { [$0] } ?? current.travelStyle

@@ -3,6 +3,7 @@ export type Weights = {
   seasonality: number;
   visaEase: number;
   affordability: number;
+  language: number;
 };
 
 export type VisaEase =
@@ -24,6 +25,7 @@ export type CountryFacts = {
   seasonality?: number;
   visaEase?: number;
   affordability?: number;
+  languageCompatibilityScore?: number;
   affordabilityCategory?: number; // 1 (cheapest) .. 10 (most expensive)
   affordabilityBand?: 'good' | 'warn' | 'bad' | 'danger';
   affordabilityExplanation?: string;
