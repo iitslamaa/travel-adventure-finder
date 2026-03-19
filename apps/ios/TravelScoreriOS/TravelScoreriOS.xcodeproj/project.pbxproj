@@ -51,6 +51,7 @@
 		170C21512F4790E00090BA78 /* AuthRequiredView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20F62F4790E00090BA78 /* AuthRequiredView.swift */; };
 		170C21522F4790E00090BA78 /* AuthSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20F72F4790E00090BA78 /* AuthSheetView.swift */; };
 		170C21532F4790E00090BA78 /* BucketListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20F82F4790E00090BA78 /* BucketListView.swift */; };
+		17F9A0012F70000100000001 /* CountryOverviewDescriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */; };
 		170C21542F4790E00090BA78 /* BucketToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20F92F4790E00090BA78 /* BucketToggleButton.swift */; };
 		170C21562F4790E00090BA78 /* Country.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20FD2F4790E00090BA78 /* Country.swift */; };
 		170C21572F4790E00090BA78 /* CountryAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20FE2F4790E00090BA78 /* CountryAPI.swift */; };
@@ -199,6 +200,7 @@
 		170C20F72F4790E00090BA78 /* AuthSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSheetView.swift; sourceTree = "<group>"; };
 		170C20F82F4790E00090BA78 /* BucketListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketListView.swift; sourceTree = "<group>"; };
 		170C20F92F4790E00090BA78 /* BucketToggleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketToggleButton.swift; sourceTree = "<group>"; };
+		17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryOverviewDescriptionStore.swift; sourceTree = "<group>"; };
 		170C20FB2F4790E00090BA78 /* countries.geojson */ = {isa = PBXFileReference; lastKnownFileType = text; path = countries.geojson; sourceTree = "<group>"; };
 		170C20FD2F4790E00090BA78 /* Country.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Country.swift; sourceTree = "<group>"; };
 		170C20FE2F4790E00090BA78 /* CountryAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryAPI.swift; sourceTree = "<group>"; };
@@ -362,6 +364,7 @@
 		};
 		170C22482F479B070090BA78 /* Models */ = {
 			isa = PBXGroup;
+				17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */,
 			children = (
 				170C20FD2F4790E00090BA78 /* Country.swift */,
 				170C21002F4790E00090BA78 /* CountryDTO.swift */,
@@ -1152,6 +1155,7 @@
 				17B478C22F55FF2E002B1865 /* PreReviewModalView.swift in Sources */,
 				17B478C32F55FF2E002B1865 /* LowRatingFeedbackSheet.swift in Sources */,
 				170C21532F4790E00090BA78 /* BucketListView.swift in Sources */,
+				17F9A0012F70000100000001 /* CountryOverviewDescriptionStore.swift in Sources */,
 				170C21542F4790E00090BA78 /* BucketToggleButton.swift in Sources */,
 				170C21562F4790E00090BA78 /* Country.swift in Sources */,
 				170C21572F4790E00090BA78 /* CountryAPI.swift in Sources */,

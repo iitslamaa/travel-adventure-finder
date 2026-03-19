@@ -74,6 +74,10 @@ struct Country: Identifiable, Hashable {
             return nil
         }
     }
+
+    var overviewDescription: String {
+        CountryOverviewDescriptionStore.description(for: self)
+    }
     
 
     // Custom initializer to maintain compatibility

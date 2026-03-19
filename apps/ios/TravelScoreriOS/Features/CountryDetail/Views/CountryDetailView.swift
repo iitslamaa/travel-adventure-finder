@@ -9,6 +9,7 @@ import SwiftUI
 import PostgREST
 import Supabase
 import Combine
+import MapKit
 
 struct CountryDetailView: View {
     @State var country: Country
@@ -93,6 +94,10 @@ struct CountryDetailView: View {
                                     Theme.countryDetailCardBackground(corner: 20)
                                 )
                                 .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+
+                            scrapbookSection {
+                                CountryOverviewCard(country: displayedCountry)
+                            }
 
                             if sessionManager.isAuthenticated {
                                 scrapbookSection {
@@ -1156,5 +1161,202 @@ private struct CountryLanguageCompatibilityCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.countryDetailCardBackground(corner: 14))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct CountryOverviewCard: View {
+    let country: Country
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(country.overviewDescription)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            CountryStaticMapView(country: country)
+                .frame(height: 220)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                )
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.countryDetailCardBackground(corner: 14))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct CountryStaticMapView: UIViewRepresentable {
+    let country: Country
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView()
+        let config = MKStandardMapConfiguration(elevationStyle: .flat)
+        mapView.preferredConfiguration = config
+        mapView.mapType = .mutedStandard
+        mapView.showsBuildings = false
+        mapView.pointOfInterestFilter = .excludingAll
+        mapView.isRotateEnabled = false
+        mapView.isPitchEnabled = false
+        mapView.isScrollEnabled = false
+        mapView.isZoomEnabled = false
+        mapView.isUserInteractionEnabled = false
+        mapView.showsCompass = false
+        mapView.showsScale = false
+        mapView.delegate = context.coordinator
+        return mapView
+    }
+
+    func updateUIView(_ mapView: MKMapView, context: Context) {
+        let iso = country.iso2.uppercased()
+
+        if context.coordinator.currentISO != iso {
+            context.coordinator.currentISO = iso
+            let overlays = CountryMapRegionResolver.overlays(for: iso)
+            mapView.removeOverlays(mapView.overlays)
+            mapView.addOverlays(overlays)
+        }
+
+        if let override = CountryMapRegionResolver.regionOverride(for: iso) {
+            mapView.setRegion(override, animated: false)
+            return
+        }
+
+        let overlays = mapView.overlays
+        guard let firstOverlay = overlays.first else { return }
+
+        let combinedRect = overlays.dropFirst().reduce(firstOverlay.boundingMapRect) { partial, overlay in
+            partial.union(overlay.boundingMapRect)
+        }
+
+        mapView.setVisibleMapRect(
+            combinedRect,
+            edgePadding: UIEdgeInsets(top: 28, left: 28, bottom: 28, right: 28),
+            animated: false
+        )
+    }
+
+    final class Coordinator: NSObject, MKMapViewDelegate {
+        var currentISO: String?
+
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            guard let polygon = overlay as? CountryPolygon else {
+                return MKOverlayRenderer(overlay: overlay)
+            }
+
+            let renderer = MKMultiPolygonRenderer(overlay: polygon)
+            renderer.fillColor = UIColor(red: 1.0, green: 0.82, blue: 0.0, alpha: 0.32)
+            renderer.strokeColor = UIColor(red: 1.0, green: 0.45, blue: 0.0, alpha: 0.92)
+            renderer.lineWidth = 1.6
+            renderer.lineJoin = .round
+            renderer.lineCap = .round
+            return renderer
+        }
+    }
+}
+
+private enum CountryMapRegionResolver {
+    static func overlays(for iso: String) -> [CountryPolygon] {
+        WorldGeoJSONLoader.loadPolygons(selectedIso: iso)
+            .filter { $0.isoCode?.uppercased() == iso }
+    }
+
+    static func regionOverride(for iso: String) -> MKCoordinateRegion? {
+        switch iso {
+        case "BQ":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 12.18, longitude: -68.25),
+                span: MKCoordinateSpan(latitudeDelta: 0.6, longitudeDelta: 0.6)
+            )
+        case "AS":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: -14.27, longitude: -170.70),
+                span: MKCoordinateSpan(latitudeDelta: 3.0, longitudeDelta: 3.0)
+            )
+        case "CN":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 35.0, longitude: 103.0),
+                span: MKCoordinateSpan(latitudeDelta: 28.0, longitudeDelta: 28.0)
+            )
+        case "DZ":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 28.0, longitude: 2.6),
+                span: MKCoordinateSpan(latitudeDelta: 20.0, longitudeDelta: 20.0)
+            )
+        case "FJ":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: -17.8, longitude: 178.0),
+                span: MKCoordinateSpan(latitudeDelta: 8.0, longitudeDelta: 8.0)
+            )
+        case "FR":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 46.5, longitude: 2.5),
+                span: MKCoordinateSpan(latitudeDelta: 11.0, longitudeDelta: 11.0)
+            )
+        case "GB":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 54.5, longitude: -3.0),
+                span: MKCoordinateSpan(latitudeDelta: 10.0, longitudeDelta: 10.0)
+            )
+        case "KI":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 1.9, longitude: -157.4),
+                span: MKCoordinateSpan(latitudeDelta: 30.0, longitudeDelta: 30.0)
+            )
+        case "NZ":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: -41.0, longitude: 173.0),
+                span: MKCoordinateSpan(latitudeDelta: 12.0, longitudeDelta: 12.0)
+            )
+        case "RU":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 60.0, longitude: 100.0),
+                span: MKCoordinateSpan(latitudeDelta: 50.0, longitudeDelta: 100.0)
+            )
+        case "SB":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: -9.6, longitude: 160.2),
+                span: MKCoordinateSpan(latitudeDelta: 10.0, longitudeDelta: 10.0)
+            )
+        case "SG":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 1.35, longitude: 103.82),
+                span: MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3)
+            )
+        case "SH":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: -15.96, longitude: -5.72),
+                span: MKCoordinateSpan(latitudeDelta: 2.5, longitudeDelta: 2.5)
+            )
+        case "SL":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 8.6, longitude: -11.8),
+                span: MKCoordinateSpan(latitudeDelta: 4.0, longitudeDelta: 4.0)
+            )
+        case "SR":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 4.0, longitude: -56.0),
+                span: MKCoordinateSpan(latitudeDelta: 7.0, longitudeDelta: 7.0)
+            )
+        case "TF":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: -49.3, longitude: 69.2),
+                span: MKCoordinateSpan(latitudeDelta: 8.0, longitudeDelta: 8.0)
+            )
+        case "US":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 39.8, longitude: -98.6),
+                span: MKCoordinateSpan(latitudeDelta: 40.0, longitudeDelta: 70.0)
+            )
+        default:
+            return nil
+        }
     }
 }
