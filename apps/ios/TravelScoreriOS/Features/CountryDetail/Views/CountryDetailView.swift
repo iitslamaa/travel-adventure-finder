@@ -22,7 +22,7 @@ struct CountryDetailView: View {
     @State private var countryLanguageProfile: CountryLanguageProfile?
     @State private var isPreparingContent: Bool = true
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
-    @State private var selectedFriendProfile: SelectedFriendProfile?
+    @State private var activeSheet: CountryDetailSheet?
 
     private var displayedCountry: Country {
         country.applyingOverallScore(using: weightsStore.weights, selectedMonth: weightsStore.selectedMonth)
@@ -96,12 +96,12 @@ struct CountryDetailView: View {
 
                             if sessionManager.isAuthenticated {
                                 scrapbookSection {
-                                    CountryFriendEngagementCard(
+                                    CountryFriendEngagementPreviewCard(
                                         country: displayedCountry,
                                         engagement: engagementVM.engagement,
                                         isLoading: engagementVM.isLoading,
-                                        onSelectProfile: { userId in
-                                            selectedFriendProfile = SelectedFriendProfile(id: userId)
+                                        onOpen: {
+                                            activeSheet = .engagement
                                         }
                                     )
                                 }
@@ -218,8 +218,16 @@ struct CountryDetailView: View {
             _ = await engagementRefresh
             isPreparingContent = false
         }
-        .sheet(item: $selectedFriendProfile) { selectedFriend in
-            CountryFriendProfileSheet(userId: selectedFriend.id)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .engagement:
+                CountryFriendEngagementSheet(
+                    country: displayedCountry,
+                    engagement: engagementVM.engagement
+                )
+            case .profile(let userId):
+                CountryFriendProfileSheet(userId: userId)
+            }
         }
     }
     
@@ -259,6 +267,20 @@ struct CountryDetailView: View {
             traveledStore.replace(with: profileVM.viewedTraveledCountries)
         } else {
             traveledStore.toggle(country.id)
+        }
+    }
+}
+
+private enum CountryDetailSheet: Identifiable {
+    case engagement
+    case profile(UUID)
+
+    var id: String {
+        switch self {
+        case .engagement:
+            return "engagement"
+        case .profile(let userId):
+            return "profile-\(userId.uuidString)"
         }
     }
 }
@@ -404,20 +426,153 @@ private struct CountryFriendEngagementService {
     }
 }
 
-private struct CountryFriendEngagementCard: View {
+private struct CountryFriendEngagementPreviewCard: View {
     let country: Country
     let engagement: CountryFriendEngagement
     let isLoading: Bool
+    let onOpen: () -> Void
+
+    var body: some View {
+        Button(action: onOpen) {
+            HStack(spacing: 14) {
+                friendPreviewStack
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Your friends")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+
+                    if isLoading {
+                        Text("Checking who knows \(country.name)")
+                            .font(TAFTypography.body(.semibold))
+                            .foregroundStyle(.primary)
+
+                        Text("Loading travel signals from your circle")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(primaryCopy)
+                            .font(TAFTypography.body(.semibold))
+                            .foregroundStyle(.primary)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text(secondaryCopy)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.secondary.opacity(0.7))
+            }
+        }
+        .buttonStyle(.plain)
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.countryDetailCardBackground(corner: 14))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var primaryCopy: String {
+        if !engagement.visited.isEmpty {
+            return "See who's been to \(country.name)"
+        }
+        if !engagement.fromHere.isEmpty {
+            return "See who's from \(country.name)"
+        }
+        if !engagement.bucketList.isEmpty {
+            return "See who wants to go to \(country.name)"
+        }
+        if engagement.totalFriends == 0 {
+            return "See what your friends know about \(country.name)"
+        }
+        return "See which friends know \(country.name)"
+    }
+
+    private var secondaryCopy: String {
+        if engagement.totalFriends == 0 {
+            return "Add friends to unlock travel signals here."
+        }
+
+        let parts = [
+            summaryPart(count: engagement.visited.count, singular: "visited"),
+            summaryPart(count: engagement.bucketList.count, singular: "want to go"),
+            summaryPart(count: engagement.fromHere.count, singular: "from here")
+        ]
+        .compactMap { $0 }
+
+        if parts.isEmpty {
+            return "\(engagement.totalFriends) friends, no travel signals yet"
+        }
+
+        return parts.joined(separator: " • ")
+    }
+
+    private func summaryPart(count: Int, singular: String) -> String? {
+        guard count > 0 else { return nil }
+        return "\(count) \(singular)"
+    }
+
+    private var friendPreviewStack: some View {
+        ZStack(alignment: .leading) {
+            if previewProfiles.isEmpty {
+                Circle()
+                    .fill(Color.black.opacity(0.08))
+                    .frame(width: 48, height: 48)
+                    .overlay {
+                        Image(systemName: "person.2.fill")
+                            .foregroundStyle(.secondary)
+                    }
+            } else {
+                ForEach(Array(previewProfiles.enumerated()), id: \.element.id) { index, profile in
+                    FriendAvatarView(profile: profile)
+                        .frame(width: 42, height: 42)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.9), lineWidth: 2)
+                        )
+                        .offset(x: CGFloat(index) * 22)
+                        .zIndex(Double(previewProfiles.count - index))
+                }
+            }
+        }
+        .frame(width: previewStackWidth, height: 48, alignment: .leading)
+    }
+
+    private var previewProfiles: [Profile] {
+        var seen = Set<UUID>()
+        let combined = engagement.visited + engagement.fromHere + engagement.bucketList
+
+        return combined.filter { profile in
+            seen.insert(profile.id).inserted
+        }
+        .prefix(3)
+        .map { $0 }
+    }
+
+    private var previewStackWidth: CGFloat {
+        previewProfiles.isEmpty ? 48 : CGFloat(42 + max(previewProfiles.count - 1, 0) * 22)
+    }
+}
+
+private struct CountryFriendEngagementCard: View {
+    let country: Country
+    let engagement: CountryFriendEngagement
     let onSelectProfile: (UUID) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Friend Engagement")
+                    Text("Friends who know \(country.name)")
                         .font(TAFTypography.section(.semibold))
 
-                    Text("Who from your friends has visited \(country.name), saved it, or is from there.")
+                    Text("See who has visited, wants to go, or is from here.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -437,44 +592,25 @@ private struct CountryFriendEngagementCard: View {
                 }
             }
 
-            if isLoading {
-                HStack(spacing: 10) {
-                    ProgressView()
-                    Text("Checking your friends’ travel connections…")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            } else if engagement.totalFriends == 0 {
-                emptyState(
-                    title: "No friends yet",
-                    detail: "Add friends to see who has visited \(country.name), wants to go, or is from there."
+            VStack(alignment: .leading, spacing: 14) {
+                engagementGroup(
+                    title: "Visited",
+                    symbol: "checkmark.circle.fill",
+                    tint: .green,
+                    profiles: engagement.visited
                 )
-            } else if !engagement.hasMatches {
-                emptyState(
-                    title: "No connections yet",
-                    detail: "None of your friends has marked \(country.name) in these lists yet."
+                engagementGroup(
+                    title: "Bucket list",
+                    symbol: "bookmark.fill",
+                    tint: Color(red: 0.84, green: 0.51, blue: 0.18),
+                    profiles: engagement.bucketList
                 )
-            } else {
-                VStack(alignment: .leading, spacing: 14) {
-                    engagementGroup(
-                        title: "Visited",
-                        symbol: "checkmark.circle.fill",
-                        tint: .green,
-                        profiles: engagement.visited
-                    )
-                    engagementGroup(
-                        title: "Bucket list",
-                        symbol: "bookmark.fill",
-                        tint: Color(red: 0.84, green: 0.51, blue: 0.18),
-                        profiles: engagement.bucketList
-                    )
-                    engagementGroup(
-                        title: "From here",
-                        symbol: "house.fill",
-                        tint: Color(red: 0.24, green: 0.44, blue: 0.72),
-                        profiles: engagement.fromHere
-                    )
-                }
+                engagementGroup(
+                    title: "From here",
+                    symbol: "house.fill",
+                    tint: Color(red: 0.24, green: 0.44, blue: 0.72),
+                    profiles: engagement.fromHere
+                )
             }
         }
         .padding()
@@ -545,23 +681,6 @@ private struct CountryFriendEngagementCard: View {
             }
         }
     }
-
-    private func emptyState(title: String, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-            Text(detail)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.white.opacity(0.42))
-        )
-    }
 }
 
 private struct FriendAvatarView: View {
@@ -631,6 +750,50 @@ private struct CountryFriendProfileSheet: View {
             FriendRequestsView()
                 .environmentObject(socialNav)
         }
+    }
+}
+
+private struct CountryFriendEngagementSheet: View {
+    let country: Country
+    let engagement: CountryFriendEngagement
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedProfile: SelectedFriendProfile?
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 18) {
+                    CountryFriendEngagementCard(
+                        country: country,
+                        engagement: engagement,
+                        onSelectProfile: { userId in
+                            selectedProfile = SelectedFriendProfile(id: userId)
+                        }
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 20)
+                    .padding(.bottom, 24)
+                }
+            }
+            .background(
+                Theme.pageBackground("travel3", tint: 0.10)
+                    .ignoresSafeArea()
+            )
+            .navigationTitle(country.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
+            .sheet(item: $selectedProfile) { selectedProfile in
+                CountryFriendProfileSheet(userId: selectedProfile.id)
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 
