@@ -1,0 +1,246 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AL",
+    "override_reason": "official_albanian_with_moderate_english_override",
+    "notes": "Albania should score Albanian as the official language while giving moderate English credit because the official tourism system is built for international visitors, even though everyday life remains overwhelmingly Albanian.",
+    "languages": [
+      { "code": "sq", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Albania English portal",
+        "url": "https://albania.al/en",
+        "note": "Albania's official tourism portal serves destination planning content in English for international travelers."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Albania",
+        "url": "https://www.britannica.com/place/Albania",
+        "note": "Britannica identifies Albanian as the official language of Albania."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "AM",
+    "override_reason": "official_armenian_with_moderate_english_and_russian_override",
+    "notes": "Armenia should score Armenian as the official language while giving moderate Russian credit and modest English credit in traveler settings, especially in Yerevan and organized tourism.",
+    "languages": [
+      { "code": "hy", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "widely_spoken", "coverage": 0.6 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Armenia Travel English portal",
+        "url": "https://armenia.travel/en",
+        "note": "Armenia's official tourism portal serves international visitor content in English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Armenia",
+        "url": "https://www.britannica.com/place/Armenia",
+        "note": "Britannica identifies Armenian as the official language and notes the practical presence of Russian."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KG",
+    "override_reason": "official_kyrgyz_with_high_russian_and_modest_english_override",
+    "notes": "Kyrgyzstan should give full credit to Kyrgyz, very strong credit to Russian, and only modest English credit at country level. English is useful in parts of the tourism sector, but Russian remains far more practical day to day.",
+    "languages": [
+      { "code": "ky", "type": "official", "coverage": 1.0 },
+      { "code": "ru", "type": "official", "coverage": 0.9 },
+      { "code": "en", "type": "minor", "coverage": 0.25 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Discover Kyrgyzstan English portal",
+        "url": "https://discoverkyrgyzstan.org/en",
+        "note": "Kyrgyzstan's official tourism portal serves international travel information directly in English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Kyrgyzstan",
+        "url": "https://www.britannica.com/place/Kyrgyzstan",
+        "note": "Britannica identifies Kyrgyz as the state language and Russian as an official language widely used in public life."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "LI",
+    "override_reason": "official_german_with_moderate_english_override",
+    "notes": "Liechtenstein should score German as the official language while giving moderate English credit because official tourism guidance offers core tours and visitor information in English and several other languages.",
+    "languages": [
+      { "code": "de", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Liechtenstein facts and figures",
+        "url": "https://en.tourismus.li/reiseland/unser-land/zahlen-fakten.html",
+        "note": "Official tourism guidance says the official language of Liechtenstein is German."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Liechtenstein Trail guided stage Vaduz",
+        "url": "https://en.tourismus.li/angebote/freizeit/fuehrungen/alle-fuehrungen/detail/liechtenstein-weg-gefuhrte-etappe-vaduz-39bbdc1b-ca1c-49c6-86e5-24a972bd6fae.html",
+        "note": "Official tourism experiences are routinely offered in English and multiple other languages."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MC",
+    "override_reason": "official_french_with_high_tourism_english_override",
+    "notes": "Monaco should score French as the official language while giving strong English credit because official tourism services and visitor apps are heavily multilingual and English is clearly supported across major attractions.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.75 },
+      { "code": "it", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "VisitMonaco city tour",
+        "url": "https://www.visitmonaco.com/en/22229/city-tour-monaco-le-grand-tour",
+        "note": "Official tourism guidance says major Monaco city tours are offered with commentary in English, French, Italian, German, and other languages."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Your Monaco app",
+        "url": "https://www.visitmonaco.com/en/prepare-your-stay/practical-information/useful-applications/your-monaco",
+        "note": "Official Monaco visitor applications are available in French, English, and Italian."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "ME",
+    "override_reason": "official_montenegrin_with_moderate_english_override",
+    "notes": "Montenegro should score Montenegrin as the official language while giving moderate English credit because the official tourism system serves visitors in English and the tourism economy is strongly oriented toward international travelers.",
+    "languages": [
+      { "code": "cnr", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Montenegro Travel English portal",
+        "url": "https://www.montenegro.travel/en",
+        "note": "Montenegro's official tourism platform serves full destination content in English for international travelers."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Montenegro",
+        "url": "https://www.britannica.com/place/Montenegro",
+        "note": "Britannica identifies Montenegrin as the official language of Montenegro."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MK",
+    "override_reason": "official_macedonian_with_moderate_english_override",
+    "notes": "North Macedonia should score Macedonian as the official language while giving moderate English credit because the official tourism system is built in English for foreign visitors and major travel interactions are internationally oriented.",
+    "languages": [
+      { "code": "mk", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "North Macedonia Timeless English portal",
+        "url": "https://northmacedonia-timeless.com/",
+        "note": "North Macedonia's official tourism platform serves foreign travelers in English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: North Macedonia",
+        "url": "https://www.britannica.com/place/North-Macedonia",
+        "note": "Britannica identifies Macedonian as the principal official language of North Macedonia."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PL",
+    "override_reason": "official_polish_with_moderate_english_override",
+    "notes": "Poland should score Polish as the official language while giving moderate English credit because the national tourism organization serves international visitors extensively in English and other foreign languages.",
+    "languages": [
+      { "code": "pl", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Poland Travel English portal",
+        "url": "https://www.poland.travel/en",
+        "note": "Poland's official tourism platform serves international destination planning in English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Poland Travel tourist information listing",
+        "url": "https://www.poland.travel/en/rit/punkt-informacji-turystycznej/",
+        "note": "Official tourism content is systematically maintained in English and other foreign languages for visitors."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "RO",
+    "override_reason": "official_romanian_with_moderate_english_override",
+    "notes": "Romania should score Romanian as the official language while giving moderate English credit because the national tourism platform serves international visitors in English and tourism-facing services are built for foreign travelers.",
+    "languages": [
+      { "code": "ro", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Romania Travel English portal",
+        "url": "https://romania.travel/en",
+        "note": "Romania's official tourism platform serves destination and travel-planning information in English for foreign visitors."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Romania",
+        "url": "https://www.britannica.com/place/Romania",
+        "note": "Britannica identifies Romanian as the official language of Romania."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "LK",
+    "override_reason": "coofficial_sinhala_and_tamil_with_high_tourism_english_override",
+    "notes": "Sri Lanka should give strong credit to Sinhala and Tamil as official languages while also giving strong English credit because official tourism guidance is built extensively in English for international travelers.",
+    "languages": [
+      { "code": "si", "type": "official", "coverage": 1.0 },
+      { "code": "ta", "type": "official", "coverage": 0.8 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Sri Lanka Tourism English portal",
+        "url": "https://www.srilanka.travel/",
+        "note": "Sri Lanka's official tourism platform serves the country internationally in English and is designed around foreign-traveler planning."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Sri Lanka",
+        "url": "https://www.britannica.com/place/Sri-Lanka",
+        "note": "Britannica identifies Sinhala and Tamil as official languages and English as widely used in administration and tourism."
+      }
+    ]
+  }
+]

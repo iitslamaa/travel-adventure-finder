@@ -1,0 +1,242 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AX",
+    "override_reason": "monolingual_swedish_with_high_english_override",
+    "notes": "Åland should score Swedish as the monolingual official language while giving very high English credit because official visitor guidance says nearly everyone on Åland speaks English.",
+    "languages": [
+      { "code": "sv", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.9 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Åland: Language and dialect",
+        "url": "https://visitaland.com/en/practical-info/language-and-dialect/",
+        "note": "Official visitor guidance says Åland is a monolingual Swedish-speaking area and that nearly all people speak English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Åland practical info",
+        "url": "https://visitaland.com/en/practical-info/",
+        "note": "Official visitor guidance is built for international travelers in English while centering Swedish as the local language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CK",
+    "override_reason": "coofficial_english_and_rarotongan_override",
+    "notes": "The Cook Islands should give full credit to English and Cook Islands Maori because both are official and both are explicitly identified in official tourism guidance as core island languages.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "rar", "type": "official", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Cook Islands FAQs",
+        "url": "https://cookislands.travel/corporate/spto",
+        "note": "Official tourism FAQs say the official languages of the Cook Islands are Cook Islands Maori and English, with English widely spoken on Rarotonga."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Cook Islands",
+        "url": "https://www.britannica.com/place/Cook-Islands/People",
+        "note": "Britannica identifies Cook Islands Maori and English as official languages."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "FK",
+    "override_reason": "official_english_override",
+    "notes": "The Falkland Islands should score English as fully compatible for travelers because official visitor guidance says the islands' official language is English and tourism services are delivered accordingly.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Falkland Islands FAQs",
+        "url": "https://www.falklandislands.com/plan-your-trip/visitor-information/faqs",
+        "note": "Official visitor guidance says the official language of the Falkland Islands is English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Falkland Islands Tourist Information Centre",
+        "url": "https://www.falklandislands.com/plan-your-trip/visitor-information/tourist-information-centre",
+        "note": "Official tourism services are presented entirely in English for visitors."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "FO",
+    "override_reason": "official_faroese_with_danish_and_high_english_override",
+    "notes": "The Faroe Islands should recognize Faroese as the primary official language while also giving meaningful credit to Danish and strong credit to English because official tourism guidance says most people speak English.",
+    "languages": [
+      { "code": "fo", "type": "official", "coverage": 1.0 },
+      { "code": "da", "type": "widely_spoken", "coverage": 0.7 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Faroe Islands: Faroese language",
+        "url": "https://visitfaroeislands.com/dk/about1/people-society/faroese-language",
+        "note": "Official visitor guidance says Faroese is the national language, Danish is the official second language taught in schools, and English is spoken by most people."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Faroe Islands",
+        "url": "https://www.britannica.com/place/Faroe-Islands-Atlantic-Ocean",
+        "note": "Britannica identifies Faroese and Danish as the official languages."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "FR-971",
+    "override_reason": "guadeloupe_duplicate_place_override",
+    "notes": "This app-specific Guadeloupe place code should mirror the reviewed Guadeloupe language profile: French as official and Guadeloupean Creole French as widely spoken.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "gcf", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Guadeloupe Islands: Gwo-Ka",
+        "url": "https://www.guadeloupe-islands.com/gwo-ka/",
+        "note": "Official tourism content describes Guadeloupean Creole as a living local language in core cultural expression."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Guadeloupe",
+        "url": "https://www.britannica.com/place/Guadeloupe/People",
+        "note": "Britannica says French is official and that a local creole is also widely spoken."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "FR-972",
+    "override_reason": "martinique_duplicate_place_override",
+    "notes": "This app-specific Martinique place code should mirror the reviewed Martinique language profile: French as official, with Martinican Creole noted for later exact-code reconciliation.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Martinique Tourisme: Martinican Creole",
+        "url": "https://www.martinique.org/en/about/culture/creole",
+        "note": "Official tourism guidance says French is official and explains that Martinican Creole is spoken widely in day-to-day life."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Martinique Tourisme: Culture",
+        "url": "https://www.martinique.org/en/about/culture",
+        "note": "Official tourism guidance explains the continuing role of Creole alongside French."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "FR-973",
+    "override_reason": "french_guiana_duplicate_place_override",
+    "notes": "French Guiana should score French as the official language and give local credit to Guianese Creole French. This app-specific code is treated as a reviewed territory-level profile.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Guyane Amazonie tourism portal",
+        "url": "https://www.guyane-amazonie.fr/",
+        "note": "French Guiana's official tourism portal is operated in French, supporting French as the official traveler-facing language."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: French Guiana",
+        "url": "https://www.britannica.com/place/French-Guiana",
+        "note": "Britannica says French is the official language and that Guianese Creole French is also among the principal languages spoken."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "FR-974",
+    "override_reason": "reunion_duplicate_place_override",
+    "notes": "This app-specific Réunion place code should mirror the reviewed Réunion language profile: French as official and Réunion Creole French as widely spoken.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "rcf", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Île de la Réunion Tourisme: Creole Glossary",
+        "url": "https://en.reunion.fr/organize/useful-information-before-travelling/creole-glossary/",
+        "note": "Official tourism guidance says French is the official language and that the population also speaks Creole."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Réunion",
+        "url": "https://www.britannica.com/place/Reunion",
+        "note": "Britannica says French is official and Réunion French Creole is in common use."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "FR-976",
+    "override_reason": "mayotte_duplicate_place_override",
+    "notes": "This app-specific Mayotte place code should mirror the reviewed Mayotte language profile: French as official, Maore Comorian as widely spoken, and Bushi as regionally important.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "swb", "type": "widely_spoken", "coverage": 0.9 },
+      { "code": "buc", "type": "minor", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "France.fr: Mayotte",
+        "url": "https://www.france.fr/en/destination/mayotte/",
+        "note": "Official tourism guidance says French is the official language and explains the strong role of Shimaore and Kibushi in daily conversation."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Mayotte",
+        "url": "https://www.britannica.com/place/Mayotte",
+        "note": "Britannica says French is official while Comorian and a Malagasy dialect are widely spoken."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GL",
+    "override_reason": "official_greenlandic_with_danish_and_english_override",
+    "notes": "Greenland should recognize Greenlandic as the official language while also giving meaningful Danish credit and some English credit, especially in towns and visitor services.",
+    "languages": [
+      { "code": "kl", "type": "official", "coverage": 1.0 },
+      { "code": "da", "type": "widely_spoken", "coverage": 0.7 },
+      { "code": "en", "type": "minor", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Greenland: Language",
+        "url": "https://visitgreenland.com/about-greenland/language/",
+        "note": "Official tourism guidance says West Greenlandic is the official language and explains that visitors will also encounter Danish and English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Greenland",
+        "url": "https://www.britannica.com/place/Greenland/People",
+        "note": "Britannica says Kalaallisut is the sole official language and that Danish and English are also spoken."
+      }
+    ]
+  }
+]
