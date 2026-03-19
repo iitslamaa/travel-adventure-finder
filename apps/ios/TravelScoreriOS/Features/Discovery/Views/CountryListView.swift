@@ -200,7 +200,6 @@ struct CountryListView: View {
                 isInTargetList: selectedIds.contains(country.id),
                 isInOtherList: otherSelectedIds.contains(country.id),
                 onTap: {
-                    guard !selectedIds.contains(country.id) else { return }
                     onSelect(country)
                 }
             )
@@ -419,7 +418,6 @@ private struct PlanningSelectableCountryRow: View {
             .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
         .buttonStyle(.plain)
-        .disabled(isInTargetList)
         .frame(maxWidth: .infinity)
         .frame(minHeight: 58)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
