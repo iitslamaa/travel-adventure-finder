@@ -62,15 +62,15 @@ enum PlanningListKind {
 
     var pickerTitle: String {
         switch self {
-        case .bucket: return "Add to Bucket List"
-        case .visited: return "Add to Visited"
+        case .bucket: return "Edit Bucket List"
+        case .visited: return "Edit Visited"
         }
     }
 
     var pickerSubtitle: String {
         switch self {
-        case .bucket: return "Pick countries from the full list. Already saved entries stay checked."
-        case .visited: return "Pick countries from the full list. Already tracked entries stay checked."
+        case .bucket: return "Tap any country to add it or remove it from your bucket list."
+        case .visited: return "Tap any country to add it or remove it from your visited list."
         }
     }
 
@@ -97,8 +97,8 @@ enum PlanningListKind {
 
     var emptyDescription: String {
         switch self {
-        case .bucket: return "Tap + to add countries here, or swipe left on a country and tap Bucket."
-        case .visited: return "Tap + to add countries here, or swipe left on a country and tap Visited."
+        case .bucket: return "Tap Edit to add countries here, or swipe left on a country and tap Bucket."
+        case .visited: return "Tap Edit to add countries here, or swipe left on a country and tap Visited."
         }
     }
 
@@ -260,12 +260,33 @@ struct PlanningCountryPickerView: View {
     let countries: [Country]
     let selectedIds: Set<String>
     let otherSelectedIds: Set<String>
-    let onSelect: (Country) -> Void
+    let onSave: (Set<String>) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var sort: CountrySort = .name
     @State private var sortOrder: SortOrder = .ascending
+    @State private var draftSelectedIds: Set<String>
+    @State private var isSaving = false
+
+    init(
+        kind: PlanningListKind,
+        countries: [Country],
+        selectedIds: Set<String>,
+        otherSelectedIds: Set<String>,
+        onSave: @escaping (Set<String>) -> Void
+    ) {
+        self.kind = kind
+        self.countries = countries
+        self.selectedIds = selectedIds
+        self.otherSelectedIds = otherSelectedIds
+        self.onSave = onSave
+        _draftSelectedIds = State(initialValue: selectedIds)
+    }
+
+    private var hasChanges: Bool {
+        draftSelectedIds != selectedIds
+    }
 
     var body: some View {
         VStack(spacing: 6) {
@@ -287,6 +308,25 @@ struct PlanningCountryPickerView: View {
                     sortOrder: $sortOrder
                 )
                 .frame(maxWidth: .infinity)
+
+                Button {
+                    isSaving = true
+                    onSave(draftSelectedIds)
+                    dismiss()
+                } label: {
+                    Text(isSaving ? "Saving..." : "Save")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(hasChanges ? Theme.accent : Color.gray.opacity(0.55))
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(!hasChanges || isSaving)
+                .opacity(hasChanges ? 1 : 0.5)
             }
             .padding(.horizontal, 16)
             .padding(.top, 6)
@@ -312,9 +352,15 @@ struct PlanningCountryPickerView: View {
                 sortOrder: $sortOrder,
                 mode: .picker(
                     kind: kind,
-                    selectedIds: selectedIds,
+                    selectedIds: draftSelectedIds,
                     otherSelectedIds: otherSelectedIds,
-                    onSelect: onSelect
+                    onSelect: { country in
+                        if draftSelectedIds.contains(country.id) {
+                            draftSelectedIds.remove(country.id)
+                        } else {
+                            draftSelectedIds.insert(country.id)
+                        }
+                    }
                 )
             )
             .frame(maxHeight: .infinity, alignment: .top)

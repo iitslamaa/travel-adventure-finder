@@ -796,7 +796,7 @@ private struct CountryFriendEngagementSheet: View {
 
                 VStack(spacing: 0) {
                     ZStack(alignment: .topTrailing) {
-                        Theme.titleBanner(country.name)
+                        Theme.titleBanner("\(country.name) \(country.flagEmoji)")
 
                         Button {
                             dismiss()
@@ -1264,7 +1264,10 @@ private struct CountryStaticMapView: UIViewRepresentable {
 
 private enum CountryMapRegionResolver {
     static func overlays(for iso: String) -> [CountryPolygon] {
-        WorldGeoJSONLoader.loadPolygons(selectedIso: iso)
+        // The full-resolution dataset produces a broken partial fill for a few small countries
+        // in the static detail card map (notably Albania). The simplified geometry is more stable
+        // for this non-interactive preview while still preserving the country silhouette well.
+        WorldGeoJSONLoader.loadPolygons()
             .filter { $0.isoCode?.uppercased() == iso }
     }
 
