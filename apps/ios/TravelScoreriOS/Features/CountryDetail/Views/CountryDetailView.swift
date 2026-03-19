@@ -765,8 +765,14 @@ private struct CountryFriendEngagementSheet: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .topTrailing) {
-                Theme.pageBackground("travel3", tint: 0.10)
-                    .ignoresSafeArea()
+                ZStack {
+                    Theme.pageBackground("travel3", tint: 0.04)
+                        .ignoresSafeArea()
+
+                    Color(red: 0.95, green: 0.91, blue: 0.84)
+                        .opacity(0.22)
+                        .ignoresSafeArea()
+                }
 
                 ScrollView {
                     VStack(spacing: 18) {
@@ -802,20 +808,16 @@ private struct CountryFriendEngagementSheet: View {
             }
             .safeAreaInset(edge: .top) {
                 HStack {
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(country.name)
-                            .font(TAFTypography.title(.bold))
+                            .font(TAFTypography.largeTitle(.semibold))
                             .foregroundStyle(.black)
-
-                        Text("Friends")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
                     }
 
                     Spacer()
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 10)
+                .padding(.top, 8)
             }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $selectedProfile) { selectedProfile in
