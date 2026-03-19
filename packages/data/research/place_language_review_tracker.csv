@@ -2,7 +2,7 @@ place_type,place_code,review_status,batch_file,override_reason,evidence_count
 country,AD,reviewed_override,place_language_overrides.researched.batch1.json,multilingual_tourism_override,2
 country,AE,reviewed_override,place_language_overrides.researched.batch2.json,tourism_language_override,2
 country,AF,pending_review,,,0
-country,AI,pending_review,,,0
+country,AI,reviewed_override,place_language_overrides.researched.batch7.json,official_english_override,2
 country,AL,pending_review,,,0
 country,AM,pending_review,,,0
 country,AO,pending_review,,,0
@@ -32,7 +32,7 @@ country,BT,pending_review,,,0
 country,BV,pending_review,,,0
 country,BW,pending_review,,,0
 country,BY,pending_review,,,0
-country,BZ,pending_review,,,0
+country,BZ,reviewed_override,place_language_overrides.researched.batch7.json,official_english_with_kriol_daily_use_override,2
 country,CA,pending_review,,,0
 country,CC,pending_review,,,0
 country,CD,pending_review,,,0
@@ -48,7 +48,7 @@ country,CN-TW,pending_review,,,0
 country,CO,pending_review,,,0
 country,CR,pending_review,,,0
 country,CU,pending_review,,,0
-country,CV,pending_review,,,0
+country,CV,reviewed_override,place_language_overrides.researched.batch7.json,official_portuguese_with_kabuverdianu_majority_use_override,3
 country,CW,reviewed_override,place_language_overrides.researched.batch3.json,multilingual_official_language_override,2
 country,CX,pending_review,,,0
 country,CY,pending_review,,,0
@@ -56,8 +56,8 @@ country,CZ,pending_review,,,0
 country,DE,pending_review,,,0
 country,DJ,pending_review,,,0
 country,DK,pending_review,,,0
-country,DM,pending_review,,,0
-country,DO,pending_review,,,0
+country,DM,reviewed_override,place_language_overrides.researched.batch7.json,official_english_with_local_creole_note_override,2
+country,DO,reviewed_override,place_language_overrides.researched.batch7.json,official_spanish_with_tourist_english_override,2
 country,DZ,reviewed_override,place_language_overrides.researched.batch2.json,dialect_and_traveler_usability_override,2
 country,EC,pending_review,,,0
 country,EE,pending_review,,,0
@@ -78,7 +78,7 @@ country,FR-973,pending_review,,,0
 country,FR-974,pending_review,,,0
 country,FR-976,pending_review,,,0
 country,GA,pending_review,,,0
-country,GD,pending_review,,,0
+country,GD,reviewed_override,place_language_overrides.researched.batch8.json,official_english_with_local_patois_note_override,2
 country,GG,reviewed_override,place_language_overrides.researched.batch5.json,english_primary_with_heritage_language_override,2
 country,GH,pending_review,,,0
 country,GI,reviewed_override,place_language_overrides.researched.batch3.json,official_and_bilingual_usability_override,2
@@ -116,7 +116,7 @@ country,KG,pending_review,,,0
 country,KH,pending_review,,,0
 country,KI,pending_review,,,0
 country,KM,pending_review,,,0
-country,KN,pending_review,,,0
+country,KN,reviewed_override,place_language_overrides.researched.batch8.json,official_english_override,2
 country,KP,pending_review,,,0
 country,KR,pending_review,,,0
 country,KW,reviewed_override,place_language_overrides.researched.batch2.json,traveler_usability_override,2
@@ -124,7 +124,7 @@ country,KY,reviewed_override,place_language_overrides.researched.batch3.json,off
 country,KZ,pending_review,,,0
 country,LA,pending_review,,,0
 country,LB,reviewed_override,place_language_overrides.researched.batch1.json,dialect_and_traveler_usability_override,2
-country,LC,pending_review,,,0
+country,LC,reviewed_override,place_language_overrides.researched.batch8.json,official_english_with_kweyol_daily_use_override,2
 country,LI,pending_review,,,0
 country,LK,pending_review,,,0
 country,LR,pending_review,,,0
@@ -214,7 +214,7 @@ country,TM,pending_review,,,0
 country,TN,reviewed_override,place_language_overrides.researched.batch2.json,dialect_and_traveler_usability_override,2
 country,TO,pending_review,,,0
 country,TR,pending_review,,,0
-country,TT,pending_review,,,0
+country,TT,reviewed_override,place_language_overrides.researched.batch8.json,official_english_with_local_dialect_note_override,2
 country,TV,pending_review,,,0
 country,TZ,pending_review,,,0
 country,UA,pending_review,,,0
@@ -223,7 +223,7 @@ country,US,pending_review,,,0
 country,UY,pending_review,,,0
 country,UZ,pending_review,,,0
 country,VA,pending_review,,,0
-country,VC,pending_review,,,0
+country,VC,reviewed_override,place_language_overrides.researched.batch8.json,official_english_override,2
 country,VE,pending_review,,,0
 country,VG,reviewed_override,place_language_overrides.researched.batch6.json,english_primary_with_secondary_spanish_override,2
 country,VI,reviewed_override,place_language_overrides.researched.batch6.json,english_primary_with_spanish_traveler_support_override,2

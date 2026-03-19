@@ -1,0 +1,118 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "GD",
+    "override_reason": "official_english_with_local_patois_note_override",
+    "notes": "Grenada should score English as fully usable for travelers. Local French-African patois remains culturally present, but it does not yet map cleanly to an exact picker code in the current app catalog and will be handled in the final reconciliation pass.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Grenada Tourism Authority FAQs",
+        "url": "https://www.puregrenada.com/faqs/",
+        "note": "Official tourism guidance says English is the official language in Grenada and notes that locals may also speak French-African patois."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Grenada",
+        "url": "https://www.britannica.com/place/Grenada-island-West-Indies",
+        "note": "Britannica lists English as the official language of Grenada."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KN",
+    "override_reason": "official_english_override",
+    "notes": "St. Kitts and Nevis should score English as fully compatible for travelers because official tourism guidance treats it as the primary language for visitor services and communication.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "St. Kitts Tourism Authority FAQ",
+        "url": "https://www.visitstkitts.com/plan/faq",
+        "note": "Official tourism FAQs say the primary language of St. Kitts is English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Saint Kitts and Nevis",
+        "url": "https://www.britannica.com/place/Saint-Kitts-and-Nevis",
+        "note": "Britannica identifies English as the official language of Saint Kitts and Nevis."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "LC",
+    "override_reason": "official_english_with_kweyol_daily_use_override",
+    "notes": "Saint Lucia should recognize English as the official language while also giving strong credit to Saint Lucian Creole French, which the government explicitly treats as a living national language in schools and cultural life.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "acf", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Government of Saint Lucia: Kwéyòl classes in Saint Lucian schools begin this September",
+        "url": "https://www.govt.lc/news/kw-y-l-classes-in-saint-lucian-schools-begin-this-september",
+        "note": "The Government of Saint Lucia describes Kwéyòl as a core part of Saint Lucian identity and confirms it is being introduced into schools as a living language."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Saint Lucia Ministry of Tourism: National Language Policy underway",
+        "url": "https://tourism.govt.lc/news/national-language-policy-underway-for-saint-lucia",
+        "note": "Saint Lucia's tourism ministry language-policy article says Kwéyòl is a home language for many students and discusses bilingual goals in English and Kwéyòl."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TT",
+    "override_reason": "official_english_with_local_dialect_note_override",
+    "notes": "Trinidad and Tobago should score English as fully compatible for travelers. The country also has a strong local creole/dialect continuum, but the exact-code reconciliation for that speech variety will be handled in the final cleanup pass.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Trinidad: Travel Tips",
+        "url": "https://visittrinidad.tt/plan-your-trip/travel-tips/",
+        "note": "Official tourism guidance says English is the official language of Trinidad while also noting the informal use of a creative local dialect."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Trinidad and Tobago",
+        "url": "https://www.britannica.com/place/Trinidad-and-Tobago",
+        "note": "Britannica lists English as the official language of Trinidad and Tobago."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "VC",
+    "override_reason": "official_english_override",
+    "notes": "St. Vincent and the Grenadines should score English as fully compatible for travelers because official tourism guidance presents English as the island nation's practical language for visitors.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Discover SVG: Bequia",
+        "url": "https://discoversvg.com/island/bequia/",
+        "note": "Official tourism guidance for St. Vincent and the Grenadines says the official language is English."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Saint Vincent and the Grenadines",
+        "url": "https://www.britannica.com/place/Saint-Vincent-and-the-Grenadines",
+        "note": "Britannica identifies English as the official language of Saint Vincent and the Grenadines."
+      }
+    ]
+  }
+]
