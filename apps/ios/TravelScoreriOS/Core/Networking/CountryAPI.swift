@@ -100,6 +100,7 @@ enum CountryAPI {
             )
         }
 
+        assertOverviewDescriptionCoverage(for: countries)
 
         return countries
     }
@@ -151,6 +152,7 @@ extension CountryAPI {
                     languageCompatibilityScore: dto.languageCompatibilityScore
                 )
             }
+            .validatedOverviewCoverage()
         } catch {
             return nil
         }
@@ -230,6 +232,7 @@ extension CountryAPI {
                 )
             }
 
+            assertOverviewDescriptionCoverage(for: countries)
             return countries
         } catch {
             return nil
@@ -286,5 +289,22 @@ extension CountryAPI {
         static func loadData() -> Data? {
             try? Data(contentsOf: cacheURL)
         }
+    }
+
+    private static func assertOverviewDescriptionCoverage(for countries: [Country]) {
+        #if DEBUG
+        let missing = CountryOverviewDescriptionStore.missingDescriptionCodes(in: countries)
+        assert(missing.isEmpty, "Missing country overview descriptions for codes: \(missing.joined(separator: ", "))")
+        #endif
+    }
+}
+
+private extension Array where Element == Country {
+    func validatedOverviewCoverage() -> [Country] {
+        #if DEBUG
+        let missing = CountryOverviewDescriptionStore.missingDescriptionCodes(in: self)
+        assert(missing.isEmpty, "Missing country overview descriptions for codes: \(missing.joined(separator: ", "))")
+        #endif
+        return self
     }
 }
