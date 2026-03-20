@@ -364,13 +364,13 @@
 		};
 		170C22482F479B070090BA78 /* Models */ = {
 			isa = PBXGroup;
-				17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */,
 			children = (
 				170C20FD2F4790E00090BA78 /* Country.swift */,
 				170C21002F4790E00090BA78 /* CountryDTO.swift */,
 				170C21202F4790E00090BA78 /* WhenToGoModels.swift */,
 				170C21192F4790E00090BA78 /* SeasonalityModels.swift */,
 				170C20CE2F4790E00090BA78 /* Profile.swift */,
+				17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */,
 				17EC41E72F4BB8B7004B80DA /* ScoreWeights.swift */,
 				1776C9642F50FD6F00AFC488 /* AppLanguage.swift */,
 			);

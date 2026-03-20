@@ -16,6 +16,8 @@
 	<string>Travel Adventure Finder</string>
 	<key>CFBundleName</key>
 	<string>Travel Adventure Finder</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Trip Planner uses your calendar so you can save tentative trip dates as Apple Calendar events.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
