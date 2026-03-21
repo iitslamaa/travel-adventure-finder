@@ -1551,6 +1551,8 @@ private struct TripPlannerComposerView: View {
 }
 
 private struct TripPlannerDetailView: View {
+    @EnvironmentObject private var sessionManager: SessionManager
+
     let trip: TripPlannerTrip
     let onSave: (TripPlannerTrip) -> Void
     let onDelete: () -> Void
@@ -1559,9 +1561,13 @@ private struct TripPlannerDetailView: View {
     @State private var resolvedFriends: [TripPlannerFriendSnapshot]
     @State private var isLoadingFriendProfiles = false
     @State private var resolvedCountries: [Country] = []
+    @State private var currentUserSnapshot: TripPlannerFriendSnapshot?
+    @State private var travelerProfiles: [UUID: Profile] = [:]
+    @State private var groupLanguageScoresByCountry: [String: Int] = [:]
 
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
     private let visaStore = VisaRequirementsStore.shared
+    private let scoreWeightsStore = ScoreWeightsStore()
 
     init(
         trip: TripPlannerTrip,
@@ -1578,6 +1584,17 @@ private struct TripPlannerDetailView: View {
 
     private var displayedFriends: [TripPlannerFriendSnapshot] {
         resolvedFriends.isEmpty ? trip.friends : resolvedFriends
+    }
+
+    private var displayedTravelers: [TripPlannerFriendSnapshot] {
+        var travelers: [TripPlannerFriendSnapshot] = []
+
+        if let currentUserSnapshot {
+            travelers.append(currentUserSnapshot)
+        }
+
+        travelers.append(contentsOf: displayedFriends)
+        return travelers
     }
 
     private var displayedCountries: [Country] {
@@ -1636,7 +1653,7 @@ private struct TripPlannerDetailView: View {
 
                         TripPlannerEditableSectionCard(
                             title: "Who’s Going",
-                            subtitle: trip.friendNames.isEmpty ? "Just you for now." : "Everyone currently included in this trip."
+                            subtitle: displayedTravelers.isEmpty ? "Just you for now." : "Everyone currently included in this trip."
                         ) {
                             NavigationLink {
                                 TripPlannerFriendsEditorView(trip: trip, onSave: onSave)
@@ -1647,7 +1664,7 @@ private struct TripPlannerDetailView: View {
                             }
                             .buttonStyle(.plain)
                         } content: {
-                            if trip.friendNames.isEmpty {
+                            if displayedTravelers.isEmpty {
                                 TripPlannerInfoCard(
                                     text: "No friends have been added to this trip yet.",
                                     systemImage: "person"
@@ -1659,13 +1676,19 @@ private struct TripPlannerDetailView: View {
                                             .tint(.black)
                                     }
 
-                                    ForEach(displayedFriends) { friend in
-                                        NavigationLink {
-                                            TripPlannerProfileDestinationView(userId: friend.id)
-                                        } label: {
-                                            TripPlannerSelectedFriendCard(friend: friend)
+                                    ForEach(displayedTravelers) { friend in
+                                        Group {
+                                            if friend.id == sessionManager.userId {
+                                                TripPlannerSelectedFriendCard(friend: friend)
+                                            } else {
+                                                NavigationLink {
+                                                    TripPlannerProfileDestinationView(userId: friend.id)
+                                                } label: {
+                                                    TripPlannerSelectedFriendCard(friend: friend)
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
                                         }
-                                        .buttonStyle(.plain)
                                     }
                                 }
                             }
@@ -1684,13 +1707,7 @@ private struct TripPlannerDetailView: View {
                             }
                             .buttonStyle(.plain)
                         } content: {
-                            TripPlannerChipGrid(
-                                items: trip.countryChipItems
-                                    .map {
-                                        TripPlannerChipItem(id: $0.id, title: $0.title, isSelected: true)
-                                    },
-                                onTap: { _ in }
-                            )
+                            TripPlannerCountryNavigationGrid(countries: displayedCountries)
                         }
 
                         TripPlannerSectionCard(
@@ -1700,7 +1717,12 @@ private struct TripPlannerDetailView: View {
                             TripPlannerStatsSection(
                                 countries: displayedCountries,
                                 startDate: trip.startDate,
-                                endDate: trip.endDate
+                                endDate: trip.endDate,
+                                weights: scoreWeightsStore.weights,
+                                preferredMonth: scoreWeightsStore.selectedMonth,
+                                isGroupTrip: trip.isGroupTrip,
+                                travelerCount: displayedTravelers.count,
+                                groupLanguageScoresByCountry: groupLanguageScoresByCountry
                             )
                         }
 
@@ -1772,33 +1794,47 @@ private struct TripPlannerDetailView: View {
             EmptyView()
         }
         .task(id: trip.id) {
-            await loadFriendProfiles()
+            await loadTravelerProfiles()
             await loadCountryStats()
+            await loadGroupLanguageScores()
         }
     }
 
     @MainActor
-    private func loadFriendProfiles() async {
-        guard !trip.friendIds.isEmpty else { return }
-
+    private func loadTravelerProfiles() async {
         isLoadingFriendProfiles = true
         defer { isLoadingFriendProfiles = false }
 
         var refreshed: [TripPlannerFriendSnapshot] = []
+        var profilesByID: [UUID: Profile] = [:]
+
+        if let currentUserId = sessionManager.userId {
+            if let cached = profileService.cachedProfile(userId: currentUserId) {
+                profilesByID[currentUserId] = cached
+                currentUserSnapshot = friendSnapshot(from: cached)
+            } else if let profile = try? await profileService.fetchMyProfile(userId: currentUserId) {
+                profilesByID[currentUserId] = profile
+                currentUserSnapshot = friendSnapshot(from: profile)
+            }
+        }
 
         for snapshot in trip.friends {
             if let cached = profileService.cachedProfile(userId: snapshot.id) {
+                profilesByID[snapshot.id] = cached
                 refreshed.append(friendSnapshot(from: cached))
                 continue
             }
 
             do {
                 let profile = try await profileService.fetchMyProfile(userId: snapshot.id)
+                profilesByID[snapshot.id] = profile
                 refreshed.append(friendSnapshot(from: profile))
             } catch {
                 refreshed.append(snapshot)
             }
         }
+
+        travelerProfiles = profilesByID
 
         if !refreshed.isEmpty {
             resolvedFriends = refreshed
@@ -1834,6 +1870,42 @@ private struct TripPlannerDetailView: View {
         if selected.isEmpty { return }
 
         resolvedCountries = await visaStore.hydrate(countries: selected)
+    }
+
+    @MainActor
+    private func loadGroupLanguageScores() async {
+        let countries = displayedCountries
+        guard !countries.isEmpty else {
+            groupLanguageScoresByCountry = [:]
+            return
+        }
+
+        let allTravelerLanguages = travelerProfiles.values.flatMap(\.languages)
+        guard !allTravelerLanguages.isEmpty else {
+            groupLanguageScoresByCountry = [:]
+            return
+        }
+
+        var scores: [String: Int] = [:]
+
+        for country in countries {
+            do {
+                guard let languageProfile = try await TripPlannerCountryLanguageProfileStore.shared.profile(for: country.iso2) else {
+                    continue
+                }
+
+                if let score = TripPlannerGroupLanguageCompatibilityScorer.score(
+                    travelerLanguages: allTravelerLanguages,
+                    countryProfile: languageProfile
+                ) {
+                    scores[country.id] = score
+                }
+            } catch {
+                continue
+            }
+        }
+
+        groupLanguageScoresByCountry = scores
     }
 }
 
@@ -2642,6 +2714,22 @@ private struct TripPlannerStatsSection: View {
     let countries: [Country]
     let startDate: Date?
     let endDate: Date?
+    let weights: ScoreWeights
+    let preferredMonth: Int
+    let isGroupTrip: Bool
+    let travelerCount: Int
+    let groupLanguageScoresByCountry: [String: Int]
+
+    private var selectedMonth: Int {
+        guard let startDate else { return preferredMonth }
+        return Calendar.current.component(.month, from: startDate)
+    }
+
+    private var scoredCountries: [Country] {
+        countries.map {
+            $0.applyingOverallScore(using: weights, selectedMonth: selectedMonth)
+        }
+    }
 
     private var affordabilityScores: [Int] {
         countries.compactMap(\.affordabilityScore)
@@ -2684,60 +2772,164 @@ private struct TripPlannerStatsSection: View {
         }
     }
 
-    private var toughestEntryCountry: Country? {
-        countries.min { ($0.visaEaseScore ?? 999) < ($1.visaEaseScore ?? 999) }
+    private var overstayRiskCountries: [Country] {
+        guard let tripLengthDays else { return [] }
+        return countries.filter { country in
+            guard let allowedDays = country.visaAllowedDays else { return false }
+            return tripLengthDays > allowedDays
+        }
+    }
+
+    private var allCountriesVisaFreeForTrip: Bool {
+        !countries.isEmpty && countries.allSatisfy { country in
+            ["freedom_of_movement", "visa_free"].contains(country.visaType ?? "")
+        } && overstayRiskCountries.isEmpty
+    }
+
+    private var allCountriesNeedNoAdvanceVisa: Bool {
+        !countries.isEmpty && countries.allSatisfy { country in
+            ["freedom_of_movement", "visa_free", "voa"].contains(country.visaType ?? "")
+        } && overstayRiskCountries.isEmpty
+    }
+
+    private var primaryVisaWarningCountry: Country? {
+        if let overstayCountry = overstayRiskCountries.first {
+            return overstayCountry
+        }
+        return visaPrepCountries.min { ($0.visaEaseScore ?? 999) < ($1.visaEaseScore ?? 999) }
+    }
+
+    private var averageOverallScore: Int? {
+        average(of: scoredCountries.compactMap(\.score))
+    }
+
+    private var averageAdvisoryScore: Int? {
+        average(of: countries.compactMap(\.advisoryScore))
+    }
+
+    private var averageSeasonalityScore: Int? {
+        average(of: countries.compactMap { $0.resolvedSeasonalityScore(for: selectedMonth) })
+    }
+
+    private var categoryAverages: [TripPlannerScoreAverage] {
+        [
+            TripPlannerScoreAverage(title: "Overall", subtitle: "Weighted trip score", score: averageOverallScore),
+            TripPlannerScoreAverage(title: "Advisory", subtitle: "Safety and travel guidance", score: averageAdvisoryScore),
+            TripPlannerScoreAverage(title: "Seasonality", subtitle: monthSummaryText, score: averageSeasonalityScore),
+            TripPlannerScoreAverage(title: "Visa", subtitle: "Entry ease across stops", score: average(of: countries.compactMap(\.visaEaseScore))),
+            TripPlannerScoreAverage(title: "Budget", subtitle: "Affordability across stops", score: averageAffordability),
+            TripPlannerScoreAverage(title: "Language", subtitle: isGroupTrip ? "Group language coverage" : "Your language coverage", score: averageLanguageScore)
+        ]
+    }
+
+    private var averageLanguageScore: Int? {
+        let values = countries.compactMap { groupLanguageScoresByCountry[$0.id] }
+        return average(of: values)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
+            if !countries.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(isGroupTrip ? "Group snapshot" : "Trip snapshot")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.black)
+
+                    Text(snapshotSummary)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black.opacity(0.68))
+
+                    LazyVGrid(
+                        columns: [
+                            GridItem(.flexible(), spacing: 10, alignment: .top),
+                            GridItem(.flexible(), spacing: 10, alignment: .top)
+                        ],
+                        spacing: 10
+                    ) {
+                        TripPlannerScoreHighlightCard(
+                            title: "Average overall",
+                            subtitle: "Across \(countries.count) stop\(countries.count == 1 ? "" : "s")",
+                            score: averageOverallScore
+                        )
+
+                        TripPlannerScoreHighlightCard(
+                            title: "Average advisory",
+                            subtitle: "Shared safety picture",
+                            score: averageAdvisoryScore
+                        )
+
+                        TripPlannerScoreHighlightCard(
+                            title: "Average seasonality",
+                            subtitle: monthSummaryText,
+                            score: averageSeasonalityScore
+                        )
+                    }
+                }
+            }
+
+            if !categoryAverages.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Score breakdown")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.black)
+
+                    LazyVGrid(
+                        columns: [
+                            GridItem(.flexible(), spacing: 10, alignment: .top),
+                            GridItem(.flexible(), spacing: 10, alignment: .top)
+                        ],
+                        spacing: 10
+                    ) {
+                        ForEach(categoryAverages) { metric in
+                            TripPlannerCategoryAverageCard(metric: metric)
+                        }
+                    }
+                }
+            }
+
             HStack(spacing: 10) {
                 TripPlannerStatPill(
                     title: "Estimated total per person",
-                    value: estimatedTripCostPerPerson.map { "$\($0)" } ?? "Add trip dates",
-                    detail: estimatedCostDetail
+                    value: estimatedTripCostPerPerson.map { "$\($0) USD" } ?? "Add trip dates",
+                    detail: "\(estimatedCostDetail) · USD"
                 )
 
                 TripPlannerStatPill(
                     title: "Typical daily spend",
-                    value: averageDailySpend.map { "$\($0)" } ?? "N/A",
-                    detail: dailySpendDetail
+                    value: averageDailySpend.map { "$\($0) USD" } ?? "N/A",
+                    detail: "\(dailySpendDetail) · USD"
                 )
             }
 
             TripPlannerStatPill(
                 title: "Visa check",
                 value: visaSummaryValue,
-                detail: "Current US passport visa data in the app"
+                detail: visaSummaryDetail
             )
 
-            if !visaPrepCountries.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("These may need pre-trip paperwork")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.black)
-
-                    TripPlannerChipGrid(
-                        items: visaPrepCountries.map {
-                            TripPlannerChipItem(
-                                id: $0.id,
-                                title: "\($0.flagEmoji) \($0.name)",
-                                isSelected: true
-                            )
-                        },
-                        onTap: { _ in }
-                    )
-                }
-            } else if !easyEntryCountries.isEmpty {
+            if !overstayRiskCountries.isEmpty {
                 TripPlannerInfoCard(
-                    text: "All selected countries look fairly straightforward for entry based on the app’s current US passport visa data.",
+                    text: overstayWarningText,
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+            } else if allCountriesVisaFreeForTrip {
+                TripPlannerInfoCard(
+                    text: "No visa required for this trip based on the app's current US passport data.",
+                    systemImage: "checkmark.seal.fill"
+                )
+            } else if allCountriesNeedNoAdvanceVisa {
+                TripPlannerInfoCard(
+                    text: "No advance visa needed for this trip based on the app's current US passport data.",
                     systemImage: "checkmark.seal.fill"
                 )
             }
 
-            if let toughestEntryCountry {
+            if let primaryVisaWarningCountry {
                 TripPlannerInfoCard(
-                    text: "The trickiest stop right now looks like \(toughestEntryCountry.flagEmoji) \(toughestEntryCountry.name): \(CountryVisaHelpers.headline(for: toughestEntryCountry))",
-                    systemImage: "globe.badge.chevron.backward"
+                    text: primaryVisaWarningText(for: primaryVisaWarningCountry),
+                    systemImage: overstayRiskCountries.contains(where: { $0.id == primaryVisaWarningCountry.id })
+                        ? "exclamationmark.triangle.fill"
+                        : "globe.badge.chevron.backward"
                 )
             }
         }
@@ -2765,10 +2957,217 @@ private struct TripPlannerStatsSection: View {
     }
 
     private var visaSummaryValue: String {
-        if visaPrepCountries.isEmpty {
-            return "Looks easy"
+        if !overstayRiskCountries.isEmpty {
+            return "Visa stay warning"
+        }
+        if allCountriesVisaFreeForTrip {
+            return "No visa required"
+        }
+        if allCountriesNeedNoAdvanceVisa {
+            return "No advance visa needed"
         }
         return "\(visaPrepCountries.count) stop\(visaPrepCountries.count == 1 ? "" : "s") to prep for"
+    }
+
+    private var visaSummaryDetail: String {
+        if !overstayRiskCountries.isEmpty {
+            return "One or more stops exceed the allowed stay for this trip"
+        }
+        return "Current US passport visa data in the app"
+    }
+
+    private var monthSummaryText: String {
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        return "\(formatter.monthSymbols[selectedMonth - 1]) timing"
+    }
+
+    private var snapshotSummary: String {
+        if isGroupTrip {
+            return "\(travelerCount) travelers, \(countries.count) countries, one cleaner view of how the trip balances overall score, safety, seasonality, and logistics."
+        }
+
+        return "\(countries.count) selected countr\(countries.count == 1 ? "y" : "ies") with a combined scoring view for the trip."
+    }
+
+    private func average(of values: [Int]) -> Int? {
+        guard !values.isEmpty else { return nil }
+        return Int((Double(values.reduce(0, +)) / Double(values.count)).rounded())
+    }
+
+    private var overstayWarningText: String {
+        let countriesText = overstayRiskCountries.map { "\($0.flagEmoji) \($0.name)" }.joined(separator: ", ")
+        guard let tripLengthDays else {
+            return "One or more stops may exceed the allowed stay for this trip."
+        }
+        return "\(countriesText) may exceed the allowed visa-free stay for a \(tripLengthDays)-day trip."
+    }
+
+    private func primaryVisaWarningText(for country: Country) -> String {
+        if let tripLengthDays, let allowedDays = country.visaAllowedDays, tripLengthDays > allowedDays {
+            return "\(country.flagEmoji) \(country.name) allows about \(allowedDays) day\(allowedDays == 1 ? "" : "s") on this entry status, so your \(tripLengthDays)-day trip would need a visa plan."
+        }
+
+        return "\(country.flagEmoji) \(country.name): \(CountryVisaHelpers.headline(for: country))"
+    }
+}
+
+private struct TripPlannerScoreHighlightCard: View {
+    let title: String
+    let subtitle: String
+    let score: Int?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(.black.opacity(0.62))
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+
+            if let score {
+                ScorePill(score: score)
+                    .fixedSize(horizontal: true, vertical: true)
+            } else {
+                Text("N/A")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.black)
+                    .fixedSize(horizontal: true, vertical: true)
+            }
+
+            Text(subtitle)
+                .font(.system(size: 12))
+                .foregroundStyle(.black.opacity(0.66))
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.82))
+        )
+    }
+}
+
+private struct TripPlannerScoreAverage: Identifiable {
+    let title: String
+    let subtitle: String
+    let score: Int?
+
+    var id: String { title }
+}
+
+private struct TripPlannerCategoryAverageCard: View {
+    let metric: TripPlannerScoreAverage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(metric.title)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.black)
+                .lineLimit(2)
+                .minimumScaleFactor(0.78)
+
+            if let score = metric.score {
+                ScorePill(score: score)
+                    .fixedSize(horizontal: true, vertical: true)
+            } else {
+                Text("N/A")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.58))
+                    .fixedSize(horizontal: true, vertical: true)
+            }
+
+            Text(metric.subtitle)
+                .font(.system(size: 12))
+                .foregroundStyle(.black.opacity(0.66))
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.76))
+        )
+    }
+}
+
+private struct TripPlannerCountryLanguageProfile: Decodable {
+    let countryISO2: String
+    let languages: [TripPlannerCountryLanguageCoverage]
+
+    enum CodingKeys: String, CodingKey {
+        case countryISO2 = "country_iso2"
+        case languages
+    }
+}
+
+private struct TripPlannerCountryLanguageCoverage: Decodable, Hashable {
+    let code: String
+    let type: String
+    let coverage: Double
+}
+
+private actor TripPlannerCountryLanguageProfileStore {
+    static let shared = TripPlannerCountryLanguageProfileStore()
+
+    private var cache: [String: TripPlannerCountryLanguageProfile] = [:]
+    private var missingISO2: Set<String> = []
+
+    func profile(for iso2: String) async throws -> TripPlannerCountryLanguageProfile? {
+        let normalizedISO2 = iso2.uppercased()
+
+        if let cached = cache[normalizedISO2] {
+            return cached
+        }
+
+        if missingISO2.contains(normalizedISO2) {
+            return nil
+        }
+
+        let response: PostgrestResponse<[TripPlannerCountryLanguageProfile]> = try await SupabaseManager.shared.client
+            .from("country_language_profiles")
+            .select("country_iso2,languages")
+            .eq("country_iso2", value: normalizedISO2)
+            .limit(1)
+            .execute()
+
+        guard let profile = response.value.first else {
+            missingISO2.insert(normalizedISO2)
+            return nil
+        }
+
+        cache[normalizedISO2] = profile
+        return profile
+    }
+}
+
+private enum TripPlannerGroupLanguageCompatibilityScorer {
+    static func score(
+        travelerLanguages: [Profile.LanguageJSON],
+        countryProfile: TripPlannerCountryLanguageProfile
+    ) -> Int? {
+        guard !countryProfile.languages.isEmpty else { return 0 }
+
+        let spokenCodes = Set(
+            travelerLanguages.map { language in
+                LanguageRepository.shared.canonicalLanguageCode(for: language.code)
+                    ?? language.code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            }
+        )
+
+        guard !spokenCodes.isEmpty else { return nil }
+
+        let countryCodes = Set(
+            countryProfile.languages.map { coverage in
+                LanguageRepository.shared.canonicalLanguageCode(for: coverage.code)
+                    ?? coverage.code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            }
+        )
+
+        return spokenCodes.isDisjoint(with: countryCodes) ? 0 : 100
     }
 }
 
@@ -3173,7 +3572,7 @@ private struct TripPlannerSavedTripCard: View {
 
             TripPlannerChipGrid(
                 items: trip.countryChipItems.map {
-                    TripPlannerChipItem(id: $0.id, title: $0.title, isSelected: true)
+                    TripPlannerChipItem(id: $0.id, title: $0.title, isSelected: false)
                 },
                 onTap: { _ in }
             )
@@ -3454,9 +3853,6 @@ private struct TripPlannerSelectedFriendCard: View {
             }
 
             Spacer()
-
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.black)
         }
         .padding(14)
         .background(
@@ -3635,6 +4031,46 @@ private struct TripPlannerChipItem: Identifiable, Hashable {
     let isSelected: Bool
 }
 
+private struct TripPlannerCountryNavigationGrid: View {
+    let countries: [Country]
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 8),
+        GridItem(.flexible(), spacing: 8)
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+            ForEach(countries) { country in
+                NavigationLink {
+                    CountryDetailView(country: country)
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("\(country.flagEmoji) \(country.name)")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.black)
+                            .multilineTextAlignment(.leading)
+
+                        Spacer(minLength: 0)
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.black.opacity(0.5))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white.opacity(0.78))
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
 private struct TripPlannerChipGrid: View {
     let items: [TripPlannerChipItem]
     let onTap: (TripPlannerChipItem) -> Void
@@ -3669,7 +4105,7 @@ private struct TripPlannerChipGrid: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.white.opacity(item.isSelected ? 0.95 : 0.72))
+                            .fill(Color.white.opacity(item.isSelected ? 0.95 : 0.78))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
