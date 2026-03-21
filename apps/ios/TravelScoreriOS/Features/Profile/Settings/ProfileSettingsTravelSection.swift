@@ -18,9 +18,7 @@ struct ProfileSettingsTravelSection: View {
 
     var body: some View {
         SectionCard(title: "Travel preferences") {
-
             VStack(spacing: 0) {
-
                 Button {
                     showTravelModeDialog = true
                 } label: {

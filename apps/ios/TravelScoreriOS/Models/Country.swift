@@ -38,6 +38,9 @@ struct Country: Identifiable, Hashable {
     let visaFeeUsd: Double?
     let visaNotes: String?
     let visaSourceUrl: URL?
+    let visaPassportCode: String?
+    let visaPassportLabel: String?
+    let visaRecommendedPassportLabel: String?
 
     // Daily spend
     let dailySpendTotalUsd: Double?
@@ -104,6 +107,9 @@ struct Country: Identifiable, Hashable {
         visaFeeUsd: Double? = nil,
         visaNotes: String? = nil,
         visaSourceUrl: URL? = nil,
+        visaPassportCode: String? = nil,
+        visaPassportLabel: String? = nil,
+        visaRecommendedPassportLabel: String? = nil,
         dailySpendTotalUsd: Double? = nil,
         dailySpendHotelUsd: Double? = nil,
         dailySpendFoodUsd: Double? = nil,
@@ -136,6 +142,9 @@ struct Country: Identifiable, Hashable {
         self.visaFeeUsd = visaFeeUsd
         self.visaNotes = visaNotes
         self.visaSourceUrl = visaSourceUrl
+        self.visaPassportCode = visaPassportCode
+        self.visaPassportLabel = visaPassportLabel
+        self.visaRecommendedPassportLabel = visaRecommendedPassportLabel
         self.dailySpendTotalUsd = dailySpendTotalUsd
         self.dailySpendHotelUsd = dailySpendHotelUsd
         self.dailySpendFoodUsd = dailySpendFoodUsd
@@ -313,7 +322,10 @@ extension Country {
         visaAllowedDays: Int?,
         visaFeeUsd: Double?,
         visaNotes: String?,
-        visaSourceUrl: URL?
+        visaSourceUrl: URL?,
+        visaPassportCode: String?,
+        visaPassportLabel: String?,
+        visaRecommendedPassportLabel: String?
     ) -> Country {
         Country(
             iso2: iso2,
@@ -338,6 +350,9 @@ extension Country {
             visaFeeUsd: visaFeeUsd ?? self.visaFeeUsd,
             visaNotes: visaNotes ?? self.visaNotes,
             visaSourceUrl: visaSourceUrl ?? self.visaSourceUrl,
+            visaPassportCode: visaPassportCode ?? self.visaPassportCode,
+            visaPassportLabel: visaPassportLabel ?? self.visaPassportLabel,
+            visaRecommendedPassportLabel: visaRecommendedPassportLabel ?? self.visaRecommendedPassportLabel,
             dailySpendTotalUsd: dailySpendTotalUsd,
             dailySpendHotelUsd: dailySpendHotelUsd,
             dailySpendFoodUsd: dailySpendFoodUsd,

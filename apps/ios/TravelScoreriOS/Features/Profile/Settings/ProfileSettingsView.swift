@@ -2,6 +2,8 @@ import SwiftUI
 import PhotosUI
 
 struct ProfileSettingsView: View {
+    private static let passportSelectionExcludedCodes: Set<String> = ["AQ", "BV", "HM"]
+
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var profileVM: ProfileViewModel
     @EnvironmentObject private var sessionManager: SessionManager
@@ -25,6 +27,8 @@ struct ProfileSettingsView: View {
 
     @State private var travelMode: TravelMode? = nil
     @State private var travelStyle: TravelStyle? = nil
+    @State private var passportNationalities: Set<String> = []
+    @State private var visaPassportCountryCode: String? = nil
 
     @State private var languages: [LanguageEntry] = []
 
@@ -46,6 +50,7 @@ struct ProfileSettingsView: View {
         case addLanguage
         case travelMode
         case travelStyle
+        case passportNationalities
 
         var id: Int { hashValue }
     }
@@ -81,6 +86,8 @@ struct ProfileSettingsView: View {
         let originalNextDestination = profile.nextDestination
         let originalCurrentCountry = profile.currentCountry
         let originalFavoriteCountries = profile.favoriteCountries ?? []
+        let originalPassportNationalities = Set(profileVM.passportNationalities)
+        let originalVisaPassportCountryCode = profileVM.visaPassportCountryCode
         let originalLanguages = profile.languages.map { ($0.code, $0.proficiency) }
         let currentLanguages = languages.map { ($0.name, $0.proficiency) }
 
@@ -94,6 +101,8 @@ struct ProfileSettingsView: View {
             || nextDestination != originalNextDestination
             || currentCountry != originalCurrentCountry
             || favoriteCountries.sorted() != originalFavoriteCountries.sorted()
+            || passportNationalities != originalPassportNationalities
+            || visaPassportCountryCode != originalVisaPassportCountryCode
             || !currentLanguages.elementsEqual(originalLanguages, by: { $0 == $1 })
             || avatarChanged
     }
@@ -126,13 +135,15 @@ struct ProfileSettingsView: View {
                         hasLoadedProfile = true
 
                         if let profile = profileVM.profile {
-                            firstName = profile.fullName ?? ""
-                            username = profile.username ?? ""
+                            firstName = profile.fullName
+                            username = profile.username
 
                             homeCountries = Set(profile.livedCountries)
                             travelMode = profile.travelMode.first.flatMap { TravelMode(rawValue: $0) }
                             travelStyle = profile.travelStyle.first.flatMap { TravelStyle(rawValue: $0) }
                             nextDestination = profile.nextDestination
+                            passportNationalities = Set(profileVM.passportNationalities)
+                            visaPassportCountryCode = profileVM.visaPassportCountryCode ?? profileVM.passportNationalities.sorted().first
 
                             currentCountry = profile.currentCountry
                             favoriteCountries = profile.favoriteCountries ?? []
@@ -173,6 +184,8 @@ struct ProfileSettingsView: View {
                             firstName: firstName,
                             username: username,
                             homeCountries: homeCountries,
+                            passportNationalities: passportNationalities,
+                            visaPassportCountryCode: visaPassportCountryCode,
                             languages: languages,
                             travelMode: travelMode,
                             travelStyle: travelStyle,
@@ -302,6 +315,23 @@ struct ProfileSettingsView: View {
                 }
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
+
+            case .passportNationalities:
+                CountryMultiSelectView(
+                    title: "Nationalities",
+                    subtitle: "Private only. These are saved for visa matching and never shown on your public profile.",
+                    selection: $passportNationalities,
+                    excludedCodes: Self.passportSelectionExcludedCodes
+                )
+
+            }
+        }
+        .onChange(of: passportNationalities) { _, newValue in
+            if let visaPassportCountryCode,
+               !newValue.contains(visaPassportCountryCode) {
+                self.visaPassportCountryCode = newValue.sorted().first
+            } else if visaPassportCountryCode == nil {
+                self.visaPassportCountryCode = newValue.sorted().first
             }
         }
     }
@@ -316,6 +346,8 @@ struct ProfileSettingsView: View {
             favoriteCountries: $favoriteCountries,
             travelMode: $travelMode,
             travelStyle: $travelStyle,
+            passportNationalities: $passportNationalities,
+            visaPassportCountryCode: $visaPassportCountryCode,
             languages: $languages,
             nextDestination: $nextDestination,
             showHomePicker: Binding(
@@ -337,6 +369,10 @@ struct ProfileSettingsView: View {
             showTravelStyleDialog: Binding(
                 get: { false },
                 set: { if $0 { activeSheet = .travelStyle } }
+            ),
+            showPassportNationalitiesPicker: Binding(
+                get: { false },
+                set: { if $0 { activeSheet = .passportNationalities } }
             ),
             showNextDestinationPicker: Binding(
                 get: { false },
@@ -434,6 +470,8 @@ struct SettingsScrollContent: View {
     @Binding var favoriteCountries: [String]
     @Binding var travelMode: TravelMode?
     @Binding var travelStyle: TravelStyle?
+    @Binding var passportNationalities: Set<String>
+    @Binding var visaPassportCountryCode: String?
     @Binding var languages: [LanguageEntry]
     @Binding var nextDestination: String?
 
@@ -442,6 +480,7 @@ struct SettingsScrollContent: View {
     @Binding var showFavoriteCountriesPicker: Bool
     @Binding var showTravelModeDialog: Bool
     @Binding var showTravelStyleDialog: Bool
+    @Binding var showPassportNationalitiesPicker: Bool
     @Binding var showNextDestinationPicker: Bool
     @Binding var showAddLanguage: Bool
 
@@ -550,6 +589,11 @@ struct SettingsScrollContent: View {
                     showAddLanguage: $showAddLanguage
                 )
 
+                ProfileSettingsPassportSection(
+                    passportNationalities: $passportNationalities,
+                    showPassportNationalitiesPicker: $showPassportNationalitiesPicker
+                )
+
                 ProfileSettingsTravelSection(
                     travelMode: $travelMode,
                     travelStyle: $travelStyle,
@@ -621,5 +665,102 @@ struct SettingsScrollContent: View {
             .padding(.top, 12)
             .padding(.bottom, 32)
         }
+    }
+}
+
+private struct ProfileSettingsPassportSection: View {
+    @Binding var passportNationalities: Set<String>
+
+    @Binding var showPassportNationalitiesPicker: Bool
+    @State private var pendingDeletionCode: String?
+
+    var body: some View {
+        SectionCard(title: "Passports") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Private to you. Used to personalize visa rules and passport recommendations with your strongest saved passport for each destination.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+
+                VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 12) {
+                            HStack(spacing: 10) {
+                                Text("Saved passports")
+                                    .foregroundStyle(.primary)
+
+                                Button {
+                                    showPassportNationalitiesPicker = true
+                                } label: {
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(.primary)
+                                        .frame(width: 28, height: 28)
+                                        .background(Color.black.opacity(0.05))
+                                        .clipShape(Circle())
+                                }
+                                .buttonStyle(.plain)
+                            }
+
+                            Spacer()
+                        }
+
+                        if passportNationalities.isEmpty {
+                            Text("No passports added yet")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(sortedPassportCodes, id: \.self) { code in
+                                        Button {
+                                            pendingDeletionCode = code
+                                        } label: {
+                                            Text(CountrySelectionFormatter.label(for: code))
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundStyle(.black.opacity(0.82))
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 8)
+                                                .background(Color.black.opacity(0.05))
+                                                .clipShape(Capsule())
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 14)
+                }
+            }
+        }
+        .confirmationDialog(
+            deletionDialogTitle,
+            isPresented: Binding(
+                get: { pendingDeletionCode != nil },
+                set: { if !$0 { pendingDeletionCode = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let code = pendingDeletionCode {
+                Button("Delete \(CountrySelectionFormatter.localizedName(for: code)) passport", role: .destructive) {
+                    passportNationalities.remove(code)
+                    pendingDeletionCode = nil
+                }
+            }
+
+            Button("Cancel", role: .cancel) {
+                pendingDeletionCode = nil
+            }
+        }
+    }
+
+    private var sortedPassportCodes: [String] {
+        passportNationalities.sorted()
+    }
+
+    private var deletionDialogTitle: String {
+        guard let pendingDeletionCode else { return "Delete passport" }
+        return CountrySelectionFormatter.localizedName(for: pendingDeletionCode)
     }
 }

@@ -51,6 +51,32 @@ struct CountryDetailView: View {
         traveledStore.ids.contains(country.id)
     }
 
+    private var visaPassportLabel: String {
+        if let label = country.visaPassportLabel, !label.isEmpty {
+            return label
+        }
+
+        if profileVM.passportNationalities.count > 1 {
+            return "best saved passport"
+        }
+
+        if let code = profileVM.effectivePassportCountryCode {
+            return CountrySelectionFormatter.localizedName(for: code)
+        }
+
+        return visaStore.activePassportLabel ?? "United States"
+    }
+
+    private var shouldShowPassportRecommendation: Bool {
+        guard profileVM.passportNationalities.count > 1 else { return false }
+        if let recommendedPassport = country.visaRecommendedPassportLabel, !recommendedPassport.isEmpty {
+            return true
+        }
+
+        guard let passportLabel = country.visaPassportLabel, !passportLabel.isEmpty else { return false }
+        return passportLabel.contains(" / ")
+    }
+
     @MainActor
     private func refreshCountryIfAvailable() async {
         let iso2 = country.iso2.uppercased()
@@ -132,7 +158,9 @@ struct CountryDetailView: View {
                             scrapbookSection {
                                 CountryVisaCard(
                                     country: displayedCountry,
-                                    weightPercentage: weightsStore.visaPercentage
+                                    weightPercentage: weightsStore.visaPercentage,
+                                    passportLabel: visaPassportLabel,
+                                    showPassportRecommendation: shouldShowPassportRecommendation
                                 )
                             }
                             
@@ -225,7 +253,11 @@ struct CountryDetailView: View {
             async let languageProfileRefresh: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
 
             _ = await countryRefresh
-            country = await visaStore.hydrate(country: country)
+            country = await visaStore.hydrate(
+                country: country,
+                passportCountryCodes: profileVM.passportNationalities,
+                fallbackPassportCountryCode: profileVM.effectivePassportCountryCode
+            )
             countryLanguageProfile = await languageProfileRefresh
             isPreparingContent = false
         }

@@ -23,7 +23,11 @@ struct DiscoveryCountryListView: View {
 
     @MainActor
     private func applyCurrentWeightsAndVisa(to countries: [Country]) async -> [Country] {
-        let visaHydrated = await visaStore.hydrate(countries: countries)
+        let visaHydrated = await visaStore.hydrate(
+            countries: countries,
+            passportCountryCodes: profileVM.passportNationalities,
+            fallbackPassportCountryCode: profileVM.effectivePassportCountryCode
+        )
         return visaHydrated.map {
             $0.applyingOverallScore(
                 using: weightsStore.weights,

@@ -11,9 +11,32 @@ import SwiftUI
 struct CountryVisaCard: View {
     let country: Country
     let weightPercentage: Int
+    let passportLabel: String
+    let showPassportRecommendation: Bool
+
+    private var equalBestPassportText: String? {
+        guard country.visaRecommendedPassportLabel == nil else { return nil }
+        guard let passportLabel = country.visaPassportLabel, passportLabel.contains(" / ") else { return nil }
+
+        let labels = passportLabel
+            .components(separatedBy: " / ")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        guard labels.count >= 2 else { return nil }
+
+        if labels.count == 2 {
+            return "Either \(labels[0]) or \(labels[1]) is fine here."
+        }
+
+        let allButLast = labels.dropLast().joined(separator: ", ")
+        return "Any of \(allButLast), or \(labels.last ?? "") are fine here."
+    }
 
     private func formattedVisaType(_ type: String) -> String {
         switch type {
+        case "own_passport":
+            return "Own passport"
         case "freedom_of_movement":
             return "Freedom of movement"
         case "visa_free":
@@ -36,7 +59,7 @@ struct CountryVisaCard: View {
                     Text("Visa")
                         .font(.headline)
                     Spacer()
-                    Text("US passport · \(weightPercentage)%")
+                    Text("\(passportLabel) passport · \(weightPercentage)%")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -72,11 +95,26 @@ struct CountryVisaCard: View {
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(CountryVisaHelpers.headline(for: country))
+                        Text(CountryVisaHelpers.headline(for: country, passportLabel: passportLabel))
                             .font(.subheadline)
                             .fontWeight(.semibold)
 
-                        Text(CountryVisaHelpers.body(for: country))
+                        if showPassportRecommendation,
+                           let recommendedPassport = country.visaRecommendedPassportLabel,
+                           !recommendedPassport.isEmpty {
+                            Text("Recommended passport: \(recommendedPassport)")
+                                .font(.footnote)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.primary)
+                        } else if showPassportRecommendation,
+                                  let equalBestPassportText {
+                            Text(equalBestPassportText)
+                                .font(.footnote)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.primary)
+                        }
+
+                        Text(CountryVisaHelpers.body(for: country, passportLabel: passportLabel))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)

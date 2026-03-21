@@ -1562,8 +1562,11 @@ private struct TripPlannerDetailView: View {
     @State private var isLoadingFriendProfiles = false
     @State private var resolvedCountries: [Country] = []
     @State private var currentUserSnapshot: TripPlannerFriendSnapshot?
+    @State private var currentPassportPreferences: PassportPreferences = .empty
+    @State private var travelerPassportPreferences: [UUID: PassportPreferences] = [:]
     @State private var travelerProfiles: [UUID: Profile] = [:]
     @State private var groupLanguageScoresByCountry: [String: Int] = [:]
+    @State private var groupVisaNeeds: [TripPlannerTravelerVisaNeed] = []
 
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
     private let visaStore = VisaRequirementsStore.shared
@@ -1722,7 +1725,9 @@ private struct TripPlannerDetailView: View {
                                 preferredMonth: scoreWeightsStore.selectedMonth,
                                 isGroupTrip: trip.isGroupTrip,
                                 travelerCount: displayedTravelers.count,
-                                groupLanguageScoresByCountry: groupLanguageScoresByCountry
+                                passportLabel: tripPassportLabel,
+                                groupLanguageScoresByCountry: groupLanguageScoresByCountry,
+                                groupVisaNeeds: groupVisaNeeds
                             )
                         }
 
@@ -1807,6 +1812,7 @@ private struct TripPlannerDetailView: View {
 
         var refreshed: [TripPlannerFriendSnapshot] = []
         var profilesByID: [UUID: Profile] = [:]
+        var passportPreferencesByUserID: [UUID: PassportPreferences] = [:]
 
         if let currentUserId = sessionManager.userId {
             if let cached = profileService.cachedProfile(userId: currentUserId) {
@@ -1816,25 +1822,39 @@ private struct TripPlannerDetailView: View {
                 profilesByID[currentUserId] = profile
                 currentUserSnapshot = friendSnapshot(from: profile)
             }
+
+            if let cachedPreferences = profileService.cachedPassportPreferences(userId: currentUserId) {
+                currentPassportPreferences = cachedPreferences
+                passportPreferencesByUserID[currentUserId] = cachedPreferences
+            } else if let preferences = try? await profileService.fetchPassportPreferences(userId: currentUserId) {
+                currentPassportPreferences = preferences
+                passportPreferencesByUserID[currentUserId] = preferences
+            }
         }
 
         for snapshot in trip.friends {
             if let cached = profileService.cachedProfile(userId: snapshot.id) {
                 profilesByID[snapshot.id] = cached
                 refreshed.append(friendSnapshot(from: cached))
-                continue
+            } else {
+                do {
+                    let profile = try await profileService.fetchMyProfile(userId: snapshot.id)
+                    profilesByID[snapshot.id] = profile
+                    refreshed.append(friendSnapshot(from: profile))
+                } catch {
+                    refreshed.append(snapshot)
+                }
             }
 
-            do {
-                let profile = try await profileService.fetchMyProfile(userId: snapshot.id)
-                profilesByID[snapshot.id] = profile
-                refreshed.append(friendSnapshot(from: profile))
-            } catch {
-                refreshed.append(snapshot)
+            if let cachedPreferences = profileService.cachedPassportPreferences(userId: snapshot.id) {
+                passportPreferencesByUserID[snapshot.id] = cachedPreferences
+            } else if let preferences = try? await profileService.fetchPassportPreferences(userId: snapshot.id) {
+                passportPreferencesByUserID[snapshot.id] = preferences
             }
         }
 
         travelerProfiles = profilesByID
+        travelerPassportPreferences = passportPreferencesByUserID
 
         if !refreshed.isEmpty {
             resolvedFriends = refreshed
@@ -1849,6 +1869,18 @@ private struct TripPlannerDetailView: View {
             username: profile.username,
             avatarURL: profile.avatarUrl
         )
+    }
+
+    private var tripPassportLabel: String {
+        if currentPassportPreferences.nationalityCountryCodes.count > 1 {
+            return "best saved passport"
+        }
+
+        if let code = currentPassportPreferences.effectivePassportCountryCode {
+            return CountrySelectionFormatter.localizedName(for: code)
+        }
+
+        return visaStore.activePassportLabel ?? "United States"
     }
 
     @MainActor
@@ -1869,7 +1901,83 @@ private struct TripPlannerDetailView: View {
 
         if selected.isEmpty { return }
 
-        resolvedCountries = await visaStore.hydrate(countries: selected)
+        let hydratedCountries = await visaStore.hydrate(
+            countries: selected,
+            passportCountryCodes: currentPassportPreferences.nationalityCountryCodes,
+            fallbackPassportCountryCode: currentPassportPreferences.effectivePassportCountryCode
+        )
+        resolvedCountries = hydratedCountries
+
+        let travelers = displayedTravelers
+        var needs: [TripPlannerTravelerVisaNeed] = []
+
+        for traveler in travelers {
+            let preferences = travelerPassportPreferences[traveler.id] ?? .empty
+            let travelerCountries = await visaStore.hydrate(
+                countries: selected,
+                passportCountryCodes: preferences.nationalityCountryCodes,
+                fallbackPassportCountryCode: preferences.effectivePassportCountryCode
+            )
+
+            for country in travelerCountries {
+                guard let visaType = country.visaType else { continue }
+
+                let needsAdvanceVisa = ["evisa", "visa_required", "entry_permit", "ban"].contains(visaType)
+                let exceedsAllowedStay = {
+                    guard
+                        let tripLengthDays = tripLengthDays,
+                        let allowedDays = country.visaAllowedDays
+                    else {
+                        return false
+                    }
+
+                    return tripLengthDays > allowedDays
+                }()
+
+                guard needsAdvanceVisa || exceedsAllowedStay else { continue }
+
+                needs.append(
+                    TripPlannerTravelerVisaNeed(
+                        travelerId: traveler.id,
+                        travelerName: traveler.displayName,
+                        countryID: country.id,
+                        countryName: country.name,
+                        countryFlag: country.flagEmoji,
+                        passportLabel: country.visaRecommendedPassportLabel ?? country.visaPassportLabel ?? resolvedPassportLabel(for: preferences),
+                        visaType: visaType,
+                        allowedDays: country.visaAllowedDays,
+                        exceedsAllowedStay: exceedsAllowedStay
+                    )
+                )
+            }
+        }
+
+        groupVisaNeeds = needs.sorted { lhs, rhs in
+            if lhs.travelerName != rhs.travelerName {
+                return lhs.travelerName.localizedCaseInsensitiveCompare(rhs.travelerName) == .orderedAscending
+            }
+
+            return lhs.countryName.localizedCaseInsensitiveCompare(rhs.countryName) == .orderedAscending
+        }
+    }
+
+    private var tripLengthDays: Int? {
+        guard let startDate = trip.startDate, let endDate = trip.endDate else { return nil }
+        let calendar = Calendar.current
+        let days = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: startDate),
+            to: calendar.startOfDay(for: endDate)
+        ).day ?? 0
+        return max(days + 1, 1)
+    }
+
+    private func resolvedPassportLabel(for preferences: PassportPreferences) -> String {
+        if let code = preferences.effectivePassportCountryCode {
+            return CountrySelectionFormatter.localizedName(for: code)
+        }
+
+        return "saved passport"
     }
 
     @MainActor
@@ -2718,7 +2826,9 @@ private struct TripPlannerStatsSection: View {
     let preferredMonth: Int
     let isGroupTrip: Bool
     let travelerCount: Int
+    let passportLabel: String
     let groupLanguageScoresByCountry: [String: Int]
+    let groupVisaNeeds: [TripPlannerTravelerVisaNeed]
 
     private var selectedMonth: Int {
         guard let startDate else { return preferredMonth }
@@ -2768,7 +2878,7 @@ private struct TripPlannerStatsSection: View {
 
     private var easyEntryCountries: [Country] {
         countries.filter {
-            ["freedom_of_movement", "visa_free", "voa"].contains($0.visaType ?? "")
+            ["own_passport", "freedom_of_movement", "visa_free", "voa"].contains($0.visaType ?? "")
         }
     }
 
@@ -2782,13 +2892,13 @@ private struct TripPlannerStatsSection: View {
 
     private var allCountriesVisaFreeForTrip: Bool {
         !countries.isEmpty && countries.allSatisfy { country in
-            ["freedom_of_movement", "visa_free"].contains(country.visaType ?? "")
+            ["own_passport", "freedom_of_movement", "visa_free"].contains(country.visaType ?? "")
         } && overstayRiskCountries.isEmpty
     }
 
     private var allCountriesNeedNoAdvanceVisa: Bool {
         !countries.isEmpty && countries.allSatisfy { country in
-            ["freedom_of_movement", "visa_free", "voa"].contains(country.visaType ?? "")
+            ["own_passport", "freedom_of_movement", "visa_free", "voa"].contains(country.visaType ?? "")
         } && overstayRiskCountries.isEmpty
     }
 
@@ -2907,6 +3017,32 @@ private struct TripPlannerStatsSection: View {
                 detail: visaSummaryDetail
             )
 
+            if isGroupTrip, !countries.isEmpty {
+                if groupVisaNeeds.isEmpty {
+                    TripPlannerInfoCard(
+                        text: "No group member currently needs advance visa prep for these stops based on each person's strongest saved passport.",
+                        systemImage: "person.3.fill"
+                    )
+                } else {
+                    ForEach(groupVisaNeedHighlights) { need in
+                        TripPlannerInfoCard(
+                            text: need.summaryText(tripLengthDays: tripLengthDays),
+                            systemImage: need.exceedsAllowedStay
+                                ? "person.crop.circle.badge.exclamationmark"
+                                : "person.crop.circle.badge.clock"
+                        )
+                    }
+
+                    if groupVisaNeeds.count > groupVisaNeedHighlights.count {
+                        let remaining = groupVisaNeeds.count - groupVisaNeedHighlights.count
+                        TripPlannerInfoCard(
+                            text: "\(remaining) more traveler-specific visa flag\(remaining == 1 ? "" : "s") are in this itinerary.",
+                            systemImage: "ellipsis.circle.fill"
+                        )
+                    }
+                }
+            }
+
             if !overstayRiskCountries.isEmpty {
                 TripPlannerInfoCard(
                     text: overstayWarningText,
@@ -2914,12 +3050,12 @@ private struct TripPlannerStatsSection: View {
                 )
             } else if allCountriesVisaFreeForTrip {
                 TripPlannerInfoCard(
-                    text: "No visa required for this trip based on the app's current US passport data.",
+                    text: "No visa required for this trip based on the app's current \(passportLabel) passport data.",
                     systemImage: "checkmark.seal.fill"
                 )
             } else if allCountriesNeedNoAdvanceVisa {
                 TripPlannerInfoCard(
-                    text: "No advance visa needed for this trip based on the app's current US passport data.",
+                    text: "No advance visa needed for this trip based on the app's current \(passportLabel) passport data.",
                     systemImage: "checkmark.seal.fill"
                 )
             }
@@ -2973,7 +3109,17 @@ private struct TripPlannerStatsSection: View {
         if !overstayRiskCountries.isEmpty {
             return "One or more stops exceed the allowed stay for this trip"
         }
-        return "Current US passport visa data in the app"
+        if isGroupTrip {
+            if groupVisaNeeds.isEmpty {
+                return "Uses each member's strongest saved passport"
+            }
+            return "\(groupVisaNeeds.count) traveler-specific flag\(groupVisaNeeds.count == 1 ? "" : "s") across the group"
+        }
+        return "Current \(passportLabel) passport visa data in the app"
+    }
+
+    private var groupVisaNeedHighlights: [TripPlannerTravelerVisaNeed] {
+        Array(groupVisaNeeds.prefix(3))
     }
 
     private var monthSummaryText: String {
@@ -3008,7 +3154,32 @@ private struct TripPlannerStatsSection: View {
             return "\(country.flagEmoji) \(country.name) allows about \(allowedDays) day\(allowedDays == 1 ? "" : "s") on this entry status, so your \(tripLengthDays)-day trip would need a visa plan."
         }
 
-        return "\(country.flagEmoji) \(country.name): \(CountryVisaHelpers.headline(for: country))"
+        let winningPassportLabel = country.visaPassportLabel ?? passportLabel
+        return "\(country.flagEmoji) \(country.name): \(CountryVisaHelpers.headline(for: country, passportLabel: winningPassportLabel))"
+    }
+}
+
+private struct TripPlannerTravelerVisaNeed: Identifiable, Hashable {
+    let travelerId: UUID
+    let travelerName: String
+    let countryID: String
+    let countryName: String
+    let countryFlag: String
+    let passportLabel: String
+    let visaType: String
+    let allowedDays: Int?
+    let exceedsAllowedStay: Bool
+
+    var id: String {
+        "\(travelerId.uuidString)::\(countryID)"
+    }
+
+    func summaryText(tripLengthDays: Int?) -> String {
+        if exceedsAllowedStay, let tripLengthDays, let allowedDays {
+            return "\(travelerName) may exceed the allowed stay in \(countryFlag) \(countryName) on their best saved passport (\(passportLabel)): about \(allowedDays) day\(allowedDays == 1 ? "" : "s") allowed for a \(tripLengthDays)-day trip."
+        }
+
+        return "\(travelerName) may need visa prep for \(countryFlag) \(countryName). Best saved passport for that stop: \(passportLabel)."
     }
 }
 

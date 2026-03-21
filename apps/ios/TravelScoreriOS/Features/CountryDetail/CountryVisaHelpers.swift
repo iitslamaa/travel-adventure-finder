@@ -9,16 +9,18 @@ import Foundation
 
 enum CountryVisaHelpers {
 
-    static func headline(for country: Country) -> String {
+    static func headline(for country: Country, passportLabel: String) -> String {
         guard let type = country.visaType else {
             return "Visa information is limited"
         }
 
         switch type {
+        case "own_passport":
+            return "Own passport for your home country"
         case "freedom_of_movement":
-            return "Freedom of movement with US passport ✅"
+            return "Freedom of movement with \(passportLabel) passport"
         case "visa_free":
-            return "Visa-free for US passport ✅"
+            return "Visa-free for \(passportLabel) passport"
         case "voa":
             return "Visa on arrival available"
         case "evisa":
@@ -34,7 +36,7 @@ enum CountryVisaHelpers {
         }
     }
 
-    static func body(for country: Country) -> String {
+    static func body(for country: Country, passportLabel: String) -> String {
         if let notes = country.visaNotes, !notes.isEmpty {
             return notes
         }
@@ -44,8 +46,10 @@ enum CountryVisaHelpers {
         }
 
         switch type {
+        case "own_passport":
+            return "You are entering on your own passport for your own country."
         case "freedom_of_movement":
-            return "This destination is part of a territory arrangement where US passport holders can move freely without visa limits."
+            return "This destination is part of a territory arrangement where \(passportLabel) passport holders can move freely without visa limits."
         case "visa_free":
             return "You can typically enter without arranging a visa in advance, subject to time limits."
         case "voa":
