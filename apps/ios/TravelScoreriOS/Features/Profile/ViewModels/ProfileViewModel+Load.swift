@@ -27,6 +27,7 @@ extension ProfileViewModel {
             mutualFriends = []
             friends = []
             pendingRequestCount = 0
+            passportPreferences = .empty
             computeOrderedLists()
             hasLoadedCoreData = true
             isLoading = false
@@ -56,11 +57,15 @@ extension ProfileViewModel {
             async let traveledTask = profileService.fetchTraveledCountries(userId: startingUserId)
             async let bucketTask = profileService.fetchBucketListCountries(userId: startingUserId)
             async let relationshipTask = resolvedRelationshipState(for: startingUserId)
+            async let passportPreferencesTask: PassportPreferences = isOwnProfile
+                ? profileService.fetchPassportPreferences(userId: startingUserId)
+                : .empty
 
             let fetchedProfile = try await fetchedProfileTask
             let traveled = try await traveledTask
             let bucket = try await bucketTask
             let resolvedRelationship = try await relationshipTask
+            let fetchedPassportPreferences = try await passportPreferencesTask
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
@@ -75,6 +80,7 @@ extension ProfileViewModel {
             mutualLanguages = []
             mutualBucketCountries = []
             mutualTraveledCountries = []
+            passportPreferences = fetchedPassportPreferences
             computeOrderedLists()
             hasLoadedCoreData = true
 

@@ -95,3 +95,45 @@ struct LanguageEntry: Identifiable, Equatable {
         "\(canonicalCode) (\(normalizedProficiency.label))"
     }
 }
+
+struct PassportPreferences: Codable, Equatable {
+    var nationalityCountryCodes: [String]
+    var passportCountryCode: String?
+
+    static let empty = PassportPreferences(
+        nationalityCountryCodes: [],
+        passportCountryCode: nil
+    )
+
+    var effectivePassportCountryCode: String? {
+        if let passportCountryCode,
+           !passportCountryCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return passportCountryCode.uppercased()
+        }
+
+        return nationalityCountryCodes.first?.uppercased()
+    }
+}
+
+enum CountrySelectionFormatter {
+    private static let locale = Locale(identifier: "en_US")
+
+    static func localizedName(for code: String) -> String {
+        let upper = code.uppercased()
+        return locale.localizedString(forRegionCode: upper) ?? upper
+    }
+
+    static func label(for code: String) -> String {
+        let upper = code.uppercased()
+        return "\(flag(for: upper)) \(localizedName(for: upper))"
+    }
+
+    static func flag(for code: String) -> String {
+        guard code.count == 2 else { return code }
+        let base: UInt32 = 127397
+        return code.unicodeScalars
+            .compactMap { UnicodeScalar(base + $0.value) }
+            .map { String($0) }
+            .joined()
+    }
+}

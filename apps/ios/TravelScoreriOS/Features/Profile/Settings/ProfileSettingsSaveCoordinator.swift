@@ -18,6 +18,8 @@ struct ProfileSettingsSaveCoordinator {
         firstName: String,
         username: String,
         homeCountries: Set<String>,
+        passportNationalities: Set<String>,
+        visaPassportCountryCode: String?,
         languages: [LanguageEntry],
         travelMode: TravelMode?,
         travelStyle: TravelStyle?,
@@ -50,6 +52,8 @@ struct ProfileSettingsSaveCoordinator {
                 firstName: trimmedName,
                 username: trimmedUsername,
                 homeCountries: Array(homeCountries).sorted(),
+                passportNationalities: Array(passportNationalities).sorted(),
+                visaPassportCountryCode: visaPassportCountryCode,
                 languages: languages.map { [
                     "code": $0.canonicalCode,
                     "proficiency": $0.normalizedProficiency.storageValue

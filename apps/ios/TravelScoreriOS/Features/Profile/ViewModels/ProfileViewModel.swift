@@ -57,6 +57,7 @@ final class ProfileViewModel: ObservableObject {
         didSet { }
     }
     @Published var hasLoadedCoreData: Bool = false
+    @Published var passportPreferences: PassportPreferences = .empty
     
     // MARK: - Dependencies
     let profileService: ProfileService
@@ -69,6 +70,30 @@ final class ProfileViewModel: ObservableObject {
 
     var loadTask: Task<Void, Never>?
     var loadGeneration: UUID = UUID()
+
+    var passportNationalities: [String] {
+        get { passportPreferences.nationalityCountryCodes }
+        set {
+            passportPreferences = PassportPreferences(
+                nationalityCountryCodes: newValue,
+                passportCountryCode: passportPreferences.passportCountryCode
+            )
+        }
+    }
+
+    var visaPassportCountryCode: String? {
+        get { passportPreferences.passportCountryCode }
+        set {
+            passportPreferences = PassportPreferences(
+                nationalityCountryCodes: passportPreferences.nationalityCountryCodes,
+                passportCountryCode: newValue
+            )
+        }
+    }
+
+    var effectivePassportCountryCode: String? {
+        passportPreferences.effectivePassportCountryCode
+    }
     
     // MARK: - Init
     init(
