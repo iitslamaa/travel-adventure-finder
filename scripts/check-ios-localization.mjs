@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { machineTranslationLocales, requiredLocales } from "./ios-localization-config.mjs";
 
 const repoRoot = process.cwd();
 const iosRoot = path.join(repoRoot, "apps/ios/TravelScoreriOS");
@@ -11,7 +12,7 @@ const sourceRoots = [
 ];
 const localizablePath = path.join(iosRoot, "App/Resources/Localizable.xcstrings");
 const infoPlistPath = path.join(iosRoot, "App/Resources/InfoPlist.xcstrings");
-const requiredLocales = ["en", "es", "fr", "de", "it", "pt-BR", "ru", "nl", "ar", "ja", "ko", "zh-Hans"];
+const requireReviewed = process.argv.includes("--require-reviewed");
 
 const keyPatterns = [
   /String\(localized:\s*"([^"]+)"/g,
@@ -93,20 +94,30 @@ for (const [key, usages] of [...keyUsages.entries()].sort(([a], [b]) => a.locale
 }
 
 const missingLocalizations = [];
+const reviewMarkers = [];
 for (const [catalogName, catalog] of [
   ["Localizable.xcstrings", localizable],
   ["InfoPlist.xcstrings", infoPlist],
 ]) {
   for (const [key, entry] of Object.entries(catalog)) {
     const localizations = entry.localizations ?? {};
-    if (!keyUsages.has(key) && !dottedKeyPattern.test(key)) {
+    const shouldCheckKey =
+      catalogName === "InfoPlist.xcstrings" ||
+      keyUsages.has(key) ||
+      dottedKeyPattern.test(key);
+    if (!shouldCheckKey) {
       continue;
     }
     const localesToCheck = requiredLocales;
     for (const locale of localesToCheck) {
-      const value = localizations[locale]?.stringUnit?.value;
+      const stringUnit = localizations[locale]?.stringUnit;
+      const value = stringUnit?.value;
       if (!value) {
         missingLocalizations.push({ catalogName, key, locale });
+        continue;
+      }
+      if (machineTranslationLocales.includes(locale) && stringUnit?.state === "needs_review") {
+        reviewMarkers.push({ catalogName, key, locale });
       }
     }
   }
@@ -130,7 +141,24 @@ for (const code of countryDescriptionCodes) {
   }
 }
 
-if (missingKeys.length === 0 && missingLocalizations.length === 0) {
+if (missingKeys.length === 0 && missingLocalizations.length === 0 && (reviewMarkers.length === 0 || !requireReviewed)) {
+  if (reviewMarkers.length > 0) {
+    console.log("iOS localization check passed with machine-translation review markers:");
+    const counts = new Map();
+    for (const { catalogName, locale } of reviewMarkers) {
+      const key = `${catalogName} :: ${locale}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    for (const [key, count] of [...counts.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+      console.log(`- ${key} :: ${count} needs_review`);
+    }
+  } else {
+    console.log("iOS localization check passed.");
+  }
+  process.exit(0);
+}
+
+if (missingKeys.length === 0 && missingLocalizations.length === 0 && reviewMarkers.length === 0) {
   console.log("iOS localization check passed.");
   process.exit(0);
 }
@@ -152,4 +180,16 @@ if (missingLocalizations.length > 0) {
   }
 }
 
-process.exit(1);
+if (reviewMarkers.length > 0) {
+  console.log(requireReviewed ? "Machine-translation review markers block release:" : "Machine-translation review markers:");
+  const counts = new Map();
+  for (const { catalogName, locale } of reviewMarkers) {
+    const key = `${catalogName} :: ${locale}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  for (const [key, count] of [...counts.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    console.log(`- ${key} :: ${count} needs_review`);
+  }
+}
+
+process.exit(missingKeys.length > 0 || missingLocalizations.length > 0 || (requireReviewed && reviewMarkers.length > 0) ? 1 : 0);

@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { createRequire } from "node:module";
+import { localizedStringState } from "./ios-localization-config.mjs";
 
 const require = createRequire(import.meta.url);
 const { translate } = require("/tmp/country-translate-tool/node_modules/@vitalets/google-translate-api");
@@ -117,7 +118,7 @@ async function main() {
           entry.localizations ??= {};
           entry.localizations[locale] = {
             stringUnit: {
-              state: "translated",
+              state: localizedStringState(locale),
               value: text,
             },
           };
