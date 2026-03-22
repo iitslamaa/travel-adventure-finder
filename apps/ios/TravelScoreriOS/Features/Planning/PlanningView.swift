@@ -527,6 +527,104 @@ struct TripPlannerDayPlan: Codable, Identifiable, Hashable {
     }
 }
 
+enum TripPlannerExpenseSplitMode: String, Codable, CaseIterable, Identifiable {
+    case everyone
+    case selectedPeople
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .everyone: return "Split with everyone"
+        case .selectedPeople: return "Split with selected people"
+        }
+    }
+}
+
+enum TripPlannerExpensePaymentMethod: String, Codable, CaseIterable, Identifiable {
+    case manual
+    case venmo
+    case applePay
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .manual: return "Manual"
+        case .venmo: return "Venmo"
+        case .applePay: return "Apple Pay"
+        }
+    }
+}
+
+struct TripPlannerExpenseShare: Codable, Identifiable, Hashable {
+    let id: UUID
+    let participantId: String
+    let participantName: String
+    let participantUsername: String?
+    let amountOwed: Double
+    let isPaid: Bool
+    let paymentMethod: TripPlannerExpensePaymentMethod?
+
+    init(
+        id: UUID = UUID(),
+        participantId: String,
+        participantName: String,
+        participantUsername: String?,
+        amountOwed: Double,
+        isPaid: Bool = false,
+        paymentMethod: TripPlannerExpensePaymentMethod? = nil
+    ) {
+        self.id = id
+        self.participantId = participantId
+        self.participantName = participantName
+        self.participantUsername = participantUsername
+        self.amountOwed = amountOwed
+        self.isPaid = isPaid
+        self.paymentMethod = paymentMethod
+    }
+}
+
+struct TripPlannerExpense: Codable, Identifiable, Hashable {
+    let id: UUID
+    let title: String
+    let totalAmount: Double
+    let paidById: String
+    let paidByName: String
+    let paidByUsername: String?
+    let splitMode: TripPlannerExpenseSplitMode
+    let date: Date
+    let participantIds: [String]
+    let participantNames: [String]
+    let shares: [TripPlannerExpenseShare]
+
+    init(
+        id: UUID = UUID(),
+        title: String,
+        totalAmount: Double,
+        paidById: String,
+        paidByName: String,
+        paidByUsername: String?,
+        splitMode: TripPlannerExpenseSplitMode,
+        date: Date = Date(),
+        participantIds: [String],
+        participantNames: [String],
+        shares: [TripPlannerExpenseShare]
+    ) {
+        self.id = id
+        self.title = title
+        self.totalAmount = totalAmount
+        self.paidById = paidById
+        self.paidByName = paidByName
+        self.paidByUsername = paidByUsername
+        self.splitMode = splitMode
+        self.date = date
+        self.participantIds = participantIds
+        self.participantNames = participantNames
+        self.shares = shares
+    }
+}
+
 struct TripPlannerTrip: Codable, Identifiable, Hashable {
     let id: UUID
     let createdAt: Date
@@ -541,6 +639,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
     let friends: [TripPlannerFriendSnapshot]
     let availability: [TripPlannerAvailabilityProposal]
     let dayPlans: [TripPlannerDayPlan]
+    let expenses: [TripPlannerExpense]
 
     var isGroupTrip: Bool {
         !friendIds.isEmpty
@@ -560,6 +659,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         case friends
         case availability
         case dayPlans
+        case expenses
     }
 
     init(
@@ -575,7 +675,8 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         friendNames: [String],
         friends: [TripPlannerFriendSnapshot],
         availability: [TripPlannerAvailabilityProposal],
-        dayPlans: [TripPlannerDayPlan] = []
+        dayPlans: [TripPlannerDayPlan] = [],
+        expenses: [TripPlannerExpense] = []
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -590,6 +691,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         self.friends = friends
         self.availability = availability
         self.dayPlans = dayPlans
+        self.expenses = expenses
     }
 
     init(from decoder: Decoder) throws {
@@ -616,6 +718,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
             }
         availability = try container.decodeIfPresent([TripPlannerAvailabilityProposal].self, forKey: .availability) ?? []
         dayPlans = try container.decodeIfPresent([TripPlannerDayPlan].self, forKey: .dayPlans) ?? []
+        expenses = try container.decodeIfPresent([TripPlannerExpense].self, forKey: .expenses) ?? []
     }
 }
 
@@ -1629,7 +1732,8 @@ private struct TripPlannerComposerView: View {
                 startDate: includeDates ? startDate : nil,
                 endDate: includeDates ? endDate : nil,
                 countries: selectedCountries.map { ($0.id, $0.name) }
-            )
+            ),
+            expenses: existingTrip?.expenses ?? []
         )
 
         onSave(trip)
@@ -1856,6 +1960,29 @@ private struct TripPlannerDetailView: View {
                             }
                         } content: {
                             TripPlannerItineraryPreview(trip: trip)
+                        }
+
+                        TripPlannerEditableSectionCard(
+                            title: "Expenses",
+                            subtitle: "Track who paid, who owes, and what’s still outstanding."
+                        ) {
+                            NavigationLink {
+                                TripPlannerExpensesEditorView(
+                                    trip: trip,
+                                    participants: displayedTravelers,
+                                    onSave: saveTripChanges
+                                )
+                            } label: {
+                                Text("Edit")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(.black)
+                            }
+                            .buttonStyle(.plain)
+                        } content: {
+                            TripPlannerExpensesSection(
+                                expenses: trip.expenses,
+                                participants: displayedTravelers
+                            )
                         }
 
                         TripPlannerSectionCard(
@@ -2258,7 +2385,8 @@ private struct TripPlannerBasicsEditorView: View {
                             startDate: includeDates ? startDate : nil,
                             endDate: includeDates ? endDate : nil,
                             countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
-                        )
+                        ),
+                        expenses: trip.expenses
                     )
                 )
                 dismiss()
@@ -2392,7 +2520,8 @@ private struct TripPlannerFriendsEditorView: View {
                         friendNames: selectedFriends.map(displayName),
                         friends: selectedFriends.map(friendSnapshot),
                         availability: preservedAvailability(with: selectedFriends.map(friendSnapshot)),
-                        dayPlans: trip.dayPlans
+                        dayPlans: trip.dayPlans,
+                        expenses: trip.expenses
                     )
                 )
                 dismiss()
@@ -2718,7 +2847,8 @@ private struct TripPlannerAvailabilityEditorView: View {
                         friendNames: trip.friendNames,
                         friends: trip.friends,
                         availability: proposals.sorted { $0.startDate < $1.startDate },
-                        dayPlans: trip.dayPlans
+                        dayPlans: trip.dayPlans,
+                        expenses: trip.expenses
                     )
                 )
                 dismiss()
@@ -2901,7 +3031,8 @@ private struct TripPlannerCountriesEditorView: View {
                             startDate: trip.startDate,
                             endDate: trip.endDate,
                             countries: selectedCountries.map { ($0.id, $0.name) }
-                        )
+                        ),
+                        expenses: trip.expenses
                     )
                 )
                 dismiss()
@@ -3044,7 +3175,8 @@ private struct TripPlannerItineraryEditorView: View {
                         friendNames: trip.friendNames,
                         friends: trip.friends,
                         availability: trip.availability,
-                        dayPlans: normalizedDayPlans()
+                        dayPlans: normalizedDayPlans(),
+                        expenses: trip.expenses
                     )
                 )
                 dismiss()
@@ -3199,6 +3331,491 @@ private struct TripPlannerDayPlanRow: View {
             return "Travel day"
         }
         return plan.countryName ?? "Country day"
+    }
+}
+
+private struct TripPlannerExpenseParticipant: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let username: String?
+
+    init(friend: TripPlannerFriendSnapshot) {
+        self.id = friend.id.uuidString
+        self.name = friend.displayName
+        self.username = friend.username
+    }
+}
+
+private struct TripPlannerExpensesSection: View {
+    let expenses: [TripPlannerExpense]
+    let participants: [TripPlannerFriendSnapshot]
+
+    private var totalSpent: Double {
+        expenses.reduce(0) { $0 + $1.totalAmount }
+    }
+
+    private var outstandingTotal: Double {
+        expenses.flatMap(\.shares).filter { !$0.isPaid }.reduce(0) { $0 + $1.amountOwed }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                TripPlannerStatPill(
+                    title: "Total logged",
+                    value: currency(totalSpent),
+                    detail: "\(expenses.count) expense\(expenses.count == 1 ? "" : "s")"
+                )
+
+                TripPlannerStatPill(
+                    title: "Still owed",
+                    value: currency(outstandingTotal),
+                    detail: outstandingTotal > 0 ? "Unpaid balances remaining" : "Everyone is settled"
+                )
+            }
+
+            if expenses.isEmpty {
+                TripPlannerInfoCard(
+                    text: "No expenses logged yet. Add hotels, meals, tickets, or shared costs here.",
+                    systemImage: "creditcard"
+                )
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(expenses.prefix(3)) { expense in
+                        TripPlannerExpenseRow(expense: expense, onUpdate: nil)
+                    }
+
+                    if expenses.count > 3 {
+                        TripPlannerInfoCard(
+                            text: "\(expenses.count - 3) more expense\(expenses.count - 3 == 1 ? "" : "s") in this trip.",
+                            systemImage: "ellipsis.circle.fill"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private func currency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        return formatter.string(from: NSNumber(value: amount)) ?? "$\(Int(amount))"
+    }
+}
+
+private struct TripPlannerExpensesEditorView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let trip: TripPlannerTrip
+    let participants: [TripPlannerFriendSnapshot]
+    let onSave: (TripPlannerTrip) -> Void
+
+    @State private var expenses: [TripPlannerExpense]
+    @State private var title = ""
+    @State private var amountText = ""
+    @State private var selectedPayerId: String = ""
+    @State private var splitMode: TripPlannerExpenseSplitMode = .everyone
+    @State private var selectedParticipantIds: Set<String> = []
+
+    init(
+        trip: TripPlannerTrip,
+        participants: [TripPlannerFriendSnapshot],
+        onSave: @escaping (TripPlannerTrip) -> Void
+    ) {
+        self.trip = trip
+        self.participants = participants
+        self.onSave = onSave
+        _expenses = State(initialValue: trip.expenses.sorted { $0.date > $1.date })
+    }
+
+    private var expenseParticipants: [TripPlannerExpenseParticipant] {
+        participants.map(TripPlannerExpenseParticipant.init(friend:))
+    }
+
+    private var canSaveExpense: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && parsedAmount != nil
+            && !selectedBeneficiaryIds.isEmpty
+            && !selectedPayerId.isEmpty
+    }
+
+    private var parsedAmount: Double? {
+        Double(amountText.replacingOccurrences(of: "$", with: "").trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private var selectedBeneficiaryIds: [String] {
+        switch splitMode {
+        case .everyone:
+            return expenseParticipants.map(\.id)
+        case .selectedPeople:
+            return Array(selectedParticipantIds)
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Theme.titleBanner("Expenses")
+
+                ScrollView {
+                    VStack(spacing: 18) {
+                        TripPlannerSectionCard(
+                            title: "Add expense",
+                            subtitle: "Track what was paid, who benefited, and who still owes."
+                        ) {
+                            VStack(alignment: .leading, spacing: 14) {
+                                TripPlannerTextInput(
+                                    title: "Expense title",
+                                    text: $title,
+                                    placeholder: "Hotel, dinner, train tickets..."
+                                )
+
+                                TripPlannerTextInput(
+                                    title: "Amount (USD)",
+                                    text: $amountText,
+                                    placeholder: "120"
+                                )
+
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Paid by")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(.black.opacity(0.72))
+
+                                    Picker("Paid by", selection: $selectedPayerId) {
+                                        ForEach(expenseParticipants) { participant in
+                                            Text(participant.name).tag(participant.id)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                            .fill(Color.white.opacity(0.78))
+                                    )
+                                }
+
+                                Picker("Split", selection: $splitMode) {
+                                    ForEach(TripPlannerExpenseSplitMode.allCases) { mode in
+                                        Text(mode.title).tag(mode)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+
+                                if splitMode == .selectedPeople {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Split between")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(.black.opacity(0.72))
+
+                                        TripPlannerChipGrid(
+                                            items: expenseParticipants.map { participant in
+                                                TripPlannerChipItem(
+                                                    id: participant.id,
+                                                    title: participant.name,
+                                                    isSelected: selectedParticipantIds.contains(participant.id)
+                                                )
+                                            },
+                                            onTap: { item in
+                                                if selectedParticipantIds.contains(item.id) {
+                                                    selectedParticipantIds.remove(item.id)
+                                                } else {
+                                                    selectedParticipantIds.insert(item.id)
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+
+                                Button {
+                                    addExpense()
+                                } label: {
+                                    Label("Save Expense", systemImage: "plus")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundStyle(.black)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .fill(Color.white.opacity(0.84))
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(!canSaveExpense)
+                                .opacity(canSaveExpense ? 1 : 0.5)
+                            }
+                        }
+
+                        TripPlannerSectionCard(
+                            title: "Logged expenses",
+                            subtitle: "Update paid status or remove old items."
+                        ) {
+                            if expenses.isEmpty {
+                                TripPlannerInfoCard(
+                                    text: "No expenses yet.",
+                                    systemImage: "creditcard"
+                                )
+                            } else {
+                                VStack(spacing: 10) {
+                                    ForEach(expenses) { expense in
+                                        VStack(spacing: 10) {
+                                            TripPlannerExpenseRow(
+                                                expense: expense,
+                                                onUpdate: { updatedExpense in
+                                                    updateExpense(updatedExpense)
+                                                }
+                                            )
+
+                                            Button(role: .destructive) {
+                                                expenses.removeAll { $0.id == expense.id }
+                                            } label: {
+                                                Text("Delete Expense")
+                                                    .font(.system(size: 13, weight: .bold))
+                                                    .foregroundStyle(.black)
+                                                    .frame(maxWidth: .infinity)
+                                                    .padding(.vertical, 10)
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                                            .fill(Color.white.opacity(0.74))
+                                                    )
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, Theme.pageHorizontalInset)
+                    .padding(.top, 18)
+                    .padding(.bottom, 32)
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .tripPlannerNavigationChrome {
+            Button("Save") {
+                onSave(
+                    TripPlannerTrip(
+                        id: trip.id,
+                        createdAt: trip.createdAt,
+                        title: trip.title,
+                        notes: trip.notes,
+                        startDate: trip.startDate,
+                        endDate: trip.endDate,
+                        countryIds: trip.countryIds,
+                        countryNames: trip.countryNames,
+                        friendIds: trip.friendIds,
+                        friendNames: trip.friendNames,
+                        friends: trip.friends,
+                        availability: trip.availability,
+                        dayPlans: trip.dayPlans,
+                        expenses: expenses.sorted { $0.date > $1.date }
+                    )
+                )
+                dismiss()
+            }
+            .foregroundStyle(.black)
+            .font(.system(size: 17, weight: .semibold))
+        }
+        .onAppear {
+            if selectedPayerId.isEmpty {
+                selectedPayerId = expenseParticipants.first?.id ?? ""
+                selectedParticipantIds = Set(expenseParticipants.map(\.id))
+            }
+        }
+    }
+
+    private func addExpense() {
+        guard
+            let amount = parsedAmount,
+            let payer = expenseParticipants.first(where: { $0.id == selectedPayerId })
+        else {
+            return
+        }
+
+        let beneficiaries = expenseParticipants.filter { selectedBeneficiaryIds.contains($0.id) }
+        let equalShare = beneficiaries.isEmpty ? 0 : amount / Double(beneficiaries.count)
+        let shares = beneficiaries.compactMap { participant -> TripPlannerExpenseShare? in
+            guard participant.id != payer.id else { return nil }
+            return TripPlannerExpenseShare(
+                participantId: participant.id,
+                participantName: participant.name,
+                participantUsername: participant.username,
+                amountOwed: equalShare
+            )
+        }
+
+        expenses.insert(
+            TripPlannerExpense(
+                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                totalAmount: amount,
+                paidById: payer.id,
+                paidByName: payer.name,
+                paidByUsername: payer.username,
+                splitMode: splitMode,
+                participantIds: beneficiaries.map(\.id),
+                participantNames: beneficiaries.map(\.name),
+                shares: shares
+            ),
+            at: 0
+        )
+
+        title = ""
+        amountText = ""
+        splitMode = .everyone
+        selectedParticipantIds = Set(expenseParticipants.map(\.id))
+    }
+
+    private func updateExpense(_ expense: TripPlannerExpense) {
+        guard let index = expenses.firstIndex(where: { $0.id == expense.id }) else { return }
+        expenses[index] = expense
+    }
+}
+
+private struct TripPlannerExpenseRow: View {
+    let expense: TripPlannerExpense
+    let onUpdate: ((TripPlannerExpense) -> Void)?
+
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(expense.title)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.black)
+
+                    Text("\(currency(expense.totalAmount)) paid by \(expense.paidByName)")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black.opacity(0.7))
+                }
+
+                Spacer()
+            }
+
+            if expense.shares.isEmpty {
+                Text("No one owes anything on this expense.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.black.opacity(0.62))
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(expense.shares) { share in
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("\(share.participantName) owes \(currency(share.amountOwed))")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(.black)
+
+                                Spacer()
+
+                                Text(share.isPaid ? "Paid" : "Not paid")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(.black.opacity(0.7))
+                            }
+
+                            if let onUpdate {
+                                HStack(spacing: 8) {
+                                    Button(share.isPaid ? "Mark Unpaid" : "Mark Paid") {
+                                        onUpdate(updatedExpense(for: share, method: .manual, isPaid: !share.isPaid))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Capsule().fill(Color.white.opacity(0.82)))
+
+                                    Button("Venmo") {
+                                        onUpdate(updatedExpense(for: share, method: .venmo, isPaid: true))
+                                        openVenmo(for: share)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Capsule().fill(Color.white.opacity(0.82)))
+
+                                    Button("Apple Pay") {
+                                        onUpdate(updatedExpense(for: share, method: .applePay, isPaid: true))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Capsule().fill(Color.white.opacity(0.82)))
+                                }
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(.black)
+                            }
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color.white.opacity(0.7))
+                        )
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.78))
+        )
+    }
+
+    private func updatedExpense(
+        for share: TripPlannerExpenseShare,
+        method: TripPlannerExpensePaymentMethod,
+        isPaid: Bool
+    ) -> TripPlannerExpense {
+        let updatedShares = expense.shares.map { currentShare in
+            guard currentShare.id == share.id else { return currentShare }
+            return TripPlannerExpenseShare(
+                id: currentShare.id,
+                participantId: currentShare.participantId,
+                participantName: currentShare.participantName,
+                participantUsername: currentShare.participantUsername,
+                amountOwed: currentShare.amountOwed,
+                isPaid: isPaid,
+                paymentMethod: isPaid ? method : nil
+            )
+        }
+
+        return TripPlannerExpense(
+            id: expense.id,
+            title: expense.title,
+            totalAmount: expense.totalAmount,
+            paidById: expense.paidById,
+            paidByName: expense.paidByName,
+            paidByUsername: expense.paidByUsername,
+            splitMode: expense.splitMode,
+            date: expense.date,
+            participantIds: expense.participantIds,
+            participantNames: expense.participantNames,
+            shares: updatedShares
+        )
+    }
+
+    private func openVenmo(for share: TripPlannerExpenseShare) {
+        guard let recipient = expense.paidByUsername, !recipient.isEmpty else { return }
+        let note = "\(expense.title) - \(share.participantName)"
+        let encodedNote = note.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? note
+        let amount = String(format: "%.2f", share.amountOwed)
+        if let venmoURL = URL(string: "venmo://paycharge?txn=pay&recipients=\(recipient)&amount=\(amount)&note=\(encodedNote)") {
+            openURL(venmoURL)
+        }
+    }
+
+    private func currency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        return formatter.string(from: NSNumber(value: amount)) ?? "$\(Int(amount))"
     }
 }
 
@@ -4150,9 +4767,14 @@ private struct TripPlannerAvailabilitySection: View {
 
 private struct TripPlannerAvailabilityCalendarBoard: View {
     let trip: TripPlannerTrip
+    @State private var selectedMonthPage: Date
 
-    private var displayMonth: Date? {
-        TripPlannerAvailabilityCalculator.primaryDisplayMonth(for: trip)
+    init(trip: TripPlannerTrip) {
+        self.trip = trip
+        _selectedMonthPage = State(
+            initialValue: TripPlannerAvailabilityCalculator.primaryDisplayMonth(for: trip)
+                ?? TripPlannerAvailabilityCalculator.startOfMonth(for: Date())
+        )
     }
 
     private var proposalsByParticipant: [(TripPlannerAvailabilityParticipant, [TripPlannerAvailabilityProposal])] {
@@ -4161,6 +4783,35 @@ private struct TripPlannerAvailabilityCalendarBoard: View {
             guard !proposals.isEmpty else { return nil }
             return (participant, proposals)
         }
+    }
+
+    private var monthsToDisplay: [Date] {
+        let calendar = Calendar.current
+        let allDates = trip.availability.flatMap { [$0.startDate, $0.endDate] } + [trip.startDate, trip.endDate].compactMap { $0 }
+
+        guard
+            let minDate = allDates.min(),
+            let maxDate = allDates.max()
+        else {
+            if let primary = TripPlannerAvailabilityCalculator.primaryDisplayMonth(for: trip) {
+                return [primary]
+            }
+            return []
+        }
+
+        let startMonth = TripPlannerAvailabilityCalculator.startOfMonth(for: minDate)
+        let endMonth = TripPlannerAvailabilityCalculator.startOfMonth(for: maxDate)
+
+        var months: [Date] = []
+        var current = startMonth
+
+        while current <= endMonth {
+            months.append(current)
+            guard let next = calendar.date(byAdding: .month, value: 1, to: current) else { break }
+            current = next
+        }
+
+        return months
     }
 
     var body: some View {
@@ -4211,12 +4862,26 @@ private struct TripPlannerAvailabilityCalendarBoard: View {
                 }
             }
 
-            if let displayMonth {
-                TripPlannerAvailabilityMonthCard(
-                    month: displayMonth,
-                    trip: trip,
-                    proposalsByParticipant: proposalsByParticipant
-                )
+            if !monthsToDisplay.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Swipe sideways to move across months.")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.58))
+
+                    TabView(selection: $selectedMonthPage) {
+                        ForEach(monthsToDisplay, id: \.self) { month in
+                            TripPlannerAvailabilityMonthCard(
+                                month: month,
+                                trip: trip,
+                                proposalsByParticipant: proposalsByParticipant
+                            )
+                            .tag(month)
+                            .padding(.bottom, 8)
+                        }
+                    }
+                    .frame(height: 390)
+                    .tabViewStyle(.page(indexDisplayMode: monthsToDisplay.count > 1 ? .automatic : .never))
+                }
             }
         }
     }
