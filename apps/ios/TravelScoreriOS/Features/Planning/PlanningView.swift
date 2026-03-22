@@ -535,8 +535,8 @@ enum TripPlannerExpenseSplitMode: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .everyone: return "Split with everyone"
-        case .selectedPeople: return "Split with selected people"
+        case .everyone: return "Everyone"
+        case .selectedPeople: return "Selected"
         }
     }
 }
@@ -939,9 +939,11 @@ final class TripPlannerStore: ObservableObject {
     }
 
     private func mergedTrips(local: [TripPlannerTrip], remote: [TripPlannerTrip]) -> [TripPlannerTrip] {
-        var mergedByID = Dictionary(uniqueKeysWithValues: remote.map { ($0.id, $0) })
+        // Prefer the local copy when IDs collide so freshly edited trip data
+        // does not get replaced by an older remote snapshot during refresh.
+        var mergedByID = Dictionary(uniqueKeysWithValues: local.map { ($0.id, $0) })
 
-        for trip in local where mergedByID[trip.id] == nil {
+        for trip in remote where mergedByID[trip.id] == nil {
             mergedByID[trip.id] = trip
         }
 
@@ -3414,7 +3416,7 @@ private struct TripPlannerExpensesSection: View {
             } else {
                 VStack(spacing: 10) {
                     ForEach(expenses.prefix(3)) { expense in
-                        TripPlannerExpenseRow(expense: expense, onUpdate: nil)
+                        TripPlannerExpenseRow(expense: expense, onEdit: nil, onUpdate: nil)
                     }
 
                     if expenses.count > 3 {
@@ -3444,7 +3446,7 @@ private struct TripPlannerExpensesEditorView: View {
     let onSave: (TripPlannerTrip) -> Void
 
     @State private var expenses: [TripPlannerExpense]
-    @State private var showingAddExpenseSheet = false
+    @State private var composerPresentation: TripPlannerExpenseComposerPresentation?
 
     init(
         trip: TripPlannerTrip,
@@ -3495,7 +3497,7 @@ private struct TripPlannerExpensesEditorView: View {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
                             title: "Outstanding balances",
-                            subtitle: "Green means they should receive money. Red means they still owe."
+                            subtitle: ""
                         ) {
                             if balances.isEmpty {
                                 TripPlannerInfoCard(
@@ -3503,13 +3505,7 @@ private struct TripPlannerExpensesEditorView: View {
                                     systemImage: "person.2"
                                 )
                             } else {
-                                LazyVGrid(
-                                    columns: [
-                                        GridItem(.flexible(), spacing: 10),
-                                        GridItem(.flexible(), spacing: 10)
-                                    ],
-                                    spacing: 10
-                                ) {
+                                VStack(spacing: 10) {
                                     ForEach(balances) { balance in
                                         TripPlannerExpenseBalanceCard(balance: balance)
                                     }
@@ -3519,7 +3515,7 @@ private struct TripPlannerExpensesEditorView: View {
 
                         TripPlannerSectionCard(
                             title: "Logged expenses",
-                            subtitle: "Update paid status or remove old items."
+                            subtitle: ""
                         ) {
                             if expenses.isEmpty {
                                 TripPlannerInfoCard(
@@ -3532,6 +3528,9 @@ private struct TripPlannerExpensesEditorView: View {
                                         VStack(spacing: 10) {
                                             TripPlannerExpenseRow(
                                                 expense: expense,
+                                                onEdit: {
+                                                    composerPresentation = TripPlannerExpenseComposerPresentation(expense: expense)
+                                                },
                                                 onUpdate: { updatedExpense in
                                                     updateExpense(updatedExpense)
                                                 }
@@ -3564,12 +3563,34 @@ private struct TripPlannerExpensesEditorView: View {
                 }
                 .scrollIndicators(.hidden)
             }
+
+            if let composerPresentation {
+                TripPlannerExpenseComposerOverlay(
+                    participants: expenseParticipants,
+                    existingExpense: composerPresentation.expense,
+                    onClose: {
+                        self.composerPresentation = nil
+                    },
+                    onSaveExpense: { expense in
+                        if expenses.contains(where: { $0.id == expense.id }) {
+                            updateExpense(expense)
+                        } else {
+                            expenses.insert(expense, at: 0)
+                            persistExpenses()
+                        }
+                        self.composerPresentation = nil
+                    }
+                )
+                .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                .zIndex(1)
+            }
         }
+        .animation(.spring(response: 0.28, dampingFraction: 0.92), value: composerPresentation != nil)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
             Button {
-                showingAddExpenseSheet = true
+                composerPresentation = TripPlannerExpenseComposerPresentation(expense: nil)
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "plus")
@@ -3588,17 +3609,6 @@ private struct TripPlannerExpensesEditorView: View {
                 .overlay(
                     Capsule()
                         .stroke(Color.black.opacity(0.12), lineWidth: 1)
-                )
-            }
-        }
-        .sheet(isPresented: $showingAddExpenseSheet) {
-            NavigationStack {
-                TripPlannerExpenseComposerSheet(
-                    participants: expenseParticipants,
-                    onSaveExpense: { expense in
-                        expenses.insert(expense, at: 0)
-                        persistExpenses()
-                    }
                 )
             }
         }
@@ -3632,22 +3642,31 @@ private struct TripPlannerExpensesEditorView: View {
     }
 }
 
+private struct TripPlannerExpenseComposerPresentation: Identifiable {
+    let id = UUID()
+    let expense: TripPlannerExpense?
+}
+
 private struct TripPlannerExpenseBalanceCard: View {
     let balance: TripPlannerExpenseBalance
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(balance.participantName)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(.black)
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(balance.participantName)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.black)
+
+                Text(statusText)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(balanceColor.opacity(0.9))
+            }
+
+            Spacer()
 
             Text(currency(abs(balance.amount)))
-                .font(.system(size: 22, weight: .bold))
+                .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(balanceColor)
-
-            Text(statusText)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(balanceColor.opacity(0.9))
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -3683,10 +3702,10 @@ private struct TripPlannerExpenseBalanceCard: View {
     }
 }
 
-private struct TripPlannerExpenseComposerSheet: View {
-    @Environment(\.dismiss) private var dismiss
-
+private struct TripPlannerExpenseComposerOverlay: View {
     let participants: [TripPlannerExpenseParticipant]
+    let existingExpense: TripPlannerExpense?
+    let onClose: () -> Void
     let onSaveExpense: (TripPlannerExpense) -> Void
 
     @State private var title = ""
@@ -3694,6 +3713,30 @@ private struct TripPlannerExpenseComposerSheet: View {
     @State private var selectedPayerId: String = ""
     @State private var splitMode: TripPlannerExpenseSplitMode = .everyone
     @State private var selectedParticipantIds: Set<String> = []
+
+    init(
+        participants: [TripPlannerExpenseParticipant],
+        existingExpense: TripPlannerExpense? = nil,
+        onClose: @escaping () -> Void,
+        onSaveExpense: @escaping (TripPlannerExpense) -> Void
+    ) {
+        self.participants = participants
+        self.existingExpense = existingExpense
+        self.onClose = onClose
+        self.onSaveExpense = onSaveExpense
+        _title = State(initialValue: existingExpense?.title ?? "")
+        if let existingExpense {
+            _amountText = State(initialValue: existingExpense.totalAmount == 0 ? "" : String(format: "%.2f", existingExpense.totalAmount))
+            _selectedPayerId = State(initialValue: existingExpense.paidById)
+            _splitMode = State(initialValue: existingExpense.splitMode)
+            _selectedParticipantIds = State(initialValue: Set(existingExpense.participantIds))
+        } else {
+            _amountText = State(initialValue: "")
+            _selectedPayerId = State(initialValue: "")
+            _splitMode = State(initialValue: .everyone)
+            _selectedParticipantIds = State(initialValue: [])
+        }
+    }
 
     private var canSaveExpense: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -3717,101 +3760,131 @@ private struct TripPlannerExpenseComposerSheet: View {
 
     var body: some View {
         ZStack {
-            Theme.pageBackground("travel2")
+            Color.black.opacity(0.22)
                 .ignoresSafeArea()
+                .onTapGesture {
+                    onClose()
+                }
 
-            ScrollView {
-                VStack(spacing: 18) {
-                    TripPlannerSectionCard(
-                        title: "Add expense",
-                        subtitle: "Track what was paid, who benefited, and who still owes."
-                    ) {
-                        VStack(alignment: .leading, spacing: 14) {
-                            TripPlannerTextInput(
-                                title: "Expense title",
-                                text: $title,
-                                placeholder: "Hotel, dinner, train tickets..."
+            VStack(spacing: 0) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(existingExpense == nil ? "Add expense" : "Edit expense")
+                            .font(.system(size: 21, weight: .bold))
+                            .foregroundStyle(.black)
+
+                        Text("Track what was paid, who benefited, and who still owes.")
+                            .font(.system(size: 15))
+                            .foregroundStyle(.black.opacity(0.66))
+                    }
+
+                    Spacer()
+
+                    HStack(spacing: 10) {
+                        Button("Close") {
+                            onClose()
+                        }
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.65))
+
+                        Button(existingExpense == nil ? "Add" : "Save") {
+                            saveExpense()
+                        }
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.black)
+                        .opacity(canSaveExpense ? 1 : 0.45)
+                        .disabled(!canSaveExpense)
+                    }
+                }
+                .padding(.bottom, 18)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        TripPlannerTextInput(
+                            title: "Expense title",
+                            text: $title,
+                            placeholder: "Hotel, dinner, train tickets..."
+                        )
+
+                        TripPlannerCurrencyInput(
+                            title: "Amount (USD)",
+                            text: $amountText,
+                            placeholder: "USD"
+                        )
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Paid by")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.black.opacity(0.72))
+
+                            Picker("Paid by", selection: $selectedPayerId) {
+                                ForEach(participants) { participant in
+                                    Text(participant.name).tag(participant.id)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(Color.white.opacity(0.84))
                             )
 
-                            TripPlannerCurrencyInput(
-                                title: "Amount (USD)",
-                                text: $amountText,
-                                placeholder: "USD"
-                            )
+                        }
 
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Paid by")
+                        Picker("Split", selection: $splitMode) {
+                            ForEach(TripPlannerExpenseSplitMode.allCases) { mode in
+                                Text(mode.title).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+
+                        if splitMode == .selectedPeople {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Split between")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundStyle(.black.opacity(0.72))
 
-                                Picker("Paid by", selection: $selectedPayerId) {
-                                    ForEach(participants) { participant in
-                                        Text(participant.name).tag(participant.id)
-                                    }
-                                }
-                                .pickerStyle(.menu)
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(Color.white.opacity(0.78))
-                                )
-                            }
-
-                            Picker("Split", selection: $splitMode) {
-                                ForEach(TripPlannerExpenseSplitMode.allCases) { mode in
-                                    Text(mode.title).tag(mode)
-                                }
-                            }
-                            .pickerStyle(.segmented)
-
-                            if splitMode == .selectedPeople {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Split between")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(.black.opacity(0.72))
-
-                                    TripPlannerChipGrid(
-                                        items: participants.map { participant in
-                                            TripPlannerChipItem(
-                                                id: participant.id,
-                                                title: participant.name,
-                                                isSelected: selectedParticipantIds.contains(participant.id)
-                                            )
-                                        },
-                                        onTap: { item in
-                                            if selectedParticipantIds.contains(item.id) {
-                                                selectedParticipantIds.remove(item.id)
-                                            } else {
-                                                selectedParticipantIds.insert(item.id)
-                                            }
+                                TripPlannerChipGrid(
+                                    items: participants.map { participant in
+                                        TripPlannerChipItem(
+                                            id: participant.id,
+                                            title: participant.name,
+                                            isSelected: selectedParticipantIds.contains(participant.id)
+                                        )
+                                    },
+                                    onTap: { item in
+                                        if selectedParticipantIds.contains(item.id) {
+                                            selectedParticipantIds.remove(item.id)
+                                        } else {
+                                            selectedParticipantIds.insert(item.id)
                                         }
-                                    )
-                                }
+                                    }
+                                )
                             }
                         }
                     }
-                    .padding(.horizontal, Theme.pageHorizontalInset)
-                    .padding(.top, 18)
-                    .padding(.bottom, 32)
                 }
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
-        }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .tripPlannerNavigationChrome {
-            Button("Add") {
-                saveExpense()
-            }
-            .foregroundStyle(.black)
-            .font(.system(size: 17, weight: .semibold))
-            .opacity(canSaveExpense ? 1 : 0.45)
-            .disabled(!canSaveExpense)
+            .padding(22)
+            .frame(maxWidth: min(UIScreen.main.bounds.width - 32, 620))
+            .background(
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .fill(Color(red: 0.98, green: 0.95, blue: 0.88).opacity(0.98))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.18), radius: 24, y: 10)
+            .padding(.horizontal, 16)
         }
         .onAppear {
             if selectedPayerId.isEmpty {
                 selectedPayerId = participants.first?.id ?? ""
+            }
+            if selectedParticipantIds.isEmpty {
                 selectedParticipantIds = Set(participants.map(\.id))
             }
         }
@@ -3839,23 +3912,25 @@ private struct TripPlannerExpenseComposerSheet: View {
 
         onSaveExpense(
             TripPlannerExpense(
+                id: existingExpense?.id ?? UUID(),
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 totalAmount: amount,
                 paidById: payer.id,
                 paidByName: payer.name,
                 paidByUsername: payer.username,
                 splitMode: splitMode,
+                date: existingExpense?.date ?? Date(),
                 participantIds: beneficiaries.map(\.id),
                 participantNames: beneficiaries.map(\.name),
                 shares: shares
             )
         )
-        dismiss()
     }
 }
 
 private struct TripPlannerExpenseRow: View {
     let expense: TripPlannerExpense
+    let onEdit: (() -> Void)?
     let onUpdate: ((TripPlannerExpense) -> Void)?
 
     @Environment(\.openURL) private var openURL
@@ -3874,6 +3949,18 @@ private struct TripPlannerExpenseRow: View {
                 }
 
                 Spacer()
+
+                if let onEdit {
+                    Button("Edit") {
+                        onEdit()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Capsule().fill(Color.white.opacity(0.82)))
+                }
             }
 
             if expense.shares.isEmpty {
@@ -5467,14 +5554,16 @@ private struct TripPlannerSectionCard<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: subtitle.isEmpty ? 0 : 4) {
                 Text(title)
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(.black)
 
-                Text(subtitle)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.black.opacity(0.68))
+                if !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black.opacity(0.68))
+                }
             }
 
             content
