@@ -10,12 +10,6 @@ const { translate } = require("/tmp/country-translate-tool/node_modules/@vitalet
 const bing = require("/tmp/country-translate-tool/node_modules/bing-translate-api");
 
 const localeMap = new Map([
-  ["fr", { google: "fr", bing: "fr" }],
-  ["es", { google: "es", bing: "es" }],
-  ["de", { google: "de", bing: "de" }],
-  ["it", { google: "it", bing: "it" }],
-  ["pt-BR", { google: "pt", bing: "pt" }],
-  ["ru", { google: "ru", bing: "ru" }],
   ["nl", { google: "nl", bing: "nl" }],
   ["ar", { google: "ar", bing: "ar" }],
   ["ja", { google: "ja", bing: "ja" }],
@@ -24,11 +18,10 @@ const localeMap = new Map([
 ]);
 
 const root = process.cwd();
-const catalogPath = path.join(
-  root,
-  "apps/ios/TravelScoreriOS/App/Resources/Localizable.xcstrings"
-);
-
+const catalogPaths = [
+  path.join(root, "apps/ios/TravelScoreriOS/App/Resources/Localizable.xcstrings"),
+  path.join(root, "apps/ios/TravelScoreriOS/App/Resources/InfoPlist.xcstrings"),
+];
 const dryRun = process.argv.includes("--dry-run");
 let googleRateLimitedUntil = 0;
 
@@ -70,7 +63,7 @@ async function translateWithFallback(source, targets) {
       const message = String(error);
       if (message.includes("TooManyRequestsError")) {
         googleRateLimitedUntil = Date.now() + 10 * 60 * 1000;
-        console.warn(`google rate-limited; cooling down for 10 minutes`);
+        console.warn("google rate-limited; cooling down for 10 minutes");
       } else {
         console.warn(`google failed (${targets.google}): ${message}`);
       }
@@ -80,34 +73,37 @@ async function translateWithFallback(source, targets) {
   return bingTranslate(source, targets.bing);
 }
 
-async function main() {
+function* entriesForCatalog(catalog) {
+  for (const [key, entry] of Object.entries(catalog.strings ?? {})) {
+    if (key.startsWith("country.description.")) continue;
+    const english = entry.localizations?.en?.stringUnit?.value?.trim();
+    if (!english) continue;
+    yield [key, entry, english];
+  }
+}
+
+async function fillCatalog(catalogPath) {
   const raw = await fs.readFile(catalogPath, "utf8");
   const catalog = JSON.parse(raw);
-  const entries = Object.entries(catalog.strings).filter(([key]) =>
-    key.startsWith("country.description.")
-  );
-
   let updated = 0;
 
   for (const [locale, targets] of localeMap) {
-    const missing = entries
-      .filter(([, entry]) => {
-        const value = entry.localizations?.[locale]?.stringUnit?.value;
-        return !(typeof value === "string" && value.trim().length > 0);
-      })
-      .map(([key, entry]) => ({
-        key,
-        source: entry.localizations?.en?.stringUnit?.value?.trim(),
-      }))
-      .filter((item) => item.source);
+    const missing = [];
 
-    console.log(`${locale}: ${missing.length} missing translations`);
+    for (const [key, entry, english] of entriesForCatalog(catalog)) {
+      const current = entry.localizations?.[locale]?.stringUnit?.value;
+      if (!current || !String(current).trim()) {
+        missing.push({ key, english });
+      }
+    }
+
+    console.log(`${path.basename(catalogPath)} :: ${locale}: ${missing.length} missing translations`);
 
     for (const group of chunk(missing, 4)) {
       const translated = await Promise.all(
-        group.map(async ({ key, source }) => ({
+        group.map(async ({ key, english }) => ({
           key,
-          text: await translateWithFallback(source, targets),
+          text: await translateWithFallback(english, targets),
         }))
       );
 
@@ -122,27 +118,19 @@ async function main() {
             },
           };
         }
-
         updated += 1;
-        console.log(`${locale}: ${updated} translated so far`);
       }
 
       if (!dryRun) {
         await fs.writeFile(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`);
       }
 
+      console.log(`${path.basename(catalogPath)} :: ${locale}: ${updated} translated so far`);
       await sleep(250);
     }
   }
-
-  if (!dryRun) {
-    await fs.writeFile(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`);
-  }
-
-  console.log(`done: ${updated} translations`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+for (const catalogPath of catalogPaths) {
+  await fillCatalog(catalogPath);
+}
