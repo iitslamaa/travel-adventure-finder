@@ -23,6 +23,7 @@ const keyPatterns = [
   /\bPicker\("([a-z0-9_.-]+)"/g,
 ];
 const dottedKeyPattern = /^[a-z0-9_-]+(\.[a-z0-9_-]+)+$/i;
+
 function walk(dir) {
   const results = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -43,6 +44,14 @@ function loadCatalog(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8")).strings ?? {};
 }
 
+function extractCountryDescriptionCodes(filePath) {
+  const text = fs.readFileSync(filePath, "utf8");
+  const blockMatch = text.match(/private static let descriptionCodes: Set<String> = \[(.*?)\n    \]/s);
+  if (!blockMatch) return [];
+
+  return [...blockMatch[1].matchAll(/"([A-Z]{2})"/g)].map((match) => match[1]);
+}
+
 function getUsedKeys(filePath) {
   const text = fs.readFileSync(filePath, "utf8");
   const keys = new Set();
@@ -60,6 +69,9 @@ function getUsedKeys(filePath) {
 
 const localizable = loadCatalog(localizablePath);
 const infoPlist = loadCatalog(infoPlistPath);
+const countryDescriptionCodes = extractCountryDescriptionCodes(
+  path.join(iosRoot, "Models/CountryOverviewDescriptionStore.swift")
+);
 
 const keyUsages = new Map();
 for (const root of sourceRoots) {
@@ -90,12 +102,33 @@ for (const [catalogName, catalog] of [
     if (!keyUsages.has(key) && !dottedKeyPattern.test(key)) {
       continue;
     }
-    for (const locale of requiredLocales) {
+    const localesToCheck = key.startsWith("country.description.")
+      ? ["en"]
+      : requiredLocales;
+    for (const locale of localesToCheck) {
       const value = localizations[locale]?.stringUnit?.value;
       if (!value) {
         missingLocalizations.push({ catalogName, key, locale });
       }
     }
+  }
+}
+
+for (const code of countryDescriptionCodes) {
+  const key = `country.description.${code.toLowerCase()}`;
+  const entry = localizable[key];
+  if (!entry) {
+    missingKeys.push({ key, usages: ["apps/ios/TravelScoreriOS/Models/CountryOverviewDescriptionStore.swift"] });
+    continue;
+  }
+
+  const englishValue = entry.localizations?.en?.stringUnit?.value;
+  if (!englishValue) {
+    missingLocalizations.push({
+      catalogName: "Localizable.xcstrings",
+      key,
+      locale: "en",
+    });
   }
 }
 
