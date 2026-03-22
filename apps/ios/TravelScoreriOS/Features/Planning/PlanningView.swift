@@ -1943,26 +1943,6 @@ private struct TripPlannerDetailView: View {
                         }
 
                         TripPlannerEditableSectionCard(
-                            title: "Itinerary",
-                            subtitle: trip.startDate != nil && trip.endDate != nil
-                                ? "Assign each day to a country or mark it as a travel day."
-                                : "Add trip dates first so you can map days to countries."
-                        ) {
-                            if trip.startDate != nil, trip.endDate != nil {
-                                NavigationLink {
-                                    TripPlannerItineraryEditorView(trip: trip, onSave: saveTripChanges)
-                                } label: {
-                                    Text("Edit")
-                                        .font(.system(size: 13, weight: .bold))
-                                        .foregroundStyle(.black)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        } content: {
-                            TripPlannerItineraryPreview(trip: trip)
-                        }
-
-                        TripPlannerEditableSectionCard(
                             title: "Expenses",
                             subtitle: "Track who paid, who owes, and what’s still outstanding."
                         ) {
@@ -2590,11 +2570,18 @@ private struct TripPlannerAvailabilityEditorView: View {
     @State private var rangeEnd = Calendar.current.date(byAdding: .day, value: 5, to: Date()) ?? Date()
     @State private var selectedMonth = TripPlannerAvailabilityCalculator.startOfMonth(for: Date())
     @State private var editingProposalId: UUID?
+    @State private var dayPlans: [TripPlannerDayPlan]
 
     init(trip: TripPlannerTrip, onSave: @escaping (TripPlannerTrip) -> Void) {
         self.trip = trip
         self.onSave = onSave
         _proposals = State(initialValue: trip.availability.sorted { $0.startDate < $1.startDate })
+        _dayPlans = State(initialValue: TripPlannerDayPlanBuilder.syncedDayPlans(
+            existingPlans: trip.dayPlans,
+            startDate: trip.startDate,
+            endDate: trip.endDate,
+            countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
+        ))
     }
 
     private var participants: [TripPlannerAvailabilityParticipant] {
@@ -2613,6 +2600,10 @@ private struct TripPlannerAvailabilityEditorView: View {
         let calendar = Calendar.current
         let start = TripPlannerAvailabilityCalculator.startOfMonth(for: Date())
         return (0..<12).compactMap { calendar.date(byAdding: .month, value: $0, to: start) }
+    }
+
+    private var countryOptions: [(id: String, name: String)] {
+        zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
     }
 
     var body: some View {
@@ -2821,6 +2812,32 @@ private struct TripPlannerAvailabilityEditorView: View {
                                 }
                             }
                         }
+
+                        TripPlannerSectionCard(
+                            title: "Trip route",
+                            subtitle: trip.startDate != nil && trip.endDate != nil
+                                ? "Choose which country each day belongs to, or mark the day as travel."
+                                : "Add trip dates above before assigning days to countries."
+                        ) {
+                            if dayPlans.isEmpty {
+                                TripPlannerInfoCard(
+                                    text: "Add exact trip dates first, then assign each day to a country or mark it as travel.",
+                                    systemImage: "calendar.badge.plus"
+                                )
+                            } else {
+                                VStack(spacing: 10) {
+                                    ForEach(dayPlans.indices, id: \.self) { index in
+                                        TripPlannerDayPlanEditorRow(
+                                            plan: Binding(
+                                                get: { dayPlans[index] },
+                                                set: { dayPlans[index] = $0 }
+                                            ),
+                                            countryOptions: countryOptions
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                     .padding(.horizontal, Theme.pageHorizontalInset)
                     .padding(.top, 18)
@@ -2847,7 +2864,12 @@ private struct TripPlannerAvailabilityEditorView: View {
                         friendNames: trip.friendNames,
                         friends: trip.friends,
                         availability: proposals.sorted { $0.startDate < $1.startDate },
-                        dayPlans: trip.dayPlans,
+                        dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
+                            existingPlans: dayPlans,
+                            startDate: trip.startDate,
+                            endDate: trip.endDate,
+                            countries: countryOptions
+                        ),
                         expenses: trip.expenses
                     )
                 )
@@ -4448,6 +4470,14 @@ private struct TripPlannerVisaCountryRow: View {
     let passportLabel: String
     let isGroupTrip: Bool
 
+    private var countryDestination: Country {
+        Country(
+            iso2: summary.countryID,
+            name: summary.countryName,
+            score: nil
+        )
+    }
+
     private var travelerPreview: String {
         let names = summary.travelerNames
         guard !names.isEmpty else { return "" }
@@ -4494,29 +4524,34 @@ private struct TripPlannerVisaCountryRow: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 5) {
-                Text("\(summary.countryFlag) \(summary.countryName)")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.black)
+        NavigationLink {
+            CountryDetailView(country: countryDestination)
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("\(summary.countryFlag) \(summary.countryName)")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.black)
 
-                Text(statusText)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.black.opacity(0.78))
+                    Text(statusText)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.78))
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: summary.exceedsAllowedStay ? "exclamationmark.triangle.fill" : "chevron.forward.circle.fill")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.42))
             }
-
-            Spacer(minLength: 0)
-
-            Image(systemName: summary.exceedsAllowedStay ? "exclamationmark.triangle.fill" : "chevron.forward.circle.fill")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(.black.opacity(0.42))
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color(red: 0.98, green: 0.97, blue: 0.95).opacity(0.92))
+            )
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(red: 0.98, green: 0.97, blue: 0.95).opacity(0.92))
-        )
+        .buttonStyle(.plain)
     }
 }
 
@@ -4734,6 +4769,14 @@ private struct TripPlannerAvailabilitySection: View {
                 )
             } else {
                 TripPlannerAvailabilityCalendarBoard(trip: trip)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Trip route")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.black)
+
+                    TripPlannerItineraryPreview(trip: trip)
+                }
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Best shared windows")
