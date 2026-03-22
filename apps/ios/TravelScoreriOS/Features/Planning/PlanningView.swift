@@ -3496,10 +3496,10 @@ private struct TripPlannerExpensesEditorView: View {
                                     placeholder: "Hotel, dinner, train tickets..."
                                 )
 
-                                TripPlannerTextInput(
+                                TripPlannerCurrencyInput(
                                     title: "Amount (USD)",
                                     text: $amountText,
-                                    placeholder: "120"
+                                    placeholder: "USD"
                                 )
 
                                 VStack(alignment: .leading, spacing: 6) {
@@ -5786,6 +5786,37 @@ private struct TripPlannerTextInput: View {
                     .fill(Color.white.opacity(0.78))
             )
             .foregroundStyle(.black)
+        }
+    }
+}
+
+private struct TripPlannerCurrencyInput: View {
+    let title: String
+    @Binding var text: String
+    let placeholder: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.black.opacity(0.72))
+
+            HStack(spacing: 10) {
+                Text("$")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.black)
+
+                TextField(placeholder, text: $text)
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.plain)
+                    .foregroundStyle(.black)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.white.opacity(0.78))
+            )
         }
     }
 }
