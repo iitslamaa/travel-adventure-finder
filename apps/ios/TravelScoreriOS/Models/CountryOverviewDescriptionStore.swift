@@ -2,6 +2,9 @@ import Foundation
 
 enum CountryOverviewDescriptionStore {
     private static let localizedDescriptions: [String: [String: String]] = [
+        "ar": [
+            "BB": "باربادوس جزيرة في شرق البحر الكاريبي تشتهر بشواطئها المعتنى بها، وثقافة الكريكيت، والروم، وبأسلوب وطني واثق يجمع بين الأناقة والهدوء. ولم تصبح جمهورية إلا في عام 2021، وهو تاريخ حديث بشكل لافت لبلد معروف عالميًا إلى هذا الحد. الجزيرة صغيرة ومجتمعية وتجيد تحويل الحياة الساحلية إلى جزء من هويتها."
+        ],
         "ru": [
             "BB": "Барбадос - это остров в восточной части Карибского бассейна, известный ухоженными пляжами, культурой крикета, ромом и уверенным национальным стилем, который одновременно ощущается элегантным и расслабленным. Он стал республикой только в 2021 году, что удивительно недавно для страны, настолько известной во всем мире. Остров компактный, общительный и отлично умеет превращать жизнь у моря в часть своей идентичности."
         ],
@@ -306,6 +309,11 @@ enum CountryOverviewDescriptionStore {
 
     private static func fallbackDescription(for country: Country) -> String {
         switch currentLanguageCode {
+        case "ar":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) يندرج ضمن \(label). لا يحتوي هذا الإدخال بعد على وصف محلي كامل في بيانات التطبيق الحالية، لكن صفحة البلد تظل متاحة بينما يكتمل إعداد قائمة الأوصاف."
+            }
+            return "\(country.localizedDisplayName) مدرج ضمن بيانات البلدان في التطبيق. لا يحتوي هذا الإدخال بعد على وصف محلي كامل في بيانات التطبيق الحالية، لكن صفحة البلد تظل متاحة بينما يكتمل إعداد قائمة الأوصاف."
         case "ru":
             if let label = country.localizedRegionLabel, !label.isEmpty {
                 return "\(country.localizedDisplayName) входит в регион \(label). Для этой записи в текущем наборе данных приложения пока нет полного локализованного описания, но страница страны остается доступной, пока список описаний дорабатывается."
@@ -358,6 +366,7 @@ enum CountryOverviewDescriptionStore {
 
         for candidate in candidates.compactMap({ $0 }) {
             if candidate.hasPrefix("pt") { return "pt" }
+            if candidate.hasPrefix("ar") { return "ar" }
             if candidate.hasPrefix("ru") { return "ru" }
             if candidate.hasPrefix("fr") { return "fr" }
             if candidate.hasPrefix("es") { return "es" }

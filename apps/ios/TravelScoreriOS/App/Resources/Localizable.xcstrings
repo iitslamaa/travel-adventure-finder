@@ -57,6 +57,12 @@
             "state": "translated",
             "value": "%1$@ %2$@"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
         }
       }
     },
@@ -160,6 +166,12 @@
             "state": "translated",
             "value": "6-значный код или пароль"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رمز من 6 أرقام أو كلمة المرور"
+          }
         }
       }
     },
@@ -205,6 +217,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Продолжить как гость"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتابعة كضيف"
           }
         }
       }
@@ -252,6 +270,12 @@
             "state": "translated",
             "value": "Продолжить с email"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتابعة عبر البريد الإلكتروني"
+          }
         }
       }
     },
@@ -297,6 +321,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Продолжить с Google"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتابعة عبر Google"
           }
         }
       }
@@ -344,6 +374,12 @@
             "state": "translated",
             "value": "Создать аккаунт / Войти"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنشاء حساب / تسجيل الدخول"
+          }
         }
       }
     },
@@ -389,6 +425,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Адрес электронной почты"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عنوان البريد الإلكتروني"
           }
         }
       }
@@ -436,6 +478,12 @@
             "state": "translated",
             "value": "Введите 6-значный код из письма или свой пароль"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدخل الرمز المكوّن من 6 أرقام المرسل إلى بريدك الإلكتروني أو أدخل كلمة المرور"
+          }
         }
       }
     },
@@ -481,6 +529,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Введите свой адрес электронной почты"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدخل عنوان بريدك الإلكتروني"
           }
         }
       }
@@ -528,6 +582,12 @@
             "state": "translated",
             "value": "Отправить повторно через %lld сек."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة الإرسال خلال %lld ثانية"
+          }
         }
       }
     },
@@ -573,6 +633,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отправить код"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرسال الرمز"
           }
         }
       }
@@ -620,6 +686,12 @@
             "state": "translated",
             "value": "Войдите, чтобы сохранить bucket list и синхронизировать данные между устройствами."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الدخول لحفظ قائمة الأمنيات ومزامنتها عبر الأجهزة."
+          }
         }
       }
     },
@@ -665,6 +737,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Вход"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول"
           }
         }
       }
@@ -712,6 +790,12 @@
             "state": "translated",
             "value": "Использовать обходной код"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدام رمز التجاوز"
+          }
         }
       }
     },
@@ -757,6 +841,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Подтвердить"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأكيد"
           }
         }
       }
@@ -813,6 +903,12 @@
             "state": "translated",
             "value": "Добавить"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة"
+          }
         }
       }
     },
@@ -858,6 +954,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Назад"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رجوع"
           }
         }
       }
@@ -905,6 +1007,12 @@
             "state": "translated",
             "value": "Отмена"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء"
+          }
         }
       }
     },
@@ -950,6 +1058,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Закрыть"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إغلاق"
           }
         }
       }
@@ -997,6 +1111,12 @@
             "state": "translated",
             "value": "Подтвердить"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأكيد"
+          }
         }
       }
     },
@@ -1042,6 +1162,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Готово"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم"
           }
         }
       }
@@ -1089,6 +1215,12 @@
             "state": "translated",
             "value": "Изменить"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل"
+          }
         }
       }
     },
@@ -1131,6 +1263,12 @@
           }
         },
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "—"
+          }
+        },
+        "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "—"
@@ -1181,6 +1319,12 @@
             "state": "translated",
             "value": "Ошибка"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطأ"
+          }
         }
       }
     },
@@ -1226,6 +1370,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Загрузка..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ التحميل..."
           }
         }
       }
@@ -1273,6 +1423,12 @@
             "state": "translated",
             "value": "Месяц"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشهر"
+          }
         }
       }
     },
@@ -1318,6 +1474,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не сейчас"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ليس الآن"
           }
         }
       }
@@ -1365,6 +1527,12 @@
             "state": "translated",
             "value": "ОК"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حسنًا"
+          }
         }
       }
     },
@@ -1410,6 +1578,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сохранить"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ"
           }
         }
       }
@@ -1457,6 +1631,12 @@
             "state": "translated",
             "value": "Сохранение..."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ الحفظ..."
+          }
         }
       }
     },
@@ -1502,6 +1682,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Оценка %lld"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النتيجة %lld"
           }
         }
       }
@@ -1549,6 +1735,12 @@
             "state": "translated",
             "value": "Отправить"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرسال"
+          }
         }
       }
     },
@@ -1594,6 +1786,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показать меньше"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض أقل"
           }
         }
       }
@@ -1641,6 +1839,12 @@
             "state": "translated",
             "value": "Показать больше"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض المزيد"
+          }
         }
       }
     },
@@ -1686,6 +1890,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отправить"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرسال"
           }
         }
       }
@@ -1733,6 +1943,12 @@
             "state": "translated",
             "value": "в этом месяце"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الشهر"
+          }
         }
       }
     },
@@ -1778,6 +1994,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обновлено: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر تحديث: %@"
           }
         }
       }
@@ -1825,6 +2047,12 @@
             "state": "translated",
             "value": "Нормализовано: %d"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مُطبع: %d"
+          }
         }
       }
     },
@@ -1870,6 +2098,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Госдеп США · %d%%"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وزارة الخارجية الأمريكية · %d%%"
           }
         }
       }
@@ -1917,6 +2151,12 @@
             "state": "translated",
             "value": "Туристические рекомендации"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرشادات السفر"
+          }
         }
       }
     },
@@ -1962,6 +2202,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Открыть официальный источник"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض الإرشاد الرسمي"
           }
         }
       }
@@ -2009,6 +2255,12 @@
             "state": "translated",
             "value": "Вес: %d%%"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن: %d%%"
+          }
         }
       }
     },
@@ -2054,6 +2306,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Активности (в день): $%.0f USD"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأنشطة (يوميًا): $%.0f USD"
           }
         }
       }
@@ -2101,6 +2359,12 @@
             "state": "translated",
             "value": "Типичные расходы в день: $%.0f USD"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إجمالي يومي معتاد: $%.0f USD"
+          }
         }
       }
     },
@@ -2146,6 +2410,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Оценка дневных расходов · %d%%"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التكلفة اليومية المقدّرة · %d%%"
           }
         }
       }
@@ -2193,6 +2463,12 @@
             "state": "translated",
             "value": "Еда (в день): $%.0f USD"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الطعام (يوميًا): $%.0f USD"
+          }
         }
       }
     },
@@ -2238,6 +2514,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Оценка ежедневных расходов на поездку основана на индексах стоимости жизни и модели цен на отели."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تستند تقديرات التكاليف اليومية للسفر إلى مؤشرات تكلفة المعيشة ونموذج أسعار الفنادق."
           }
         }
       }
@@ -2285,6 +2567,12 @@
             "state": "translated",
             "value": "Отель (за ночь): $%.0f USD"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفندق (لليلة): $%.0f USD"
+          }
         }
       }
     },
@@ -2330,6 +2618,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Нормализовано: %d"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مُطبع: %d"
           }
         }
       }
@@ -2377,6 +2671,12 @@
             "state": "translated",
             "value": "Доступность"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القدرة على التحمّل"
+          }
         }
       }
     },
@@ -2422,6 +2722,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Вес: %d%%"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن: %d%%"
           }
         }
       }
@@ -2469,6 +2775,12 @@
             "state": "translated",
             "value": "Bucket list"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمة الأمنيات"
+          }
         }
       }
     },
@@ -2514,6 +2826,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld друзей"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أصدقاء"
           }
         }
       }
@@ -2561,6 +2879,12 @@
             "state": "translated",
             "value": "Отсюда"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من هنا"
+          }
         }
       }
     },
@@ -2606,6 +2930,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Загружаем сигналы о путешествиях из вашего круга"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تحميل إشارات السفر من دائرتك"
           }
         }
       }
@@ -2653,6 +2983,12 @@
             "state": "translated",
             "value": "%lld друзей, но пока без сигналов о поездках"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أصدقاء، ولا توجد إشارات سفر بعد"
+          }
         }
       }
     },
@@ -2698,6 +3034,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Пока никого"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا أحد بعد"
           }
         }
       }
@@ -2745,6 +3087,12 @@
             "state": "translated",
             "value": "Ваши друзья"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أصدقاؤك"
+          }
         }
       }
     },
@@ -2790,6 +3138,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Посмотрите, кто уже был здесь, хочет поехать или родом отсюда."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعرف من زار هذا المكان أو يريد الذهاب إليه أو ينتمي إليه."
           }
         }
       }
@@ -2837,6 +3191,12 @@
             "state": "translated",
             "value": "Добавьте друзей, чтобы открыть сигналы о путешествиях здесь."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف أصدقاء لفتح إشارات السفر هنا."
+          }
         }
       }
     },
@@ -2882,6 +3242,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Были здесь"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زاروا"
           }
         }
       }
@@ -2929,6 +3295,12 @@
             "state": "translated",
             "value": "хотят поехать"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يريدون الذهاب"
+          }
         }
       }
     },
@@ -2974,6 +3346,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Язык может быть здесь барьером."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قد تكون اللغة عائقًا هنا."
           }
         }
       }
@@ -3021,6 +3399,12 @@
             "state": "translated",
             "value": "Здесь вы также можете практиковать %@."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكنك أيضًا ممارسة %@ هنا."
+          }
         }
       }
     },
@@ -3066,6 +3450,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Скорее всего, язык будет особенно полезен в туристических зонах, а не повсюду."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من المرجح أن تكون اللغة مفيدة أكثر في المناطق السياحية منها في كل مكان."
           }
         }
       }
@@ -3113,6 +3503,12 @@
             "state": "translated",
             "value": "Проще всего будет в основных туристических районах."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيكون الأمر أسهل غالبًا في المناطق السياحية الرئيسية."
+          }
         }
       }
     },
@@ -3158,6 +3554,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "На этой территории нет постоянного населения, поэтому обычную языковую среду здесь оценить нельзя."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد هنا كثافة سكانية مستقرة دائمة، لذلك لا تنطبق بيئة اللغة المعتادة على هذا التقييم."
           }
         }
       }
@@ -3205,6 +3607,12 @@
             "state": "translated",
             "value": "Обычная языковая оценка здесь не совсем применима."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تنطبق نتيجة اللغة المعتادة هنا بشكل كامل."
+          }
         }
       }
     },
@@ -3250,6 +3658,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Основано на языковом покрытии страны и сохранённых вами языках. Реальный опыт может отличаться по городам и регионам."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعتمد ذلك على انتشار اللغات على مستوى البلد وعلى رموز اللغات المحفوظة لديك. قد تختلف التجربة الفعلية حسب المدينة والمنطقة."
           }
         }
       }
@@ -3297,6 +3711,12 @@
             "state": "translated",
             "value": "Язык всё ещё может быть барьером в некоторых частях страны."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قد تظل اللغة عائقًا في بعض أجزاء البلد."
+          }
         }
       }
     },
@@ -3342,6 +3762,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Вам будет комфортно путешествовать здесь на %@."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستشعر براحة في السفر هنا باستخدام %@."
           }
         }
       }
@@ -3389,6 +3815,12 @@
             "state": "translated",
             "value": "Скорее всего, здесь можно обойтись с %@."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من المحتمل أن تتمكن من تدبر أمورك هنا باستخدام %@."
+          }
         }
       }
     },
@@ -3434,6 +3866,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ поможет вам во многих ситуациях во время поездки."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيساعدك %@ في كثير من مواقف السفر هنا."
           }
         }
       }
@@ -3481,6 +3919,12 @@
             "state": "translated",
             "value": "Здесь можно практиковать %@, но полагаться только на него может быть не стоит."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكنك ممارسة %@ هنا، لكن قد لا ترغب في الاعتماد عليه وحده."
+          }
         }
       }
     },
@@ -3526,6 +3970,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Источник: Britannica"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المصدر: Britannica"
           }
         }
       }
@@ -3573,6 +4023,12 @@
             "state": "translated",
             "value": "Источник: Glottolog"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المصدر: Glottolog"
+          }
         }
       }
     },
@@ -3618,6 +4074,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Языковая совместимость"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التوافق اللغوي"
           }
         }
       }
@@ -3665,6 +4127,12 @@
             "state": "translated",
             "value": "Почему такой балл?"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لماذا هذه النتيجة؟"
+          }
         }
       }
     },
@@ -3710,6 +4178,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ваши языки · %d%%"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لغاتك · %d%%"
           }
         }
       }
@@ -3757,6 +4231,12 @@
             "state": "translated",
             "value": "Лучшие месяцы:"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أفضل الأشهر:"
+          }
         }
       }
     },
@@ -3802,6 +4282,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Погодные условия и уровень загруженности идеальны для этого месяца."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنماط الطقس والازدحام مثالية لهذا الشهر."
           }
         }
       }
@@ -3849,6 +4335,12 @@
             "state": "translated",
             "value": "Данные по сезонности ограничены; время всё ещё может быть удачным, но проверьте местные условия."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيانات الموسمية محدودة؛ قد يظل التوقيت مناسبًا، لكن تحقق من الظروف المحلية."
+          }
         }
       }
     },
@@ -3894,6 +4386,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Условия в целом благоприятны для этого месяца: хорошая погода и приемлемая загруженность."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الظروف مواتية عمومًا لهذا الشهر، مع طقس جيد وازدحام مناسب."
           }
         }
       }
@@ -3941,6 +4439,12 @@
             "state": "translated",
             "value": "Этот месяц не лучший по погоде и загруженности; если возможно, рассмотрите другие месяцы."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الشهر ليس مثاليًا من ناحية الطقس أو الازدحام؛ إن أمكن، فكّر في أشهر أخرى."
+          }
         }
       }
     },
@@ -3986,6 +4490,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Этот месяц даёт неплохой баланс погоды, цен и количества людей, хотя и с компромиссами."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمنح هذا الشهر توازنًا جيدًا بين الطقس والأسعار والازدحام، مع بعض التنازلات."
           }
         }
       }
@@ -4033,6 +4543,12 @@
             "state": "translated",
             "value": "Сведения о сезонности основаны на исторических климатических средних и типичных туристических паттернах. Из года в год время может немного отличаться."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعتمد رؤى الموسمية على المتوسطات المناخية التاريخية وأنماط السفر المعتادة. قد يختلف التوقيت من عام لآخر."
+          }
         }
       }
     },
@@ -4078,6 +4594,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Лучшее время для поездки ✅"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أفضل وقت للذهاب ✅"
           }
         }
       }
@@ -4125,6 +4647,12 @@
             "state": "translated",
             "value": "Текущее окно"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التوقيت الحالي"
+          }
         }
       }
     },
@@ -4170,6 +4698,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Хорошее время для поездки ✅"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وقت جيد للذهاب ✅"
           }
         }
       }
@@ -4217,6 +4751,12 @@
             "state": "translated",
             "value": "Менее удачное время"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توقيت أقل مثالية"
+          }
         }
       }
     },
@@ -4263,6 +4803,12 @@
             "state": "translated",
             "value": "Переходный сезон"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموسم الانتقالي"
+          }
         }
       }
     },
@@ -4305,6 +4851,12 @@
           }
         },
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %d%%"
+          }
+        },
+        "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ · %d%%"
@@ -4355,6 +4907,12 @@
             "state": "translated",
             "value": "Нормализовано: %d"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مُطبع: %d"
+          }
         }
       }
     },
@@ -4400,6 +4958,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сезонность в %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموسمية في %@"
           }
         }
       }
@@ -4447,6 +5011,12 @@
             "state": "translated",
             "value": "Вес: %d%%"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن: %d%%"
+          }
         }
       }
     },
@@ -4492,6 +5062,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Разрешённый срок пребывания: до %lld дней"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مدة الإقامة المسموحة: حتى %lld يومًا"
           }
         }
       }
@@ -4539,6 +5115,12 @@
             "state": "translated",
             "value": "Подойдёт любой из %@ или %@."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أي من %@ أو %@ مناسب هنا."
+          }
         }
       }
     },
@@ -4584,6 +5166,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Примерный сбор: $%.0f USD"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسوم تقريبية: $%.0f USD"
           }
         }
       }
@@ -4631,6 +5219,12 @@
             "state": "translated",
             "value": "Текущие правила могут серьёзно ограничивать или запрещать въезд; проверьте официальные рекомендации перед планированием."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قد تقيّد القواعد الحالية الدخول بشدة أو تمنعه؛ تحقق من الإرشادات الرسمية قبل التخطيط."
+          }
         }
       }
     },
@@ -4676,6 +5270,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "До въезда может потребоваться предварительное разрешение или допуск."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قد تحتاج إلى تصريح أو موافقة مسبقة قبل السماح بالدخول."
           }
         }
       }
@@ -4723,6 +5323,12 @@
             "state": "translated",
             "value": "Обычно нужно подать заявку и оплатить всё онлайн до поездки."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غالبًا ما تحتاج إلى التقديم والدفع عبر الإنترنت قبل السفر."
+          }
         }
       }
     },
@@ -4768,6 +5374,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Это направление входит в территориальное соглашение, по которому владельцы паспорта %@ могут свободно перемещаться без визовых ограничений."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تندرج هذه الوجهة ضمن ترتيب إقليمي يسمح لحاملي جواز %@ بالتنقل بحرية دون قيود تأشيرة."
           }
         }
       }
@@ -4815,6 +5427,12 @@
             "state": "translated",
             "value": "Проверьте официальные источники, чтобы узнать актуальные требования для въезда."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحقق من المصادر الرسمية لمعرفة أحدث متطلبات الدخول."
+          }
         }
       }
     },
@@ -4860,6 +5478,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Вы въезжаете по собственному паспорту в свою страну."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت تدخل مستخدمًا جواز سفرك الخاص لبلدك."
           }
         }
       }
@@ -4907,6 +5531,12 @@
             "state": "translated",
             "value": "Правила въезда могут зависеть от деталей поездки; уточните информацию у официальных государственных источников."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قد تعتمد قواعد الدخول على تفاصيل رحلتك؛ أكد ذلك مع المصادر الحكومية الرسمية."
+          }
         }
       }
     },
@@ -4952,6 +5582,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обычно можно въехать без визы заранее, с учётом ограничений по сроку пребывания."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكنك عادة الدخول دون ترتيب تأشيرة مسبقًا، مع مراعاة حدود مدة الإقامة."
           }
         }
       }
@@ -4999,6 +5635,12 @@
             "state": "translated",
             "value": "Нужно заранее оформить визу через консульство или официальный канал."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يجب عليك الحصول على تأشيرة مسبقًا عبر قنصلية أو قناة رسمية."
+          }
         }
       }
     },
@@ -5044,6 +5686,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Виза оформляется по прибытии; будьте готовы к документам и возможным сборам на границе."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصدر التأشيرة عند الوصول؛ توقع إجراءات ورقية ورسومًا محتملة عند الحدود."
           }
         }
       }
@@ -5091,6 +5739,12 @@
             "state": "translated",
             "value": "Подойдёт либо %@, либо %@."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إما %@ أو %@ مناسب هنا."
+          }
         }
       }
     },
@@ -5136,6 +5790,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Въезд сильно ограничен"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الدخول مقيّد بشدة"
           }
         }
       }
@@ -5183,6 +5843,12 @@
             "state": "translated",
             "value": "Требуется разрешение на въезд"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يلزم تصريح دخول"
+          }
         }
       }
     },
@@ -5228,6 +5894,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Доступна eVisa онлайн"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأشيرة إلكترونية متاحة عبر الإنترنت"
           }
         }
       }
@@ -5275,6 +5947,12 @@
             "state": "translated",
             "value": "Свободное перемещение с паспортом %@"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حرية تنقل بجواز %@"
+          }
         }
       }
     },
@@ -5320,6 +5998,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Информация по визам ограничена"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معلومات التأشيرة محدودة"
           }
         }
       }
@@ -5367,6 +6051,12 @@
             "state": "translated",
             "value": "Собственный паспорт для своей страны"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جوازك الخاص لبلدك"
+          }
         }
       }
     },
@@ -5412,6 +6102,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Визовые правила различаются"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تختلف قواعد التأشيرة"
           }
         }
       }
@@ -5459,6 +6155,12 @@
             "state": "translated",
             "value": "Без визы для паспорта %@"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دون تأشيرة لحاملي جواز %@"
+          }
         }
       }
     },
@@ -5504,6 +6206,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Виза нужна до поездки"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التأشيرة مطلوبة قبل السفر"
           }
         }
       }
@@ -5551,6 +6259,12 @@
             "state": "translated",
             "value": "Доступна виза по прибытии"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأشيرة عند الوصول متاحة"
+          }
         }
       }
     },
@@ -5596,6 +6310,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Нормализовано: %d"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مُطبع: %d"
           }
         }
       }
@@ -5643,6 +6363,12 @@
             "state": "translated",
             "value": "Паспорт %@ · %d%%"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جواز %@ · %d%%"
+          }
         }
       }
     },
@@ -5688,6 +6414,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Рекомендуемый паспорт: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجواز الموصى به: %@"
           }
         }
       }
@@ -5735,6 +6467,12 @@
             "state": "translated",
             "value": "Визовые требования"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متطلبات التأشيرة"
+          }
         }
       }
     },
@@ -5780,6 +6518,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Тип визы: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نوع التأشيرة: %@"
           }
         }
       }
@@ -5827,6 +6571,12 @@
             "state": "needs_review",
             "value": "Entry permit"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصريح دخول"
+          }
         }
       }
     },
@@ -5872,6 +6622,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Freedom of movement"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حرية التنقل"
           }
         }
       }
@@ -5919,6 +6675,12 @@
             "state": "needs_review",
             "value": "Own passport"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جوازك الخاص"
+          }
         }
       }
     },
@@ -5964,6 +6726,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Visa free"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بدون تأشيرة"
           }
         }
       }
@@ -6011,6 +6779,12 @@
             "state": "needs_review",
             "value": "Visa required"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأشيرة مطلوبة"
+          }
         }
       }
     },
@@ -6056,6 +6830,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "View official visa source"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض المصدر الرسمي للتأشيرة"
           }
         }
       }
@@ -6103,6 +6883,12 @@
             "state": "translated",
             "value": "Вес: %d%%"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن: %d%%"
+          }
         }
       }
     },
@@ -6148,6 +6934,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "UAE"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإمارات"
           }
         }
       }
@@ -6195,6 +6987,12 @@
             "state": "needs_review",
             "value": "DRC"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكونغو الديمقراطية"
+          }
         }
       }
     },
@@ -6240,6 +7038,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "CAR"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إفريقيا الوسطى"
           }
         }
       }
@@ -6287,6 +7091,12 @@
             "state": "needs_review",
             "value": "UK"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المملكة المتحدة"
+          }
         }
       }
     },
@@ -6333,6 +7143,12 @@
             "state": "needs_review",
             "value": "Palestine"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فلسطين"
+          }
         }
       }
     },
@@ -6378,6 +7194,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "USA"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الولايات المتحدة"
           }
         }
       }
@@ -6433,6 +7255,12 @@
             "state": "translated",
             "value": "Сортировка"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفرز"
+          }
         }
       }
     },
@@ -6478,6 +7306,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сравнивайте страны по вашим приоритетам"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قارن البلدان وفقًا لأولوياتك"
           }
         }
       }
@@ -6525,6 +7359,12 @@
             "state": "translated",
             "value": "Страны"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان"
+          }
         }
       }
     },
@@ -6570,6 +7410,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Искать страны и территории"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن البلدان والأقاليم"
           }
         }
       }
@@ -6617,6 +7463,12 @@
             "state": "translated",
             "value": "Исследуйте мир на карте"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استكشف العالم على الخريطة"
+          }
         }
       }
     },
@@ -6662,6 +7514,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Карта"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخريطة"
           }
         }
       }
@@ -6709,6 +7567,12 @@
             "state": "translated",
             "value": "Доступность"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القدرة على التحمّل"
+          }
         }
       }
     },
@@ -6754,6 +7618,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Лучшее время"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أفضل وقت"
           }
         }
       }
@@ -6801,6 +7671,12 @@
             "state": "translated",
             "value": "Открыть полную страницу страны"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح صفحة البلد الكاملة"
+          }
         }
       }
     },
@@ -6846,6 +7722,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Регион: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المنطقة: %@"
           }
         }
       }
@@ -6893,6 +7775,12 @@
             "state": "translated",
             "value": "Оценка безопасности: %lld"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نتيجة الأمان: %lld"
+          }
         }
       }
     },
@@ -6938,6 +7826,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Краткий обзор оценок"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لمحة عن النتائج"
           }
         }
       }
@@ -6985,6 +7879,12 @@
             "state": "translated",
             "value": "Сезонность"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموسمية"
+          }
         }
       }
     },
@@ -7030,6 +7930,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выбранное направление"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوجهة المحددة"
           }
         }
       }
@@ -7077,6 +7983,12 @@
             "state": "translated",
             "value": "Открыть страницу страны для %@"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح صفحة البلد لـ %@"
+          }
         }
       }
     },
@@ -7122,6 +8034,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Визовые условия"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سهولة التأشيرة"
           }
         }
       }
@@ -7169,6 +8087,12 @@
             "state": "translated",
             "value": "Общая оценка"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النتيجة الإجمالية"
+          }
         }
       }
     },
@@ -7214,6 +8138,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Искать страны и территории"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن البلدان والأقاليم"
           }
         }
       }
@@ -7261,6 +8191,12 @@
             "state": "translated",
             "value": "Поиск стран"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتشاف البلدان"
+          }
         }
       }
     },
@@ -7306,6 +8242,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Действия"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإجراءات"
           }
         }
       }
@@ -7353,6 +8295,12 @@
             "state": "translated",
             "value": "Доступность"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القدرة على التحمّل"
+          }
         }
       }
     },
@@ -7398,6 +8346,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Язык"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللغة"
           }
         }
       }
@@ -7445,6 +8399,12 @@
             "state": "translated",
             "value": "Выберите месяц для сезонной оценки"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر شهرًا لنتيجة الموسمية"
+          }
         }
       }
     },
@@ -7490,6 +8450,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сбалансировано"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوازن"
           }
         }
       }
@@ -7538,6 +8504,12 @@
             "state": "translated",
             "value": "Равновесие между стоимостью, простотой и комфортом путешествия."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توازن بين التكلفة وسهولة السفر والراحة."
+          }
         }
       }
     },
@@ -7583,6 +8555,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Экономно"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اقتصادي"
           }
         }
       }
@@ -7631,6 +8609,12 @@
             "state": "translated",
             "value": "Сильнее учитывает бюджет и общую доступность."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يركّز أكثر على الميزانية والقدرة على التحمّل."
+          }
         }
       }
     },
@@ -7676,6 +8660,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Легкое путешествие"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سفر سهل"
           }
         }
       }
@@ -7724,6 +8714,12 @@
             "state": "translated",
             "value": "Сильнее учитывает визы, язык и удобство поездки."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يركّز أكثر على التأشيرة واللغة وسهولة الرحلة."
+          }
         }
       }
     },
@@ -7769,6 +8765,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сначала безопасность"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السلامة أولاً"
           }
         }
       }
@@ -7817,6 +8819,12 @@
             "state": "translated",
             "value": "Сильнее учитывает безопасность и стабильные условия."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يركّز أكثر على السلامة والظروف المستقرة."
+          }
         }
       }
     },
@@ -7862,6 +8870,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Быстрые пресеты"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعدادات سريعة"
           }
         }
       }
@@ -7909,6 +8923,12 @@
             "state": "translated",
             "value": "Сбросить по умолчанию"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة التعيين إلى الافتراضي"
+          }
         }
       }
     },
@@ -7954,6 +8974,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сохранить настройки"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ التفضيلات"
           }
         }
       }
@@ -8001,6 +9027,12 @@
             "state": "translated",
             "value": "Сохранено"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الحفظ"
+          }
         }
       }
     },
@@ -8046,6 +9078,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сезонность"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموسمية"
           }
         }
       }
@@ -8093,6 +9131,12 @@
             "state": "translated",
             "value": "Настройте, как рассчитывается общий балл"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خصص طريقة احتساب النتيجة الإجمالية"
+          }
         }
       }
     },
@@ -8138,6 +9182,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ваши веса"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأوزان الخاصة بك"
           }
         }
       }
@@ -8185,6 +9235,12 @@
             "state": "needs_review",
             "value": "Travel Advisory"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرشادات السفر"
+          }
         }
       }
     },
@@ -8230,6 +9286,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Visa Ease"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سهولة التأشيرة"
           }
         }
       }
@@ -8277,6 +9339,12 @@
             "state": "needs_review",
             "value": "Weights"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأوزان"
+          }
         }
       }
     },
@@ -8322,6 +9390,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "At least one category must have weight."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يجب أن يكون لواحدة على الأقل من الفئات وزن."
           }
         }
       }
@@ -8369,6 +9443,12 @@
             "state": "needs_review",
             "value": "Find peak seasons"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعثر على مواسم الذروة"
+          }
         }
       }
     },
@@ -8415,6 +9495,12 @@
             "state": "needs_review",
             "value": "When To Go"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متى تذهب"
+          }
         }
       }
     },
@@ -8460,6 +9546,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Preparing your world…"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تجهيز خريطتك العالمية…"
           }
         }
       }
@@ -8515,6 +9607,12 @@
             "state": "needs_review",
             "value": "Something went wrong. Please try again."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+          }
         }
       }
     },
@@ -8560,6 +9658,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "I built TAF because I kept looking up the same travel statistics when deciding where to go, and I could not believe a tool like this did not already exist."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنشأت TAF لأنني كنت أبحث مرارًا عن إحصاءات السفر نفسها عند اختيار وجهتي، ولم أصدق أن أداة كهذه غير موجودة بالفعل."
           }
         }
       }
@@ -8607,6 +9711,12 @@
             "state": "needs_review",
             "value": "I am passionate about traveling and connecting with people, and I genuinely want TAF to be something travelers find useful."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنا شغوفة بالسفر والتواصل مع الناس، وأرغب بصدق أن تكون TAF أداة يجدها المسافرون مفيدة."
+          }
         }
       }
     },
@@ -8652,6 +9762,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "I truly want to hear from you."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أرغب حقًا في سماع رأيك."
           }
         }
       }
@@ -8699,6 +9815,12 @@
             "state": "needs_review",
             "value": "I read every message personally and work daily to make TAF better. Thank you for being here and travel on!"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقرأ كل رسالة بنفسي وأعمل يوميًا على تحسين TAF. شكرًا لوجودك هنا، واستمتع برحلتك!"
+          }
         }
       }
     },
@@ -8744,6 +9866,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "I am Lama, the developer behind Travel Adventure Finder!"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنا لما، المطوّرة وراء Travel Adventure Finder!"
           }
         }
       }
@@ -8791,6 +9919,12 @@
             "state": "needs_review",
             "value": "Send Feedback"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرسال الملاحظات"
+          }
         }
       }
     },
@@ -8836,6 +9970,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Sent ✓"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الإرسال ✓"
           }
         }
       }
@@ -8883,6 +10023,12 @@
             "state": "needs_review",
             "value": "Feedback"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملاحظات"
+          }
         }
       }
     },
@@ -8928,6 +10074,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Accept"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبول"
           }
         }
       }
@@ -8975,6 +10127,12 @@
             "state": "needs_review",
             "value": "Decline"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رفض"
+          }
         }
       }
     },
@@ -9020,6 +10178,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "When someone sends you a friend request, it will show up here."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عندما يرسل لك أحدهم طلب صداقة، سيظهر هنا."
           }
         }
       }
@@ -9067,6 +10231,12 @@
             "state": "needs_review",
             "value": "No friend requests"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد طلبات صداقة"
+          }
         }
       }
     },
@@ -9112,6 +10282,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Loading requests..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تحميل الطلبات..."
           }
         }
       }
@@ -9159,6 +10335,12 @@
             "state": "needs_review",
             "value": "Friend Requests"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طلبات الصداقة"
+          }
         }
       }
     },
@@ -9204,6 +10386,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Управление этой дружбой"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إدارة هذه الصداقة"
           }
         }
       }
@@ -9251,6 +10439,12 @@
             "state": "translated",
             "value": "Удалить %@ из друзей"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة %@ من الأصدقاء"
+          }
         }
       }
     },
@@ -9296,6 +10490,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Искать друзей"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن الأصدقاء"
           }
         }
       }
@@ -9343,6 +10543,12 @@
             "state": "translated",
             "value": "Отменить запрос"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء الطلب"
+          }
         }
       }
     },
@@ -9388,6 +10594,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Друзья"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأصدقاء"
           }
         }
       }
@@ -9435,6 +10647,12 @@
             "state": "translated",
             "value": "Удалить из друзей"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة من الأصدقاء"
+          }
         }
       }
     },
@@ -9480,6 +10698,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Удалить друга?"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة هذا الصديق؟"
           }
         }
       }
@@ -9527,6 +10751,12 @@
             "state": "translated",
             "value": "Посмотреть друзей"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض الأصدقاء"
+          }
         }
       }
     },
@@ -9572,6 +10802,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Друзья"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأصدقاء"
           }
         }
       }
@@ -9620,6 +10856,12 @@
             "state": "translated",
             "value": "Друзья доступны после входа"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأصدقاء متاحون بعد تسجيل الدخول"
+          }
         }
       }
     },
@@ -9666,6 +10908,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Войдите, чтобы видеть друзей"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الدخول لرؤية أصدقائك"
           }
         }
       }
@@ -9714,6 +10962,12 @@
             "state": "translated",
             "value": "Создайте аккаунт, чтобы добавлять друзей и видеть их сигналы о путешествиях."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنشئ حسابًا لإضافة الأصدقاء ورؤية إشارات السفر الخاصة بهم."
+          }
         }
       }
     },
@@ -9760,6 +11014,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Профиль доступен после входа"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملف الشخصي متاح بعد تسجيل الدخول"
           }
         }
       }
@@ -9808,6 +11068,12 @@
             "state": "translated",
             "value": "Войдите, чтобы сохранить профиль"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الدخول لحفظ ملفك الشخصي"
+          }
         }
       }
     },
@@ -9854,6 +11120,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Создайте аккаунт, чтобы сохранять языки, страны и настройки путешествий."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنشئ حسابًا لحفظ اللغات والبلدان وتفضيلات السفر."
           }
         }
       }
@@ -9904,6 +11176,12 @@
             "state": "needs_review",
             "value": "Safety advisories and scores are derived from publicly available sources and third-party data. Conditions may change rapidly, and Travel Adventure Finder does not guarantee accuracy, completeness, or timeliness."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تستند تنبيهات السلامة والنتائج إلى مصادر متاحة للعامة وبيانات من جهات خارجية. قد تتغير الظروف بسرعة، ولا تضمن Travel Adventure Finder الدقة أو الاكتمال أو حداثة المعلومات."
+          }
         }
       }
     },
@@ -9949,6 +11227,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Advisories & Safety Scores"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التنبيهات ودرجات السلامة"
           }
         }
       }
@@ -9996,6 +11280,12 @@
             "state": "needs_review",
             "value": "Travel Adventure Finder provides informational travel insights only. All scores, advisories, and recommendations are intended for general guidance and educational purposes. Seasonality insights are based on historical climate averages and typical travel patterns."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقدّم Travel Adventure Finder معلومات وإضاءات سفر لأغراض إعلامية فقط. جميع الدرجات والتنبيهات والتوصيات مخصّصة للإرشاد العام وللأغراض التعليمية. وتعتمد رؤى الموسمية على المتوسطات المناخية التاريخية وأنماط السفر المعتادة."
+          }
         }
       }
     },
@@ -10041,6 +11331,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "General Information"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معلومات عامة"
           }
         }
       }
@@ -10088,6 +11384,12 @@
             "state": "needs_review",
             "value": "Travel Adventure Finder is not responsible for decisions made based on information presented in the app. Use of this app is at your own discretion."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تتحمل Travel Adventure Finder مسؤولية القرارات التي تُتخذ بناءً على المعلومات المعروضة في التطبيق. استخدامك لهذا التطبيق يكون وفق تقديرك الشخصي."
+          }
         }
       }
     },
@@ -10133,6 +11435,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Limitation of Liability"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديد المسؤولية"
           }
         }
       }
@@ -10180,6 +11488,12 @@
             "state": "needs_review",
             "value": "Travel Adventure Finder does not provide legal, medical, or governmental advice. Users should verify information with official sources before making travel decisions."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تقدّم Travel Adventure Finder مشورة قانونية أو طبية أو حكومية. ينبغي على المستخدمين التحقق من المعلومات من المصادر الرسمية قبل اتخاذ قرارات السفر."
+          }
         }
       }
     },
@@ -10225,6 +11539,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "No Professional Advice"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد مشورة مهنية"
           }
         }
       }
@@ -10272,6 +11592,12 @@
             "state": "needs_review",
             "value": "Legal"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قانوني"
+          }
         }
       }
     },
@@ -10317,6 +11643,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Let us know what you think"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أخبرنا برأيك"
           }
         }
       }
@@ -10364,6 +11696,12 @@
             "state": "needs_review",
             "value": "Send Feedback"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرسال الملاحظات"
+          }
         }
       }
     },
@@ -10409,6 +11747,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Privacy, terms, and app policies"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخصوصية والشروط وسياسات التطبيق"
           }
         }
       }
@@ -10456,6 +11800,12 @@
             "state": "needs_review",
             "value": "Legal"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قانوني"
+          }
         }
       }
     },
@@ -10501,6 +11851,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "More"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المزيد"
           }
         }
       }
@@ -10553,6 +11909,12 @@
             "state": "translated",
             "value": "Добавить в bucket list"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة إلى قائمة الأمنيات"
+          }
         }
       }
     },
@@ -10598,6 +11960,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Удалить из bucket list"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة من قائمة الأمنيات"
           }
         }
       }
@@ -10645,6 +12013,12 @@
             "state": "translated",
             "value": "Страны, о которых вы мечтаете"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان التي تحلم بزيارتها"
+          }
         }
       }
     },
@@ -10690,6 +12064,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bucket list"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمة الأمنيات"
           }
         }
       }
@@ -10737,6 +12117,12 @@
             "state": "translated",
             "value": "Добавить в %@"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة إلى %@"
+          }
         }
       }
     },
@@ -10782,6 +12168,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Удалить из %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة من %@"
           }
         }
       }
@@ -10829,6 +12221,12 @@
             "state": "translated",
             "value": "Добавляйте страны, которые хотите посетить."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف البلدان التي تريد زيارتها."
+          }
         }
       }
     },
@@ -10874,6 +12272,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ваш bucket list пока пуст"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمة الأمنيات فارغة حاليًا"
           }
         }
       }
@@ -10921,6 +12325,12 @@
             "state": "translated",
             "value": "Bucket list"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمة الأمنيات"
+          }
         }
       }
     },
@@ -10966,6 +12376,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отмечайте страны, которые хотите посетить."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّد البلدان التي تريد زيارتها."
           }
         }
       }
@@ -11013,6 +12429,12 @@
             "state": "translated",
             "value": "Добавить в bucket list"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة إلى قائمة الأمنيات"
+          }
         }
       }
     },
@@ -11058,6 +12480,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bucket list"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأمنيات"
           }
         }
       }
@@ -11105,6 +12533,12 @@
             "state": "translated",
             "value": "Отмечайте страны, в которых вы уже были."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّد البلدان التي زرتها بالفعل."
+          }
         }
       }
     },
@@ -11150,6 +12584,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Пока нет посещённых стран"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد بلدان تمت زيارتها بعد"
           }
         }
       }
@@ -11197,6 +12637,12 @@
             "state": "translated",
             "value": "Посещено"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت زيارتها"
+          }
         }
       }
     },
@@ -11242,6 +12688,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отмечайте страны, которые вы уже посетили."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّد البلدان التي زرتها بالفعل."
           }
         }
       }
@@ -11289,6 +12741,12 @@
             "state": "translated",
             "value": "Отметить как посещённые"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضع علامة كمُزارة"
+          }
         }
       }
     },
@@ -11334,6 +12792,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Посещено"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت زيارتها"
           }
         }
       }
@@ -11381,6 +12845,12 @@
             "state": "translated",
             "value": "Планирование"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التخطيط"
+          }
         }
       }
     },
@@ -11427,6 +12897,12 @@
             "state": "translated",
             "value": "Соберите свой следующий маршрут"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنشئ مسار رحلتك القادمة"
+          }
         }
       }
     },
@@ -11472,6 +12948,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Планировщик поездок"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مخطط الرحلات"
           }
         }
       }
@@ -11521,6 +13003,12 @@
             "state": "translated",
             "value": "Посещено"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت زيارتها"
+          }
         }
       }
     },
@@ -11566,6 +13054,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Страны, в которых вы уже были"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان التي زرتها بالفعل"
           }
         }
       }
@@ -11613,6 +13107,12 @@
             "state": "translated",
             "value": "Посещённые страны"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان المزارة"
+          }
         }
       }
     },
@@ -11658,6 +13158,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Failed to create profile after retries"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فشل إنشاء الملف الشخصي بعد عدة محاولات"
           }
         }
       }
@@ -11705,6 +13211,12 @@
             "state": "needs_review",
             "value": "Name and username are required."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم واسم المستخدم مطلوبان."
+          }
         }
       }
     },
@@ -11750,6 +13262,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "No active session. Please log in again."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد جلسة نشطة. يرجى تسجيل الدخول مرة أخرى."
           }
         }
       }
@@ -11797,6 +13315,12 @@
             "state": "needs_review",
             "value": "No auth user found"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم العثور على مستخدم مصادقة"
+          }
         }
       }
     },
@@ -11842,6 +13366,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Not authenticated. Please log in again."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تتم المصادقة. يرجى تسجيل الدخول مرة أخرى."
           }
         }
       }
@@ -11889,6 +13419,12 @@
             "state": "needs_review",
             "value": "Profile not found"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم العثور على الملف الشخصي"
+          }
         }
       }
     },
@@ -11934,6 +13470,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Profile not loaded yet. Please try again."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم تحميل الملف الشخصي بعد. يرجى المحاولة مرة أخرى."
           }
         }
       }
@@ -11981,6 +13523,12 @@
             "state": "translated",
             "value": "Принять"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبول"
+          }
         }
       }
     },
@@ -12026,6 +13574,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Добавить в друзья"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة صديق"
           }
         }
       }
@@ -12073,6 +13627,12 @@
             "state": "translated",
             "value": "Текущая страна"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلد الحالي"
+          }
         }
       }
     },
@@ -12118,6 +13678,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Любимые поездки"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرحلات المفضلة"
           }
         }
       }
@@ -12165,6 +13731,12 @@
             "state": "translated",
             "value": "Домашние флаги"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أعلام الوطن"
+          }
         }
       }
     },
@@ -12210,6 +13782,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Следующая"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التالي"
           }
         }
       }
@@ -12257,6 +13835,12 @@
             "state": "translated",
             "value": "Не указано"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غير محدد"
+          }
         }
       }
     },
@@ -12302,6 +13886,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Запрос отправлен"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم إرسال الطلب"
           }
         }
       }
@@ -12349,6 +13939,12 @@
             "state": "translated",
             "value": "Bucket list"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمة الأمنيات"
+          }
         }
       }
     },
@@ -12394,6 +13990,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Посещённые страны"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان التي تمت زيارتها"
           }
         }
       }
@@ -12441,6 +14043,12 @@
             "state": "translated",
             "value": "Языки"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللغات"
+          }
         }
       }
     },
@@ -12486,6 +14094,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Подружитесь, чтобы увидеть больше сведений профиля."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف هذا الشخص كصديق لرؤية المزيد من معلومات الملف الشخصي."
           }
         }
       }
@@ -12533,6 +14147,12 @@
             "state": "translated",
             "value": "Общие языки"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللغات المشتركة"
+          }
         }
       }
     },
@@ -12578,6 +14198,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Некоторые данные профиля видны только друзьям."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعض تفاصيل الملف الشخصي مرئية للأصدقاء فقط."
           }
         }
       }
@@ -12625,6 +14251,12 @@
             "state": "translated",
             "value": "Добавить фото"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة صورة"
+          }
         }
       }
     },
@@ -12670,6 +14302,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Изменить фото"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيير الصورة"
           }
         }
       }
@@ -12717,6 +14355,12 @@
             "state": "translated",
             "value": "Фото профиля"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صورة الملف الشخصي"
+          }
         }
       }
     },
@@ -12762,6 +14406,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Удалить фото"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة الصورة"
           }
         }
       }
@@ -12809,6 +14459,12 @@
             "state": "translated",
             "value": "Текущая страна"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلد الحالي"
+          }
         }
       }
     },
@@ -12854,6 +14510,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Любимые страны"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان المفضلة"
           }
         }
       }
@@ -12901,6 +14563,12 @@
             "state": "translated",
             "value": "Мои флаги"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أعلامي"
+          }
         }
       }
     },
@@ -12946,6 +14614,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Следующее направление"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوجهة التالية"
           }
         }
       }
@@ -12993,6 +14667,12 @@
             "state": "translated",
             "value": "Фон профиля"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خلفية الملف الشخصي"
+          }
         }
       }
     },
@@ -13038,6 +14718,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Удалить аккаунт"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف الحساب"
           }
         }
       }
@@ -13085,6 +14771,12 @@
             "state": "translated",
             "value": "Вы уверены, что хотите удалить аккаунт?"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل أنت متأكد أنك تريد حذف الحساب؟"
+          }
         }
       }
     },
@@ -13130,6 +14822,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не удалось удалить аккаунт."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حذف الحساب."
           }
         }
       }
@@ -13177,6 +14875,12 @@
             "state": "translated",
             "value": "Полное имя"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم الكامل"
+          }
         }
       }
     },
@@ -13222,6 +14926,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Начальный"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مبتدئ"
           }
         }
       }
@@ -13269,6 +14979,12 @@
             "state": "translated",
             "value": "Разговорный"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محادثة"
+          }
         }
       }
     },
@@ -13314,6 +15030,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Свободный"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طليق"
           }
         }
       }
@@ -13361,6 +15083,12 @@
             "state": "translated",
             "value": "Добавить язык"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة لغة"
+          }
         }
       }
     },
@@ -13406,6 +15134,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Языки пока не добавлены"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تتم إضافة أي لغات بعد"
           }
         }
       }
@@ -13453,6 +15187,12 @@
             "state": "translated",
             "value": "Уровень владения"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستوى الإتقان"
+          }
         }
       }
     },
@@ -13498,6 +15238,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Select Language"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر اللغة"
           }
         }
       }
@@ -13545,6 +15291,12 @@
             "state": "needs_review",
             "value": "Languages spoken"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللغات التي تتحدثها"
+          }
         }
       }
     },
@@ -13590,6 +15342,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Loading profile..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تحميل الملف الشخصي..."
           }
         }
       }
@@ -13637,6 +15395,12 @@
             "state": "needs_review",
             "value": "Log Out"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الخروج"
+          }
         }
       }
     },
@@ -13682,6 +15446,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "None"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء"
           }
         }
       }
@@ -13729,6 +15499,12 @@
             "state": "needs_review",
             "value": "Not set"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غير محدد"
+          }
         }
       }
     },
@@ -13774,6 +15550,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Delete %@ passport"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف جواز %@"
           }
         }
       }
@@ -13821,6 +15603,12 @@
             "state": "needs_review",
             "value": "Delete passport"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف الجواز"
+          }
         }
       }
     },
@@ -13866,6 +15654,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "No passports added yet"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تتم إضافة أي جوازات بعد"
           }
         }
       }
@@ -13913,6 +15707,12 @@
             "state": "needs_review",
             "value": "Saved passports"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجوازات المحفوظة"
+          }
         }
       }
     },
@@ -13958,6 +15758,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Private to you. Used to personalize visa rules and passport recommendations with your strongest saved passport for each destination."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خاص بك فقط. يُستخدم لتخصيص قواعد التأشيرات وتوصيات الجوازات باستخدام أقوى جواز محفوظ لديك لكل وجهة."
           }
         }
       }
@@ -14005,6 +15811,12 @@
             "state": "needs_review",
             "value": "Passports"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جوازات السفر"
+          }
         }
       }
     },
@@ -14050,6 +15862,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Search"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بحث"
           }
         }
       }
@@ -14097,6 +15915,12 @@
             "state": "needs_review",
             "value": "Select your favorite destinations."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر وجهاتك المفضلة."
+          }
         }
       }
     },
@@ -14142,6 +15966,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Favorite Countries"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان المفضلة"
           }
         }
       }
@@ -14189,6 +16019,12 @@
             "state": "needs_review",
             "value": "Add any flag that represents you! (countries you've lived in, background, ethnicity, etc.)"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف أي علم يمثلك! (بلدان عشت فيها، خلفيتك، عِرقك، إلخ)"
+          }
         }
       }
     },
@@ -14234,6 +16070,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Home Countries"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بلدانك الأصلية"
           }
         }
       }
@@ -14281,6 +16123,12 @@
             "state": "needs_review",
             "value": "Private only. These are saved for visa matching and never shown on your public profile."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خاص فقط. يتم حفظ هذه البيانات لمطابقة التأشيرات ولا تُعرض أبدًا في ملفك العام."
+          }
         }
       }
     },
@@ -14326,6 +16174,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Nationalities"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجنسيات"
           }
         }
       }
@@ -14373,6 +16227,12 @@
             "state": "needs_review",
             "value": "Select current country"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر البلد الحالي"
+          }
         }
       }
     },
@@ -14418,6 +16278,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Select next destination"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر الوجهة التالية"
           }
         }
       }
@@ -14465,6 +16331,12 @@
             "state": "needs_review",
             "value": "Profile Settings"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعدادات الملف الشخصي"
+          }
         }
       }
     },
@@ -14510,6 +16382,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Solo + Group"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منفرد + جماعي"
           }
         }
       }
@@ -14557,6 +16435,12 @@
             "state": "needs_review",
             "value": "Group"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جماعي"
+          }
         }
       }
     },
@@ -14602,6 +16486,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Solo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منفرد"
           }
         }
       }
@@ -14649,6 +16539,12 @@
             "state": "needs_review",
             "value": "Budget or comfy, depending"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اقتصادي أو مريح، حسب الوضع"
+          }
         }
       }
     },
@@ -14694,6 +16590,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Budget"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اقتصادي"
           }
         }
       }
@@ -14741,6 +16643,12 @@
             "state": "needs_review",
             "value": "Comfortable"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مريح"
+          }
         }
       }
     },
@@ -14786,6 +16694,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Between Budget and Comfy"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بين الاقتصادي والمريح"
           }
         }
       }
@@ -14833,6 +16747,12 @@
             "state": "needs_review",
             "value": "Travel mode"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نمط السفر"
+          }
         }
       }
     },
@@ -14878,6 +16798,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Travel style"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسلوب السفر"
           }
         }
       }
@@ -14925,6 +16851,12 @@
             "state": "needs_review",
             "value": "Travel preferences"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفضيلات السفر"
+          }
         }
       }
     },
@@ -14970,6 +16902,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Profile updated"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تحديث الملف الشخصي"
           }
         }
       }
@@ -15017,6 +16955,12 @@
             "state": "needs_review",
             "value": "username"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم المستخدم"
+          }
         }
       }
     },
@@ -15062,6 +17006,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Username is already taken"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم المستخدم مستخدم بالفعل"
           }
         }
       }
@@ -15109,6 +17059,12 @@
             "state": "needs_review",
             "value": "Profile"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملف الشخصي"
+          }
         }
       }
     },
@@ -15154,6 +17110,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Enjoying Travel Adventure Finder?"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تستمتع باستخدام Travel Adventure Finder؟"
           }
         }
       }
@@ -15201,6 +17163,12 @@
             "state": "needs_review",
             "value": "Your feedback helps us make Travel Adventure Finder better."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملاحظاتك تساعدنا في جعل Travel Adventure Finder أفضل."
+          }
         }
       }
     },
@@ -15246,6 +17214,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Type feedback here..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتب ملاحظاتك هنا..."
           }
         }
       }
@@ -15293,6 +17267,12 @@
             "state": "needs_review",
             "value": "What could we improve?"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما الذي يمكننا تحسينه؟"
+          }
         }
       }
     },
@@ -15338,6 +17318,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Thanks for your feedback!"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شكرًا على ملاحظاتك!"
           }
         }
       }
@@ -15390,6 +17376,12 @@
             "state": "needs_review",
             "value": "Monthly travel conditions"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ظروف السفر الشهرية"
+          }
         }
       }
     },
@@ -15435,6 +17427,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Overall"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإجمالي"
           }
         }
       }
@@ -15482,6 +17480,12 @@
             "state": "needs_review",
             "value": "View Full Country Details"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض تفاصيل البلد كاملة"
+          }
         }
       }
     },
@@ -15527,6 +17531,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "No destinations in this category for the selected month."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد وجهات في هذه الفئة للشهر المحدد."
           }
         }
       }
@@ -15574,6 +17584,12 @@
             "state": "needs_review",
             "value": "Peak season"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موسم الذروة"
+          }
         }
       }
     },
@@ -15619,6 +17635,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Best weather and overall conditions — usually the busiest and priciest."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أفضل طقس وأفضل ظروف عامة، لكنه غالبًا الأكثر ازدحامًا والأعلى تكلفة."
           }
         }
       }
@@ -15666,6 +17688,12 @@
             "state": "needs_review",
             "value": "Shoulder season"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموسم الانتقالي"
+          }
         }
       }
     },
@@ -15711,6 +17739,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Still good conditions, often fewer crowds and better value."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ظروف لا تزال جيدة، وغالبًا مع زحام أقل وقيمة أفضل."
           }
         }
       }
@@ -15773,6 +17807,12 @@
             "state": "translated",
             "value": "Поиск"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاكتشاف"
+          }
         }
       }
     },
@@ -15818,6 +17858,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Друзья"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأصدقاء"
           }
         }
       }
@@ -15865,6 +17911,12 @@
             "state": "translated",
             "value": "Ещё"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المزيد"
+          }
         }
       }
     },
@@ -15911,6 +17963,12 @@
             "state": "translated",
             "value": "План"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التخطيط"
+          }
         }
       }
     },
@@ -15956,6 +18014,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Профиль"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملف الشخصي"
           }
         }
       }
@@ -16024,6 +18088,12 @@
             "state": "needs_review",
             "value": "Add To Apple Calendar"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة إلى Apple Calendar"
+          }
         }
       }
     },
@@ -16069,6 +18139,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Delete Trip"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف الرحلة"
           }
         }
       }
@@ -16116,6 +18192,12 @@
             "state": "needs_review",
             "value": "Update the plan, send it to Calendar, or remove it."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّث الخطة، أرسلها إلى التقويم، أو أزلها."
+          }
         }
       }
     },
@@ -16161,6 +18243,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Actions"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإجراءات"
           }
         }
       }
@@ -16208,6 +18296,12 @@
             "state": "needs_review",
             "value": "Add All"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة الكل"
+          }
         }
       }
     },
@@ -16253,6 +18347,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Add Countries"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة بلدان"
           }
         }
       }
@@ -16300,6 +18400,12 @@
             "state": "needs_review",
             "value": "Add more countries"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة المزيد من البلدان"
+          }
         }
       }
     },
@@ -16345,6 +18451,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Add tentative dates"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة تواريخ مبدئية"
           }
         }
       }
@@ -16392,6 +18504,12 @@
             "state": "needs_review",
             "value": "Best shared windows"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أفضل النوافذ المشتركة"
+          }
         }
       }
     },
@@ -16437,6 +18555,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Calendar view"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض التقويم"
           }
         }
       }
@@ -16484,6 +18608,12 @@
             "state": "needs_review",
             "value": "Cancel Editing"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء التعديل"
+          }
         }
       }
     },
@@ -16529,6 +18659,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Each traveler can have multiple windows."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكن أن يكون لكل مسافر عدة نوافذ."
           }
         }
       }
@@ -16576,6 +18712,12 @@
             "state": "needs_review",
             "value": "Current proposals"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المقترحات الحالية"
+          }
         }
       }
     },
@@ -16621,6 +18763,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%lld date ranges"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld نطاقات تاريخ"
           }
         }
       }
@@ -16668,6 +18816,12 @@
             "state": "needs_review",
             "value": "Edit your availability"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدّل توافرك"
+          }
         }
       }
     },
@@ -16713,6 +18867,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Update your submitted window without deleting it first."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّث النافذة التي أرسلتها من دون حذفها أولًا."
           }
         }
       }
@@ -16760,6 +18920,12 @@
             "state": "needs_review",
             "value": "%lld flexible months"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أشهر مرنة"
+          }
         }
       }
     },
@@ -16805,6 +18971,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Add either exact windows or flexible months for each traveler, then let the planner surface the strongest overlap."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف نوافذ دقيقة أو أشهرًا مرنة لكل مسافر، ثم دع المخطط يُظهر أقوى تداخل."
           }
         }
       }
@@ -16852,6 +19024,12 @@
             "state": "needs_review",
             "value": "How this works"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف يعمل هذا"
+          }
         }
       }
     },
@@ -16897,6 +19075,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Use exact dates when someone already knows the week they’re free. Use flexible months when they only know the general timing."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدم التواريخ الدقيقة عندما يعرف الشخص الأسبوع الذي يكون فيه متاحًا. واستخدم الأشهر المرنة عندما يعرف فقط التوقيت العام."
           }
         }
       }
@@ -16944,6 +19128,12 @@
             "state": "needs_review",
             "value": "Exact dates"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تواريخ دقيقة"
+          }
         }
       }
     },
@@ -16989,6 +19179,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "A specific range someone knows works."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نطاق محدد يعرف الشخص أنه مناسب."
           }
         }
       }
@@ -17036,6 +19232,12 @@
             "state": "needs_review",
             "value": "Flexible month"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شهر مرن"
+          }
         }
       }
     },
@@ -17081,6 +19283,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "A month someone could likely make work."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شهر يمكن أن يناسب الشخص على الأرجح."
           }
         }
       }
@@ -17128,6 +19336,12 @@
             "state": "needs_review",
             "value": "Dates"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التواريخ"
+          }
         }
       }
     },
@@ -17173,6 +19387,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Exact: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دقيق: %@"
           }
         }
       }
@@ -17220,6 +19440,12 @@
             "state": "needs_review",
             "value": "Flexible: %@"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرن: %@"
+          }
         }
       }
     },
@@ -17265,6 +19491,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Month"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشهر"
           }
         }
       }
@@ -17312,6 +19544,12 @@
             "state": "needs_review",
             "value": "No shared window yet. Add a few more ideas across the group and the planner will suggest stronger matches here."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد نافذة مشتركة بعد. أضفوا مزيدًا من الأفكار داخل المجموعة وسيقترح المخطط توافقات أقوى هنا."
+          }
         }
       }
     },
@@ -17357,6 +19595,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "No availability has been proposed yet."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم اقتراح أي توفر بعد."
           }
         }
       }
@@ -17404,6 +19648,12 @@
             "state": "needs_review",
             "value": "Only you can edit these submissions."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكنك أنت فقط تعديل هذه الإدخالات."
+          }
         }
       }
     },
@@ -17449,6 +19699,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Works across everyone’s current proposals."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا يناسب جميع المقترحات الحالية للجميع."
           }
         }
       }
@@ -17496,6 +19752,12 @@
             "state": "needs_review",
             "value": "This lines up for %lld of %lld people so far."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا يتوافق حتى الآن مع %lld من أصل %lld أشخاص."
+          }
         }
       }
     },
@@ -17541,6 +19803,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Save Availability"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ التوفر"
           }
         }
       }
@@ -17588,6 +19856,12 @@
             "state": "needs_review",
             "value": "Shared window"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نافذة مشتركة"
+          }
         }
       }
     },
@@ -17633,6 +19907,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Start collecting free months or exact date ranges so the planner can spotlight the best shared window."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابدأ بجمع الأشهر المتاحة أو نطاقات التواريخ الدقيقة حتى يتمكن المخطط من إبراز أفضل نافذة مشتركة."
           }
         }
       }
@@ -17680,6 +19960,12 @@
             "state": "needs_review",
             "value": "Add a couple of date ideas here to keep your planning options visible."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف بعض أفكار التواريخ هنا حتى تبقى خيارات التخطيط واضحة أمامك."
+          }
         }
       }
     },
@@ -17725,6 +20011,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "No shared window yet. Ask everyone to add a few more free months or date ranges so the planner can find a better match."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد نافذة مشتركة بعد. اطلب من الجميع إضافة مزيد من الأشهر المتاحة أو نطاقات التواريخ حتى يتمكن المخطط من إيجاد تطابق أفضل."
           }
         }
       }
@@ -17772,6 +20064,12 @@
             "state": "needs_review",
             "value": "Swipe sideways to move across months."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسحب أفقيًا للتنقل بين الأشهر."
+          }
         }
       }
     },
@@ -17817,6 +20115,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Availability"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التوفر"
           }
         }
       }
@@ -17864,6 +20168,12 @@
             "state": "needs_review",
             "value": "Trip dates"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تواريخ الرحلة"
+          }
         }
       }
     },
@@ -17909,6 +20219,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Add exact trip dates first, then assign each day to a country or mark it as travel."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف تواريخ الرحلة الدقيقة أولًا، ثم وزّع كل يوم على بلد أو حدده كيوم سفر."
           }
         }
       }
@@ -17956,6 +20272,12 @@
             "state": "needs_review",
             "value": "Add trip dates above before assigning days to countries."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف تواريخ الرحلة أعلاه قبل توزيع الأيام على البلدان."
+          }
         }
       }
     },
@@ -18001,6 +20323,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Choose which country each day belongs to, or mark the day as travel."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر البلد الذي ينتمي إليه كل يوم، أو حدّد اليوم كيوم سفر."
           }
         }
       }
@@ -18048,6 +20376,12 @@
             "state": "needs_review",
             "value": "Trip route"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسار الرحلة"
+          }
         }
       }
     },
@@ -18093,6 +20427,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Update Availability"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديث التوفر"
           }
         }
       }
@@ -18140,6 +20480,12 @@
             "state": "needs_review",
             "value": "Your availability"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توافرك"
+          }
         }
       }
     },
@@ -18185,6 +20531,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Share the months or exact dates that work for you. Everyone else’s availability stays read-only here."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شارك الأشهر أو التواريخ الدقيقة المناسبة لك. يظل توفر الآخرين للقراءة فقط هنا."
           }
         }
       }
@@ -18232,6 +20584,12 @@
             "state": "needs_review",
             "value": "Give it a name and rough timing so you can start shaping it."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أعطها اسمًا وتوقيتًا تقريبيًا حتى تبدأ في تشكيلها."
+          }
         }
       }
     },
@@ -18277,6 +20635,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Trip Basics"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أساسيات الرحلة"
           }
         }
       }
@@ -18324,6 +20688,12 @@
             "state": "needs_review",
             "value": "Calendar Access"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوصول إلى التقويم"
+          }
         }
       }
     },
@@ -18369,6 +20739,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Calendar access was denied. You can enable it later in Settings."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم رفض الوصول إلى التقويم. يمكنك تفعيله لاحقًا من الإعدادات."
           }
         }
       }
@@ -18416,6 +20792,12 @@
             "state": "needs_review",
             "value": "We could not access Apple Calendar right now. Please try again."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذر علينا الوصول إلى Apple Calendar الآن. يرجى المحاولة مرة أخرى."
+          }
         }
       }
     },
@@ -18461,6 +20843,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "This trip needs tentative dates before it can be added to Apple Calendar."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحتاج هذه الرحلة إلى تواريخ مبدئية قبل إضافتها إلى Apple Calendar."
           }
         }
       }
@@ -18508,6 +20896,12 @@
             "state": "needs_review",
             "value": "Countries: %@"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان: %@"
+          }
         }
       }
     },
@@ -18553,6 +20947,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Friends: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأصدقاء: %@"
           }
         }
       }
@@ -18600,6 +21000,12 @@
             "state": "needs_review",
             "value": "Comparing bucket lists..."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ مقارنة قوائم الأمنيات..."
+          }
         }
       }
     },
@@ -18645,6 +21051,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Update which countries belong in this plan."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّث البلدان التي تنتمي إلى هذه الخطة."
           }
         }
       }
@@ -18692,6 +21104,12 @@
             "state": "needs_review",
             "value": "Included Countries"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان المضمنة"
+          }
         }
       }
     },
@@ -18737,6 +21155,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Loading countries..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تحميل البلدان..."
           }
         }
       }
@@ -18784,6 +21208,12 @@
             "state": "needs_review",
             "value": "Mutual bucket list"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمة الأمنيات المشتركة"
+          }
         }
       }
     },
@@ -18829,6 +21259,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Japan, Brazil, Morocco..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اليابان، البرازيل، المغرب..."
           }
         }
       }
@@ -18876,6 +21312,12 @@
             "state": "needs_review",
             "value": "Search countries"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن بلدان"
+          }
         }
       }
     },
@@ -18921,6 +21363,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Keep the route here, then open the ranked country list when you want to add more."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احتفظ بالمسار هنا، ثم افتح قائمة البلدان المرتبة عندما تريد إضافة المزيد."
           }
         }
       }
@@ -18968,6 +21416,12 @@
             "state": "needs_review",
             "value": "Countries"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلدان"
+          }
         }
       }
     },
@@ -19013,6 +21467,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "All other countries"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جميع البلدان الأخرى"
           }
         }
       }
@@ -19060,6 +21520,12 @@
             "state": "needs_review",
             "value": "Already in this trip"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موجودة بالفعل في هذه الرحلة"
+          }
         }
       }
     },
@@ -19105,6 +21571,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Everyone's bucket list"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمة أمنيات الجميع"
           }
         }
       }
@@ -19152,6 +21624,12 @@
             "state": "needs_review",
             "value": "From your bucket list"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من قائمة أمنياتك"
+          }
         }
       }
     },
@@ -19197,6 +21675,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%lld of %lld bucket lists"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld من أصل %lld قوائم أمنيات"
           }
         }
       }
@@ -19244,6 +21728,12 @@
             "state": "needs_review",
             "value": "In one person's bucket list"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في قائمة أمنيات شخص واحد"
+          }
         }
       }
     },
@@ -19289,6 +21779,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Create Trip"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنشاء رحلة"
           }
         }
       }
@@ -19336,6 +21832,12 @@
             "state": "needs_review",
             "value": "Compare when everyone is free and lock in the best window."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قارن بين أوقات فراغ الجميع وثبّت أفضل نافذة."
+          }
         }
       }
     },
@@ -19381,6 +21883,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Keep rough options visible until your dates are finalized."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احتفظ بالخيارات التقريبية ظاهرة حتى يتم تثبيت تواريخك."
           }
         }
       }
@@ -19428,6 +21936,12 @@
             "state": "needs_review",
             "value": "Basics"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأساسيات"
+          }
         }
       }
     },
@@ -19473,6 +21987,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Update the trip name, notes, and dates."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّث اسم الرحلة والملاحظات والتواريخ."
           }
         }
       }
@@ -19520,6 +22040,12 @@
             "state": "needs_review",
             "value": "Everything currently included in this trip."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل ما هو مضمن حاليًا في هذه الرحلة."
+          }
         }
       }
     },
@@ -19565,6 +22091,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Everyone currently included in this trip."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل من هو مضمّن حاليًا في هذه الرحلة."
           }
         }
       }
@@ -19612,6 +22144,12 @@
             "state": "needs_review",
             "value": "Group trip"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رحلة جماعية"
+          }
         }
       }
     },
@@ -19657,6 +22195,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Just you for now."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت فقط في الوقت الحالي."
           }
         }
       }
@@ -19704,6 +22248,12 @@
             "state": "needs_review",
             "value": "Loading profiles..."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تحميل الملفات الشخصية..."
+          }
         }
       }
     },
@@ -19749,6 +22299,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "No friends have been added to this trip yet."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تتم إضافة أي أصدقاء إلى هذه الرحلة بعد."
           }
         }
       }
@@ -19796,6 +22352,12 @@
             "state": "needs_review",
             "value": "Solo trip"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رحلة فردية"
+          }
         }
       }
     },
@@ -19841,6 +22403,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Trip Details"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفاصيل الرحلة"
           }
         }
       }
@@ -19888,6 +22456,12 @@
             "state": "needs_review",
             "value": "Trip Stats"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إحصاءات الرحلة"
+          }
         }
       }
     },
@@ -19933,6 +22507,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Based on the countries currently in this plan."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بناءً على البلدان المضمنة حاليًا في هذه الخطة."
           }
         }
       }
@@ -19980,6 +22560,12 @@
             "state": "needs_review",
             "value": "Create New Trip"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنشاء رحلة جديدة"
+          }
         }
       }
     },
@@ -20025,6 +22611,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Start with one rough trip idea and refine it as dates, countries, and people come into focus."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابدأ بفكرة رحلة تقريبية واحدة ثم حسّنها مع اتضاح التواريخ والبلدان والأشخاص."
           }
         }
       }
@@ -20072,6 +22664,12 @@
             "state": "needs_review",
             "value": "No Trips Yet"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد رحلات بعد"
+          }
         }
       }
     },
@@ -20117,6 +22715,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "End"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النهاية"
           }
         }
       }
@@ -20164,6 +22768,12 @@
             "state": "needs_review",
             "value": "Add expense"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة مصروف"
+          }
         }
       }
     },
@@ -20209,6 +22819,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Add people to the trip to start tracking who owes what."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف أشخاصًا إلى الرحلة لبدء تتبّع من يدين بماذا."
           }
         }
       }
@@ -20256,6 +22872,12 @@
             "state": "needs_review",
             "value": "Amount (USD)"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المبلغ (USD)"
+          }
         }
       }
     },
@@ -20300,6 +22922,12 @@
         "ru": {
           "stringUnit": {
             "state": "needs_review",
+            "value": "Apple Pay"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Apple Pay"
           }
         }
@@ -20348,6 +22976,12 @@
             "state": "needs_review",
             "value": "Delete Expense"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف المصروف"
+          }
         }
       }
     },
@@ -20393,6 +23027,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Edit expense"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل المصروف"
           }
         }
       }
@@ -20440,6 +23080,12 @@
             "state": "needs_review",
             "value": "Expense title"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عنوان المصروف"
+          }
         }
       }
     },
@@ -20485,6 +23131,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Hotel, dinner, train tickets..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فندق، عشاء، تذاكر قطار..."
           }
         }
       }
@@ -20532,6 +23184,12 @@
             "state": "needs_review",
             "value": "Logged expenses"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المصروفات المسجلة"
+          }
         }
       }
     },
@@ -20577,6 +23235,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Manual"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يدوي"
           }
         }
       }
@@ -20624,6 +23288,12 @@
             "state": "needs_review",
             "value": "Mark Paid"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضع علامة مدفوع"
+          }
         }
       }
     },
@@ -20669,6 +23339,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Mark Unpaid"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضع علامة غير مدفوع"
           }
         }
       }
@@ -20716,6 +23392,12 @@
             "state": "needs_review",
             "value": "New"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جديد"
+          }
         }
       }
     },
@@ -20761,6 +23443,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "No one owes anything on this expense."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا أحد مدين بأي شيء في هذا المصروف."
           }
         }
       }
@@ -20808,6 +23496,12 @@
             "state": "needs_review",
             "value": "No expenses yet."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد مصروفات بعد."
+          }
         }
       }
     },
@@ -20853,6 +23547,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Not paid"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غير مدفوع"
           }
         }
       }
@@ -20900,6 +23600,12 @@
             "state": "needs_review",
             "value": "Outstanding balances"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأرصدة المستحقة"
+          }
         }
       }
     },
@@ -20945,6 +23651,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Track what was paid, who benefited, and who still owes."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تتبّع ما تم دفعه، ومن استفاد، ومن لا يزال مدينًا."
           }
         }
       }
@@ -20992,6 +23704,12 @@
             "state": "needs_review",
             "value": "%@ owes %@"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ مدين بـ %@"
+          }
         }
       }
     },
@@ -21037,6 +23755,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Paid"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مدفوع"
           }
         }
       }
@@ -21084,6 +23808,12 @@
             "state": "needs_review",
             "value": "Paid by"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مدفوع بواسطة"
+          }
         }
       }
     },
@@ -21129,6 +23859,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%@ paid by %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ تم دفعه بواسطة %@"
           }
         }
       }
@@ -21176,6 +23912,12 @@
             "state": "needs_review",
             "value": "Settled up"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت التسوية"
+          }
         }
       }
     },
@@ -21221,6 +23963,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Should receive"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يجب أن يستلم"
           }
         }
       }
@@ -21268,6 +24016,12 @@
             "state": "needs_review",
             "value": "Split"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقسيم"
+          }
         }
       }
     },
@@ -21313,6 +24067,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Split between"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقسيم بين"
           }
         }
       }
@@ -21360,6 +24120,12 @@
             "state": "needs_review",
             "value": "Everyone"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجميع"
+          }
         }
       }
     },
@@ -21405,6 +24171,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Selected"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المحددون"
           }
         }
       }
@@ -21452,6 +24224,12 @@
             "state": "needs_review",
             "value": "No expenses logged yet. Add hotels, meals, tickets, or shared costs here."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد مصروفات مسجلة بعد. أضف الفنادق أو الوجبات أو التذاكر أو التكاليف المشتركة هنا."
+          }
         }
       }
     },
@@ -21497,6 +24275,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Everyone is settled"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت تسوية الجميع"
           }
         }
       }
@@ -21544,6 +24328,12 @@
             "state": "needs_review",
             "value": "%lld expenses"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مصروفات"
+          }
         }
       }
     },
@@ -21589,6 +24379,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%lld more expenses in this trip."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مصروفات إضافية في هذه الرحلة."
           }
         }
       }
@@ -21636,6 +24432,12 @@
             "state": "needs_review",
             "value": "Still owed"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما زال مستحقًا"
+          }
         }
       }
     },
@@ -21681,6 +24483,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Total logged"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإجمالي المسجل"
           }
         }
       }
@@ -21728,6 +24536,12 @@
             "state": "needs_review",
             "value": "Unpaid balances remaining"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أرصدة غير مدفوعة متبقية"
+          }
         }
       }
     },
@@ -21773,6 +24587,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Still owes"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما زال مدينًا"
           }
         }
       }
@@ -21820,6 +24640,12 @@
             "state": "needs_review",
             "value": "Track who paid, who owes, and what’s still outstanding."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تتبّع من دفع، ومن يدين، وما لا يزال معلقًا."
+          }
         }
       }
     },
@@ -21865,6 +24691,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Expenses"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المصروفات"
           }
         }
       }
@@ -21912,6 +24744,12 @@
             "state": "needs_review",
             "value": "USD"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دولار أمريكي"
+          }
         }
       }
     },
@@ -21956,6 +24794,12 @@
         "ru": {
           "stringUnit": {
             "state": "needs_review",
+            "value": "Venmo"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
             "value": "Venmo"
           }
         }
@@ -22004,6 +24848,12 @@
             "state": "needs_review",
             "value": "Friend matching needs a signed-in account."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مطابقة الأصدقاء تحتاج إلى حساب مسجّل الدخول."
+          }
         }
       }
     },
@@ -22049,6 +24899,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "We couldn't load your friends right now."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم نتمكن من تحميل أصدقائك الآن."
           }
         }
       }
@@ -22096,6 +24952,12 @@
             "state": "needs_review",
             "value": "Loading friends..."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تحميل الأصدقاء..."
+          }
         }
       }
     },
@@ -22141,6 +25003,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%lld mutual"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مشترك"
           }
         }
       }
@@ -22188,6 +25056,12 @@
             "state": "needs_review",
             "value": "You don’t have any friends added yet."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تضف أي أصدقاء بعد."
+          }
         }
       }
     },
@@ -22233,6 +25107,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Hadi, Layal, @username..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هادي، ليال، @username..."
           }
         }
       }
@@ -22280,6 +25160,12 @@
             "state": "needs_review",
             "value": "Search friends"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن أصدقاء"
+          }
         }
       }
     },
@@ -22325,6 +25211,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Sign in to edit trip companions."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الدخول لتعديل رفقاء الرحلة."
           }
         }
       }
@@ -22372,6 +25264,12 @@
             "state": "needs_review",
             "value": "Choose who’s joining this trip."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر من سينضم إلى هذه الرحلة."
+          }
         }
       }
     },
@@ -22417,6 +25315,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%@ Trip"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رحلة %@"
           }
         }
       }
@@ -22464,6 +25368,12 @@
             "state": "needs_review",
             "value": "Included in this trip"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مضمن في هذه الرحلة"
+          }
         }
       }
     },
@@ -22509,6 +25419,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Country"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البلد"
           }
         }
       }
@@ -22556,6 +25472,12 @@
             "state": "needs_review",
             "value": "Country day"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم بلد"
+          }
         }
       }
     },
@@ -22601,6 +25523,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Choose the country for each day, or mark a day as travel so trip costs reflect your actual routing."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر البلد لكل يوم، أو حدّد اليوم كيوم سفر حتى تعكس تكاليف الرحلة مسارك الفعلي."
           }
         }
       }
@@ -22648,6 +25576,12 @@
             "state": "needs_review",
             "value": "Day-by-day route"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المسار يومًا بيوم"
+          }
         }
       }
     },
@@ -22693,6 +25627,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%lld more days in this itinerary."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أيام إضافية في هذا المسار."
           }
         }
       }
@@ -22740,6 +25680,12 @@
             "state": "needs_review",
             "value": "Add trip dates to map each day to a country or mark it as travel."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف تواريخ الرحلة لربط كل يوم ببلد أو تحديده كيوم سفر."
+          }
         }
       }
     },
@@ -22785,6 +25731,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Itinerary"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خط السير"
           }
         }
       }
@@ -22832,6 +25784,12 @@
             "state": "needs_review",
             "value": "Travel"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سفر"
+          }
         }
       }
     },
@@ -22877,6 +25835,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Travel day"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم سفر"
           }
         }
       }
@@ -22924,6 +25888,12 @@
             "state": "needs_review",
             "value": "Type"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النوع"
+          }
         }
       }
     },
@@ -22969,6 +25939,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Loading planner..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تحميل المخطط..."
           }
         }
       }
@@ -23016,6 +25992,12 @@
             "state": "needs_review",
             "value": "New Trip"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رحلة جديدة"
+          }
         }
       }
     },
@@ -23061,6 +26043,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "You do not have any friends added yet, so this trip will stay solo for now."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ليس لديك أي أصدقاء مضافين بعد، لذا ستبقى هذه الرحلة فردية في الوقت الحالي."
           }
         }
       }
@@ -23108,6 +26096,12 @@
             "state": "needs_review",
             "value": "Notes"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملاحظات"
+          }
         }
       }
     },
@@ -23153,6 +26147,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "What kind of trip are you imagining?"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما نوع الرحلة التي تتخيلها؟"
           }
         }
       }
@@ -23200,6 +26200,12 @@
             "state": "needs_review",
             "value": "Pick at least one country before saving the trip."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر بلدًا واحدًا على الأقل قبل حفظ الرحلة."
+          }
         }
       }
     },
@@ -23245,6 +26251,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Plan with friends"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطط مع الأصدقاء"
           }
         }
       }
@@ -23292,6 +26304,12 @@
             "state": "needs_review",
             "value": "Preview in Apple Calendar"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معاينة في Apple Calendar"
+          }
         }
       }
     },
@@ -23337,6 +26355,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "With %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مع %@"
           }
         }
       }
@@ -23384,6 +26408,12 @@
             "state": "needs_review",
             "value": "See more"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض المزيد"
+          }
         }
       }
     },
@@ -23429,6 +26459,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Shared"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مشترك"
           }
         }
       }
@@ -23476,6 +26512,12 @@
             "state": "needs_review",
             "value": "Shared bucket-list matches"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تطابقات قائمة الأمنيات المشتركة"
+          }
         }
       }
     },
@@ -23521,6 +26563,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Start"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البداية"
           }
         }
       }
@@ -23568,6 +26616,12 @@
             "state": "needs_review",
             "value": "Across selected countries"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عبر البلدان المحددة"
+          }
         }
       }
     },
@@ -23613,6 +26667,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Across %lld stop(s)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عبر %lld محطة"
           }
         }
       }
@@ -23660,6 +26720,12 @@
             "state": "needs_review",
             "value": "Add trip dates"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف تواريخ الرحلة"
+          }
         }
       }
     },
@@ -23705,6 +26771,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Average advisory"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوسط الإرشادات"
           }
         }
       }
@@ -23752,6 +26824,12 @@
             "state": "needs_review",
             "value": "Shared safety picture"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صورة السلامة المشتركة"
+          }
         }
       }
     },
@@ -23797,6 +26875,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Average overall"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتوسط الإجمالي"
           }
         }
       }
@@ -23844,6 +26928,12 @@
             "state": "needs_review",
             "value": "Average seasonality"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوسط الموسمية"
+          }
         }
       }
     },
@@ -23889,6 +26979,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Leans more budget-friendly"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يميل إلى كونه مناسبًا للميزانية"
           }
         }
       }
@@ -23936,6 +27032,12 @@
             "state": "needs_review",
             "value": "Advisory"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإرشادات"
+          }
         }
       }
     },
@@ -23981,6 +27083,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Safety and travel guidance"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السلامة وإرشادات السفر"
           }
         }
       }
@@ -24028,6 +27136,12 @@
             "state": "needs_review",
             "value": "Budget"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الميزانية"
+          }
         }
       }
     },
@@ -24073,6 +27187,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Affordability across stops"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القدرة على التحمّل عبر المحطات"
           }
         }
       }
@@ -24120,6 +27240,12 @@
             "state": "needs_review",
             "value": "Language"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللغة"
+          }
         }
       }
     },
@@ -24165,6 +27291,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Group language coverage"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغطية لغات المجموعة"
           }
         }
       }
@@ -24212,6 +27344,12 @@
             "state": "needs_review",
             "value": "Your language coverage"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغطية لغاتك"
+          }
         }
       }
     },
@@ -24257,6 +27395,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Overall"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإجمالي"
           }
         }
       }
@@ -24304,6 +27448,12 @@
             "state": "needs_review",
             "value": "Weighted trip score"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نتيجة الرحلة الموزونة"
+          }
         }
       }
     },
@@ -24349,6 +27499,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Seasonality"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموسمية"
           }
         }
       }
@@ -24396,6 +27552,12 @@
             "state": "needs_review",
             "value": "Visa"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التأشيرة"
+          }
         }
       }
     },
@@ -24441,6 +27603,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Entry ease across stops"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سهولة الدخول عبر المحطات"
           }
         }
       }
@@ -24488,6 +27656,12 @@
             "state": "needs_review",
             "value": "We’ll estimate this once trip dates are set"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سنقدّر ذلك بمجرد تحديد تواريخ الرحلة"
+          }
         }
       }
     },
@@ -24533,6 +27707,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Estimated total per person"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإجمالي التقديري لكل شخص"
           }
         }
       }
@@ -24580,6 +27760,12 @@
             "state": "needs_review",
             "value": "Leans expensive overall"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يميل إلى أن يكون مرتفع التكلفة إجمالًا"
+          }
         }
       }
     },
@@ -24625,6 +27811,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Group snapshot"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لمحة عن المجموعة"
           }
         }
       }
@@ -24672,6 +27864,12 @@
             "state": "needs_review",
             "value": "%lld travelers, %lld countries, one cleaner view of how the trip balances overall score, safety, seasonality, and logistics."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مسافرين، و%lld بلدان، ورؤية أوضح لكيفية توازن الرحلة بين النتيجة العامة والسلامة والموسمية واللوجستيات."
+          }
         }
       }
     },
@@ -24717,6 +27915,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "More mid-range to pricey"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من متوسط التكلفة إلى مرتفع"
           }
         }
       }
@@ -24764,6 +27968,12 @@
             "state": "needs_review",
             "value": "%@ timing"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توقيت %@"
+          }
         }
       }
     },
@@ -24809,6 +28019,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "N/A"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غير متاح"
           }
         }
       }
@@ -24856,6 +28072,12 @@
             "state": "needs_review",
             "value": "Pretty balanced overall"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوازنة بشكل جيد إجمالًا"
+          }
         }
       }
     },
@@ -24901,6 +28123,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Score breakdown"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفصيل النتائج"
           }
         }
       }
@@ -24948,6 +28176,12 @@
             "state": "needs_review",
             "value": "%lld selected countr(y/ies) with a combined scoring view for the trip."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld بلدان محددة مع عرض تقييم مجمع للرحلة."
+          }
         }
       }
     },
@@ -24993,6 +28227,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%lld-day estimate across selected countries"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقدير %lld يومًا عبر البلدان المحددة"
           }
         }
       }
@@ -25040,6 +28280,12 @@
             "state": "needs_review",
             "value": "Trip snapshot"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لمحة عن الرحلة"
+          }
         }
       }
     },
@@ -25085,6 +28331,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Typical daily spend"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإنفاق اليومي المعتاد"
           }
         }
       }
@@ -25132,6 +28384,12 @@
             "state": "needs_review",
             "value": "Weighted by your day-by-day itinerary"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موزون بحسب خط سيرك اليومي"
+          }
         }
       }
     },
@@ -25177,6 +28435,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Weighted by assigned days, excluding %lld travel day(s)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موزون بحسب الأيام المخصصة، مع استبعاد %lld أيام السفر"
           }
         }
       }
@@ -25224,6 +28488,12 @@
             "state": "needs_review",
             "value": "Trip Planner"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مخطط الرحلات"
+          }
         }
       }
     },
@@ -25269,6 +28539,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Travel friends"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أصدقاء السفر"
           }
         }
       }
@@ -25316,6 +28592,12 @@
             "state": "needs_review",
             "value": "Trip name"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم الرحلة"
+          }
         }
       }
     },
@@ -25361,6 +28643,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Summer city escape"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هروب صيفي إلى المدن"
           }
         }
       }
@@ -25408,6 +28696,12 @@
             "state": "needs_review",
             "value": "best saved passport"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أفضل جواز محفوظ"
+          }
         }
       }
     },
@@ -25453,6 +28747,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%lld day(s)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld يومًا"
           }
         }
       }
@@ -25500,6 +28800,12 @@
             "state": "needs_review",
             "value": "United States"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الولايات المتحدة"
+          }
         }
       }
     },
@@ -25545,6 +28851,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Every stop can be handled without advance visa prep."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكن التعامل مع كل محطة دون أي استعداد مسبق للتأشيرة."
           }
         }
       }
@@ -25592,6 +28904,12 @@
             "state": "needs_review",
             "value": "Every stop is currently visa-free for this trip."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل محطة في هذه الرحلة بدون تأشيرة حاليًا."
+          }
         }
       }
     },
@@ -25637,6 +28955,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%lld visa flag(s)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld إشارات تأشيرة"
           }
         }
       }
@@ -25684,6 +29008,12 @@
             "state": "needs_review",
             "value": "No one in the group currently needs advance visa prep for these stops."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا أحد في المجموعة يحتاج حاليًا إلى استعداد مسبق للتأشيرة لهذه المحطات."
+          }
         }
       }
     },
@@ -25729,6 +29059,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%@ may exceed the %lld-day stay on this %lld-day trip."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ قد يتجاوز مدة الإقامة البالغة %lld يومًا في هذه الرحلة التي مدتها %lld يومًا."
           }
         }
       }
@@ -25776,6 +29112,12 @@
             "state": "needs_review",
             "value": "%lld more stop(s) still need attention in this itinerary."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld محطات إضافية ما زالت تحتاج إلى انتباه في هذا المسار."
+          }
         }
       }
     },
@@ -25821,6 +29163,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%@ need visas here."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ يحتاجون إلى تأشيرات هنا."
           }
         }
       }
@@ -25868,6 +29216,12 @@
             "state": "needs_review",
             "value": "No advance visa needed"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا حاجة إلى تأشيرة مسبقة"
+          }
         }
       }
     },
@@ -25913,6 +29267,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "No visa required"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد تأشيرة مطلوبة"
           }
         }
       }
@@ -25960,6 +29320,12 @@
             "state": "needs_review",
             "value": "%@ needs a visa here."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ يحتاج إلى تأشيرة هنا."
+          }
         }
       }
     },
@@ -26005,6 +29371,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%@ may exceed the allowed visa-free stay for a %lld-day trip."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ قد يتجاوز مدة الإقامة المسموح بها بدون تأشيرة لرحلة مدتها %lld يومًا."
           }
         }
       }
@@ -26052,6 +29424,12 @@
             "state": "needs_review",
             "value": "One or more stops may exceed the allowed stay for this trip."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قد تتجاوز محطة أو أكثر مدة الإقامة المسموح بها لهذه الرحلة."
+          }
         }
       }
     },
@@ -26097,6 +29475,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Visa plan needed"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطة تأشيرة مطلوبة"
           }
         }
       }
@@ -26144,6 +29528,12 @@
             "state": "needs_review",
             "value": "saved passport"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جواز محفوظ"
+          }
         }
       }
     },
@@ -26189,6 +29579,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "This stop may exceed the %lld-day stay on your %lld-day trip."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قد تتجاوز هذه المحطة مدة الإقامة البالغة %lld يومًا في رحلتك التي مدتها %lld يومًا."
           }
         }
       }
@@ -26236,6 +29632,12 @@
             "state": "needs_review",
             "value": "%lld stop(s)"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld محطات"
+          }
         }
       }
     },
@@ -26281,6 +29683,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%lld stop(s) to prep"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld محطات تحتاج إلى استعداد"
           }
         }
       }
@@ -26328,6 +29736,12 @@
             "state": "needs_review",
             "value": "%lld stop(s) to prep for"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld محطات للاستعداد لها"
+          }
         }
       }
     },
@@ -26373,6 +29787,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Visa plan"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطة التأشيرة"
           }
         }
       }
@@ -26420,6 +29840,12 @@
             "state": "needs_review",
             "value": "%lld traveler(s)"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مسافرين"
+          }
         }
       }
     },
@@ -26465,6 +29891,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%@ may exceed the allowed stay in %@ %@ on their best saved passport (%@): about %lld day(s) allowed for a %lld-day trip."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ قد يتجاوز مدة الإقامة المسموح بها في %@ %@ على أفضل جواز محفوظ لديه (%@): يُسمح بحوالي %lld يومًا لرحلة مدتها %lld يومًا."
           }
         }
       }
@@ -26512,6 +29944,12 @@
             "state": "needs_review",
             "value": "%lld traveler(s) need prep"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مسافرين يحتاجون إلى استعداد"
+          }
         }
       }
     },
@@ -26557,6 +29995,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%@ may need visa prep for %@ %@. Best saved passport for that stop: %@."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ قد يحتاج إلى استعداد للتأشيرة من أجل %@ %@. أفضل جواز محفوظ لتلك المحطة: %@."
           }
         }
       }
@@ -26604,6 +30048,12 @@
             "state": "needs_review",
             "value": "Keep it solo or add friends to compare shared bucket-list countries."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اجعلها رحلة فردية أو أضف أصدقاء لمقارنة بلدان قائمة الأمنيات المشتركة."
+          }
         }
       }
     },
@@ -26650,6 +30100,12 @@
             "state": "needs_review",
             "value": "Who is Going"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من سيذهب"
+          }
         }
       }
     },
@@ -26695,6 +30151,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "You"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت"
           }
         }
       }
@@ -26745,6 +30207,12 @@
             "state": "translated",
             "value": "По названию"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حسب الاسم"
+          }
         }
       }
     },
@@ -26790,6 +30258,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "По оценке"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حسب النتيجة"
           }
         }
       }

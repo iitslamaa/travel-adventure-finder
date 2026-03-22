@@ -11,7 +11,7 @@ const sourceRoots = [
 ];
 const localizablePath = path.join(iosRoot, "App/Resources/Localizable.xcstrings");
 const infoPlistPath = path.join(iosRoot, "App/Resources/InfoPlist.xcstrings");
-const requiredLocales = ["en", "es", "fr", "de", "it", "pt-BR", "ru"];
+const requiredLocales = ["en", "es", "fr", "de", "it", "pt-BR", "ru", "ar"];
 
 const keyPatterns = [
   /String\(localized:\s*"([^"]+)"/g,
