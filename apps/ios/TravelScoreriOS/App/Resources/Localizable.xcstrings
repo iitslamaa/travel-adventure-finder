@@ -51,6 +51,12 @@
             "state": "translated",
             "value": "%1$@ %2$@"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
         }
       }
     },
@@ -148,6 +154,12 @@
             "state": "translated",
             "value": "Codigo de 6 digitos ou senha"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6-значный код или пароль"
+          }
         }
       }
     },
@@ -187,6 +199,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Continuar como convidado"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить как гость"
           }
         }
       }
@@ -228,6 +246,12 @@
             "state": "translated",
             "value": "Continuar com e-mail"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить с email"
+          }
         }
       }
     },
@@ -267,6 +291,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Continuar com Google"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить с Google"
           }
         }
       }
@@ -308,6 +338,12 @@
             "state": "translated",
             "value": "Criar conta / Entrar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создать аккаунт / Войти"
+          }
         }
       }
     },
@@ -347,6 +383,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Endereco de e-mail"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Адрес электронной почты"
           }
         }
       }
@@ -388,6 +430,12 @@
             "state": "translated",
             "value": "Digite o codigo de 6 digitos enviado para seu e-mail ou digite sua senha"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите 6-значный код из письма или свой пароль"
+          }
         }
       }
     },
@@ -427,6 +475,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Digite seu endereco de e-mail"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите свой адрес электронной почты"
           }
         }
       }
@@ -468,6 +522,12 @@
             "state": "translated",
             "value": "Reenviar em %llds"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить повторно через %lld сек."
+          }
         }
       }
     },
@@ -507,6 +567,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enviar codigo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить код"
           }
         }
       }
@@ -548,6 +614,12 @@
             "state": "translated",
             "value": "Entre para salvar sua lista de desejos e sincronizar entre dispositivos."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войдите, чтобы сохранить bucket list и синхронизировать данные между устройствами."
+          }
         }
       }
     },
@@ -587,6 +659,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entrar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход"
           }
         }
       }
@@ -628,6 +706,12 @@
             "state": "translated",
             "value": "Usar codigo de acesso"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Использовать обходной код"
+          }
         }
       }
     },
@@ -667,6 +751,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verificar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подтвердить"
           }
         }
       }
@@ -717,6 +807,12 @@
             "state": "translated",
             "value": "Adicionar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить"
+          }
         }
       }
     },
@@ -756,6 +852,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voltar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Назад"
           }
         }
       }
@@ -797,6 +899,12 @@
             "state": "translated",
             "value": "Cancelar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмена"
+          }
         }
       }
     },
@@ -836,6 +944,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fechar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыть"
           }
         }
       }
@@ -877,6 +991,12 @@
             "state": "translated",
             "value": "Confirmar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подтвердить"
+          }
         }
       }
     },
@@ -916,6 +1036,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Concluir"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готово"
           }
         }
       }
@@ -957,6 +1083,12 @@
             "state": "translated",
             "value": "Editar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменить"
+          }
         }
       }
     },
@@ -993,6 +1125,12 @@
           }
         },
         "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "—"
+          }
+        },
+        "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "—"
@@ -1037,6 +1175,12 @@
             "state": "translated",
             "value": "Erro"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка"
+          }
         }
       }
     },
@@ -1076,6 +1220,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carregando..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузка..."
           }
         }
       }
@@ -1117,6 +1267,12 @@
             "state": "translated",
             "value": "Mes"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Месяц"
+          }
         }
       }
     },
@@ -1156,6 +1312,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agora nao"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не сейчас"
           }
         }
       }
@@ -1197,6 +1359,12 @@
             "state": "translated",
             "value": "OK"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ОК"
+          }
         }
       }
     },
@@ -1236,6 +1404,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salvar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить"
           }
         }
       }
@@ -1277,6 +1451,12 @@
             "state": "translated",
             "value": "Salvando..."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранение..."
+          }
         }
       }
     },
@@ -1316,6 +1496,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pontuacao %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оценка %lld"
           }
         }
       }
@@ -1357,6 +1543,12 @@
             "state": "translated",
             "value": "Enviar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить"
+          }
         }
       }
     },
@@ -1396,6 +1588,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostrar menos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать меньше"
           }
         }
       }
@@ -1437,6 +1635,12 @@
             "state": "translated",
             "value": "Mostrar mais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать больше"
+          }
         }
       }
     },
@@ -1476,6 +1680,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enviar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить"
           }
         }
       }
@@ -1517,6 +1727,12 @@
             "state": "translated",
             "value": "este mes"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "в этом месяце"
+          }
         }
       }
     },
@@ -1556,6 +1772,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ultima atualizacao: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновлено: %@"
           }
         }
       }
@@ -1597,6 +1819,12 @@
             "state": "translated",
             "value": "Normalizado: %d"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нормализовано: %d"
+          }
         }
       }
     },
@@ -1636,6 +1864,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Depto. de Estado dos EUA · %d%%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Госдеп США · %d%%"
           }
         }
       }
@@ -1677,6 +1911,12 @@
             "state": "translated",
             "value": "Aviso de viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Туристические рекомендации"
+          }
         }
       }
     },
@@ -1716,6 +1956,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ver aviso oficial"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть официальный источник"
           }
         }
       }
@@ -1757,6 +2003,12 @@
             "state": "translated",
             "value": "Peso: %d%%"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вес: %d%%"
+          }
         }
       }
     },
@@ -1796,6 +2048,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atividades (por dia): $%.0f USD"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активности (в день): $%.0f USD"
           }
         }
       }
@@ -1837,6 +2095,12 @@
             "state": "translated",
             "value": "Total diario tipico: $%.0f USD"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Типичные расходы в день: $%.0f USD"
+          }
         }
       }
     },
@@ -1876,6 +2140,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Custo diario estimado · %d%%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оценка дневных расходов · %d%%"
           }
         }
       }
@@ -1917,6 +2187,12 @@
             "state": "translated",
             "value": "Comida (por dia): $%.0f USD"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Еда (в день): $%.0f USD"
+          }
         }
       }
     },
@@ -1956,6 +2232,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Custos diarios estimados de viagem com base em indices de custo de vida e modelos de precos de hotel."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оценка ежедневных расходов на поездку основана на индексах стоимости жизни и модели цен на отели."
           }
         }
       }
@@ -1997,6 +2279,12 @@
             "state": "translated",
             "value": "Hotel (por noite): $%.0f USD"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отель (за ночь): $%.0f USD"
+          }
         }
       }
     },
@@ -2036,6 +2324,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Normalizado: %d"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нормализовано: %d"
           }
         }
       }
@@ -2077,6 +2371,12 @@
             "state": "translated",
             "value": "Custo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступность"
+          }
         }
       }
     },
@@ -2116,6 +2416,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Peso: %d%%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вес: %d%%"
           }
         }
       }
@@ -2157,6 +2463,12 @@
             "state": "translated",
             "value": "Lista de desejos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bucket list"
+          }
         }
       }
     },
@@ -2196,6 +2508,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld amigos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld друзей"
           }
         }
       }
@@ -2237,6 +2555,12 @@
             "state": "translated",
             "value": "Daqui"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отсюда"
+          }
         }
       }
     },
@@ -2276,6 +2600,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carregando sinais de viagem do seu circulo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загружаем сигналы о путешествиях из вашего круга"
           }
         }
       }
@@ -2317,6 +2647,12 @@
             "state": "translated",
             "value": "%lld amigos, ainda sem sinais de viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld друзей, но пока без сигналов о поездках"
+          }
         }
       }
     },
@@ -2356,6 +2692,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ninguem ainda"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пока никого"
           }
         }
       }
@@ -2397,6 +2739,12 @@
             "state": "translated",
             "value": "Seus amigos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваши друзья"
+          }
         }
       }
     },
@@ -2436,6 +2784,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Veja quem ja esteve aqui, quer ir ou e daqui."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Посмотрите, кто уже был здесь, хочет поехать или родом отсюда."
           }
         }
       }
@@ -2477,6 +2831,12 @@
             "state": "translated",
             "value": "Adicione amigos para desbloquear sinais de viagem aqui."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавьте друзей, чтобы открыть сигналы о путешествиях здесь."
+          }
         }
       }
     },
@@ -2516,6 +2876,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visitou"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Были здесь"
           }
         }
       }
@@ -2557,6 +2923,12 @@
             "state": "translated",
             "value": "quer ir"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "хотят поехать"
+          }
         }
       }
     },
@@ -2596,6 +2968,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O idioma pode ser uma barreira aqui."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Язык может быть здесь барьером."
           }
         }
       }
@@ -2637,6 +3015,12 @@
             "state": "translated",
             "value": "Voce tambem pode praticar seu %@ aqui."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Здесь вы также можете практиковать %@."
+          }
         }
       }
     },
@@ -2676,6 +3060,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Provavelmente sera mais util em areas fortemente turisticas do que em todo lugar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорее всего, язык будет особенно полезен в туристических зонах, а не повсюду."
           }
         }
       }
@@ -2717,6 +3107,12 @@
             "state": "translated",
             "value": "A experiencia deve ser mais facil nas principais areas turisticas."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проще всего будет в основных туристических районах."
+          }
         }
       }
     },
@@ -2756,6 +3152,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este territorio nao tem populacao residente permanente, entao nao existe um ambiente linguistico tipico para avaliar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На этой территории нет постоянного населения, поэтому обычную языковую среду здесь оценить нельзя."
           }
         }
       }
@@ -2797,6 +3199,12 @@
             "state": "translated",
             "value": "Uma pontuacao normal de idioma realmente nao se aplica aqui."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычная языковая оценка здесь не совсем применима."
+          }
         }
       }
     },
@@ -2836,6 +3244,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Com base na cobertura linguistica do pais e nos seus codigos de idioma salvos. A experiencia real pode variar por cidade e regiao."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Основано на языковом покрытии страны и сохранённых вами языках. Реальный опыт может отличаться по городам и регионам."
           }
         }
       }
@@ -2877,6 +3291,12 @@
             "state": "translated",
             "value": "O idioma ainda pode ser uma barreira em partes do pais."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Язык всё ещё может быть барьером в некоторых частях страны."
+          }
         }
       }
     },
@@ -2916,6 +3336,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voce vai se sentir confortavel viajando aqui com %@."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вам будет комфортно путешествовать здесь на %@."
           }
         }
       }
@@ -2957,6 +3383,12 @@
             "state": "translated",
             "value": "Voce provavelmente vai conseguir se virar aqui com %@."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорее всего, здесь можно обойтись с %@."
+          }
         }
       }
     },
@@ -2996,6 +3428,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ deve ajudar em muitas situacoes de viagem aqui."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ поможет вам во многих ситуациях во время поездки."
           }
         }
       }
@@ -3037,6 +3475,12 @@
             "state": "translated",
             "value": "Voce pode praticar seu %@ aqui, mas talvez nao queira depender totalmente dele."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Здесь можно практиковать %@, но полагаться только на него может быть не стоит."
+          }
         }
       }
     },
@@ -3076,6 +3520,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fonte: Britannica"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Источник: Britannica"
           }
         }
       }
@@ -3117,6 +3567,12 @@
             "state": "translated",
             "value": "Fonte: Glottolog"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Источник: Glottolog"
+          }
         }
       }
     },
@@ -3156,6 +3612,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compatibilidade linguistica"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Языковая совместимость"
           }
         }
       }
@@ -3197,6 +3659,12 @@
             "state": "translated",
             "value": "Por que essa pontuacao?"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Почему такой балл?"
+          }
         }
       }
     },
@@ -3236,6 +3704,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seus idiomas · %d%%"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваши языки · %d%%"
           }
         }
       }
@@ -3277,6 +3751,12 @@
             "state": "translated",
             "value": "Melhores meses:"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лучшие месяцы:"
+          }
         }
       }
     },
@@ -3316,6 +3796,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Clima e padroes de movimento sao ideais para este mes."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Погодные условия и уровень загруженности идеальны для этого месяца."
           }
         }
       }
@@ -3357,6 +3843,12 @@
             "state": "translated",
             "value": "Os dados de sazonalidade sao limitados; o momento ainda pode ser bom, mas confira as condicoes locais."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Данные по сезонности ограничены; время всё ещё может быть удачным, но проверьте местные условия."
+          }
         }
       }
     },
@@ -3396,6 +3888,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "As condicoes geralmente sao favoraveis neste mes, com clima e movimento razoaveis."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Условия в целом благоприятны для этого месяца: хорошая погода и приемлемая загруженность."
           }
         }
       }
@@ -3437,6 +3935,12 @@
             "state": "translated",
             "value": "Este mes nao e o ideal para clima ou movimento; se possivel, considere outros meses."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот месяц не лучший по погоде и загруженности; если возможно, рассмотрите другие месяцы."
+          }
         }
       }
     },
@@ -3476,6 +3980,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este mes oferece um bom equilibrio entre clima, movimento e precos, com alguns compromissos."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот месяц даёт неплохой баланс погоды, цен и количества людей, хотя и с компромиссами."
           }
         }
       }
@@ -3517,6 +4027,12 @@
             "state": "translated",
             "value": "Os insights de sazonalidade se baseiam em medias climaticas historicas e padroes tipicos de viagem. O momento pode variar de ano para ano."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сведения о сезонности основаны на исторических климатических средних и типичных туристических паттернах. Из года в год время может немного отличаться."
+          }
         }
       }
     },
@@ -3556,6 +4072,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Melhor epoca para ir ✅"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лучшее время для поездки ✅"
           }
         }
       }
@@ -3597,6 +4119,12 @@
             "state": "translated",
             "value": "Momento atual"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текущее окно"
+          }
         }
       }
     },
@@ -3636,6 +4164,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Boa epoca para ir ✅"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хорошее время для поездки ✅"
           }
         }
       }
@@ -3677,6 +4211,12 @@
             "state": "translated",
             "value": "Momento menos ideal"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Менее удачное время"
+          }
         }
       }
     },
@@ -3717,6 +4257,12 @@
             "state": "translated",
             "value": "Meia-estacao"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переходный сезон"
+          }
         }
       }
     },
@@ -3753,6 +4299,12 @@
           }
         },
         "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %d%%"
+          }
+        },
+        "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ · %d%%"
@@ -3797,6 +4349,12 @@
             "state": "translated",
             "value": "Normalizado: %d"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нормализовано: %d"
+          }
         }
       }
     },
@@ -3836,6 +4394,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sazonalidade em %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сезонность в %@"
           }
         }
       }
@@ -3877,6 +4441,12 @@
             "state": "translated",
             "value": "Peso: %d%%"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вес: %d%%"
+          }
         }
       }
     },
@@ -3916,6 +4486,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Permanencia permitida: ate %lld dias"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрешённый срок пребывания: до %lld дней"
           }
         }
       }
@@ -3957,6 +4533,12 @@
             "state": "translated",
             "value": "Qualquer um entre %@ ou %@ funciona aqui."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подойдёт любой из %@ или %@."
+          }
         }
       }
     },
@@ -3996,6 +4578,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Taxa aproximada: $%.0f USD"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Примерный сбор: $%.0f USD"
           }
         }
       }
@@ -4037,6 +4625,12 @@
             "state": "translated",
             "value": "As regras atuais podem limitar severamente ou proibir a entrada; confira orientacoes oficiais antes de planejar."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текущие правила могут серьёзно ограничивать или запрещать въезд; проверьте официальные рекомендации перед планированием."
+          }
         }
       }
     },
@@ -4076,6 +4670,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Talvez voce precise de autorizacao previa ou de uma permissao antes da entrada ser aprovada."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "До въезда может потребоваться предварительное разрешение или допуск."
           }
         }
       }
@@ -4117,6 +4717,12 @@
             "state": "translated",
             "value": "Normalmente voce precisa solicitar e pagar online antes da viagem."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычно нужно подать заявку и оплатить всё онлайн до поездки."
+          }
         }
       }
     },
@@ -4156,6 +4762,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este destino faz parte de um arranjo territorial em que titulares de passaporte %@ podem circular livremente sem limites de visto."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это направление входит в территориальное соглашение, по которому владельцы паспорта %@ могут свободно перемещаться без визовых ограничений."
           }
         }
       }
@@ -4197,6 +4809,12 @@
             "state": "translated",
             "value": "Consulte fontes oficiais para os requisitos de entrada mais recentes."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверьте официальные источники, чтобы узнать актуальные требования для въезда."
+          }
         }
       }
     },
@@ -4236,6 +4854,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voce esta entrando no seu proprio pais com o seu proprio passaporte."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вы въезжаете по собственному паспорту в свою страну."
           }
         }
       }
@@ -4277,6 +4901,12 @@
             "state": "translated",
             "value": "As regras de entrada podem depender dos detalhes da viagem; confirme com fontes oficiais do governo."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Правила въезда могут зависеть от деталей поездки; уточните информацию у официальных государственных источников."
+          }
         }
       }
     },
@@ -4316,6 +4946,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Normalmente voce pode entrar sem organizar um visto antecipadamente, sujeito aos limites de permanencia."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычно можно въехать без визы заранее, с учётом ограничений по сроку пребывания."
           }
         }
       }
@@ -4357,6 +4993,12 @@
             "state": "translated",
             "value": "Voce precisa garantir um visto antes da viagem por meio de um consulado ou canal oficial."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нужно заранее оформить визу через консульство или официальный канал."
+          }
         }
       }
     },
@@ -4396,6 +5038,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O visto e emitido na chegada; espere lidar com burocracia e possiveis taxas na fronteira."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виза оформляется по прибытии; будьте готовы к документам и возможным сборам на границе."
           }
         }
       }
@@ -4437,6 +5085,12 @@
             "state": "translated",
             "value": "Tanto %@ quanto %@ funcionam aqui."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подойдёт либо %@, либо %@."
+          }
         }
       }
     },
@@ -4476,6 +5130,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entrada fortemente restrita"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Въезд сильно ограничен"
           }
         }
       }
@@ -4517,6 +5177,12 @@
             "state": "translated",
             "value": "Permissao de entrada exigida"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Требуется разрешение на въезд"
+          }
         }
       }
     },
@@ -4556,6 +5222,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "eVisa disponivel online"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступна eVisa онлайн"
           }
         }
       }
@@ -4597,6 +5269,12 @@
             "state": "translated",
             "value": "Livre circulacao com passaporte %@"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свободное перемещение с паспортом %@"
+          }
         }
       }
     },
@@ -4636,6 +5314,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "As informacoes sobre visto sao limitadas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Информация по визам ограничена"
           }
         }
       }
@@ -4677,6 +5361,12 @@
             "state": "translated",
             "value": "Seu proprio passaporte para o seu pais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Собственный паспорт для своей страны"
+          }
         }
       }
     },
@@ -4716,6 +5406,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "As regras de visto variam"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Визовые правила различаются"
           }
         }
       }
@@ -4757,6 +5453,12 @@
             "state": "translated",
             "value": "Sem visto com passaporte %@"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без визы для паспорта %@"
+          }
         }
       }
     },
@@ -4796,6 +5498,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visto exigido antes da viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виза нужна до поездки"
           }
         }
       }
@@ -4837,6 +5545,12 @@
             "state": "translated",
             "value": "Visto na chegada disponivel"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступна виза по прибытии"
+          }
         }
       }
     },
@@ -4876,6 +5590,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Normalizado: %d"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нормализовано: %d"
           }
         }
       }
@@ -4917,6 +5637,12 @@
             "state": "translated",
             "value": "Passaporte %@ · %d%%"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Паспорт %@ · %d%%"
+          }
         }
       }
     },
@@ -4956,6 +5682,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Passaporte recomendado: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рекомендуемый паспорт: %@"
           }
         }
       }
@@ -4997,6 +5729,12 @@
             "state": "translated",
             "value": "Visto"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Визовые требования"
+          }
         }
       }
     },
@@ -5036,6 +5774,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tipo: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тип визы: %@"
           }
         }
       }
@@ -5077,6 +5821,12 @@
             "state": "translated",
             "value": "Permissao de entrada"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Entry permit"
+          }
         }
       }
     },
@@ -5116,6 +5866,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Livre circulacao"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Freedom of movement"
           }
         }
       }
@@ -5157,6 +5913,12 @@
             "state": "translated",
             "value": "Passaporte proprio"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Own passport"
+          }
         }
       }
     },
@@ -5196,6 +5958,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sem visto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Visa free"
           }
         }
       }
@@ -5237,6 +6005,12 @@
             "state": "translated",
             "value": "Visto exigido"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Visa required"
+          }
         }
       }
     },
@@ -5276,6 +6050,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ver fonte oficial do visto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "View official visa source"
           }
         }
       }
@@ -5317,6 +6097,12 @@
             "state": "translated",
             "value": "Peso: %d%%"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вес: %d%%"
+          }
         }
       }
     },
@@ -5356,6 +6142,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "EAU"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "UAE"
           }
         }
       }
@@ -5397,6 +6189,12 @@
             "state": "translated",
             "value": "RDC"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "DRC"
+          }
         }
       }
     },
@@ -5436,6 +6234,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "RCA"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "CAR"
           }
         }
       }
@@ -5477,6 +6281,12 @@
             "state": "translated",
             "value": "Reino Unido"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "UK"
+          }
         }
       }
     },
@@ -5517,6 +6327,12 @@
             "state": "translated",
             "value": "Palestina"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Palestine"
+          }
         }
       }
     },
@@ -5556,6 +6372,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estados Unidos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "USA"
           }
         }
       }
@@ -5605,6 +6427,12 @@
             "state": "translated",
             "value": "Ordenar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сортировка"
+          }
         }
       }
     },
@@ -5644,6 +6472,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Veja todos os destinos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сравнивайте страны по вашим приоритетам"
           }
         }
       }
@@ -5685,6 +6519,12 @@
             "state": "translated",
             "value": "Paises"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Страны"
+          }
         }
       }
     },
@@ -5724,6 +6564,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Buscar paises ou territorios"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Искать страны и территории"
           }
         }
       }
@@ -5765,6 +6611,12 @@
             "state": "translated",
             "value": "Abrir o mapa-mundi interativo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исследуйте мир на карте"
+          }
         }
       }
     },
@@ -5804,6 +6656,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Explorar o mundo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Карта"
           }
         }
       }
@@ -5845,6 +6703,12 @@
             "state": "translated",
             "value": "Custo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступность"
+          }
         }
       }
     },
@@ -5884,6 +6748,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este mes e um dos melhores para visitar com base no clima, nas multidoes e nas condicoes gerais. Abra a pagina completa do pais para comparar seguranca, custo e detalhes de visto."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лучшее время"
           }
         }
       }
@@ -5925,6 +6795,12 @@
             "state": "translated",
             "value": "Abrir pagina completa do pais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть полную страницу страны"
+          }
         }
       }
     },
@@ -5964,6 +6840,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Regiao: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Регион: %@"
           }
         }
       }
@@ -6005,6 +6887,12 @@
             "state": "translated",
             "value": "Pontuacao de seguranca: %d"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оценка безопасности: %lld"
+          }
         }
       }
     },
@@ -6044,6 +6932,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Resumo da pontuacao"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Краткий обзор оценок"
           }
         }
       }
@@ -6085,6 +6979,12 @@
             "state": "translated",
             "value": "Sazonalidade"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сезонность"
+          }
         }
       }
     },
@@ -6124,6 +7024,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Destino selecionado"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбранное направление"
           }
         }
       }
@@ -6165,6 +7071,12 @@
             "state": "translated",
             "value": "TODO: detalhes do pais para %@"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть страницу страны для %@"
+          }
         }
       }
     },
@@ -6204,6 +7116,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Facilidade de visto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Визовые условия"
           }
         }
       }
@@ -6245,6 +7163,12 @@
             "state": "translated",
             "value": "Pontuacao geral"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Общая оценка"
+          }
         }
       }
     },
@@ -6284,6 +7208,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Buscar paises e territorios"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Искать страны и территории"
           }
         }
       }
@@ -6325,6 +7255,12 @@
             "state": "translated",
             "value": "Explorar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск стран"
+          }
         }
       }
     },
@@ -6364,6 +7300,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Acoes"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Действия"
           }
         }
       }
@@ -6405,6 +7347,12 @@
             "state": "translated",
             "value": "Custo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступность"
+          }
         }
       }
     },
@@ -6444,6 +7392,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Idioma"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Язык"
           }
         }
       }
@@ -6485,6 +7439,12 @@
             "state": "translated",
             "value": "Usa o mes de viagem selecionado. Alterar aqui tambem atualiza Quando ir."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите месяц для сезонной оценки"
+          }
         }
       }
     },
@@ -6524,6 +7484,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Equilibrado"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбалансировано"
           }
         }
       }
@@ -6566,6 +7532,12 @@
             "state": "translated",
             "value": "Mistura equilibrada de custo, seguranca e acesso a vistos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Равновесие между стоимостью, простотой и комфортом путешествия."
+          }
         }
       }
     },
@@ -6605,6 +7577,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Orcamento"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экономно"
           }
         }
       }
@@ -6647,6 +7625,12 @@
             "state": "translated",
             "value": "Priorize destinos mais baratos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сильнее учитывает бюджет и общую доступность."
+          }
         }
       }
     },
@@ -6686,6 +7670,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Viagem facil"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Легкое путешествие"
           }
         }
       }
@@ -6728,6 +7718,12 @@
             "state": "translated",
             "value": "Destinos sem visto e convenientes"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сильнее учитывает визы, язык и удобство поездки."
+          }
         }
       }
     },
@@ -6767,6 +7763,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seguranca primeiro"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала безопасность"
           }
         }
       }
@@ -6809,6 +7811,12 @@
             "state": "translated",
             "value": "Prefira destinos com boas classificacoes de seguranca"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сильнее учитывает безопасность и стабильные условия."
+          }
         }
       }
     },
@@ -6848,6 +7856,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Predefinicoes rapidas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Быстрые пресеты"
           }
         }
       }
@@ -6889,6 +7903,12 @@
             "state": "translated",
             "value": "Restaurar padrao"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить по умолчанию"
+          }
         }
       }
     },
@@ -6928,6 +7948,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salvar preferencias"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить настройки"
           }
         }
       }
@@ -6969,6 +7995,12 @@
             "state": "translated",
             "value": "Salvo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранено"
+          }
         }
       }
     },
@@ -7008,6 +8040,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sazonalidade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сезонность"
           }
         }
       }
@@ -7049,6 +8087,12 @@
             "state": "translated",
             "value": "Os pesos selecionados determinam como as Travelability Scores sao calculadas em todo o aplicativo. As classificacoes sao atualizadas depois que voce salva."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройте, как рассчитывается общий балл"
+          }
         }
       }
     },
@@ -7088,6 +8132,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preferencias de viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваши веса"
           }
         }
       }
@@ -7129,6 +8179,12 @@
             "state": "translated",
             "value": "Aviso de viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel Advisory"
+          }
         }
       }
     },
@@ -7168,6 +8224,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Facilidade de visto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Visa Ease"
           }
         }
       }
@@ -7209,6 +8271,12 @@
             "state": "translated",
             "value": "Pesos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Weights"
+          }
         }
       }
     },
@@ -7248,6 +8316,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pelo menos uma categoria precisa ter peso."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "At least one category must have weight."
           }
         }
       }
@@ -7289,6 +8363,12 @@
             "state": "translated",
             "value": "Encontre as melhores temporadas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Find peak seasons"
+          }
         }
       }
     },
@@ -7329,6 +8409,12 @@
             "state": "translated",
             "value": "Quando ir"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "When To Go"
+          }
         }
       }
     },
@@ -7368,6 +8454,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preparando seu mundo…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preparing your world…"
           }
         }
       }
@@ -7417,6 +8509,12 @@
             "state": "translated",
             "value": "Algo deu errado. Tente novamente."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Something went wrong. Please try again."
+          }
         }
       }
     },
@@ -7456,6 +8554,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Criei o TAF porque eu sempre pesquisava as mesmas estatisticas de viagem ao decidir para onde ir e nao conseguia acreditar que uma ferramenta assim ainda nao existia."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I built TAF because I kept looking up the same travel statistics when deciding where to go, and I could not believe a tool like this did not already exist."
           }
         }
       }
@@ -7497,6 +8601,12 @@
             "state": "translated",
             "value": "Sou apaixonada por viajar e me conectar com pessoas, e realmente quero que o TAF seja algo util para viajantes."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I am passionate about traveling and connecting with people, and I genuinely want TAF to be something travelers find useful."
+          }
         }
       }
     },
@@ -7536,6 +8646,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eu realmente quero ouvir voce."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I truly want to hear from you."
           }
         }
       }
@@ -7577,6 +8693,12 @@
             "state": "translated",
             "value": "Leio cada mensagem pessoalmente e trabalho todos os dias para melhorar o TAF. Obrigada por estar aqui e boa viagem!"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I read every message personally and work daily to make TAF better. Thank you for being here and travel on!"
+          }
         }
       }
     },
@@ -7616,6 +8738,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eu sou Lama, a desenvolvedora por tras do Travel Adventure Finder!"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I am Lama, the developer behind Travel Adventure Finder!"
           }
         }
       }
@@ -7657,6 +8785,12 @@
             "state": "translated",
             "value": "Enviar feedback"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Send Feedback"
+          }
         }
       }
     },
@@ -7697,6 +8831,12 @@
             "state": "translated",
             "value": "Enviado ✓"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sent ✓"
+          }
         }
       }
     },
@@ -7735,6 +8875,12 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
+            "value": "Feedback"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "Feedback"
           }
         }
@@ -7777,6 +8923,12 @@
             "state": "translated",
             "value": "Aceitar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Accept"
+          }
         }
       }
     },
@@ -7816,6 +8968,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recusar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Decline"
           }
         }
       }
@@ -7857,6 +9015,12 @@
             "state": "translated",
             "value": "Quando alguem enviar um pedido de amizade, ele aparecera aqui."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "When someone sends you a friend request, it will show up here."
+          }
         }
       }
     },
@@ -7896,6 +9060,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nenhum pedido de amizade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No friend requests"
           }
         }
       }
@@ -7937,6 +9107,12 @@
             "state": "translated",
             "value": "Carregando pedidos..."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Loading requests..."
+          }
         }
       }
     },
@@ -7976,6 +9152,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pedidos de amizade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Friend Requests"
           }
         }
       }
@@ -8017,6 +9199,12 @@
             "state": "translated",
             "value": "Voce nao sera mais amigo desta pessoa."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Управление этой дружбой"
+          }
         }
       }
     },
@@ -8056,6 +9244,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desfazer amizade com %@?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить %@ из друзей"
           }
         }
       }
@@ -8097,6 +9291,12 @@
             "state": "translated",
             "value": "Buscar por nome de usuario"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Искать друзей"
+          }
         }
       }
     },
@@ -8136,6 +9336,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar pedido de amizade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отменить запрос"
           }
         }
       }
@@ -8177,6 +9383,12 @@
             "state": "translated",
             "value": "Amigos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Друзья"
+          }
         }
       }
     },
@@ -8216,6 +9428,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remover amigo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить из друзей"
           }
         }
       }
@@ -8257,6 +9475,12 @@
             "state": "translated",
             "value": "Remover amigo?"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить друга?"
+          }
         }
       }
     },
@@ -8297,6 +9521,12 @@
             "state": "translated",
             "value": "Ver amigos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Посмотреть друзей"
+          }
         }
       }
     },
@@ -8336,6 +9566,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amigos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Друзья"
           }
         }
       }
@@ -8378,6 +9614,12 @@
             "state": "translated",
             "value": "Amigos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Друзья доступны после входа"
+          }
         }
       }
     },
@@ -8418,6 +9660,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seus amigos estao esperando"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войдите, чтобы видеть друзей"
           }
         }
       }
@@ -8460,6 +9708,12 @@
             "state": "translated",
             "value": "Crie uma conta para adicionar seus amigos!"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создайте аккаунт, чтобы добавлять друзей и видеть их сигналы о путешествиях."
+          }
         }
       }
     },
@@ -8500,6 +9754,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Perfil"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Профиль доступен после входа"
           }
         }
       }
@@ -8542,6 +9802,12 @@
             "state": "translated",
             "value": "Monte seu perfil"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войдите, чтобы сохранить профиль"
+          }
         }
       }
     },
@@ -8582,6 +9848,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Crie uma conta para personalizar seu perfil!"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создайте аккаунт, чтобы сохранять языки, страны и настройки путешествий."
           }
         }
       }
@@ -8626,6 +9898,12 @@
             "state": "translated",
             "value": "Avisos de seguranca e pontuacoes sao derivados de fontes publicas e dados de terceiros. As condicoes podem mudar rapidamente, e o Travel Adventure Finder nao garante precisao, completude ou atualidade."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Safety advisories and scores are derived from publicly available sources and third-party data. Conditions may change rapidly, and Travel Adventure Finder does not guarantee accuracy, completeness, or timeliness."
+          }
         }
       }
     },
@@ -8665,6 +9943,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Avisos e pontuacoes de seguranca"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Advisories & Safety Scores"
           }
         }
       }
@@ -8706,6 +9990,12 @@
             "state": "translated",
             "value": "O Travel Adventure Finder fornece apenas informacoes e insights de viagem. Todas as pontuacoes, avisos e recomendacoes destinam-se a orientacao geral e fins educacionais. Os insights de sazonalidade se baseiam em medias climaticas historicas e padroes tipicos de viagem."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel Adventure Finder provides informational travel insights only. All scores, advisories, and recommendations are intended for general guidance and educational purposes. Seasonality insights are based on historical climate averages and typical travel patterns."
+          }
         }
       }
     },
@@ -8745,6 +10035,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Informacoes gerais"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "General Information"
           }
         }
       }
@@ -8786,6 +10082,12 @@
             "state": "translated",
             "value": "O Travel Adventure Finder nao se responsabiliza por decisoes tomadas com base nas informacoes apresentadas no aplicativo. O uso deste app e por sua propria conta e criterio."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel Adventure Finder is not responsible for decisions made based on information presented in the app. Use of this app is at your own discretion."
+          }
         }
       }
     },
@@ -8825,6 +10127,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Limitacao de responsabilidade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Limitation of Liability"
           }
         }
       }
@@ -8866,6 +10174,12 @@
             "state": "translated",
             "value": "O Travel Adventure Finder nao fornece aconselhamento juridico, medico ou governamental. Os usuarios devem verificar as informacoes em fontes oficiais antes de tomar decisoes de viagem."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel Adventure Finder does not provide legal, medical, or governmental advice. Users should verify information with official sources before making travel decisions."
+          }
         }
       }
     },
@@ -8905,6 +10219,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nenhum aconselhamento profissional"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No Professional Advice"
           }
         }
       }
@@ -8946,6 +10266,12 @@
             "state": "translated",
             "value": "Avisos legais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Legal"
+          }
         }
       }
     },
@@ -8985,6 +10311,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conte para nos o que voce acha"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Let us know what you think"
           }
         }
       }
@@ -9026,6 +10358,12 @@
             "state": "translated",
             "value": "Enviar feedback"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Send Feedback"
+          }
         }
       }
     },
@@ -9065,6 +10403,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Privacidade, termos e politicas do app"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Privacy, terms, and app policies"
           }
         }
       }
@@ -9106,6 +10450,12 @@
             "state": "translated",
             "value": "Avisos legais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Legal"
+          }
         }
       }
     },
@@ -9145,6 +10495,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mais"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "More"
           }
         }
       }
@@ -9191,6 +10547,12 @@
             "state": "translated",
             "value": "Adicionar a Lista de desejos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить в bucket list"
+          }
         }
       }
     },
@@ -9230,6 +10592,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remover da Lista de desejos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить из bucket list"
           }
         }
       }
@@ -9271,6 +10639,12 @@
             "state": "translated",
             "value": "Lugares que voce quer visitar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Страны, о которых вы мечтаете"
+          }
         }
       }
     },
@@ -9310,6 +10684,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lista de desejos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bucket list"
           }
         }
       }
@@ -9351,6 +10731,12 @@
             "state": "translated",
             "value": "Adicionar %@ para este pais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить в %@"
+          }
         }
       }
     },
@@ -9390,6 +10776,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remover %@ deste pais"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить из %@"
           }
         }
       }
@@ -9431,6 +10823,12 @@
             "state": "translated",
             "value": "Toque em Editar para adicionar paises aqui ou deslize para a esquerda em um pais e toque em Lista de desejos."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавляйте страны, которые хотите посетить."
+          }
         }
       }
     },
@@ -9470,6 +10868,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda nao ha lista de desejos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш bucket list пока пуст"
           }
         }
       }
@@ -9511,6 +10915,12 @@
             "state": "translated",
             "value": "Tambem visitado"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bucket list"
+          }
         }
       }
     },
@@ -9550,6 +10960,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Toque em qualquer pais para adiciona-lo ou remove-lo da sua lista de desejos."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмечайте страны, которые хотите посетить."
           }
         }
       }
@@ -9591,6 +11007,12 @@
             "state": "translated",
             "value": "Editar Lista de desejos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить в bucket list"
+          }
         }
       }
     },
@@ -9630,6 +11052,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desejos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bucket list"
           }
         }
       }
@@ -9671,6 +11099,12 @@
             "state": "translated",
             "value": "Toque em Editar para adicionar paises aqui ou deslize para a esquerda em um pais e toque em Visitado."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмечайте страны, в которых вы уже были."
+          }
         }
       }
     },
@@ -9710,6 +11144,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda nao ha viagens"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пока нет посещённых стран"
           }
         }
       }
@@ -9751,6 +11191,12 @@
             "state": "translated",
             "value": "Tambem na lista de desejos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Посещено"
+          }
         }
       }
     },
@@ -9790,6 +11236,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Toque em qualquer pais para adiciona-lo ou remove-lo da sua lista de visitados."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмечайте страны, которые вы уже посетили."
           }
         }
       }
@@ -9831,6 +11283,12 @@
             "state": "translated",
             "value": "Editar visitados"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отметить как посещённые"
+          }
         }
       }
     },
@@ -9870,6 +11328,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visitados"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Посещено"
           }
         }
       }
@@ -9911,6 +11375,12 @@
             "state": "translated",
             "value": "Planejamento"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Планирование"
+          }
         }
       }
     },
@@ -9951,6 +11421,12 @@
             "state": "translated",
             "value": "Monte uma viagem com datas, paises e amigos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Соберите свой следующий маршрут"
+          }
         }
       }
     },
@@ -9990,6 +11466,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Planejador de viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Планировщик поездок"
           }
         }
       }
@@ -10033,6 +11515,12 @@
             "state": "translated",
             "value": "Paises visitados"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Посещено"
+          }
         }
       }
     },
@@ -10072,6 +11560,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Acompanhe os lugares que voce ja visitou"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Страны, в которых вы уже были"
           }
         }
       }
@@ -10113,6 +11607,12 @@
             "state": "translated",
             "value": "Paises visitados"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Посещённые страны"
+          }
         }
       }
     },
@@ -10152,6 +11652,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Falha ao criar o perfil apos varias tentativas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Failed to create profile after retries"
           }
         }
       }
@@ -10193,6 +11699,12 @@
             "state": "translated",
             "value": "Nome e nome de usuario sao obrigatorios."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Name and username are required."
+          }
         }
       }
     },
@@ -10232,6 +11744,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nenhuma sessao ativa. Entre novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No active session. Please log in again."
           }
         }
       }
@@ -10273,6 +11791,12 @@
             "state": "translated",
             "value": "Nenhum usuario de autenticacao encontrado"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No auth user found"
+          }
         }
       }
     },
@@ -10312,6 +11836,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nao autenticado. Entre novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Not authenticated. Please log in again."
           }
         }
       }
@@ -10353,6 +11883,12 @@
             "state": "translated",
             "value": "Perfil nao encontrado"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Profile not found"
+          }
         }
       }
     },
@@ -10392,6 +11928,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Perfil ainda nao carregado. Tente novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Profile not loaded yet. Please try again."
           }
         }
       }
@@ -10433,6 +11975,12 @@
             "state": "translated",
             "value": "Aceitar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Принять"
+          }
         }
       }
     },
@@ -10472,6 +12020,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicionar amigo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить в друзья"
           }
         }
       }
@@ -10513,6 +12067,12 @@
             "state": "translated",
             "value": "Atual"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текущая страна"
+          }
         }
       }
     },
@@ -10552,6 +12112,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Viagens favoritas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Любимые поездки"
           }
         }
       }
@@ -10593,6 +12159,12 @@
             "state": "translated",
             "value": "Bandeiras de origem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Домашние флаги"
+          }
         }
       }
     },
@@ -10632,6 +12204,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Proximo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Следующая"
           }
         }
       }
@@ -10673,6 +12251,12 @@
             "state": "translated",
             "value": "Nao definido"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не указано"
+          }
         }
       }
     },
@@ -10712,6 +12296,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pedido enviado"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрос отправлен"
           }
         }
       }
@@ -10753,6 +12343,12 @@
             "state": "translated",
             "value": "Lista de desejos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bucket list"
+          }
         }
       }
     },
@@ -10792,6 +12388,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paises visitados"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Посещённые страны"
           }
         }
       }
@@ -10833,6 +12435,12 @@
             "state": "translated",
             "value": "Idiomas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Языки"
+          }
         }
       }
     },
@@ -10872,6 +12480,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicione este usuario como amigo para ver mais detalhes."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подружитесь, чтобы увидеть больше сведений профиля."
           }
         }
       }
@@ -10913,6 +12527,12 @@
             "state": "translated",
             "value": "Idiomas em comum"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Общие языки"
+          }
         }
       }
     },
@@ -10952,6 +12572,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Saiba mais sobre este usuario adicionando-o como amigo!"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Некоторые данные профиля видны только друзьям."
           }
         }
       }
@@ -10993,6 +12619,12 @@
             "state": "translated",
             "value": "Adicionar foto"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить фото"
+          }
         }
       }
     },
@@ -11032,6 +12664,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alterar foto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменить фото"
           }
         }
       }
@@ -11073,6 +12711,12 @@
             "state": "translated",
             "value": "Foto de perfil"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фото профиля"
+          }
         }
       }
     },
@@ -11112,6 +12756,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remover foto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить фото"
           }
         }
       }
@@ -11153,6 +12803,12 @@
             "state": "translated",
             "value": "Pais atual"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текущая страна"
+          }
         }
       }
     },
@@ -11192,6 +12848,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paises favoritos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Любимые страны"
           }
         }
       }
@@ -11233,6 +12895,12 @@
             "state": "translated",
             "value": "Minhas bandeiras"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мои флаги"
+          }
         }
       }
     },
@@ -11272,6 +12940,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Proximo destino"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Следующее направление"
           }
         }
       }
@@ -11313,6 +12987,12 @@
             "state": "translated",
             "value": "Seu fundo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фон профиля"
+          }
         }
       }
     },
@@ -11352,6 +13032,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Excluir conta"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить аккаунт"
           }
         }
       }
@@ -11393,6 +13079,12 @@
             "state": "translated",
             "value": "Tem certeza de que deseja excluir sua conta permanentemente? Isso nao pode ser desfeito."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вы уверены, что хотите удалить аккаунт?"
+          }
         }
       }
     },
@@ -11432,6 +13124,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Falha ao excluir a conta. Tente novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось удалить аккаунт."
           }
         }
       }
@@ -11473,6 +13171,12 @@
             "state": "translated",
             "value": "Nome completo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полное имя"
+          }
         }
       }
     },
@@ -11512,6 +13216,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Iniciante"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начальный"
           }
         }
       }
@@ -11553,6 +13263,12 @@
             "state": "translated",
             "value": "Conversacional"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разговорный"
+          }
         }
       }
     },
@@ -11592,6 +13308,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fluente"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свободный"
           }
         }
       }
@@ -11633,6 +13355,12 @@
             "state": "translated",
             "value": "Adicionar idioma"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить язык"
+          }
         }
       }
     },
@@ -11672,6 +13400,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicione idiomas que voce fala ou esta aprendendo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Языки пока не добавлены"
           }
         }
       }
@@ -11713,6 +13447,12 @@
             "state": "translated",
             "value": "Proficiencia"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уровень владения"
+          }
         }
       }
     },
@@ -11752,6 +13492,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Selecionar idioma"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Select Language"
           }
         }
       }
@@ -11793,6 +13539,12 @@
             "state": "translated",
             "value": "Idiomas falados"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Languages spoken"
+          }
         }
       }
     },
@@ -11832,6 +13584,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carregando perfil..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Loading profile..."
           }
         }
       }
@@ -11873,6 +13631,12 @@
             "state": "translated",
             "value": "Sair"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Log Out"
+          }
         }
       }
     },
@@ -11912,6 +13676,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nenhum"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "None"
           }
         }
       }
@@ -11953,6 +13723,12 @@
             "state": "translated",
             "value": "Nao definido"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Not set"
+          }
         }
       }
     },
@@ -11992,6 +13768,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Excluir passaporte %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Delete %@ passport"
           }
         }
       }
@@ -12033,6 +13815,12 @@
             "state": "translated",
             "value": "Excluir passaporte"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Delete passport"
+          }
         }
       }
     },
@@ -12072,6 +13860,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nenhum passaporte adicionado ainda"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No passports added yet"
           }
         }
       }
@@ -12113,6 +13907,12 @@
             "state": "translated",
             "value": "Passaportes salvos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Saved passports"
+          }
         }
       }
     },
@@ -12152,6 +13952,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Privado para voce. Usado para personalizar regras de visto e recomendacoes de passaporte com seu melhor passaporte salvo para cada destino."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Private to you. Used to personalize visa rules and passport recommendations with your strongest saved passport for each destination."
           }
         }
       }
@@ -12193,6 +13999,12 @@
             "state": "translated",
             "value": "Passaportes"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Passports"
+          }
         }
       }
     },
@@ -12232,6 +14044,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Buscar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Search"
           }
         }
       }
@@ -12273,6 +14091,12 @@
             "state": "translated",
             "value": "Selecione seus destinos favoritos."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Select your favorite destinations."
+          }
         }
       }
     },
@@ -12312,6 +14136,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paises favoritos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Favorite Countries"
           }
         }
       }
@@ -12353,6 +14183,12 @@
             "state": "translated",
             "value": "Adicione qualquer bandeira que represente voce! (paises onde voce morou, origem, etnia etc.)"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add any flag that represents you! (countries you've lived in, background, ethnicity, etc.)"
+          }
         }
       }
     },
@@ -12392,6 +14228,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paises de origem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Home Countries"
           }
         }
       }
@@ -12433,6 +14275,12 @@
             "state": "translated",
             "value": "Privado. Isso e salvo para combinacoes de visto e nunca aparece no seu perfil publico."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Private only. These are saved for visa matching and never shown on your public profile."
+          }
         }
       }
     },
@@ -12472,6 +14320,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nacionalidades"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nationalities"
           }
         }
       }
@@ -12513,6 +14367,12 @@
             "state": "translated",
             "value": "Selecionar pais atual"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Select current country"
+          }
         }
       }
     },
@@ -12552,6 +14412,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Selecionar proximo destino"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Select next destination"
           }
         }
       }
@@ -12593,6 +14459,12 @@
             "state": "translated",
             "value": "Configuracoes do perfil"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Profile Settings"
+          }
         }
       }
     },
@@ -12632,6 +14504,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sozinho + Grupo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solo + Group"
           }
         }
       }
@@ -12673,6 +14551,12 @@
             "state": "translated",
             "value": "Grupo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Group"
+          }
         }
       }
     },
@@ -12712,6 +14596,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sozinho"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solo"
           }
         }
       }
@@ -12753,6 +14643,12 @@
             "state": "translated",
             "value": "Economico ou confortavel, depende"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Budget or comfy, depending"
+          }
         }
       }
     },
@@ -12792,6 +14688,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Economico"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Budget"
           }
         }
       }
@@ -12833,6 +14735,12 @@
             "state": "translated",
             "value": "Confortavel"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comfortable"
+          }
         }
       }
     },
@@ -12872,6 +14780,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entre economico e confortavel"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Between Budget and Comfy"
           }
         }
       }
@@ -12913,6 +14827,12 @@
             "state": "translated",
             "value": "Modo de viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel mode"
+          }
         }
       }
     },
@@ -12952,6 +14872,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estilo de viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel style"
           }
         }
       }
@@ -12993,6 +14919,12 @@
             "state": "translated",
             "value": "Preferencias de viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel preferences"
+          }
         }
       }
     },
@@ -13032,6 +14964,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Perfil atualizado"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Profile updated"
           }
         }
       }
@@ -13073,6 +15011,12 @@
             "state": "translated",
             "value": "nome de usuario"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "username"
+          }
         }
       }
     },
@@ -13112,6 +15056,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este nome de usuario ja esta em uso"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Username is already taken"
           }
         }
       }
@@ -13153,6 +15103,12 @@
             "state": "translated",
             "value": "Perfil"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Profile"
+          }
         }
       }
     },
@@ -13192,6 +15148,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gostando do Travel Adventure Finder?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enjoying Travel Adventure Finder?"
           }
         }
       }
@@ -13233,6 +15195,12 @@
             "state": "translated",
             "value": "Seu feedback nos ajuda a tornar o Travel Adventure Finder melhor."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your feedback helps us make Travel Adventure Finder better."
+          }
         }
       }
     },
@@ -13272,6 +15240,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Digite seu feedback aqui..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Type feedback here..."
           }
         }
       }
@@ -13313,6 +15287,12 @@
             "state": "translated",
             "value": "O que poderiamos melhorar?"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "What could we improve?"
+          }
         }
       }
     },
@@ -13352,6 +15332,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Obrigado pelo seu feedback!"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Thanks for your feedback!"
           }
         }
       }
@@ -13398,6 +15384,12 @@
             "state": "translated",
             "value": "Condicoes mensais de viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Monthly travel conditions"
+          }
         }
       }
     },
@@ -13437,6 +15429,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geral"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Overall"
           }
         }
       }
@@ -13478,6 +15476,12 @@
             "state": "translated",
             "value": "Ver todos os detalhes do pais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "View Full Country Details"
+          }
         }
       }
     },
@@ -13517,6 +15521,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nenhum destino nesta categoria para o mes selecionado."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No destinations in this category for the selected month."
           }
         }
       }
@@ -13558,6 +15568,12 @@
             "state": "translated",
             "value": "Alta temporada"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Peak season"
+          }
         }
       }
     },
@@ -13597,6 +15613,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Melhor clima e melhores condicoes gerais — normalmente o periodo mais cheio e caro."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Best weather and overall conditions — usually the busiest and priciest."
           }
         }
       }
@@ -13638,6 +15660,12 @@
             "state": "translated",
             "value": "Meia-estacao"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Shoulder season"
+          }
         }
       }
     },
@@ -13677,6 +15705,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda com boas condicoes, muitas vezes com menos multidoes e melhor custo-beneficio."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Still good conditions, often fewer crowds and better value."
           }
         }
       }
@@ -13733,6 +15767,12 @@
             "state": "translated",
             "value": "Explorar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск"
+          }
         }
       }
     },
@@ -13772,6 +15812,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amigos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Друзья"
           }
         }
       }
@@ -13813,6 +15859,12 @@
             "state": "translated",
             "value": "Mais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ещё"
+          }
         }
       }
     },
@@ -13853,6 +15905,12 @@
             "state": "translated",
             "value": "Planejar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "План"
+          }
         }
       }
     },
@@ -13892,6 +15950,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Perfil"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Профиль"
           }
         }
       }
@@ -13954,6 +16018,12 @@
             "state": "translated",
             "value": "Adicionar ao Apple Calendar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add To Apple Calendar"
+          }
         }
       }
     },
@@ -13993,6 +16063,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Excluir viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Delete Trip"
           }
         }
       }
@@ -14034,6 +16110,12 @@
             "state": "translated",
             "value": "Atualize o plano, envie para o Calendario ou remova-o."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Update the plan, send it to Calendar, or remove it."
+          }
         }
       }
     },
@@ -14073,6 +16155,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Acoes"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Actions"
           }
         }
       }
@@ -14114,6 +16202,12 @@
             "state": "translated",
             "value": "Adicionar todos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add All"
+          }
         }
       }
     },
@@ -14153,6 +16247,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicionar paises"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add Countries"
           }
         }
       }
@@ -14194,6 +16294,12 @@
             "state": "translated",
             "value": "Adicionar mais paises"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add more countries"
+          }
         }
       }
     },
@@ -14233,6 +16339,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicionar datas provisórias"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add tentative dates"
           }
         }
       }
@@ -14274,6 +16386,12 @@
             "state": "translated",
             "value": "Melhores janelas em comum"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Best shared windows"
+          }
         }
       }
     },
@@ -14313,6 +16431,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visualizacao de calendario"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Calendar view"
           }
         }
       }
@@ -14354,6 +16478,12 @@
             "state": "translated",
             "value": "Cancelar edicao"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cancel Editing"
+          }
         }
       }
     },
@@ -14393,6 +16523,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cada viajante pode ter varias janelas."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Each traveler can have multiple windows."
           }
         }
       }
@@ -14434,6 +16570,12 @@
             "state": "translated",
             "value": "Propostas atuais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Current proposals"
+          }
         }
       }
     },
@@ -14473,6 +16615,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld intervalos de datas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld date ranges"
           }
         }
       }
@@ -14514,6 +16662,12 @@
             "state": "translated",
             "value": "Editar sua disponibilidade"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Edit your availability"
+          }
         }
       }
     },
@@ -14553,6 +16707,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualize a janela enviada sem precisar exclui-la primeiro."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Update your submitted window without deleting it first."
           }
         }
       }
@@ -14594,6 +16754,12 @@
             "state": "translated",
             "value": "%lld meses flexiveis"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld flexible months"
+          }
         }
       }
     },
@@ -14633,6 +16799,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicione janelas exatas ou meses flexiveis para cada viajante e deixe o planejador mostrar a melhor sobreposicao."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add either exact windows or flexible months for each traveler, then let the planner surface the strongest overlap."
           }
         }
       }
@@ -14674,6 +16846,12 @@
             "state": "translated",
             "value": "Como funciona"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "How this works"
+          }
         }
       }
     },
@@ -14713,6 +16891,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Use datas exatas quando alguem ja souber em que semana estara livre. Use meses flexiveis quando a pessoa so souber o periodo geral."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Use exact dates when someone already knows the week they’re free. Use flexible months when they only know the general timing."
           }
         }
       }
@@ -14754,6 +16938,12 @@
             "state": "translated",
             "value": "Datas exatas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Exact dates"
+          }
         }
       }
     },
@@ -14793,6 +16983,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Um intervalo especifico que alguem sabe que funciona."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A specific range someone knows works."
           }
         }
       }
@@ -14834,6 +17030,12 @@
             "state": "translated",
             "value": "Mes flexivel"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Flexible month"
+          }
         }
       }
     },
@@ -14873,6 +17075,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Um mes que alguem provavelmente conseguiria encaixar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A month someone could likely make work."
           }
         }
       }
@@ -14914,6 +17122,12 @@
             "state": "translated",
             "value": "Datas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dates"
+          }
         }
       }
     },
@@ -14953,6 +17167,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Exatas: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Exact: %@"
           }
         }
       }
@@ -14994,6 +17214,12 @@
             "state": "translated",
             "value": "Flexivel: %@"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Flexible: %@"
+          }
         }
       }
     },
@@ -15033,6 +17259,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mes"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Month"
           }
         }
       }
@@ -15074,6 +17306,12 @@
             "state": "translated",
             "value": "Ainda nao ha uma janela em comum. Adicione mais opcoes no grupo e o planejador sugerira combinacoes melhores aqui."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No shared window yet. Add a few more ideas across the group and the planner will suggest stronger matches here."
+          }
         }
       }
     },
@@ -15113,6 +17351,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda nao foi sugerida nenhuma disponibilidade."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No availability has been proposed yet."
           }
         }
       }
@@ -15154,6 +17398,12 @@
             "state": "translated",
             "value": "So voce pode editar essas informacoes."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Only you can edit these submissions."
+          }
         }
       }
     },
@@ -15193,6 +17443,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Funciona para as propostas atuais de todo mundo."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Works across everyone’s current proposals."
           }
         }
       }
@@ -15234,6 +17490,12 @@
             "state": "translated",
             "value": "Isso funciona para %lld de %lld pessoas ate agora."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This lines up for %lld of %lld people so far."
+          }
         }
       }
     },
@@ -15273,6 +17535,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Salvar disponibilidade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Save Availability"
           }
         }
       }
@@ -15314,6 +17582,12 @@
             "state": "translated",
             "value": "Janela em comum"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Shared window"
+          }
         }
       }
     },
@@ -15353,6 +17627,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comece a reunir meses livres ou intervalos de datas exatos para que o planejador destaque a melhor janela em comum."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Start collecting free months or exact date ranges so the planner can spotlight the best shared window."
           }
         }
       }
@@ -15394,6 +17674,12 @@
             "state": "translated",
             "value": "Adicione algumas ideias de datas aqui para manter suas opcoes visiveis."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add a couple of date ideas here to keep your planning options visible."
+          }
         }
       }
     },
@@ -15433,6 +17719,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda nao ha uma janela em comum. Peca para todos adicionarem mais meses livres ou intervalos de datas para que o planejador encontre uma combinacao melhor."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No shared window yet. Ask everyone to add a few more free months or date ranges so the planner can find a better match."
           }
         }
       }
@@ -15474,6 +17766,12 @@
             "state": "translated",
             "value": "Deslize para os lados para navegar pelos meses."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Swipe sideways to move across months."
+          }
         }
       }
     },
@@ -15513,6 +17811,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Disponibilidade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Availability"
           }
         }
       }
@@ -15554,6 +17858,12 @@
             "state": "translated",
             "value": "Datas da viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Trip dates"
+          }
         }
       }
     },
@@ -15593,6 +17903,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicione primeiro as datas exatas da viagem e depois associe cada dia a um pais ou marque-o como deslocamento."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add exact trip dates first, then assign each day to a country or mark it as travel."
           }
         }
       }
@@ -15634,6 +17950,12 @@
             "state": "translated",
             "value": "Adicione as datas da viagem acima antes de atribuir os dias aos paises."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add trip dates above before assigning days to countries."
+          }
         }
       }
     },
@@ -15673,6 +17995,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escolha a qual pais cada dia pertence ou marque o dia como deslocamento."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choose which country each day belongs to, or mark the day as travel."
           }
         }
       }
@@ -15714,6 +18042,12 @@
             "state": "translated",
             "value": "Roteiro da viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Trip route"
+          }
         }
       }
     },
@@ -15753,6 +18087,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualizar disponibilidade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Update Availability"
           }
         }
       }
@@ -15794,6 +18134,12 @@
             "state": "translated",
             "value": "Sua disponibilidade"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your availability"
+          }
         }
       }
     },
@@ -15833,6 +18179,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compartilhe os meses ou datas exatas que funcionam para voce. A disponibilidade dos outros fica somente para leitura aqui."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Share the months or exact dates that work for you. Everyone else’s availability stays read-only here."
           }
         }
       }
@@ -15874,6 +18226,12 @@
             "state": "translated",
             "value": "Dê um nome e um periodo aproximado para comecar a montar a viagem."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Give it a name and rough timing so you can start shaping it."
+          }
         }
       }
     },
@@ -15913,6 +18271,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Informacoes basicas da viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Trip Basics"
           }
         }
       }
@@ -15954,6 +18318,12 @@
             "state": "translated",
             "value": "Acesso ao Calendario"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Calendar Access"
+          }
         }
       }
     },
@@ -15993,6 +18363,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O acesso ao calendario foi negado. Voce pode habilita-lo depois em Ajustes."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Calendar access was denied. You can enable it later in Settings."
           }
         }
       }
@@ -16034,6 +18410,12 @@
             "state": "translated",
             "value": "Nao conseguimos acessar o Apple Calendar agora. Tente novamente."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "We could not access Apple Calendar right now. Please try again."
+          }
         }
       }
     },
@@ -16073,6 +18455,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta viagem precisa de datas provisórias antes de poder ser adicionada ao Apple Calendar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This trip needs tentative dates before it can be added to Apple Calendar."
           }
         }
       }
@@ -16114,6 +18502,12 @@
             "state": "translated",
             "value": "Paises: %@"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Countries: %@"
+          }
         }
       }
     },
@@ -16153,6 +18547,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amigos: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Friends: %@"
           }
         }
       }
@@ -16194,6 +18594,12 @@
             "state": "translated",
             "value": "Comparando listas de desejos..."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Comparing bucket lists..."
+          }
         }
       }
     },
@@ -16233,6 +18639,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualize quais paises pertencem a este plano."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Update which countries belong in this plan."
           }
         }
       }
@@ -16274,6 +18686,12 @@
             "state": "translated",
             "value": "Paises incluidos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Included Countries"
+          }
         }
       }
     },
@@ -16313,6 +18731,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carregando paises..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Loading countries..."
           }
         }
       }
@@ -16354,6 +18778,12 @@
             "state": "translated",
             "value": "Lista de desejos em comum"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mutual bucket list"
+          }
         }
       }
     },
@@ -16393,6 +18823,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Japao, Brasil, Marrocos..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Japan, Brazil, Morocco..."
           }
         }
       }
@@ -16434,6 +18870,12 @@
             "state": "translated",
             "value": "Buscar paises"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Search countries"
+          }
         }
       }
     },
@@ -16473,6 +18915,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mantenha a rota aqui e abra a lista ranqueada de paises quando quiser adicionar mais."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Keep the route here, then open the ranked country list when you want to add more."
           }
         }
       }
@@ -16514,6 +18962,12 @@
             "state": "translated",
             "value": "Paises"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Countries"
+          }
         }
       }
     },
@@ -16553,6 +19007,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todos os outros paises"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "All other countries"
           }
         }
       }
@@ -16594,6 +19054,12 @@
             "state": "translated",
             "value": "Ja esta nesta viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Already in this trip"
+          }
         }
       }
     },
@@ -16633,6 +19099,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lista de desejos de todos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Everyone's bucket list"
           }
         }
       }
@@ -16674,6 +19146,12 @@
             "state": "translated",
             "value": "Da sua lista de desejos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "From your bucket list"
+          }
         }
       }
     },
@@ -16713,6 +19191,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld de %lld listas de desejos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld of %lld bucket lists"
           }
         }
       }
@@ -16754,6 +19238,12 @@
             "state": "translated",
             "value": "Na lista de desejos de uma pessoa"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "In one person's bucket list"
+          }
         }
       }
     },
@@ -16793,6 +19283,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Criar viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Create Trip"
           }
         }
       }
@@ -16834,6 +19330,12 @@
             "state": "translated",
             "value": "Compare quando todos estao livres e encontre a melhor janela."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Compare when everyone is free and lock in the best window."
+          }
         }
       }
     },
@@ -16873,6 +19375,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mantenha as opcoes aproximadas visiveis ate as datas serem definidas."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Keep rough options visible until your dates are finalized."
           }
         }
       }
@@ -16914,6 +19422,12 @@
             "state": "translated",
             "value": "Basico"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Basics"
+          }
         }
       }
     },
@@ -16953,6 +19467,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualize o nome da viagem, as notas e as datas."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Update the trip name, notes, and dates."
           }
         }
       }
@@ -16994,6 +19514,12 @@
             "state": "translated",
             "value": "Tudo o que esta incluido nesta viagem no momento."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Everything currently included in this trip."
+          }
         }
       }
     },
@@ -17033,6 +19559,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todos incluidos nesta viagem no momento."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Everyone currently included in this trip."
           }
         }
       }
@@ -17074,6 +19606,12 @@
             "state": "translated",
             "value": "Viagem em grupo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Group trip"
+          }
         }
       }
     },
@@ -17113,6 +19651,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "So voce por enquanto."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Just you for now."
           }
         }
       }
@@ -17154,6 +19698,12 @@
             "state": "translated",
             "value": "Carregando perfis..."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Loading profiles..."
+          }
         }
       }
     },
@@ -17193,6 +19743,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nenhum amigo foi adicionado a esta viagem ainda."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No friends have been added to this trip yet."
           }
         }
       }
@@ -17234,6 +19790,12 @@
             "state": "translated",
             "value": "Viagem solo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solo trip"
+          }
         }
       }
     },
@@ -17273,6 +19835,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Detalhes da viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Trip Details"
           }
         }
       }
@@ -17314,6 +19882,12 @@
             "state": "translated",
             "value": "Estatisticas da viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Trip Stats"
+          }
         }
       }
     },
@@ -17353,6 +19927,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Com base nos paises atualmente incluidos neste plano."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Based on the countries currently in this plan."
           }
         }
       }
@@ -17394,6 +19974,12 @@
             "state": "translated",
             "value": "Criar nova viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Create New Trip"
+          }
         }
       }
     },
@@ -17433,6 +20019,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Comece com uma ideia inicial de viagem e refine quando datas, paises e pessoas ficarem mais claras."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Start with one rough trip idea and refine it as dates, countries, and people come into focus."
           }
         }
       }
@@ -17474,6 +20066,12 @@
             "state": "translated",
             "value": "Ainda nao ha viagens"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No Trips Yet"
+          }
         }
       }
     },
@@ -17513,6 +20111,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fim"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "End"
           }
         }
       }
@@ -17554,6 +20158,12 @@
             "state": "translated",
             "value": "Adicionar despesa"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add expense"
+          }
         }
       }
     },
@@ -17593,6 +20203,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicione pessoas a viagem primeiro para comecar a acompanhar quem deve o que."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add people to the trip to start tracking who owes what."
           }
         }
       }
@@ -17634,6 +20250,12 @@
             "state": "translated",
             "value": "Valor (USD)"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Amount (USD)"
+          }
         }
       }
     },
@@ -17672,6 +20294,12 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
+            "value": "Apple Pay"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "Apple Pay"
           }
         }
@@ -17714,6 +20342,12 @@
             "state": "translated",
             "value": "Excluir despesa"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Delete Expense"
+          }
         }
       }
     },
@@ -17753,6 +20387,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Editar despesa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Edit expense"
           }
         }
       }
@@ -17794,6 +20434,12 @@
             "state": "translated",
             "value": "Titulo da despesa"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expense title"
+          }
         }
       }
     },
@@ -17833,6 +20479,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hotel, jantar, passagens de trem..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hotel, dinner, train tickets..."
           }
         }
       }
@@ -17874,6 +20526,12 @@
             "state": "translated",
             "value": "Despesas registradas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Logged expenses"
+          }
         }
       }
     },
@@ -17912,6 +20570,12 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
+            "value": "Manual"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "Manual"
           }
         }
@@ -17954,6 +20618,12 @@
             "state": "translated",
             "value": "Marcar como pago"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mark Paid"
+          }
         }
       }
     },
@@ -17993,6 +20663,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Marcar como nao pago"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mark Unpaid"
           }
         }
       }
@@ -18034,6 +20710,12 @@
             "state": "translated",
             "value": "Novo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "New"
+          }
         }
       }
     },
@@ -18073,6 +20755,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ninguem deve nada nesta despesa."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No one owes anything on this expense."
           }
         }
       }
@@ -18114,6 +20802,12 @@
             "state": "translated",
             "value": "Ainda nao ha despesas."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No expenses yet."
+          }
         }
       }
     },
@@ -18153,6 +20847,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nao pago"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Not paid"
           }
         }
       }
@@ -18194,6 +20894,12 @@
             "state": "translated",
             "value": "Saldos pendentes"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Outstanding balances"
+          }
         }
       }
     },
@@ -18233,6 +20939,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Acompanhe o que foi pago, quem se beneficiou e quem ainda deve."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Track what was paid, who benefited, and who still owes."
           }
         }
       }
@@ -18274,6 +20986,12 @@
             "state": "translated",
             "value": "%@ deve %@"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ owes %@"
+          }
         }
       }
     },
@@ -18313,6 +21031,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pago"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paid"
           }
         }
       }
@@ -18354,6 +21078,12 @@
             "state": "translated",
             "value": "Pago por"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Paid by"
+          }
         }
       }
     },
@@ -18393,6 +21123,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ pago por %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ paid by %@"
           }
         }
       }
@@ -18434,6 +21170,12 @@
             "state": "translated",
             "value": "Quitado"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Settled up"
+          }
         }
       }
     },
@@ -18473,6 +21215,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deve receber"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Should receive"
           }
         }
       }
@@ -18514,6 +21262,12 @@
             "state": "translated",
             "value": "Dividir"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Split"
+          }
         }
       }
     },
@@ -18553,6 +21307,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dividir entre"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Split between"
           }
         }
       }
@@ -18594,6 +21354,12 @@
             "state": "translated",
             "value": "Todos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Everyone"
+          }
         }
       }
     },
@@ -18633,6 +21399,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Selecionados"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Selected"
           }
         }
       }
@@ -18674,6 +21446,12 @@
             "state": "translated",
             "value": "Ainda nao ha despesas registradas. Adicione aqui hoteis, refeicoes, ingressos ou custos compartilhados."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No expenses logged yet. Add hotels, meals, tickets, or shared costs here."
+          }
         }
       }
     },
@@ -18713,6 +21491,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todos estao quites"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Everyone is settled"
           }
         }
       }
@@ -18754,6 +21538,12 @@
             "state": "translated",
             "value": "%lld despesas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld expenses"
+          }
         }
       }
     },
@@ -18793,6 +21583,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld despesas a mais nesta viagem."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld more expenses in this trip."
           }
         }
       }
@@ -18834,6 +21630,12 @@
             "state": "translated",
             "value": "Ainda devido"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Still owed"
+          }
         }
       }
     },
@@ -18873,6 +21675,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Total registrado"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Total logged"
           }
         }
       }
@@ -18914,6 +21722,12 @@
             "state": "translated",
             "value": "Restam saldos nao pagos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Unpaid balances remaining"
+          }
         }
       }
     },
@@ -18953,6 +21767,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda deve"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Still owes"
           }
         }
       }
@@ -18994,6 +21814,12 @@
             "state": "translated",
             "value": "Acompanhe quem pagou, quem deve e o que ainda esta pendente."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Track who paid, who owes, and what’s still outstanding."
+          }
         }
       }
     },
@@ -19034,6 +21860,12 @@
             "state": "translated",
             "value": "Despesas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Expenses"
+          }
         }
       }
     },
@@ -19072,6 +21904,12 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
+            "value": "USD"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "USD"
           }
         }
@@ -19114,6 +21952,12 @@
             "state": "translated",
             "value": "Venmo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Venmo"
+          }
         }
       }
     },
@@ -19153,6 +21997,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A combinacao de amigos precisa de uma conta conectada."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Friend matching needs a signed-in account."
           }
         }
       }
@@ -19194,6 +22044,12 @@
             "state": "translated",
             "value": "Nao conseguimos carregar seus amigos agora."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "We couldn't load your friends right now."
+          }
         }
       }
     },
@@ -19233,6 +22089,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carregando amigos..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Loading friends..."
           }
         }
       }
@@ -19274,6 +22136,12 @@
             "state": "translated",
             "value": "%lld em comum"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld mutual"
+          }
         }
       }
     },
@@ -19314,6 +22182,12 @@
             "state": "translated",
             "value": "Voce ainda nao adicionou nenhum amigo."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "You don’t have any friends added yet."
+          }
         }
       }
     },
@@ -19352,6 +22226,12 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
+            "value": "Hadi, Layal, @username..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "Hadi, Layal, @username..."
           }
         }
@@ -19394,6 +22274,12 @@
             "state": "translated",
             "value": "Buscar amigos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Search friends"
+          }
         }
       }
     },
@@ -19433,6 +22319,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entre para editar acompanhantes da viagem."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sign in to edit trip companions."
           }
         }
       }
@@ -19474,6 +22366,12 @@
             "state": "translated",
             "value": "Escolha quem vai participar desta viagem."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choose who’s joining this trip."
+          }
         }
       }
     },
@@ -19513,6 +22411,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Viagem para %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ Trip"
           }
         }
       }
@@ -19554,6 +22458,12 @@
             "state": "translated",
             "value": "Incluido nesta viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Included in this trip"
+          }
         }
       }
     },
@@ -19593,6 +22503,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pais"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Country"
           }
         }
       }
@@ -19634,6 +22550,12 @@
             "state": "translated",
             "value": "Dia no pais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Country day"
+          }
         }
       }
     },
@@ -19673,6 +22595,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escolha o pais para cada dia ou marque um dia como deslocamento para que os custos reflitam sua rota real."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Choose the country for each day, or mark a day as travel so trip costs reflect your actual routing."
           }
         }
       }
@@ -19714,6 +22642,12 @@
             "state": "translated",
             "value": "Rota dia a dia"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Day-by-day route"
+          }
         }
       }
     },
@@ -19753,6 +22687,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld dias a mais neste itinerario."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld more days in this itinerary."
           }
         }
       }
@@ -19794,6 +22734,12 @@
             "state": "translated",
             "value": "Adicione as datas da viagem para associar cada dia a um pais ou marcá-lo como deslocamento."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add trip dates to map each day to a country or mark it as travel."
+          }
         }
       }
     },
@@ -19833,6 +22779,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Itinerario"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Itinerary"
           }
         }
       }
@@ -19874,6 +22826,12 @@
             "state": "translated",
             "value": "Deslocamento"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel"
+          }
         }
       }
     },
@@ -19913,6 +22871,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dia de deslocamento"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel day"
           }
         }
       }
@@ -19954,6 +22918,12 @@
             "state": "translated",
             "value": "Tipo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Type"
+          }
         }
       }
     },
@@ -19993,6 +22963,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carregando planejador..."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Loading planner..."
           }
         }
       }
@@ -20034,6 +23010,12 @@
             "state": "translated",
             "value": "Nova viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "New Trip"
+          }
         }
       }
     },
@@ -20073,6 +23055,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voce ainda nao adicionou nenhum amigo, entao esta viagem vai continuar solo por enquanto."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "You do not have any friends added yet, so this trip will stay solo for now."
           }
         }
       }
@@ -20114,6 +23102,12 @@
             "state": "translated",
             "value": "Notas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notes"
+          }
         }
       }
     },
@@ -20153,6 +23147,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Que tipo de viagem voce esta imaginando?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "What kind of trip are you imagining?"
           }
         }
       }
@@ -20194,6 +23194,12 @@
             "state": "translated",
             "value": "Escolha pelo menos um pais antes de salvar a viagem."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pick at least one country before saving the trip."
+          }
         }
       }
     },
@@ -20233,6 +23239,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Planejar com amigos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Plan with friends"
           }
         }
       }
@@ -20274,6 +23286,12 @@
             "state": "translated",
             "value": "Visualizar no Apple Calendar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preview in Apple Calendar"
+          }
         }
       }
     },
@@ -20313,6 +23331,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Com %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "With %@"
           }
         }
       }
@@ -20354,6 +23378,12 @@
             "state": "translated",
             "value": "Ver mais"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "See more"
+          }
         }
       }
     },
@@ -20393,6 +23423,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Compartilhado"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Shared"
           }
         }
       }
@@ -20434,6 +23470,12 @@
             "state": "translated",
             "value": "Correspondencias compartilhadas da lista de desejos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Shared bucket-list matches"
+          }
         }
       }
     },
@@ -20473,6 +23515,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inicio"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Start"
           }
         }
       }
@@ -20514,6 +23562,12 @@
             "state": "translated",
             "value": "Entre os paises selecionados"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Across selected countries"
+          }
         }
       }
     },
@@ -20553,6 +23607,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ao longo de %lld paradas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Across %lld stop(s)"
           }
         }
       }
@@ -20594,6 +23654,12 @@
             "state": "translated",
             "value": "Adicionar datas da viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Add trip dates"
+          }
         }
       }
     },
@@ -20633,6 +23699,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aviso medio"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Average advisory"
           }
         }
       }
@@ -20674,6 +23746,12 @@
             "state": "translated",
             "value": "Panorama compartilhado de seguranca"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Shared safety picture"
+          }
         }
       }
     },
@@ -20713,6 +23791,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Media geral"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Average overall"
           }
         }
       }
@@ -20754,6 +23838,12 @@
             "state": "translated",
             "value": "Sazonalidade media"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Average seasonality"
+          }
         }
       }
     },
@@ -20793,6 +23883,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tende a ser mais economico"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Leans more budget-friendly"
           }
         }
       }
@@ -20834,6 +23930,12 @@
             "state": "translated",
             "value": "Aviso"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Advisory"
+          }
         }
       }
     },
@@ -20873,6 +23975,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seguranca e orientacao de viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Safety and travel guidance"
           }
         }
       }
@@ -20914,6 +24022,12 @@
             "state": "translated",
             "value": "Orcamento"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Budget"
+          }
         }
       }
     },
@@ -20953,6 +24067,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Custo ao longo das paradas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Affordability across stops"
           }
         }
       }
@@ -20994,6 +24114,12 @@
             "state": "translated",
             "value": "Idioma"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Language"
+          }
         }
       }
     },
@@ -21033,6 +24159,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cobertura de idiomas do grupo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Group language coverage"
           }
         }
       }
@@ -21074,6 +24206,12 @@
             "state": "translated",
             "value": "Sua cobertura de idiomas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Your language coverage"
+          }
         }
       }
     },
@@ -21113,6 +24251,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geral"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Overall"
           }
         }
       }
@@ -21154,6 +24298,12 @@
             "state": "translated",
             "value": "Pontuacao ponderada da viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Weighted trip score"
+          }
         }
       }
     },
@@ -21193,6 +24343,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sazonalidade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Seasonality"
           }
         }
       }
@@ -21234,6 +24390,12 @@
             "state": "translated",
             "value": "Visto"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Visa"
+          }
         }
       }
     },
@@ -21273,6 +24435,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Facilidade de entrada ao longo das paradas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Entry ease across stops"
           }
         }
       }
@@ -21314,6 +24482,12 @@
             "state": "translated",
             "value": "Vamos estimar isso quando as datas da viagem forem definidas"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "We’ll estimate this once trip dates are set"
+          }
         }
       }
     },
@@ -21353,6 +24527,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Total estimado por pessoa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Estimated total per person"
           }
         }
       }
@@ -21394,6 +24574,12 @@
             "state": "translated",
             "value": "Tende a ser caro no geral"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Leans expensive overall"
+          }
         }
       }
     },
@@ -21433,6 +24619,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Resumo do grupo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Group snapshot"
           }
         }
       }
@@ -21474,6 +24666,12 @@
             "state": "translated",
             "value": "%lld viajantes, %lld paises, uma visao mais clara de como a viagem equilibra pontuacao geral, seguranca, sazonalidade e logistica."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld travelers, %lld countries, one cleaner view of how the trip balances overall score, safety, seasonality, and logistics."
+          }
         }
       }
     },
@@ -21513,6 +24711,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mais de medio a caro"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "More mid-range to pricey"
           }
         }
       }
@@ -21554,6 +24758,12 @@
             "state": "translated",
             "value": "Momento de %@"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ timing"
+          }
         }
       }
     },
@@ -21592,6 +24802,12 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
+            "value": "N/A"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "N/A"
           }
         }
@@ -21634,6 +24850,12 @@
             "state": "translated",
             "value": "Bem equilibrado no geral"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pretty balanced overall"
+          }
         }
       }
     },
@@ -21673,6 +24895,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Detalhamento da pontuacao"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Score breakdown"
           }
         }
       }
@@ -21714,6 +24942,12 @@
             "state": "translated",
             "value": "%lld paises selecionados com uma visao combinada de pontuacao para a viagem."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld selected countr(y/ies) with a combined scoring view for the trip."
+          }
         }
       }
     },
@@ -21753,6 +24987,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estimativa de %lld dias nos paises selecionados"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld-day estimate across selected countries"
           }
         }
       }
@@ -21794,6 +25034,12 @@
             "state": "translated",
             "value": "Resumo da viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Trip snapshot"
+          }
         }
       }
     },
@@ -21833,6 +25079,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gasto diario tipico"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Typical daily spend"
           }
         }
       }
@@ -21874,6 +25126,12 @@
             "state": "translated",
             "value": "Ponderado pelo seu itinerario dia a dia"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Weighted by your day-by-day itinerary"
+          }
         }
       }
     },
@@ -21913,6 +25171,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ponderado pelos dias atribuidos, excluindo %lld dia(s) de deslocamento"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Weighted by assigned days, excluding %lld travel day(s)"
           }
         }
       }
@@ -21954,6 +25218,12 @@
             "state": "translated",
             "value": "Planejador de viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Trip Planner"
+          }
         }
       }
     },
@@ -21993,6 +25263,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amigos de viagem"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Travel friends"
           }
         }
       }
@@ -22034,6 +25310,12 @@
             "state": "translated",
             "value": "Nome da viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Trip name"
+          }
         }
       }
     },
@@ -22073,6 +25355,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escapada urbana de verao"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Summer city escape"
           }
         }
       }
@@ -22114,6 +25402,12 @@
             "state": "translated",
             "value": "melhor passaporte salvo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "best saved passport"
+          }
         }
       }
     },
@@ -22153,6 +25447,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld dia(s)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld day(s)"
           }
         }
       }
@@ -22194,6 +25494,12 @@
             "state": "translated",
             "value": "Estados Unidos"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "United States"
+          }
         }
       }
     },
@@ -22233,6 +25539,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cada parada pode ser resolvida sem preparacao antecipada de visto."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Every stop can be handled without advance visa prep."
           }
         }
       }
@@ -22274,6 +25586,12 @@
             "state": "translated",
             "value": "Cada parada esta atualmente sem visto para esta viagem."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Every stop is currently visa-free for this trip."
+          }
         }
       }
     },
@@ -22313,6 +25631,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld alerta(s) de visto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld visa flag(s)"
           }
         }
       }
@@ -22354,6 +25678,12 @@
             "state": "translated",
             "value": "Ninguem no grupo precisa atualmente de preparacao antecipada de visto para essas paradas."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No one in the group currently needs advance visa prep for these stops."
+          }
         }
       }
     },
@@ -22393,6 +25723,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ pode ultrapassar a permanencia de %lld dias nesta viagem de %lld dias."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ may exceed the %lld-day stay on this %lld-day trip."
           }
         }
       }
@@ -22434,6 +25770,12 @@
             "state": "translated",
             "value": "%lld parada(s) a mais ainda exigem atencao neste itinerario."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld more stop(s) still need attention in this itinerary."
+          }
         }
       }
     },
@@ -22473,6 +25815,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ precisam de visto aqui."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ need visas here."
           }
         }
       }
@@ -22514,6 +25862,12 @@
             "state": "translated",
             "value": "Nao e preciso preparo antecipado"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No advance visa needed"
+          }
         }
       }
     },
@@ -22553,6 +25907,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nao e necessario visto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "No visa required"
           }
         }
       }
@@ -22594,6 +25954,12 @@
             "state": "translated",
             "value": "%@ precisa de visto aqui."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ needs a visa here."
+          }
         }
       }
     },
@@ -22633,6 +25999,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ pode ultrapassar a permanencia sem visto permitida para uma viagem de %lld dias."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ may exceed the allowed visa-free stay for a %lld-day trip."
           }
         }
       }
@@ -22674,6 +26046,12 @@
             "state": "translated",
             "value": "Uma ou mais paradas podem ultrapassar a permanencia permitida para esta viagem."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "One or more stops may exceed the allowed stay for this trip."
+          }
         }
       }
     },
@@ -22713,6 +26091,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plano de visto necessario"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Visa plan needed"
           }
         }
       }
@@ -22754,6 +26138,12 @@
             "state": "translated",
             "value": "passaporte salvo"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "saved passport"
+          }
         }
       }
     },
@@ -22793,6 +26183,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta parada pode ultrapassar a permanencia de %lld dias na sua viagem de %lld dias."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "This stop may exceed the %lld-day stay on your %lld-day trip."
           }
         }
       }
@@ -22834,6 +26230,12 @@
             "state": "translated",
             "value": "%lld parada(s)"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld stop(s)"
+          }
         }
       }
     },
@@ -22873,6 +26275,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld parada(s) para preparar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld stop(s) to prep"
           }
         }
       }
@@ -22914,6 +26322,12 @@
             "state": "translated",
             "value": "%lld parada(s) para preparar"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld stop(s) to prep for"
+          }
         }
       }
     },
@@ -22953,6 +26367,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plano de visto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Visa plan"
           }
         }
       }
@@ -22994,6 +26414,12 @@
             "state": "translated",
             "value": "%lld viajante(s)"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld traveler(s)"
+          }
         }
       }
     },
@@ -23033,6 +26459,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ pode ultrapassar a permanencia permitida em %@ %@ com seu melhor passaporte salvo (%@): cerca de %lld dia(s) permitidos para uma viagem de %lld dias."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ may exceed the allowed stay in %@ %@ on their best saved passport (%@): about %lld day(s) allowed for a %lld-day trip."
           }
         }
       }
@@ -23074,6 +26506,12 @@
             "state": "translated",
             "value": "%lld viajante(s) precisam de preparacao"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld traveler(s) need prep"
+          }
         }
       }
     },
@@ -23113,6 +26551,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ podem precisar de preparacao de visto para %@ %@. Melhor passaporte salvo para essa parada: %@."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ may need visa prep for %@ %@. Best saved passport for that stop: %@."
           }
         }
       }
@@ -23154,6 +26598,12 @@
             "state": "translated",
             "value": "Mantenha solo ou adicione amigos para comparar paises compartilhados na lista de desejos."
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Keep it solo or add friends to compare shared bucket-list countries."
+          }
         }
       }
     },
@@ -23194,6 +26644,12 @@
             "state": "translated",
             "value": "Quem vai?"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Who is Going"
+          }
         }
       }
     },
@@ -23233,6 +26689,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voce"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "You"
           }
         }
       }
@@ -23277,6 +26739,12 @@
             "state": "translated",
             "value": "Nome"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "По названию"
+          }
         }
       }
     },
@@ -23316,6 +26784,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pontuacao"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "По оценке"
           }
         }
       }

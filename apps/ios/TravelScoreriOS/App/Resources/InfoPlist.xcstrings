@@ -39,6 +39,12 @@
             "state": "translated",
             "value": "Explorador de aventuras de viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск приключений для путешествий"
+          }
         }
       }
     },
@@ -80,6 +86,12 @@
             "state": "translated",
             "value": "Explorador de aventuras de viagem"
           }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск приключений для путешествий"
+          }
         }
       }
     },
@@ -120,6 +132,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O Trip Planner usa seu calendario para que voce possa salvar datas provisórias de viagem como eventos do Apple Calendar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trip Planner использует ваш календарь, чтобы вы могли сохранять примерные даты поездки как события Apple Calendar."
           }
         }
       }

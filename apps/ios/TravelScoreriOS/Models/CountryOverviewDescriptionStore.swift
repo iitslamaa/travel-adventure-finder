@@ -2,6 +2,9 @@ import Foundation
 
 enum CountryOverviewDescriptionStore {
     private static let localizedDescriptions: [String: [String: String]] = [
+        "ru": [
+            "BB": "Барбадос - это остров в восточной части Карибского бассейна, известный ухоженными пляжами, культурой крикета, ромом и уверенным национальным стилем, который одновременно ощущается элегантным и расслабленным. Он стал республикой только в 2021 году, что удивительно недавно для страны, настолько известной во всем мире. Остров компактный, общительный и отлично умеет превращать жизнь у моря в часть своей идентичности."
+        ],
         "fr": [
             "BB": "La Barbade est une ile des Caraibes orientales connue pour ses plages soignees, sa culture du cricket, son rhum et un style national assure a la fois elegant et detendu. Elle n'est devenue une republique qu'en 2021, ce qui est etonnamment recent pour un pays aussi connu dans le monde. L'ile est compacte, sociable et tres douee pour faire de la vie en bord de mer une part de son identite."
         ],
@@ -303,6 +306,11 @@ enum CountryOverviewDescriptionStore {
 
     private static func fallbackDescription(for country: Country) -> String {
         switch currentLanguageCode {
+        case "ru":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) входит в регион \(label). Для этой записи в текущем наборе данных приложения пока нет полного локализованного описания, но страница страны остается доступной, пока список описаний дорабатывается."
+            }
+            return "\(country.localizedDisplayName) входит в набор стран приложения. Для этой записи в текущем наборе данных приложения пока нет полного локализованного описания, но страница страны остается доступной, пока список описаний дорабатывается."
         case "fr":
             if let label = country.localizedRegionLabel, !label.isEmpty {
                 return "\(country.localizedDisplayName) fait partie de \(label). Cette fiche n'a pas encore sa description complete localisee dans les donnees actuelles de l'application, mais la page du pays reste disponible pendant que la liste est en cours de finalisation."
@@ -350,6 +358,7 @@ enum CountryOverviewDescriptionStore {
 
         for candidate in candidates.compactMap({ $0 }) {
             if candidate.hasPrefix("pt") { return "pt" }
+            if candidate.hasPrefix("ru") { return "ru" }
             if candidate.hasPrefix("fr") { return "fr" }
             if candidate.hasPrefix("es") { return "es" }
             if candidate.hasPrefix("de") { return "de" }
