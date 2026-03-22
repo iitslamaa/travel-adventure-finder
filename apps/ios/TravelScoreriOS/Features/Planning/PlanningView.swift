@@ -2919,13 +2919,6 @@ private struct TripPlannerStatsSection: View {
         } && overstayRiskCountries.isEmpty
     }
 
-    private var primaryVisaWarningCountry: Country? {
-        if let overstayCountry = overstayRiskCountries.first {
-            return overstayCountry
-        }
-        return visaPrepCountries.min { ($0.visaEaseScore ?? 999) < ($1.visaEaseScore ?? 999) }
-    }
-
     private var averageOverallScore: Int? {
         average(of: scoredCountries.compactMap(\.score))
     }
@@ -2952,6 +2945,61 @@ private struct TripPlannerStatsSection: View {
     private var averageLanguageScore: Int? {
         let values = countries.compactMap { groupLanguageScoresByCountry[$0.id] }
         return average(of: values)
+    }
+
+    private var affectedTravelerCount: Int {
+        Set(groupVisaNeeds.map(\.travelerId)).count
+    }
+
+    private var visibleVisaSummaries: [TripPlannerVisaSummary] {
+        Array(visaSummaries.prefix(3))
+    }
+
+    private var hiddenVisaSummaryCount: Int {
+        max(visaSummaries.count - visibleVisaSummaries.count, 0)
+    }
+
+    private var visaSummaries: [TripPlannerVisaSummary] {
+        if isGroupTrip {
+            var grouped: [String: TripPlannerVisaSummary] = [:]
+
+            for need in groupVisaNeeds {
+                if var existing = grouped[need.countryID] {
+                    existing.add(need)
+                    grouped[need.countryID] = existing
+                } else {
+                    grouped[need.countryID] = TripPlannerVisaSummary(need: need)
+                }
+            }
+
+            return grouped.values.sorted { lhs, rhs in
+                if lhs.exceedsAllowedStay != rhs.exceedsAllowedStay {
+                    return lhs.exceedsAllowedStay && !rhs.exceedsAllowedStay
+                }
+                if lhs.travelerCount != rhs.travelerCount {
+                    return lhs.travelerCount > rhs.travelerCount
+                }
+                return lhs.countryName.localizedCaseInsensitiveCompare(rhs.countryName) == .orderedAscending
+            }
+        }
+
+        let riskByCountry = Dictionary(uniqueKeysWithValues: overstayRiskCountries.map { ($0.id, $0) })
+        let prepOnlyCountries = visaPrepCountries.filter { riskByCountry[$0.id] == nil }
+        let combined = overstayRiskCountries + prepOnlyCountries
+
+        return combined.map { country in
+            TripPlannerVisaSummary(
+                countryID: country.id,
+                countryName: country.name,
+                countryFlag: country.flagEmoji,
+                passportLabels: [country.visaPassportLabel ?? passportLabel],
+                travelerNames: [],
+                travelerCount: 0,
+                allowedDays: country.visaAllowedDays,
+                exceedsAllowedStay: overstayRiskCountries.contains(where: { $0.id == country.id }),
+                visaType: country.visaType
+            )
+        }
     }
 
     var body: some View {
@@ -3028,63 +3076,17 @@ private struct TripPlannerStatsSection: View {
                 )
             }
 
-            TripPlannerStatPill(
-                title: "Visa check",
-                value: visaSummaryValue,
-                detail: visaSummaryDetail
+            TripPlannerVisaSummaryCard(
+                headline: visaSummaryValue,
+                detail: visaSummaryDetail,
+                badges: visaBadges,
+                summaries: visibleVisaSummaries,
+                hiddenSummaryCount: hiddenVisaSummaryCount,
+                tripLengthDays: tripLengthDays,
+                passportLabel: passportLabel,
+                isGroupTrip: isGroupTrip,
+                allClearMessage: visaAllClearMessage
             )
-
-            if isGroupTrip, !countries.isEmpty {
-                if groupVisaNeeds.isEmpty {
-                    TripPlannerInfoCard(
-                        text: "No group member currently needs advance visa prep for these stops based on each person's strongest saved passport.",
-                        systemImage: "person.3.fill"
-                    )
-                } else {
-                    ForEach(groupVisaNeedHighlights) { need in
-                        TripPlannerInfoCard(
-                            text: need.summaryText(tripLengthDays: tripLengthDays),
-                            systemImage: need.exceedsAllowedStay
-                                ? "person.crop.circle.badge.exclamationmark"
-                                : "person.crop.circle.badge.clock"
-                        )
-                    }
-
-                    if groupVisaNeeds.count > groupVisaNeedHighlights.count {
-                        let remaining = groupVisaNeeds.count - groupVisaNeedHighlights.count
-                        TripPlannerInfoCard(
-                            text: "\(remaining) more traveler-specific visa flag\(remaining == 1 ? "" : "s") are in this itinerary.",
-                            systemImage: "ellipsis.circle.fill"
-                        )
-                    }
-                }
-            }
-
-            if !overstayRiskCountries.isEmpty {
-                TripPlannerInfoCard(
-                    text: overstayWarningText,
-                    systemImage: "exclamationmark.triangle.fill"
-                )
-            } else if allCountriesVisaFreeForTrip {
-                TripPlannerInfoCard(
-                    text: "No visa required for this trip based on the app's current \(passportLabel) passport data.",
-                    systemImage: "checkmark.seal.fill"
-                )
-            } else if allCountriesNeedNoAdvanceVisa {
-                TripPlannerInfoCard(
-                    text: "No advance visa needed for this trip based on the app's current \(passportLabel) passport data.",
-                    systemImage: "checkmark.seal.fill"
-                )
-            }
-
-            if let primaryVisaWarningCountry {
-                TripPlannerInfoCard(
-                    text: primaryVisaWarningText(for: primaryVisaWarningCountry),
-                    systemImage: overstayRiskCountries.contains(where: { $0.id == primaryVisaWarningCountry.id })
-                        ? "exclamationmark.triangle.fill"
-                        : "globe.badge.chevron.backward"
-                )
-            }
         }
     }
 
@@ -3111,7 +3113,10 @@ private struct TripPlannerStatsSection: View {
 
     private var visaSummaryValue: String {
         if !overstayRiskCountries.isEmpty {
-            return "Visa stay warning"
+            return "Visa plan needed"
+        }
+        if isGroupTrip, affectedTravelerCount > 0 {
+            return "\(affectedTravelerCount) traveler\(affectedTravelerCount == 1 ? "" : "s") need prep"
         }
         if allCountriesVisaFreeForTrip {
             return "No visa required"
@@ -3124,19 +3129,15 @@ private struct TripPlannerStatsSection: View {
 
     private var visaSummaryDetail: String {
         if !overstayRiskCountries.isEmpty {
-            return "One or more stops exceed the allowed stay for this trip"
+            return overstayWarningText
         }
         if isGroupTrip {
             if groupVisaNeeds.isEmpty {
-                return "Uses each member's strongest saved passport"
+                return "Checked against each traveler's strongest saved passport."
             }
-            return "\(groupVisaNeeds.count) traveler-specific flag\(groupVisaNeeds.count == 1 ? "" : "s") across the group"
+            return "\(visaPrepCountries.count) stop\(visaPrepCountries.count == 1 ? "" : "s") create \(groupVisaNeeds.count) traveler-specific visa flag\(groupVisaNeeds.count == 1 ? "" : "s")."
         }
-        return "Current \(passportLabel) passport visa data in the app"
-    }
-
-    private var groupVisaNeedHighlights: [TripPlannerTravelerVisaNeed] {
-        Array(groupVisaNeeds.prefix(3))
+        return "Based on the app's current \(passportLabel) passport data."
     }
 
     private var monthSummaryText: String {
@@ -3166,13 +3167,40 @@ private struct TripPlannerStatsSection: View {
         return "\(countriesText) may exceed the allowed visa-free stay for a \(tripLengthDays)-day trip."
     }
 
-    private func primaryVisaWarningText(for country: Country) -> String {
-        if let tripLengthDays, let allowedDays = country.visaAllowedDays, tripLengthDays > allowedDays {
-            return "\(country.flagEmoji) \(country.name) allows about \(allowedDays) day\(allowedDays == 1 ? "" : "s") on this entry status, so your \(tripLengthDays)-day trip would need a visa plan."
+    private var visaBadges: [String] {
+        var badges: [String] = []
+
+        if !countries.isEmpty {
+            badges.append("\(countries.count) stop\(countries.count == 1 ? "" : "s")")
         }
 
-        let winningPassportLabel = country.visaPassportLabel ?? passportLabel
-        return "\(country.flagEmoji) \(country.name): \(CountryVisaHelpers.headline(for: country, passportLabel: winningPassportLabel))"
+        if isGroupTrip {
+            badges.append("\(travelerCount) traveler\(travelerCount == 1 ? "" : "s")")
+            if !groupVisaNeeds.isEmpty {
+                badges.append("\(groupVisaNeeds.count) visa flag\(groupVisaNeeds.count == 1 ? "" : "s")")
+            }
+        } else if !visaPrepCountries.isEmpty {
+            badges.append("\(visaPrepCountries.count) stop\(visaPrepCountries.count == 1 ? "" : "s") to prep")
+        }
+
+        if let tripLengthDays {
+            badges.append("\(tripLengthDays) day\(tripLengthDays == 1 ? "" : "s")")
+        }
+
+        return badges
+    }
+
+    private var visaAllClearMessage: String? {
+        if isGroupTrip, groupVisaNeeds.isEmpty {
+            return "No one in the group currently needs advance visa prep for these stops."
+        }
+        if allCountriesVisaFreeForTrip {
+            return "Every stop is currently visa-free for this trip."
+        }
+        if allCountriesNeedNoAdvanceVisa {
+            return "Every stop can be handled without advance visa prep."
+        }
+        return nil
     }
 }
 
@@ -3197,6 +3225,247 @@ private struct TripPlannerTravelerVisaNeed: Identifiable, Hashable {
         }
 
         return "\(travelerName) may need visa prep for \(countryFlag) \(countryName). Best saved passport for that stop: \(passportLabel)."
+    }
+}
+
+private struct TripPlannerVisaSummary: Identifiable, Hashable {
+    let countryID: String
+    let countryName: String
+    let countryFlag: String
+    var passportLabels: [String]
+    var travelerNames: [String]
+    var travelerCount: Int
+    let allowedDays: Int?
+    var exceedsAllowedStay: Bool
+    let visaType: String?
+
+    init(
+        countryID: String,
+        countryName: String,
+        countryFlag: String,
+        passportLabels: [String],
+        travelerNames: [String],
+        travelerCount: Int,
+        allowedDays: Int?,
+        exceedsAllowedStay: Bool,
+        visaType: String?
+    ) {
+        self.countryID = countryID
+        self.countryName = countryName
+        self.countryFlag = countryFlag
+        self.passportLabels = passportLabels
+        self.travelerNames = travelerNames
+        self.travelerCount = travelerCount
+        self.allowedDays = allowedDays
+        self.exceedsAllowedStay = exceedsAllowedStay
+        self.visaType = visaType
+    }
+
+    init(need: TripPlannerTravelerVisaNeed) {
+        self.init(
+            countryID: need.countryID,
+            countryName: need.countryName,
+            countryFlag: need.countryFlag,
+            passportLabels: [need.passportLabel],
+            travelerNames: [need.travelerName],
+            travelerCount: 1,
+            allowedDays: need.allowedDays,
+            exceedsAllowedStay: need.exceedsAllowedStay,
+            visaType: need.visaType
+        )
+    }
+
+    var id: String { countryID }
+
+    mutating func add(_ need: TripPlannerTravelerVisaNeed) {
+        travelerCount += 1
+        exceedsAllowedStay = exceedsAllowedStay || need.exceedsAllowedStay
+        travelerNames = Array(NSOrderedSet(array: travelerNames + [need.travelerName])) as? [String] ?? travelerNames
+        passportLabels = Array(NSOrderedSet(array: passportLabels + [need.passportLabel])) as? [String] ?? passportLabels
+    }
+}
+
+private struct TripPlannerVisaSummaryCard: View {
+    let headline: String
+    let detail: String
+    let badges: [String]
+    let summaries: [TripPlannerVisaSummary]
+    let hiddenSummaryCount: Int
+    let tripLengthDays: Int?
+    let passportLabel: String
+    let isGroupTrip: Bool
+    let allClearMessage: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(iconBackgroundColor)
+                        .frame(width: 40, height: 40)
+
+                    Image(systemName: iconName)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.75))
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Visa plan")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.58))
+
+                    Text(headline)
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(.black)
+
+                    Text(detail)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.black.opacity(0.7))
+                }
+            }
+
+            if !badges.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(badges, id: \.self) { badge in
+                            TripPlannerBadge(text: badge)
+                        }
+                    }
+                }
+            }
+
+            if let allClearMessage, summaries.isEmpty {
+                TripPlannerInfoCard(
+                    text: allClearMessage,
+                    systemImage: "checkmark.seal.fill"
+                )
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(summaries) { summary in
+                        TripPlannerVisaCountryRow(
+                            summary: summary,
+                            tripLengthDays: tripLengthDays,
+                            passportLabel: passportLabel,
+                            isGroupTrip: isGroupTrip
+                        )
+                    }
+                }
+
+                if hiddenSummaryCount > 0 {
+                    TripPlannerInfoCard(
+                        text: "\(hiddenSummaryCount) more stop\(hiddenSummaryCount == 1 ? "" : "s") still need attention in this itinerary.",
+                        systemImage: "ellipsis.circle.fill"
+                    )
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color.white.opacity(0.82))
+        )
+    }
+
+    private var iconName: String {
+        summaries.contains(where: \.exceedsAllowedStay) ? "exclamationmark.triangle.fill" : "globe.badge.chevron.backward"
+    }
+
+    private var iconBackgroundColor: Color {
+        summaries.contains(where: \.exceedsAllowedStay)
+            ? Color(red: 0.94, green: 0.84, blue: 0.73)
+            : Color.black.opacity(0.08)
+    }
+}
+
+private struct TripPlannerVisaCountryRow: View {
+    let summary: TripPlannerVisaSummary
+    let tripLengthDays: Int?
+    let passportLabel: String
+    let isGroupTrip: Bool
+
+    private var passportText: String {
+        let uniqueLabels = Array(NSOrderedSet(array: summary.passportLabels)) as? [String] ?? summary.passportLabels
+        return uniqueLabels.joined(separator: ", ")
+    }
+
+    private var travelerPreview: String {
+        let names = summary.travelerNames
+        guard !names.isEmpty else { return "" }
+        if names.count <= 2 {
+            return names.joined(separator: ", ")
+        }
+        return "\(names.prefix(2).joined(separator: ", ")) +\(names.count - 2) more"
+    }
+
+    private var statusText: String {
+        if summary.exceedsAllowedStay, let tripLengthDays, let allowedDays = summary.allowedDays {
+            if isGroupTrip, summary.travelerCount > 0 {
+                return "\(summary.travelerCount) traveler\(summary.travelerCount == 1 ? "" : "s") may exceed the \(allowedDays)-day stay on this \(tripLengthDays)-day trip."
+            }
+            return "This stop may exceed the \(allowedDays)-day stay on your \(tripLengthDays)-day trip."
+        }
+
+        if isGroupTrip, summary.travelerCount > 0 {
+            return "\(summary.travelerCount) traveler\(summary.travelerCount == 1 ? "" : "s") need visa prep here."
+        }
+
+        let label = summary.passportLabels.first ?? passportLabel
+        let country = Country(iso2: summary.countryID, name: summary.countryName, score: nil).applyingVisa(
+            visaEaseScore: nil,
+            visaType: summary.visaType,
+            visaAllowedDays: summary.allowedDays,
+            visaFeeUsd: nil,
+            visaNotes: nil,
+            visaSourceUrl: nil,
+            visaPassportCode: nil,
+            visaPassportLabel: label,
+            visaRecommendedPassportLabel: nil
+        )
+        return CountryVisaHelpers.headline(for: country, passportLabel: label)
+    }
+
+    private var secondaryText: String {
+        if isGroupTrip, !travelerPreview.isEmpty {
+            return "Affected: \(travelerPreview) • Passport: \(passportText)"
+        }
+
+        if !passportText.isEmpty {
+            return "Passport used: \(passportText)"
+        }
+
+        return ""
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("\(summary.countryFlag) \(summary.countryName)")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.black)
+
+                Text(statusText)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.78))
+
+                if !secondaryText.isEmpty {
+                    Text(secondaryText)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.black.opacity(0.6))
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            Image(systemName: summary.exceedsAllowedStay ? "exclamationmark.triangle.fill" : "chevron.forward.circle.fill")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.black.opacity(0.42))
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color(red: 0.98, green: 0.97, blue: 0.95).opacity(0.92))
+        )
     }
 }
 
