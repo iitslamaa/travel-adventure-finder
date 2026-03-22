@@ -28,7 +28,7 @@ struct ProfileSettingsDeletionCoordinator {
             dismiss()
 
         } catch {
-            setError("Failed to delete account. Please try again.")
+            setError(String(localized: "profile.settings.delete_failed"))
         }
 
         setDeleting(false)

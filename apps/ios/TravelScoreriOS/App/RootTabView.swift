@@ -54,6 +54,11 @@ struct RootTabView: View {
         case profile
         case more
     }
+
+    private enum GuestLockedSection {
+        case friends
+        case profile
+    }
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
 
@@ -100,8 +105,7 @@ struct RootTabView: View {
                         .environmentObject(friendsSocialNav)
                 } else {
                     guestLockedState(
-                        title: "Friends",
-                        message: "Create an account to add your friends!",
+                        section: .friends,
                         backgroundImage: "travel3"
                     )
                 }
@@ -122,8 +126,7 @@ struct RootTabView: View {
                         .environmentObject(profileSocialNav)
                 } else {
                     guestLockedState(
-                        title: "Profile",
-                        message: "Create an account to customize your profile!",
+                        section: .profile,
                         backgroundImage: "travel4"
                     )
                 }
@@ -207,11 +210,11 @@ struct RootTabView: View {
 
     private var customTabBar: some View {
         HStack(spacing: 10) {
-            tabButton(.discovery, title: "Discover", systemImage: "globe.americas.fill")
-            tabButton(.planning, title: "Plan", systemImage: "list.bullet")
-            tabButton(.friends, title: "Friends", systemImage: "person.2.fill")
-            tabButton(.profile, title: "Profile", systemImage: "person.crop.circle")
-            tabButton(.more, title: "More", systemImage: "ellipsis")
+            tabButton(.discovery, title: String(localized: "tab.discovery"), systemImage: "globe.americas.fill")
+            tabButton(.planning, title: String(localized: "tab.planning"), systemImage: "list.bullet")
+            tabButton(.friends, title: String(localized: "tab.friends"), systemImage: "person.2.fill")
+            tabButton(.profile, title: String(localized: "tab.profile"), systemImage: "person.crop.circle")
+            tabButton(.more, title: String(localized: "tab.more"), systemImage: "ellipsis")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 10)
@@ -233,20 +236,24 @@ struct RootTabView: View {
         .shadow(color: .black.opacity(0.18), radius: 14, y: 8)
     }
 
-    private func guestLockedState(title: String, message: String, backgroundImage: String) -> some View {
-        ZStack {
+    private func guestLockedState(section: GuestLockedSection, backgroundImage: String) -> some View {
+        let bannerTitle = String(localized: section == .friends ? "guest.friends.banner_title" : "guest.profile.banner_title")
+        let cardTitle = String(localized: section == .friends ? "guest.friends.card_title" : "guest.profile.card_title")
+        let message = String(localized: section == .friends ? "guest.friends.message" : "guest.profile.message")
+
+        return ZStack {
             Theme.pageBackground(backgroundImage)
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner(title)
+                Theme.titleBanner(bannerTitle)
 
                 Spacer(minLength: 20)
 
                 VStack(spacing: 24) {
                     Theme.featureCard(
-                        icon: title == "Friends" ? "person.2.fill" : "person.crop.circle",
-                        title: title == "Friends" ? "Friends are waiting" : "Build your profile",
+                        icon: section == .friends ? "person.2.fill" : "person.crop.circle",
+                        title: cardTitle,
                         subtitle: message,
                         minHeight: 138
                     ) {
@@ -261,7 +268,7 @@ struct RootTabView: View {
                         HStack(spacing: 10) {
                             Image(systemName: "paperplane.fill")
                                 .font(.system(size: 16, weight: .bold))
-                            Text("Create Account / Log In")
+                            Text("auth.create_account_log_in")
                                 .font(.system(size: 18, weight: .bold))
                         }
                         .foregroundColor(Color(red: 0.19, green: 0.15, blue: 0.12))
@@ -336,7 +343,7 @@ struct MoreView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("More")
+                Theme.titleBanner(String(localized: "more.title"))
 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -344,8 +351,8 @@ struct MoreView: View {
                             FeedbackView()
                         } label: {
                             MoreCard(
-                                title: "Send Feedback",
-                                subtitle: "Let us know what you think",
+                                title: String(localized: "more.feedback.title"),
+                                subtitle: String(localized: "more.feedback.subtitle"),
                                 icon: "bubble.left.and.bubble.right"
                             )
                         }
@@ -355,8 +362,8 @@ struct MoreView: View {
                             LegalView()
                         } label: {
                             MoreCard(
-                                title: "Legal",
-                                subtitle: "Privacy, terms, and app policies",
+                                title: String(localized: "more.legal.title"),
+                                subtitle: String(localized: "more.legal.subtitle"),
                                 icon: "doc.text"
                             )
                         }

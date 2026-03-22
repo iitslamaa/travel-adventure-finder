@@ -119,7 +119,7 @@ struct ProfileHeaderView: View {
 
                 // Current Country
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Current")
+                    Text("profile.header.current")
                         .font(.callout.weight(.semibold))
                         .foregroundColor(.black)
 
@@ -127,7 +127,7 @@ struct ProfileHeaderView: View {
                        !country.isEmpty {
                         countryLink(code: country)
                     } else {
-                        Text("Not set")
+                        Text("profile.header.not_set")
                             .font(.subheadline)
                             .foregroundColor(.black)
                     }
@@ -135,7 +135,7 @@ struct ProfileHeaderView: View {
 
                 // Next Destination
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Next")
+                    Text("profile.header.next")
                         .font(.callout.weight(.semibold))
                         .foregroundColor(.black)
 
@@ -143,7 +143,7 @@ struct ProfileHeaderView: View {
                        !destination.isEmpty {
                         countryLink(code: destination)
                     } else {
-                        Text("Not set")
+                        Text("profile.header.not_set")
                             .font(.subheadline)
                             .foregroundColor(.black)
                     }
@@ -152,7 +152,7 @@ struct ProfileHeaderView: View {
                 // Favorites
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
-                        Text("Favorite trips")
+                        Text("profile.header.favorite_trips")
                             .font(.callout.weight(.semibold))
                             .foregroundColor(.black)
 
@@ -189,7 +189,7 @@ struct ProfileHeaderView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     } else {
-                        Text("Not set")
+                        Text("profile.header.not_set")
                             .font(.subheadline)
                             .foregroundColor(.black)
                     }
@@ -212,10 +212,10 @@ struct ProfileHeaderView: View {
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
         .sheet(isPresented: $showFavoriteTripsSheet) {
-            CountryCodesSheet(title: "Favorite Trips", countryCodes: favoriteCountries, onOpenCountry: onOpenCountry)
+            CountryCodesSheet(title: String(localized: "profile.header.favorite_trips"), countryCodes: favoriteCountries, onOpenCountry: onOpenCountry)
         }
         .sheet(isPresented: $showHomeFlagsSheet) {
-            CountryCodesSheet(title: "Home Flags", countryCodes: homeCountryCodes, onOpenCountry: onOpenCountry)
+            CountryCodesSheet(title: String(localized: "profile.header.home_flags"), countryCodes: homeCountryCodes, onOpenCountry: onOpenCountry)
         }
     }
 
@@ -306,13 +306,13 @@ struct ProfileHeaderView: View {
 
         switch state {
         case .none:
-            return "Add Friend"
+            return String(localized: "profile.header.add_friend")
         case .requestSent:
-            return "Request Sent"
+            return String(localized: "profile.header.request_sent")
         case .requestReceived:
-            return "Accept"
+            return String(localized: "profile.header.accept")
         case .friends:
-            return "Friends"
+            return String(localized: "friends.section.title")
         case .selfProfile:
             return ""
         }
@@ -357,21 +357,21 @@ struct ProfileHeaderView: View {
         let upper = code.uppercased()
         switch upper {
         case "US":
-            return "USA"
+            return String(localized: "country.short.us")
         case "GB":
-            return "UK"
+            return String(localized: "country.short.gb")
         case "PS":
-            return "Palestine"
+            return String(localized: "country.short.ps")
         case "AE":
-            return "UAE"
+            return String(localized: "country.short.ae")
         case "CD":
-            return "DRC"
+            return String(localized: "country.short.cd")
         case "CF":
-            return "CAR"
+            return String(localized: "country.short.cf")
         default:
             break
         }
-        let locale = Locale(identifier: "en_US")
+        let locale = Locale.autoupdatingCurrent
         return locale.localizedString(forRegionCode: upper) ?? upper
     }
 
@@ -506,19 +506,19 @@ private struct CountryCodesSheet: View {
         let upper = countryCode.uppercased()
         switch upper {
         case "US":
-            return "USA"
+            return String(localized: "country.short.us")
         case "GB":
-            return "UK"
+            return String(localized: "country.short.gb")
         case "PS":
-            return "Palestine"
+            return String(localized: "country.short.ps")
         case "AE":
-            return "UAE"
+            return String(localized: "country.short.ae")
         case "CD":
-            return "DRC"
+            return String(localized: "country.short.cd")
         case "CF":
-            return "CAR"
+            return String(localized: "country.short.cf")
         default:
-            return Locale(identifier: "en_US").localizedString(forRegionCode: upper) ?? upper
+            return Locale.autoupdatingCurrent.localizedString(forRegionCode: upper) ?? upper
         }
     }
 }

@@ -61,7 +61,11 @@ extension ProfileViewModel {
         }()
 
         guard !trimmedName.isEmpty, !trimmedUsername.isEmpty else {
-            throw NSError(domain: "ProfileValidation", code: 1, userInfo: [NSLocalizedDescriptionKey: "Name and username are required."])
+            throw NSError(
+                domain: "ProfileValidation",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.name_username_required")]
+            )
         }
         
         let payload = ProfileUpdate(

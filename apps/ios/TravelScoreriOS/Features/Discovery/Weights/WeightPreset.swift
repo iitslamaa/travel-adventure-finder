@@ -9,16 +9,19 @@ import Foundation
 
 struct WeightPreset: Identifiable {
     let id = UUID()
-    let name: String
-    let description: String
+    let nameKey: String
+    let descriptionKey: String
     let weights: ScoreWeights
+
+    var name: String { NSLocalizedString(nameKey, comment: "") }
+    var description: String { NSLocalizedString(descriptionKey, comment: "") }
 }
 
 extension WeightPreset {
 
     static let balanced = WeightPreset(
-        name: "Balanced",
-        description: "Even mix of affordability, safety, and visa access",
+        nameKey: "discovery.weights.preset.balanced",
+        descriptionKey: "discovery.weights.preset.balanced_description",
         weights: ScoreWeights(
             affordability: 0.2,
             visa: 0.2,
@@ -29,8 +32,8 @@ extension WeightPreset {
     )
 
     static let budget = WeightPreset(
-        name: "Budget",
-        description: "Prioritize cheaper destinations",
+        nameKey: "discovery.weights.preset.budget",
+        descriptionKey: "discovery.weights.preset.budget_description",
         weights: ScoreWeights(
             affordability: 0.45,
             visa: 0.1,
@@ -41,8 +44,8 @@ extension WeightPreset {
     )
 
     static let easyTravel = WeightPreset(
-        name: "Easy Travel",
-        description: "Visa-free and convenient destinations",
+        nameKey: "discovery.weights.preset.easy_travel",
+        descriptionKey: "discovery.weights.preset.easy_travel_description",
         weights: ScoreWeights(
             affordability: 0.1,
             visa: 0.3,
@@ -53,8 +56,8 @@ extension WeightPreset {
     )
 
     static let safetyFirst = WeightPreset(
-        name: "Safety First",
-        description: "Prefer destinations with strong safety ratings",
+        nameKey: "discovery.weights.preset.safety_first",
+        descriptionKey: "discovery.weights.preset.safety_first_description",
         weights: ScoreWeights(
             affordability: 0.1,
             visa: 0.15,

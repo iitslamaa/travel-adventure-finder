@@ -76,8 +76,10 @@ struct CountryListView: View {
             filtered = recalculatedCountries
         } else {
             let normalizedSearch = snapshotSearch.normalizedSearchKey
-            filtered = recalculatedCountries.filter {
-                $0.name.normalizedSearchKey.contains(normalizedSearch)
+            filtered = recalculatedCountries.filter { country in
+                country.localizedSearchableNames.contains {
+                    $0.normalizedSearchKey.contains(normalizedSearch)
+                }
             }
         }
 
@@ -85,7 +87,7 @@ struct CountryListView: View {
         switch snapshotSort {
         case .name:
             baseSorted = filtered.sorted {
-                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending
             }
         case .score:
             baseSorted = filtered.sorted { ($0.score ?? Int.min) > ($1.score ?? Int.min) }
@@ -252,7 +254,7 @@ private struct LocalFloatingSearchBar: View {
             TextField(
                 "",
                 text: $text,
-                prompt: Text("Search countries or territories")
+                prompt: Text("discovery.country_list.search_placeholder")
                     .foregroundStyle(Color.black.opacity(0.28))
             )
                 .focused(isFocused)
@@ -303,7 +305,7 @@ private struct SwipeableCountryRow: View {
                 .font(.system(size: 22))
                 .frame(width: 28, alignment: .leading)
 
-            Text(country.name)
+            Text(country.localizedDisplayName)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.black)
                 .lineLimit(1)
@@ -335,7 +337,7 @@ private struct SwipeableCountryRow: View {
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(action: onVisited) {
-                Label("Visited", systemImage: isVisited ? "checkmark.circle.fill" : "checkmark.circle")
+                Label("planning.list_kind.visited.short", systemImage: isVisited ? "checkmark.circle.fill" : "checkmark.circle")
             }
             .tint(.green)
 
@@ -343,7 +345,7 @@ private struct SwipeableCountryRow: View {
                 VStack(spacing: 4) {
                     Text("🪣")
                         .font(.system(size: 20))
-                    Text("Bucket")
+                    Text("planning.list_kind.bucket.short")
                         .font(.system(size: 11, weight: .semibold))
                 }
             }
@@ -370,7 +372,7 @@ private struct PlanningSelectableCountryRow: View {
                     .frame(width: 28, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(country.name)
+                    Text(country.localizedDisplayName)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.black)
                         .lineLimit(1)

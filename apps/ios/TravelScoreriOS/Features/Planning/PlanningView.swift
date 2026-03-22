@@ -19,22 +19,22 @@ enum PlanningListKind {
 
     var title: String {
         switch self {
-        case .bucket: return "Bucket List"
-        case .visited: return "Visited Countries"
+        case .bucket: return String(localized: "planning.bucket_list.title")
+        case .visited: return String(localized: "planning.visited.title")
         }
     }
 
     var shortTitle: String {
         switch self {
-        case .bucket: return "Bucket"
-        case .visited: return "Visited"
+        case .bucket: return String(localized: "planning.list_kind.bucket.short")
+        case .visited: return String(localized: "planning.list_kind.visited.short")
         }
     }
 
     var subtitle: String {
         switch self {
-        case .bucket: return "Places you want to visit"
-        case .visited: return "Track places you've been"
+        case .bucket: return String(localized: "planning.bucket_list.subtitle")
+        case .visited: return String(localized: "planning.visited.subtitle")
         }
     }
 
@@ -54,29 +54,29 @@ enum PlanningListKind {
 
     var otherListLabel: String {
         switch self {
-        case .bucket: return "Also visited"
-        case .visited: return "Also in bucket"
+        case .bucket: return String(localized: "planning.list_kind.bucket.other_label")
+        case .visited: return String(localized: "planning.list_kind.visited.other_label")
         }
     }
 
     var otherListName: String {
         switch self {
-        case .bucket: return "Visited"
-        case .visited: return "Bucket"
+        case .bucket: return String(localized: "planning.list_kind.visited.short")
+        case .visited: return String(localized: "planning.list_kind.bucket.short")
         }
     }
 
     var pickerTitle: String {
         switch self {
-        case .bucket: return "Edit Bucket List"
-        case .visited: return "Edit Visited"
+        case .bucket: return String(localized: "planning.list_kind.bucket.picker_title")
+        case .visited: return String(localized: "planning.list_kind.visited.picker_title")
         }
     }
 
     var pickerSubtitle: String {
         switch self {
-        case .bucket: return "Tap any country to add it or remove it from your bucket list."
-        case .visited: return "Tap any country to add it or remove it from your visited list."
+        case .bucket: return String(localized: "planning.list_kind.bucket.picker_subtitle")
+        case .visited: return String(localized: "planning.list_kind.visited.picker_subtitle")
         }
     }
 
@@ -89,8 +89,8 @@ enum PlanningListKind {
 
     var emptyTitle: String {
         switch self {
-        case .bucket: return "No Bucket List Yet"
-        case .visited: return "No trips yet"
+        case .bucket: return String(localized: "planning.list_kind.bucket.empty_title")
+        case .visited: return String(localized: "planning.list_kind.visited.empty_title")
         }
     }
 
@@ -103,8 +103,8 @@ enum PlanningListKind {
 
     var emptyDescription: String {
         switch self {
-        case .bucket: return "Tap Edit to add countries here, or swipe left on a country and tap Bucket."
-        case .visited: return "Tap Edit to add countries here, or swipe left on a country and tap Visited."
+        case .bucket: return String(localized: "planning.list_kind.bucket.empty_description")
+        case .visited: return String(localized: "planning.list_kind.visited.empty_description")
         }
     }
 
@@ -140,7 +140,7 @@ struct ListsView: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            Theme.titleBanner("Planning")
+            Theme.titleBanner(String(localized: "planning.title"))
 
             ScrollViewReader { proxy in
                 ScrollView {
@@ -150,8 +150,8 @@ struct ListsView: View {
                             BucketListView()
                         } label: {
                             PlanningCard(
-                                title: "Bucket List",
-                                subtitle: "Places you want to visit",
+                                title: String(localized: "planning.bucket_list.title"),
+                                subtitle: String(localized: "planning.bucket_list.subtitle"),
                                 icon: "bookmark"
                             )
                         }
@@ -161,8 +161,8 @@ struct ListsView: View {
                             MyTravelsView()
                         } label: {
                             PlanningCard(
-                                title: "Visited Countries",
-                                subtitle: "Track places you've been",
+                                title: String(localized: "planning.visited.title"),
+                                subtitle: String(localized: "planning.visited.subtitle"),
                                 icon: "checkmark.circle"
                             )
                         }
@@ -172,8 +172,8 @@ struct ListsView: View {
                             TripPlannerView()
                         } label: {
                             PlanningCard(
-                                title: "Trip Planner",
-                                subtitle: "Build a trip with dates, countries, and friends",
+                                title: String(localized: "planning.trip_planner.title"),
+                                subtitle: String(localized: "planning.trip_planner.subtitle"),
                                 icon: "airplane.departure"
                             )
                         }
@@ -323,8 +323,8 @@ struct PlanningListActionButton: View {
         .buttonStyle(.plain)
         .accessibilityLabel(
             isActive
-            ? "Remove \(kind.shortTitle) for this country"
-            : "Add \(kind.shortTitle) for this country"
+            ? String(format: String(localized: "planning.country_toggle.remove_format"), locale: Locale.current, kind.shortTitle)
+            : String(format: String(localized: "planning.country_toggle.add_format"), locale: Locale.current, kind.shortTitle)
         )
     }
 }
@@ -388,7 +388,7 @@ struct PlanningCountryPickerView: View {
                     onSave(draftSelectedIds)
                     dismiss()
                 } label: {
-                    Text(isSaving ? "Saving..." : "Save")
+                    Text(isSaving ? String(localized: "common.saving") : String(localized: "common.save"))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14)
@@ -464,18 +464,18 @@ enum TripPlannerAvailabilityKind: String, Codable, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .exactDates:
-            return "Exact dates"
+            return String(localized: "trip_planner.availability.kind.exact_dates")
         case .flexibleMonth:
-            return "Flexible month"
+            return String(localized: "trip_planner.availability.kind.flexible_month")
         }
     }
 
     var subtitle: String {
         switch self {
         case .exactDates:
-            return "A specific range someone knows works."
+            return String(localized: "trip_planner.availability.kind.exact_dates_subtitle")
         case .flexibleMonth:
-            return "A month someone could likely make work."
+            return String(localized: "trip_planner.availability.kind.flexible_month_subtitle")
         }
     }
 }
@@ -499,8 +499,8 @@ enum TripPlannerDayPlanKind: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .country: return "Country"
-        case .travel: return "Travel"
+        case .country: return String(localized: "trip_planner.itinerary.country")
+        case .travel: return String(localized: "trip_planner.itinerary.travel")
         }
     }
 }
@@ -535,8 +535,8 @@ enum TripPlannerExpenseSplitMode: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .everyone: return "Everyone"
-        case .selectedPeople: return "Selected"
+        case .everyone: return String(localized: "trip_planner.expenses.split_mode.everyone")
+        case .selectedPeople: return String(localized: "trip_planner.expenses.split_mode.selected")
         }
     }
 }
@@ -550,9 +550,9 @@ enum TripPlannerExpensePaymentMethod: String, Codable, CaseIterable, Identifiabl
 
     var title: String {
         switch self {
-        case .manual: return "Manual"
-        case .venmo: return "Venmo"
-        case .applePay: return "Apple Pay"
+        case .manual: return String(localized: "trip_planner.expenses.manual")
+        case .venmo: return String(localized: "trip_planner.expenses.venmo")
+        case .applePay: return String(localized: "trip_planner.expenses.apple_pay")
         }
     }
 }
@@ -760,7 +760,7 @@ private enum TripPlannerDayPlanBuilder {
                     date: date,
                     kind: .country,
                     countryId: firstCountry.id,
-                    countryName: firstCountry.name
+                    countryName: Locale.autoupdatingCurrent.localizedString(forRegionCode: firstCountry.id.uppercased()) ?? firstCountry.name
                 )
             }
 
@@ -1033,7 +1033,7 @@ struct TripPlannerView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Trip Planner")
+                Theme.titleBanner(String(localized: "trip_planner.title"))
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -1101,7 +1101,7 @@ struct TripPlannerView: View {
                     Image(systemName: "plus")
                         .font(.system(size: 13, weight: .bold))
 
-                    Text("New Trip")
+                    Text("trip_planner.new_trip")
                         .font(.system(size: 15, weight: .bold))
                 }
                     .foregroundStyle(.black)
@@ -1121,7 +1121,7 @@ struct TripPlannerView: View {
         .sheet(item: $calendarDraft) { draft in
             TripPlannerCalendarSheet(draft: draft)
         }
-        .alert("Calendar Access", isPresented: Binding(
+        .alert(String(localized: "trip_planner.calendar_access"), isPresented: Binding(
             get: { calendarError != nil },
             set: { newValue in
                 if !newValue {
@@ -1129,7 +1129,7 @@ struct TripPlannerView: View {
                 }
             }
         )) {
-            Button("OK", role: .cancel) {}
+            Button(String(localized: "common.ok"), role: .cancel) {}
         } message: {
             Text(calendarError ?? "")
         }
@@ -1139,7 +1139,7 @@ struct TripPlannerView: View {
     private func openCalendar(for trip: TripPlannerTrip) async {
         guard let startDate = trip.startDate,
               let endDate = trip.endDate else {
-            calendarError = "This trip needs tentative dates before it can be added to Apple Calendar."
+            calendarError = String(localized: "trip_planner.calendar_error_missing_dates")
             return
         }
 
@@ -1148,7 +1148,7 @@ struct TripPlannerView: View {
         do {
             let granted = try await store.requestFullAccessToEvents()
             guard granted else {
-                calendarError = "Calendar access was denied. You can enable it later in Settings."
+                calendarError = String(localized: "trip_planner.calendar_error_denied")
                 return
             }
 
@@ -1161,14 +1161,24 @@ struct TripPlannerView: View {
 
             let noteParts = [
                 trip.notes.isEmpty ? nil : trip.notes,
-                trip.countryNames.isEmpty ? nil : "Countries: \(trip.countryNames.joined(separator: ", "))",
-                trip.friendNames.isEmpty ? nil : "Friends: \(trip.friendNames.joined(separator: ", "))"
+                trip.countryNames.isEmpty ? nil : String(
+                    format: String(localized: "trip_planner.calendar_notes_countries"),
+                    locale: Locale.current,
+                    trip.countryNames.joined(separator: ", ")
+                ),
+                trip.friendNames.isEmpty ? nil : String(
+                    format: String(localized: "trip_planner.calendar_notes_friends"),
+                    locale: Locale.current,
+                    trip.friendNames.joined(separator: ", ")
+                )
             ].compactMap { $0 }
             event.notes = noteParts.joined(separator: "\n")
 
             calendarDraft = TripPlannerCalendarDraft(store: store, event: event)
         } catch {
-            calendarError = error.localizedDescription
+            calendarError = error.localizedDescription.isEmpty
+                ? String(localized: "trip_planner.calendar_error_generic")
+                : error.localizedDescription
         }
     }
 }
@@ -1290,7 +1300,7 @@ private struct TripPlannerComposerView: View {
         if !selectedCountries.isEmpty {
             sections.append(
                 TripPlannerCountryPickerSection(
-                    title: "Already in this trip",
+                    title: String(localized: "trip_planner.country_picker.already_in_trip"),
                     countries: selectedCountries
                 )
             )
@@ -1304,7 +1314,7 @@ private struct TripPlannerComposerView: View {
             if !mutualCountries.isEmpty {
                 sections.append(
                     TripPlannerCountryPickerSection(
-                        title: "Everyone's bucket list",
+                        title: String(localized: "trip_planner.country_picker.everyones_bucket"),
                         countries: mutualCountries
                     )
                 )
@@ -1320,7 +1330,12 @@ private struct TripPlannerComposerView: View {
                 if !matchingCountries.isEmpty {
                     sections.append(
                         TripPlannerCountryPickerSection(
-                            title: "\(matchCount) of \(groupSize) bucket lists",
+                            title: String(
+                                format: String(localized: "trip_planner.country_picker.match_count_format"),
+                                locale: Locale.current,
+                                matchCount,
+                                groupSize
+                            ),
                             countries: matchingCountries
                         )
                     )
@@ -1334,7 +1349,7 @@ private struct TripPlannerComposerView: View {
         if !oneBucketCountries.isEmpty {
             sections.append(
                 TripPlannerCountryPickerSection(
-                    title: groupSize > 1 ? "In one person's bucket list" : "From your bucket list",
+                    title: groupSize > 1 ? String(localized: "trip_planner.country_picker.one_person_bucket") : String(localized: "trip_planner.country_picker.from_your_bucket"),
                     countries: oneBucketCountries
                 )
             )
@@ -1346,7 +1361,7 @@ private struct TripPlannerComposerView: View {
         if !otherCountries.isEmpty {
             sections.append(
                 TripPlannerCountryPickerSection(
-                    title: "All other countries",
+                    title: String(localized: "trip_planner.country_picker.all_other_countries"),
                     countries: otherCountries
                 )
             )
@@ -1374,12 +1389,12 @@ private struct TripPlannerComposerView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Create Trip")
+                Theme.titleBanner(String(localized: "trip_planner.create_trip_title"))
 
                 if isLoading {
                     VStack(spacing: 12) {
                         ProgressView()
-                        Text("Loading planner...")
+                        Text("trip_planner.loading")
                             .font(.subheadline)
                             .foregroundStyle(.black)
                     }
@@ -1388,31 +1403,31 @@ private struct TripPlannerComposerView: View {
                     ScrollView {
                         VStack(spacing: 18) {
                             TripPlannerSectionCard(
-                                title: "Trip Basics",
-                                subtitle: "Give it a name and rough timing so you can start shaping it."
+                                title: String(localized: "trip_planner.basics.title"),
+                                subtitle: String(localized: "trip_planner.basics.subtitle")
                             ) {
                                 VStack(alignment: .leading, spacing: 14) {
                                     TripPlannerTextInput(
-                                        title: "Trip name",
+                                        title: String(localized: "trip_planner.trip_name"),
                                         text: $title,
-                                        placeholder: "Summer city escape"
+                                        placeholder: String(localized: "trip_planner.trip_name_placeholder")
                                     )
 
                                     TripPlannerTextInput(
-                                        title: "Notes",
+                                        title: String(localized: "trip_planner.notes"),
                                         text: $notes,
-                                        placeholder: "What kind of trip are you imagining?",
+                                        placeholder: String(localized: "trip_planner.notes_placeholder"),
                                         axis: .vertical
                                     )
 
-                                    Toggle("Add tentative dates", isOn: $includeDates)
+                                    Toggle("trip_planner.add_tentative_dates", isOn: $includeDates)
                                         .tint(.black)
 
                                     if includeDates {
-                                        DatePicker("Start", selection: $startDate, displayedComponents: .date)
+                                        DatePicker("trip_planner.start", selection: $startDate, displayedComponents: .date)
                                             .tint(.black)
 
-                                        DatePicker("End", selection: $endDate, in: startDate..., displayedComponents: .date)
+                                        DatePicker("trip_planner.end", selection: $endDate, in: startDate..., displayedComponents: .date)
                                             .tint(.black)
 
                                         Button {
@@ -1420,7 +1435,7 @@ private struct TripPlannerComposerView: View {
                                                 await openDraftCalendar()
                                             }
                                         } label: {
-                                            Label("Preview in Apple Calendar", systemImage: "calendar.badge.plus")
+                                            Label("trip_planner.preview_calendar", systemImage: "calendar.badge.plus")
                                                 .font(.system(size: 14, weight: .semibold))
                                                 .foregroundStyle(.black)
                                                 .frame(maxWidth: .infinity)
@@ -1436,17 +1451,17 @@ private struct TripPlannerComposerView: View {
                             }
 
                             TripPlannerSectionCard(
-                                title: "Who’s Going",
-                                subtitle: "Keep it solo or add friends to compare shared bucket-list countries."
+                                title: String(localized: "trip_planner.whos_going.title"),
+                                subtitle: String(localized: "trip_planner.whos_going.subtitle")
                             ) {
                                 VStack(alignment: .leading, spacing: 14) {
-                                    Toggle("Plan with friends", isOn: $includeFriends)
+                                    Toggle("trip_planner.plan_with_friends", isOn: $includeFriends)
                                         .tint(.black)
 
                                     if includeFriends {
                                         if !sessionManager.isAuthenticated {
                                             TripPlannerInfoCard(
-                                                text: "Friend matching needs a signed-in account.",
+                                                text: String(localized: "trip_planner.friend_matching_locked"),
                                                 systemImage: "lock.fill"
                                             )
                                         } else if let friendsError {
@@ -1456,19 +1471,19 @@ private struct TripPlannerComposerView: View {
                                             )
                                         } else if friends.isEmpty {
                                             TripPlannerInfoCard(
-                                                text: "You don’t have any friends added yet, so this trip will stay solo for now.",
+                                                text: String(localized: "trip_planner.no_friends_yet"),
                                                 systemImage: "person.2.slash"
                                             )
                                         } else {
                                             HStack {
-                                                Text("Travel friends")
+                                                Text("trip_planner.travel_friends")
                                                     .font(.system(size: 15, weight: .bold))
                                                     .foregroundStyle(.black)
 
                                                 Spacer()
 
                                                 if rankedFriends.count > 3 {
-                                                    Button("See more") {
+                                                    Button("trip_planner.see_more") {
                                                         showingAllFriends = true
                                                     }
                                                     .font(.system(size: 13, weight: .bold))
@@ -1493,7 +1508,7 @@ private struct TripPlannerComposerView: View {
                                             }
 
                                             if isLoadingShared {
-                                                ProgressView("Comparing bucket lists...")
+                                                ProgressView("trip_planner.comparing_bucket_lists")
                                                     .tint(.black)
                                             }
                                         }
@@ -1502,13 +1517,13 @@ private struct TripPlannerComposerView: View {
                             }
 
                             TripPlannerSectionCard(
-                                title: "Countries",
-                                subtitle: "Keep the route here, then open the ranked country list when you want to add more."
+                                title: String(localized: "trip_planner.countries.title"),
+                                subtitle: String(localized: "trip_planner.countries.subtitle")
                             ) {
                                 VStack(alignment: .leading, spacing: 14) {
                                     if !selectedCountries.isEmpty {
                                         VStack(alignment: .leading, spacing: 10) {
-                                            Text("Included in this trip")
+                                            Text("trip_planner.included_in_trip")
                                                 .font(.system(size: 15, weight: .bold))
                                                 .foregroundStyle(.black)
 
@@ -1516,7 +1531,7 @@ private struct TripPlannerComposerView: View {
                                                 items: selectedCountries.map { country in
                                                     TripPlannerChipItem(
                                                         id: country.id,
-                                                        title: "\(country.flagEmoji) \(country.name)",
+                                                        title: "\(country.flagEmoji) \(country.localizedDisplayName)",
                                                         isSelected: true
                                                     )
                                                 },
@@ -1527,7 +1542,7 @@ private struct TripPlannerComposerView: View {
                                         }
                                     } else {
                                         TripPlannerInfoCard(
-                                            text: "Pick at least one country before saving the trip.",
+                                            text: String(localized: "trip_planner.pick_country_before_save"),
                                             systemImage: "mappin.and.ellipse"
                                         )
                                     }
@@ -1535,13 +1550,13 @@ private struct TripPlannerComposerView: View {
                                     if !sharedCountries.isEmpty {
                                         VStack(alignment: .leading, spacing: 10) {
                                             HStack {
-                                                Text("Shared bucket-list matches")
+                                                Text("trip_planner.shared_bucket_matches")
                                                     .font(.system(size: 15, weight: .bold))
                                                     .foregroundStyle(.black)
 
                                                 Spacer()
 
-                                                Button("Add All") {
+                                                Button("trip_planner.add_all") {
                                                     selectedCountryIds.formUnion(sharedCountryIds)
                                                 }
                                                 .font(.system(size: 13, weight: .bold))
@@ -1552,7 +1567,7 @@ private struct TripPlannerComposerView: View {
                                                 items: sharedCountries.map { country in
                                                     TripPlannerChipItem(
                                                         id: country.id,
-                                                        title: "\(country.flagEmoji) \(country.name)",
+                                                        title: "\(country.flagEmoji) \(country.localizedDisplayName)",
                                                         isSelected: false
                                                     )
                                                 },
@@ -1570,7 +1585,7 @@ private struct TripPlannerComposerView: View {
                                             Image(systemName: "plus")
                                                 .font(.system(size: 12, weight: .bold))
 
-                                            Text("Add more countries")
+                                            Text("trip_planner.add_more_countries")
                                                 .font(.system(size: 14, weight: .bold))
                                         }
                                         .foregroundStyle(.black)
@@ -1600,7 +1615,7 @@ private struct TripPlannerComposerView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
-            Button("Save") {
+            Button(String(localized: "common.save")) {
                 saveTrip()
             }
             .font(.system(size: 17, weight: .semibold))
@@ -1625,7 +1640,7 @@ private struct TripPlannerComposerView: View {
         .sheet(isPresented: $showingBucketCountries) {
             NavigationStack {
                 TripPlannerCountryPickerSheet(
-                    title: "Add Countries",
+                    title: String(localized: "trip_planner.add_countries"),
                     sections: countryPickerSections,
                     selectedIds: selectedCountryIds,
                     bucketIds: Set(countryBucketMatchCounts.keys),
@@ -1635,7 +1650,7 @@ private struct TripPlannerComposerView: View {
             }
             .presentationDragIndicator(.visible)
         }
-        .alert("Calendar Access", isPresented: Binding(
+        .alert(String(localized: "trip_planner.calendar_access"), isPresented: Binding(
             get: { calendarError != nil },
             set: { newValue in
                 if !newValue {
@@ -1643,7 +1658,7 @@ private struct TripPlannerComposerView: View {
                 }
             }
         )) {
-            Button("OK", role: .cancel) {}
+            Button(String(localized: "common.ok"), role: .cancel) {}
         } message: {
             Text(calendarError ?? "")
         }
@@ -1686,7 +1701,7 @@ private struct TripPlannerComposerView: View {
                 friends = try await friendService.fetchFriends(for: userId)
                 await loadFriendBuckets(for: friends.map(\.id))
             } catch {
-                friendsError = "We couldn't load your friends right now."
+                friendsError = String(localized: "trip_planner.friends.load_error")
             }
         }
 
@@ -1752,10 +1767,10 @@ private struct TripPlannerComposerView: View {
         }
 
         if let firstCountry = selectedCountries.first {
-            return "\(firstCountry.name) Trip"
+            return String(format: String(localized: "trip_planner.generated_title_format"), locale: Locale.current, firstCountry.name)
         }
 
-        return "New Trip"
+        return String(localized: "trip_planner.new_trip")
     }
 
     @MainActor
@@ -1765,7 +1780,7 @@ private struct TripPlannerComposerView: View {
         do {
             let granted = try await store.requestFullAccessToEvents()
             guard granted else {
-                calendarError = "Calendar access was denied. You can enable it later in Settings."
+                calendarError = String(localized: "trip_planner.calendar_error_denied")
                 return
             }
 
@@ -1824,7 +1839,7 @@ private struct TripPlannerComposerView: View {
             TripPlannerAvailabilityProposal(
                 id: UUID(),
                 participantId: "self",
-                participantName: "You",
+                participantName: String(localized: "trip_planner.you"),
                 participantUsername: nil,
                 participantAvatarURL: nil,
                 kind: .exactDates,
@@ -1902,7 +1917,7 @@ private struct TripPlannerDetailView: View {
         resolvedCountries.isEmpty ? trip.countryIds.enumerated().map { index, id in
             Country(
                 iso2: id,
-                name: trip.countryNames.indices.contains(index) ? trip.countryNames[index] : id,
+                name: Locale.autoupdatingCurrent.localizedString(forRegionCode: id.uppercased()) ?? (trip.countryNames.indices.contains(index) ? trip.countryNames[index] : id),
                 score: nil
             )
         } : resolvedCountries
@@ -1919,13 +1934,13 @@ private struct TripPlannerDetailView: View {
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerEditableSectionCard(
-                            title: "Trip Details",
-                            subtitle: trip.isGroupTrip ? "Group trip" : "Solo trip"
+                            title: String(localized: "trip_planner.detail.trip_details"),
+                            subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip")
                         ) {
                             NavigationLink {
                                 TripPlannerBasicsEditorView(trip: trip, onSave: saveTripChanges)
                             } label: {
-                                Text("Edit")
+                                Text("common.edit")
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundStyle(.black)
                             }
@@ -1940,7 +1955,7 @@ private struct TripPlannerDetailView: View {
 
                                 if !trip.notes.isEmpty {
                                     VStack(alignment: .leading, spacing: 6) {
-                                        Text("Notes")
+                                        Text("trip_planner.notes")
                                             .font(.system(size: 14, weight: .bold))
                                             .foregroundStyle(.black.opacity(0.75))
 
@@ -1953,13 +1968,13 @@ private struct TripPlannerDetailView: View {
                         }
 
                         TripPlannerEditableSectionCard(
-                            title: "Who’s Going",
-                            subtitle: displayedTravelers.isEmpty ? "Just you for now." : "Everyone currently included in this trip."
+                            title: String(localized: "trip_planner.whos_going.title"),
+                            subtitle: displayedTravelers.isEmpty ? String(localized: "trip_planner.detail.just_you_for_now") : String(localized: "trip_planner.detail.everyone_included")
                         ) {
                             NavigationLink {
                                 TripPlannerFriendsEditorView(trip: trip, onSave: saveTripChanges)
                             } label: {
-                                Text("Edit")
+                                Text("common.edit")
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundStyle(.black)
                             }
@@ -1967,13 +1982,13 @@ private struct TripPlannerDetailView: View {
                         } content: {
                             if displayedTravelers.isEmpty {
                                 TripPlannerInfoCard(
-                                    text: "No friends have been added to this trip yet.",
+                                    text: String(localized: "trip_planner.detail.no_friends_added"),
                                     systemImage: "person"
                                 )
                             } else {
                                 VStack(alignment: .leading, spacing: 10) {
                                     if isLoadingFriendProfiles && displayedFriends.isEmpty {
-                                        ProgressView("Loading profiles...")
+                                        ProgressView("trip_planner.detail.loading_profiles")
                                             .tint(.black)
                                     }
 
@@ -1996,13 +2011,13 @@ private struct TripPlannerDetailView: View {
                         }
 
                         TripPlannerEditableSectionCard(
-                            title: "Countries",
-                            subtitle: "Everything currently included in this trip."
+                            title: String(localized: "trip_planner.countries.title"),
+                            subtitle: String(localized: "trip_planner.detail.countries_subtitle")
                         ) {
                             NavigationLink {
                                 TripPlannerCountriesEditorView(trip: trip, onSave: saveTripChanges)
                             } label: {
-                                Text("Edit")
+                                Text("common.edit")
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundStyle(.black)
                             }
@@ -2012,8 +2027,8 @@ private struct TripPlannerDetailView: View {
                         }
 
                         TripPlannerEditableSectionCard(
-                            title: "Expenses",
-                            subtitle: "Track who paid, who owes, and what’s still outstanding."
+                            title: String(localized: "trip_planner.expenses.title"),
+                            subtitle: String(localized: "trip_planner.expenses.subtitle")
                         ) {
                             NavigationLink {
                                 TripPlannerExpensesEditorView(
@@ -2022,7 +2037,7 @@ private struct TripPlannerDetailView: View {
                                     onSave: saveTripChanges
                                 )
                             } label: {
-                                Text("Edit")
+                                Text("common.edit")
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundStyle(.black)
                             }
@@ -2035,8 +2050,8 @@ private struct TripPlannerDetailView: View {
                         }
 
                         TripPlannerSectionCard(
-                            title: "Trip Stats",
-                            subtitle: "Based on the countries currently in this plan."
+                            title: String(localized: "trip_planner.detail.trip_stats"),
+                            subtitle: String(localized: "trip_planner.detail.trip_stats_subtitle")
                         ) {
                             TripPlannerStatsSection(
                                 countries: displayedCountries,
@@ -2054,13 +2069,13 @@ private struct TripPlannerDetailView: View {
                         }
 
                         TripPlannerEditableSectionCard(
-                            title: "Availability",
-                            subtitle: trip.isGroupTrip ? "Compare when everyone is free and lock in the best window." : "Keep rough options visible until your dates are finalized."
+                            title: String(localized: "trip_planner.availability.title"),
+                            subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.availability_group_subtitle") : String(localized: "trip_planner.detail.availability_solo_subtitle")
                         ) {
                             NavigationLink {
                                 TripPlannerAvailabilityEditorView(trip: trip, onSave: saveTripChanges)
                             } label: {
-                                Text("Edit")
+                                Text("common.edit")
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundStyle(.black)
                             }
@@ -2070,15 +2085,15 @@ private struct TripPlannerDetailView: View {
                         }
 
                         TripPlannerSectionCard(
-                            title: "Actions",
-                            subtitle: "Update the plan, send it to Calendar, or remove it."
+                            title: String(localized: "trip_planner.actions.title"),
+                            subtitle: String(localized: "trip_planner.actions.subtitle")
                         ) {
                             VStack(spacing: 12) {
                                 if trip.startDate != nil, trip.endDate != nil {
                                     Button {
                                         onAddToCalendar(trip)
                                     } label: {
-                                        Label("Add To Apple Calendar", systemImage: "calendar.badge.plus")
+                                        Label("trip_planner.actions.add_to_calendar", systemImage: "calendar.badge.plus")
                                             .font(.system(size: 15, weight: .bold))
                                             .foregroundStyle(.black)
                                             .frame(maxWidth: .infinity)
@@ -2094,7 +2109,7 @@ private struct TripPlannerDetailView: View {
                                 Button(role: .destructive) {
                                     onDelete()
                                 } label: {
-                                    Label("Delete Trip", systemImage: "trash")
+                                    Label("trip_planner.actions.delete_trip", systemImage: "trash")
                                         .font(.system(size: 15, weight: .bold))
                                         .foregroundStyle(.black)
                                         .frame(maxWidth: .infinity)
@@ -2195,14 +2210,14 @@ private struct TripPlannerDetailView: View {
 
     private var tripPassportLabel: String {
         if currentPassportPreferences.nationalityCountryCodes.count > 1 {
-            return "best saved passport"
+            return String(localized: "trip_planner.visa.best_saved_passport")
         }
 
         if let code = currentPassportPreferences.effectivePassportCountryCode {
             return CountrySelectionFormatter.localizedName(for: code)
         }
 
-        return visaStore.activePassportLabel ?? "United States"
+        return visaStore.activePassportLabel ?? String(localized: "trip_planner.visa.default_passport_label")
     }
 
     @MainActor
@@ -2267,7 +2282,7 @@ private struct TripPlannerDetailView: View {
                         travelerId: traveler.id,
                         travelerName: traveler.displayName,
                         countryID: country.id,
-                        countryName: country.name,
+                        countryName: country.localizedDisplayName,
                         countryFlag: country.flagEmoji,
                         passportLabel: country.visaRecommendedPassportLabel ?? country.visaPassportLabel ?? resolvedPassportLabel(for: preferences),
                         visaType: visaType,
@@ -2303,7 +2318,7 @@ private struct TripPlannerDetailView: View {
             return CountrySelectionFormatter.localizedName(for: code)
         }
 
-        return "saved passport"
+        return String(localized: "trip_planner.visa.saved_passport")
     }
 
     @MainActor
@@ -2371,35 +2386,35 @@ private struct TripPlannerBasicsEditorView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Trip Details")
+                Theme.titleBanner(String(localized: "trip_planner.detail.trip_details"))
 
                 ScrollView {
                     TripPlannerSectionCard(
-                        title: "Basics",
-                        subtitle: "Update the trip name, notes, and dates."
+                        title: String(localized: "trip_planner.detail.basics"),
+                        subtitle: String(localized: "trip_planner.detail.basics_subtitle")
                     ) {
                         VStack(alignment: .leading, spacing: 14) {
                             TripPlannerTextInput(
-                                title: "Trip name",
+                                title: String(localized: "trip_planner.trip_name"),
                                 text: $title,
-                                placeholder: "Summer city escape"
+                                placeholder: String(localized: "trip_planner.trip_name_placeholder")
                             )
 
                             TripPlannerTextInput(
-                                title: "Notes",
+                                title: String(localized: "trip_planner.notes"),
                                 text: $notes,
-                                placeholder: "What kind of trip are you imagining?",
+                                placeholder: String(localized: "trip_planner.notes_placeholder"),
                                 axis: .vertical
                             )
 
-                            Toggle("Add tentative dates", isOn: $includeDates)
+                            Toggle("trip_planner.add_tentative_dates", isOn: $includeDates)
                                 .tint(.black)
 
                             if includeDates {
-                                DatePicker("Start", selection: $startDate, displayedComponents: .date)
+                                DatePicker("trip_planner.start", selection: $startDate, displayedComponents: .date)
                                     .tint(.black)
 
-                                DatePicker("End", selection: $endDate, in: startDate..., displayedComponents: .date)
+                                DatePicker("trip_planner.end", selection: $endDate, in: startDate..., displayedComponents: .date)
                                     .tint(.black)
                             }
                         }
@@ -2414,7 +2429,7 @@ private struct TripPlannerBasicsEditorView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
-            Button("Save") {
+            Button(String(localized: "common.save")) {
                 onSave(
                     TripPlannerTrip(
                         id: trip.id,
@@ -2458,7 +2473,7 @@ private struct TripPlannerBasicsEditorView: View {
             TripPlannerAvailabilityProposal(
                 id: UUID(),
                 participantId: "self",
-                participantName: "You",
+                participantName: String(localized: "trip_planner.you"),
                 participantUsername: nil,
                 participantAvatarURL: nil,
                 kind: .exactDates,
@@ -2495,12 +2510,12 @@ private struct TripPlannerFriendsEditorView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Who’s Going")
+                Theme.titleBanner(String(localized: "trip_planner.whos_going.title"))
 
                 if isLoading {
                     VStack(spacing: 12) {
                         ProgressView()
-                        Text("Loading friends...")
+                        Text("trip_planner.friends.loading")
                             .foregroundStyle(.black)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -2508,8 +2523,8 @@ private struct TripPlannerFriendsEditorView: View {
                     ScrollView {
                         VStack(spacing: 18) {
                             TripPlannerSectionCard(
-                                title: "Travel Friends",
-                                subtitle: "Choose who’s joining this trip."
+                                title: String(localized: "trip_planner.travel_friends"),
+                                subtitle: String(localized: "trip_planner.friends.subtitle")
                             ) {
                                 if let errorMessage {
                                     TripPlannerInfoCard(
@@ -2518,7 +2533,7 @@ private struct TripPlannerFriendsEditorView: View {
                                     )
                                 } else if friends.isEmpty {
                                     TripPlannerInfoCard(
-                                        text: "You don’t have any friends added yet.",
+                                        text: String(localized: "trip_planner.friends.none_added_yet"),
                                         systemImage: "person.2.slash"
                                     )
                                 } else {
@@ -2550,7 +2565,7 @@ private struct TripPlannerFriendsEditorView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
-            Button("Save") {
+            Button(String(localized: "common.save")) {
                 let selectedFriends = friends
                     .filter { selectedFriendIds.contains($0.id) }
                     .sorted { displayName(for: $0) < displayName(for: $1) }
@@ -2588,14 +2603,14 @@ private struct TripPlannerFriendsEditorView: View {
         defer { isLoading = false }
 
         guard let userId = sessionManager.userId else {
-            errorMessage = "Sign in to edit trip companions."
+            errorMessage = String(localized: "trip_planner.friends.sign_in_required")
             return
         }
 
         do {
             friends = try await friendService.fetchFriends(for: userId)
         } catch {
-            errorMessage = "We couldn't load your friends right now."
+            errorMessage = String(localized: "trip_planner.friends.load_error")
         }
     }
 
@@ -2681,23 +2696,23 @@ private struct TripPlannerAvailabilityEditorView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Availability")
+                Theme.titleBanner(String(localized: "trip_planner.availability.title"))
 
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
-                            title: "How this works",
-                            subtitle: "Add either exact windows or flexible months for each traveler, then let the planner surface the strongest overlap."
+                            title: String(localized: "trip_planner.availability.how_it_works_title"),
+                            subtitle: String(localized: "trip_planner.availability.how_it_works_subtitle")
                         ) {
                             VStack(alignment: .leading, spacing: 10) {
                                 TripPlannerInfoCard(
-                                    text: "Use exact dates when someone already knows the week they’re free. Use flexible months when they only know the general timing.",
+                                    text: String(localized: "trip_planner.availability.info_exact_vs_flexible"),
                                     systemImage: "calendar"
                                 )
 
                                 if overlapMatches.isEmpty {
                                     TripPlannerInfoCard(
-                                        text: "No shared window yet. Add a few more ideas across the group and the planner will suggest stronger matches here.",
+                                        text: String(localized: "trip_planner.availability.no_shared_window"),
                                         systemImage: "person.3.sequence.fill"
                                     )
                                 } else {
@@ -2711,12 +2726,12 @@ private struct TripPlannerAvailabilityEditorView: View {
                         }
 
                         TripPlannerSectionCard(
-                            title: "Current proposals",
-                            subtitle: "Each traveler can have multiple windows."
+                            title: String(localized: "trip_planner.availability.current_proposals_title"),
+                            subtitle: String(localized: "trip_planner.availability.current_proposals_subtitle")
                         ) {
                             if proposals.isEmpty {
                                 TripPlannerInfoCard(
-                                    text: "No availability has been proposed yet.",
+                                    text: String(localized: "trip_planner.availability.none_proposed"),
                                     systemImage: "calendar.badge.plus"
                                 )
                             } else {
@@ -2761,7 +2776,7 @@ private struct TripPlannerAvailabilityEditorView: View {
                                                         Button {
                                                             beginEditing(proposal)
                                                         } label: {
-                                                            Text("Edit")
+                                                            Text("common.edit")
                                                                 .font(.system(size: 13, weight: .bold))
                                                                 .foregroundStyle(.black)
                                                                 .padding(.horizontal, 12)
@@ -2798,10 +2813,10 @@ private struct TripPlannerAvailabilityEditorView: View {
                         }
 
                         TripPlannerSectionCard(
-                            title: editingProposalId == nil ? "Your availability" : "Edit your availability",
+                            title: editingProposalId == nil ? String(localized: "trip_planner.availability.your_availability") : String(localized: "trip_planner.availability.edit_your_availability"),
                             subtitle: editingProposalId == nil
-                                ? "Share the months or exact dates that work for you. Everyone else’s availability stays read-only here."
-                                : "Update your submitted window without deleting it first."
+                                ? String(localized: "trip_planner.availability.your_availability_subtitle")
+                                : String(localized: "trip_planner.availability.edit_your_availability_subtitle")
                         ) {
                             VStack(alignment: .leading, spacing: 14) {
                                 HStack(spacing: 12) {
@@ -2817,13 +2832,13 @@ private struct TripPlannerAvailabilityEditorView: View {
                                             .font(.system(size: 15, weight: .bold))
                                             .foregroundStyle(.black)
 
-                                        Text("Only you can edit these submissions.")
+                                        Text("trip_planner.availability.only_you_can_edit")
                                             .font(.system(size: 13))
                                             .foregroundStyle(.black.opacity(0.62))
                                     }
                                 }
 
-                                Picker("Type", selection: $selectedKind) {
+                                Picker(String(localized: "trip_planner.itinerary.type"), selection: $selectedKind) {
                                     ForEach(TripPlannerAvailabilityKind.allCases) { kind in
                                         Text(kind.title).tag(kind)
                                     }
@@ -2831,18 +2846,18 @@ private struct TripPlannerAvailabilityEditorView: View {
                                 .pickerStyle(.segmented)
 
                                 if selectedKind == .exactDates {
-                                    DatePicker("Start", selection: $rangeStart, displayedComponents: .date)
+                                    DatePicker("trip_planner.start", selection: $rangeStart, displayedComponents: .date)
                                         .tint(.black)
 
-                                    DatePicker("End", selection: $rangeEnd, in: rangeStart..., displayedComponents: .date)
+                                    DatePicker("trip_planner.end", selection: $rangeEnd, in: rangeStart..., displayedComponents: .date)
                                         .tint(.black)
                                 } else {
                                     VStack(alignment: .leading, spacing: 6) {
-                                        Text("Month")
+                                        Text("trip_planner.availability.month")
                                             .font(.system(size: 14, weight: .semibold))
                                             .foregroundStyle(.black.opacity(0.72))
 
-                                        Picker("Month", selection: $selectedMonth) {
+                                        Picker(String(localized: "trip_planner.availability.month"), selection: $selectedMonth) {
                                             ForEach(monthOptions, id: \.self) { month in
                                                 Text(TripPlannerAvailabilityCalculator.monthTitle(for: month)).tag(month)
                                             }
@@ -2860,7 +2875,7 @@ private struct TripPlannerAvailabilityEditorView: View {
                                 Button {
                                     saveProposal()
                                 } label: {
-                                    Label(editingProposalId == nil ? "Save Availability" : "Update Availability", systemImage: editingProposalId == nil ? "plus" : "checkmark")
+                                    Label(editingProposalId == nil ? String(localized: "trip_planner.availability.save") : String(localized: "trip_planner.availability.update"), systemImage: editingProposalId == nil ? "plus" : "checkmark")
                                         .font(.system(size: 14, weight: .bold))
                                         .foregroundStyle(.black)
                                         .frame(maxWidth: .infinity)
@@ -2873,7 +2888,7 @@ private struct TripPlannerAvailabilityEditorView: View {
                                 .buttonStyle(.plain)
 
                                 if editingProposalId != nil {
-                                    Button("Cancel Editing") {
+                                    Button("trip_planner.availability.cancel_editing") {
                                         resetComposer()
                                     }
                                     .font(.system(size: 13, weight: .bold))
@@ -2883,14 +2898,14 @@ private struct TripPlannerAvailabilityEditorView: View {
                         }
 
                         TripPlannerSectionCard(
-                            title: "Trip route",
+                            title: String(localized: "trip_planner.availability.trip_route_title"),
                             subtitle: trip.startDate != nil && trip.endDate != nil
-                                ? "Choose which country each day belongs to, or mark the day as travel."
-                                : "Add trip dates above before assigning days to countries."
+                                ? String(localized: "trip_planner.availability.trip_route_subtitle")
+                                : String(localized: "trip_planner.availability.trip_route_missing_dates")
                         ) {
                             if dayPlans.isEmpty {
                                 TripPlannerInfoCard(
-                                    text: "Add exact trip dates first, then assign each day to a country or mark it as travel.",
+                                    text: String(localized: "trip_planner.availability.trip_route_empty"),
                                     systemImage: "calendar.badge.plus"
                                 )
                             } else {
@@ -2918,7 +2933,7 @@ private struct TripPlannerAvailabilityEditorView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
-            Button("Save") {
+            Button(String(localized: "common.save")) {
                 onSave(
                     TripPlannerTrip(
                         id: trip.id,
@@ -3065,12 +3080,12 @@ private struct TripPlannerCountriesEditorView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Countries")
+                Theme.titleBanner(String(localized: "trip_planner.countries.title"))
 
                 if isLoading {
                     VStack(spacing: 12) {
                         ProgressView()
-                        Text("Loading countries...")
+                        Text("trip_planner.countries.loading")
                             .foregroundStyle(.black)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -3078,19 +3093,19 @@ private struct TripPlannerCountriesEditorView: View {
                     ScrollView {
                         VStack(spacing: 18) {
                             TripPlannerSectionCard(
-                                title: "Included Countries",
-                                subtitle: "Update which countries belong in this plan."
+                                title: String(localized: "trip_planner.countries.included_title"),
+                                subtitle: String(localized: "trip_planner.countries.included_subtitle")
                             ) {
                                 if !sharedBucketCountries.isEmpty {
                                     VStack(alignment: .leading, spacing: 10) {
                                         HStack {
-                                            Text("Mutual bucket list")
+                                            Text("trip_planner.countries.mutual_bucket_list")
                                                 .font(.system(size: 15, weight: .bold))
                                                 .foregroundStyle(.black)
 
-                                            Spacer()
+                                                Spacer()
 
-                                            Button("Add All") {
+                                            Button("trip_planner.add_all") {
                                                 selectedCountryIds.formUnion(sharedBucketCountryIds)
                                             }
                                             .font(.system(size: 13, weight: .bold))
@@ -3101,7 +3116,7 @@ private struct TripPlannerCountriesEditorView: View {
                                             items: sharedBucketCountries.map { country in
                                                 TripPlannerChipItem(
                                                     id: country.id,
-                                                    title: "\(country.flagEmoji) \(country.name)",
+                                                    title: "\(country.flagEmoji) \(country.localizedDisplayName)",
                                                     isSelected: selectedCountryIds.contains(country.id)
                                                 )
                                             },
@@ -3113,9 +3128,9 @@ private struct TripPlannerCountriesEditorView: View {
                                 }
 
                                 TripPlannerTextInput(
-                                    title: "Search countries",
+                                    title: String(localized: "trip_planner.countries.search_title"),
                                     text: $searchText,
-                                    placeholder: "Japan, Brazil, Morocco..."
+                                    placeholder: String(localized: "trip_planner.countries.search_placeholder")
                                 )
 
                                 TripPlannerCountryList(
@@ -3138,7 +3153,7 @@ private struct TripPlannerCountriesEditorView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
-            Button("Save") {
+            Button(String(localized: "common.save")) {
                 let selectedCountries = countries
                     .filter { selectedCountryIds.contains($0.id) }
                     .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -3236,7 +3251,7 @@ private struct TripPlannerItineraryPreview: View {
     var body: some View {
         if normalizedPlans.isEmpty {
             TripPlannerInfoCard(
-                text: "Add trip dates to map each day to a country or mark it as travel.",
+                text: String(localized: "trip_planner.itinerary.preview_empty"),
                 systemImage: "calendar.badge.plus"
             )
         } else {
@@ -3247,7 +3262,11 @@ private struct TripPlannerItineraryPreview: View {
 
                 if normalizedPlans.count > 4 {
                     TripPlannerInfoCard(
-                        text: "\(normalizedPlans.count - 4) more day\(normalizedPlans.count - 4 == 1 ? "" : "s") in this itinerary.",
+                        text: String(
+                            format: String(localized: "trip_planner.itinerary.more_days"),
+                            locale: Locale.current,
+                            normalizedPlans.count - 4
+                        ),
                         systemImage: "ellipsis.circle.fill"
                     )
                 }
@@ -3285,13 +3304,13 @@ private struct TripPlannerItineraryEditorView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Itinerary")
+                Theme.titleBanner(String(localized: "trip_planner.itinerary.title"))
 
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
-                            title: "Day-by-day route",
-                            subtitle: "Choose the country for each day, or mark a day as travel so trip costs reflect your actual routing."
+                            title: String(localized: "trip_planner.itinerary.day_by_day_title"),
+                            subtitle: String(localized: "trip_planner.itinerary.day_by_day_subtitle")
                         ) {
                             VStack(spacing: 10) {
                                 ForEach(dayPlans.indices, id: \.self) { index in
@@ -3313,7 +3332,7 @@ private struct TripPlannerItineraryEditorView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
-            Button("Save") {
+            Button(String(localized: "common.save")) {
                 onSave(
                     TripPlannerTrip(
                         id: trip.id,
@@ -3383,14 +3402,14 @@ private struct TripPlannerDayPlanEditorRow: View {
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(.black)
 
-            Picker("Type", selection: kindBinding) {
-                Text("Country").tag(TripPlannerDayPlanKind.country)
-                Text("Travel").tag(TripPlannerDayPlanKind.travel)
+            Picker(String(localized: "trip_planner.itinerary.type"), selection: kindBinding) {
+                Text("trip_planner.itinerary.country").tag(TripPlannerDayPlanKind.country)
+                Text("trip_planner.itinerary.travel").tag(TripPlannerDayPlanKind.travel)
             }
             .pickerStyle(.segmented)
 
             if plan.kind == .country {
-                Picker("Country", selection: countryBinding) {
+                Picker(String(localized: "trip_planner.itinerary.country"), selection: countryBinding) {
                     ForEach(countryOptions, id: \.id) { option in
                         Text(option.name).tag(Optional(option.id))
                     }
@@ -3481,9 +3500,9 @@ private struct TripPlannerDayPlanRow: View {
 
     private var labelText: String {
         if plan.kind == .travel {
-            return "Travel day"
+            return String(localized: "trip_planner.itinerary.travel_day")
         }
-        return plan.countryName ?? "Country day"
+        return plan.countryName ?? String(localized: "trip_planner.itinerary.country_day")
     }
 }
 
@@ -3525,21 +3544,25 @@ private struct TripPlannerExpensesSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 TripPlannerStatPill(
-                    title: "Total logged",
+                    title: String(localized: "trip_planner.expenses.stats.total_logged"),
                     value: currency(totalSpent),
-                    detail: "\(expenses.count) expense\(expenses.count == 1 ? "" : "s")"
+                    detail: String(
+                        format: String(localized: "trip_planner.expenses.stats.expense_count"),
+                        locale: Locale.current,
+                        expenses.count
+                    )
                 )
 
                 TripPlannerStatPill(
-                    title: "Still owed",
+                    title: String(localized: "trip_planner.expenses.stats.still_owed"),
                     value: currency(outstandingTotal),
-                    detail: outstandingTotal > 0 ? "Unpaid balances remaining" : "Everyone is settled"
+                    detail: outstandingTotal > 0 ? String(localized: "trip_planner.expenses.stats.unpaid_balances") : String(localized: "trip_planner.expenses.stats.everyone_settled")
                 )
             }
 
             if expenses.isEmpty {
                 TripPlannerInfoCard(
-                    text: "No expenses logged yet. Add hotels, meals, tickets, or shared costs here.",
+                    text: String(localized: "trip_planner.expenses.stats.empty"),
                     systemImage: "creditcard"
                 )
             } else {
@@ -3550,7 +3573,11 @@ private struct TripPlannerExpensesSection: View {
 
                     if expenses.count > 3 {
                         TripPlannerInfoCard(
-                            text: "\(expenses.count - 3) more expense\(expenses.count - 3 == 1 ? "" : "s") in this trip.",
+                            text: String(
+                                format: String(localized: "trip_planner.expenses.stats.more_expenses"),
+                                locale: Locale.current,
+                                expenses.count - 3
+                            ),
                             systemImage: "ellipsis.circle.fill"
                         )
                     }
@@ -3620,17 +3647,17 @@ private struct TripPlannerExpensesEditorView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Expenses")
+                Theme.titleBanner(String(localized: "trip_planner.expenses.title"))
 
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
-                            title: "Outstanding balances",
+                            title: String(localized: "trip_planner.expenses.outstanding_balances"),
                             subtitle: ""
                         ) {
                             if balances.isEmpty {
                                 TripPlannerInfoCard(
-                                    text: "Add people to the trip to start tracking who owes what.",
+                                    text: String(localized: "trip_planner.expenses.add_people_first"),
                                     systemImage: "person.2"
                                 )
                             } else {
@@ -3643,12 +3670,12 @@ private struct TripPlannerExpensesEditorView: View {
                         }
 
                         TripPlannerSectionCard(
-                            title: "Logged expenses",
+                            title: String(localized: "trip_planner.expenses.logged_expenses"),
                             subtitle: ""
                         ) {
                             if expenses.isEmpty {
                                 TripPlannerInfoCard(
-                                    text: "No expenses yet.",
+                                    text: String(localized: "trip_planner.expenses.none_yet"),
                                     systemImage: "creditcard"
                                 )
                             } else {
@@ -3669,7 +3696,7 @@ private struct TripPlannerExpensesEditorView: View {
                                                 expenses.removeAll { $0.id == expense.id }
                                                 persistExpenses()
                                             } label: {
-                                                Text("Delete Expense")
+                                                Text("trip_planner.expenses.delete_expense")
                                                     .font(.system(size: 13, weight: .bold))
                                                     .foregroundStyle(.black)
                                                     .frame(maxWidth: .infinity)
@@ -3726,7 +3753,7 @@ private struct TripPlannerExpensesEditorView: View {
                         Image(systemName: "plus")
                             .font(.system(size: 13, weight: .bold))
 
-                        Text("New")
+                        Text("trip_planner.expenses.new")
                             .font(.system(size: 15, weight: .bold))
                     }
                     .foregroundStyle(.black)
@@ -3808,9 +3835,9 @@ private struct TripPlannerExpenseBalanceCard: View {
     }
 
     private var statusText: String {
-        if balance.isOwed { return "Should receive" }
-        if balance.owes { return "Still owes" }
-        return "Settled up"
+        if balance.isOwed { return String(localized: "trip_planner.expenses.should_receive") }
+        if balance.owes { return String(localized: "trip_planner.expenses.still_owes") }
+        return String(localized: "trip_planner.expenses.settled_up")
     }
 
     private var balanceColor: Color {
@@ -3900,11 +3927,11 @@ private struct TripPlannerExpenseComposerOverlay: View {
             VStack(spacing: 0) {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(existingExpense == nil ? "Add expense" : "Edit expense")
+                        Text(existingExpense == nil ? String(localized: "trip_planner.expenses.add_expense") : String(localized: "trip_planner.expenses.edit_expense"))
                             .font(.system(size: 21, weight: .bold))
                             .foregroundStyle(.black)
 
-                        Text("Track what was paid, who benefited, and who still owes.")
+                        Text("trip_planner.expenses.overlay_subtitle")
                             .font(.system(size: 15))
                             .foregroundStyle(.black.opacity(0.66))
                     }
@@ -3912,13 +3939,13 @@ private struct TripPlannerExpenseComposerOverlay: View {
                     Spacer()
 
                     HStack(spacing: 10) {
-                        Button("Close") {
+                        Button(String(localized: "common.close")) {
                             onClose()
                         }
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.black.opacity(0.65))
 
-                        Button(existingExpense == nil ? "Add" : "Save") {
+                        Button(existingExpense == nil ? String(localized: "common.add") : String(localized: "common.save")) {
                             saveExpense()
                         }
                         .font(.system(size: 15, weight: .bold))
@@ -3931,23 +3958,23 @@ private struct TripPlannerExpenseComposerOverlay: View {
 
                 VStack(alignment: .leading, spacing: 14) {
                     TripPlannerTextInput(
-                        title: "Expense title",
+                        title: String(localized: "trip_planner.expenses.expense_title"),
                         text: $title,
-                        placeholder: "Hotel, dinner, train tickets..."
+                        placeholder: String(localized: "trip_planner.expenses.expense_title_placeholder")
                     )
 
                     TripPlannerCurrencyInput(
-                        title: "Amount (USD)",
+                        title: String(localized: "trip_planner.expenses.amount_usd"),
                         text: $amountText,
-                        placeholder: "USD"
+                        placeholder: String(localized: "trip_planner.expenses.usd")
                     )
 
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Paid by")
+                        Text("trip_planner.expenses.paid_by")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.black.opacity(0.72))
 
-                        Picker("Paid by", selection: $selectedPayerId) {
+                        Picker(String(localized: "trip_planner.expenses.paid_by"), selection: $selectedPayerId) {
                             ForEach(participants) { participant in
                                 Text(participant.name).tag(participant.id)
                             }
@@ -3962,7 +3989,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
 
                     }
 
-                    Picker("Split", selection: $splitMode) {
+                    Picker(String(localized: "trip_planner.expenses.split"), selection: $splitMode) {
                         ForEach(TripPlannerExpenseSplitMode.allCases) { mode in
                             Text(mode.title).tag(mode)
                         }
@@ -3971,7 +3998,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
 
                     if splitMode == .selectedPeople {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Split between")
+                            Text("trip_planner.expenses.split_between")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.black.opacity(0.72))
 
@@ -4073,7 +4100,14 @@ private struct TripPlannerExpenseRow: View {
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.black)
 
-                    Text("\(currency(expense.totalAmount)) paid by \(expense.paidByName)")
+                    Text(
+                        String(
+                            format: String(localized: "trip_planner.expenses.paid_by_format"),
+                            locale: Locale.current,
+                            currency(expense.totalAmount),
+                            expense.paidByName
+                        )
+                    )
                         .font(.system(size: 14))
                         .foregroundStyle(.black.opacity(0.7))
                 }
@@ -4081,7 +4115,7 @@ private struct TripPlannerExpenseRow: View {
                 Spacer()
 
                 if let onEdit {
-                    Button("Edit") {
+                    Button(String(localized: "common.edit")) {
                         onEdit()
                     }
                     .buttonStyle(.plain)
@@ -4094,7 +4128,7 @@ private struct TripPlannerExpenseRow: View {
             }
 
             if expense.shares.isEmpty {
-                Text("No one owes anything on this expense.")
+                Text("trip_planner.expenses.no_one_owes")
                     .font(.system(size: 13))
                     .foregroundStyle(.black.opacity(0.62))
             } else {
@@ -4102,20 +4136,27 @@ private struct TripPlannerExpenseRow: View {
                     ForEach(expense.shares) { share in
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Text("\(share.participantName) owes \(currency(share.amountOwed))")
+                                Text(
+                                    String(
+                                        format: String(localized: "trip_planner.expenses.owes_format"),
+                                        locale: Locale.current,
+                                        share.participantName,
+                                        currency(share.amountOwed)
+                                    )
+                                )
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(.black)
 
                                 Spacer()
 
-                                Text(share.isPaid ? "Paid" : "Not paid")
+                                Text(share.isPaid ? String(localized: "trip_planner.expenses.paid") : String(localized: "trip_planner.expenses.not_paid"))
                                     .font(.system(size: 12, weight: .bold))
                                     .foregroundStyle(.black.opacity(0.7))
                             }
 
                             if let onUpdate {
                                 HStack(spacing: 8) {
-                                    Button(share.isPaid ? "Mark Unpaid" : "Mark Paid") {
+                                    Button(share.isPaid ? String(localized: "trip_planner.expenses.mark_unpaid") : String(localized: "trip_planner.expenses.mark_paid")) {
                                         onUpdate(updatedExpense(for: share, method: .manual, isPaid: !share.isPaid))
                                     }
                                     .buttonStyle(.plain)
@@ -4123,7 +4164,7 @@ private struct TripPlannerExpenseRow: View {
                                     .padding(.vertical, 8)
                                     .background(Capsule().fill(Color.white.opacity(0.82)))
 
-                                    Button("Venmo") {
+                                    Button(String(localized: "trip_planner.expenses.venmo")) {
                                         onUpdate(updatedExpense(for: share, method: .venmo, isPaid: true))
                                         openVenmo(for: share)
                                     }
@@ -4132,7 +4173,7 @@ private struct TripPlannerExpenseRow: View {
                                     .padding(.vertical, 8)
                                     .background(Capsule().fill(Color.white.opacity(0.82)))
 
-                                    Button("Apple Pay") {
+                                    Button(String(localized: "trip_planner.expenses.apple_pay")) {
                                         onUpdate(updatedExpense(for: share, method: .applePay, isPaid: true))
                                     }
                                     .buttonStyle(.plain)
@@ -4238,7 +4279,7 @@ private struct TripPlannerAvailabilityParticipant: Identifiable, Hashable {
 
     static let you = TripPlannerAvailabilityParticipant(
         id: "self",
-        name: "You",
+        name: String(localized: "trip_planner.you"),
         username: nil,
         avatarURL: nil
     )
@@ -4383,12 +4424,12 @@ private struct TripPlannerStatsSection: View {
 
     private var categoryAverages: [TripPlannerScoreAverage] {
         [
-            TripPlannerScoreAverage(title: "Overall", subtitle: "Weighted trip score", score: averageOverallScore),
-            TripPlannerScoreAverage(title: "Advisory", subtitle: "Safety and travel guidance", score: averageAdvisoryScore),
-            TripPlannerScoreAverage(title: "Seasonality", subtitle: monthSummaryText, score: averageSeasonalityScore),
-            TripPlannerScoreAverage(title: "Visa", subtitle: "Entry ease across stops", score: average(of: countries.compactMap(\.visaEaseScore))),
-            TripPlannerScoreAverage(title: "Budget", subtitle: "Affordability across stops", score: averageAffordability),
-            TripPlannerScoreAverage(title: "Language", subtitle: isGroupTrip ? "Group language coverage" : "Your language coverage", score: averageLanguageScore)
+            TripPlannerScoreAverage(title: String(localized: "trip_planner.stats.category.overall"), subtitle: String(localized: "trip_planner.stats.category.overall_subtitle"), score: averageOverallScore),
+            TripPlannerScoreAverage(title: String(localized: "trip_planner.stats.category.advisory"), subtitle: String(localized: "trip_planner.stats.category.advisory_subtitle"), score: averageAdvisoryScore),
+            TripPlannerScoreAverage(title: String(localized: "trip_planner.stats.category.seasonality"), subtitle: monthSummaryText, score: averageSeasonalityScore),
+            TripPlannerScoreAverage(title: String(localized: "trip_planner.stats.category.visa"), subtitle: String(localized: "trip_planner.stats.category.visa_subtitle"), score: average(of: countries.compactMap(\.visaEaseScore))),
+            TripPlannerScoreAverage(title: String(localized: "trip_planner.stats.category.budget"), subtitle: String(localized: "trip_planner.stats.category.budget_subtitle"), score: averageAffordability),
+            TripPlannerScoreAverage(title: String(localized: "trip_planner.stats.category.language"), subtitle: isGroupTrip ? String(localized: "trip_planner.stats.category.language_group_subtitle") : String(localized: "trip_planner.stats.category.language_solo_subtitle"), score: averageLanguageScore)
         ]
     }
 
@@ -4456,7 +4497,7 @@ private struct TripPlannerStatsSection: View {
         VStack(alignment: .leading, spacing: 14) {
             if !countries.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(isGroupTrip ? "Group snapshot" : "Trip snapshot")
+                    Text(isGroupTrip ? String(localized: "trip_planner.stats.group_snapshot") : String(localized: "trip_planner.stats.trip_snapshot"))
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.black)
 
@@ -4472,19 +4513,19 @@ private struct TripPlannerStatsSection: View {
                         spacing: 10
                     ) {
                         TripPlannerScoreHighlightCard(
-                            title: "Average overall",
-                            subtitle: "Across \(countries.count) stop\(countries.count == 1 ? "" : "s")",
+                            title: String(localized: "trip_planner.stats.average_overall"),
+                            subtitle: String(format: String(localized: "trip_planner.stats.across_stops_format"), locale: Locale.current, countries.count),
                             score: averageOverallScore
                         )
 
                         TripPlannerScoreHighlightCard(
-                            title: "Average advisory",
-                            subtitle: "Shared safety picture",
+                            title: String(localized: "trip_planner.stats.average_advisory"),
+                            subtitle: String(localized: "trip_planner.stats.average_advisory_subtitle"),
                             score: averageAdvisoryScore
                         )
 
                         TripPlannerScoreHighlightCard(
-                            title: "Average seasonality",
+                            title: String(localized: "trip_planner.stats.average_seasonality"),
                             subtitle: monthSummaryText,
                             score: averageSeasonalityScore
                         )
@@ -4494,7 +4535,7 @@ private struct TripPlannerStatsSection: View {
 
             if !categoryAverages.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Score breakdown")
+                    Text("trip_planner.stats.score_breakdown")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.black)
 
@@ -4514,14 +4555,14 @@ private struct TripPlannerStatsSection: View {
 
             HStack(spacing: 10) {
                 TripPlannerStatPill(
-                    title: "Estimated total per person",
-                    value: estimatedTripCostPerPerson.map { "$\($0) USD" } ?? "Add trip dates",
+                    title: String(localized: "trip_planner.stats.estimated_total_per_person"),
+                    value: estimatedTripCostPerPerson.map { "$\($0) USD" } ?? String(localized: "trip_planner.stats.add_trip_dates"),
                     detail: "\(estimatedCostDetail) · USD"
                 )
 
                 TripPlannerStatPill(
-                    title: "Typical daily spend",
-                    value: averageDailySpend.map { "$\($0) USD" } ?? "N/A",
+                    title: String(localized: "trip_planner.stats.typical_daily_spend"),
+                    value: averageDailySpend.map { "$\($0) USD" } ?? String(localized: "trip_planner.stats.na"),
                     detail: "\(dailySpendDetail) · USD"
                 )
             }
@@ -4541,60 +4582,60 @@ private struct TripPlannerStatsSection: View {
 
     private var estimatedCostDetail: String {
         guard let tripLengthDays else {
-            return "We’ll estimate this once trip dates are set"
+            return String(localized: "trip_planner.stats.estimate_when_dates_set")
         }
-        return "\(tripLengthDays)-day estimate across selected countries"
+        return String(format: String(localized: "trip_planner.stats.trip_length_estimate_format"), locale: Locale.current, tripLengthDays)
     }
 
     private var dailySpendDetail: String {
         if !weightedCountryDays.isEmpty {
             let travelDayCount = normalizedDayPlans.filter { $0.kind == .travel }.count
             if travelDayCount > 0 {
-                return "Weighted by assigned days, excluding \(travelDayCount) travel day\(travelDayCount == 1 ? "" : "s")"
+                return String(format: String(localized: "trip_planner.stats.weighted_excluding_travel_days_format"), locale: Locale.current, travelDayCount)
             }
-            return "Weighted by your day-by-day itinerary"
+            return String(localized: "trip_planner.stats.weighted_by_itinerary")
         }
-        guard let averageAffordability else { return "Across selected countries" }
+        guard let averageAffordability else { return String(localized: "trip_planner.stats.across_selected_countries") }
         switch averageAffordability {
         case 80...:
-            return "Leans more budget-friendly"
+            return String(localized: "trip_planner.stats.budget_friendly")
         case 60..<80:
-            return "Pretty balanced overall"
+            return String(localized: "trip_planner.stats.pretty_balanced")
         case 40..<60:
-            return "More mid-range to pricey"
+            return String(localized: "trip_planner.stats.mid_range_to_pricey")
         default:
-            return "Leans expensive overall"
+            return String(localized: "trip_planner.stats.expensive")
         }
     }
 
     private var visaSummaryValue: String {
         if !overstayRiskCountries.isEmpty {
-            return "Visa plan needed"
+            return String(localized: "trip_planner.visa.plan_needed")
         }
         if isGroupTrip, affectedTravelerCount > 0 {
-            return "\(affectedTravelerCount) traveler\(affectedTravelerCount == 1 ? "" : "s") need prep"
+            return String(format: String(localized: "trip_planner.visa.traveler_prep_format"), locale: Locale.current, affectedTravelerCount)
         }
         if allCountriesVisaFreeForTrip {
-            return "No visa required"
+            return String(localized: "trip_planner.visa.none_required")
         }
         if allCountriesNeedNoAdvanceVisa {
-            return "No advance visa needed"
+            return String(localized: "trip_planner.visa.no_advance_needed")
         }
-        return "\(visaPrepCountries.count) stop\(visaPrepCountries.count == 1 ? "" : "s") to prep for"
+        return String(format: String(localized: "trip_planner.visa.stops_to_prep_format"), locale: Locale.current, visaPrepCountries.count)
     }
 
     private var monthSummaryText: String {
         let formatter = DateFormatter()
         formatter.locale = .current
-        return "\(formatter.monthSymbols[selectedMonth - 1]) timing"
+        return String(format: String(localized: "trip_planner.stats.month_timing_format"), locale: Locale.current, formatter.monthSymbols[selectedMonth - 1])
     }
 
     private var snapshotSummary: String {
         if isGroupTrip {
-            return "\(travelerCount) travelers, \(countries.count) countries, one cleaner view of how the trip balances overall score, safety, seasonality, and logistics."
+            return String(format: String(localized: "trip_planner.stats.group_snapshot_summary_format"), locale: Locale.current, travelerCount, countries.count)
         }
 
-        return "\(countries.count) selected countr\(countries.count == 1 ? "y" : "ies") with a combined scoring view for the trip."
+        return String(format: String(localized: "trip_planner.stats.selected_countries_summary_format"), locale: Locale.current, countries.count)
     }
 
     private func average(of values: [Int]) -> Int? {
@@ -4605,29 +4646,29 @@ private struct TripPlannerStatsSection: View {
     private var overstayWarningText: String {
         let countriesText = overstayRiskCountries.map { "\($0.flagEmoji) \($0.name)" }.joined(separator: ", ")
         guard let tripLengthDays else {
-            return "One or more stops may exceed the allowed stay for this trip."
+            return String(localized: "trip_planner.visa.overstay_warning_generic")
         }
-        return "\(countriesText) may exceed the allowed visa-free stay for a \(tripLengthDays)-day trip."
+        return String(format: String(localized: "trip_planner.visa.overstay_warning_format"), locale: Locale.current, countriesText, tripLengthDays)
     }
 
     private var visaBadges: [String] {
         var badges: [String] = []
 
         if !countries.isEmpty {
-            badges.append("\(countries.count) stop\(countries.count == 1 ? "" : "s")")
+            badges.append(String(format: String(localized: "trip_planner.visa.stop_count_format"), locale: Locale.current, countries.count))
         }
 
         if isGroupTrip {
-            badges.append("\(travelerCount) traveler\(travelerCount == 1 ? "" : "s")")
+            badges.append(String(format: String(localized: "trip_planner.visa.traveler_count_format"), locale: Locale.current, travelerCount))
             if !groupVisaNeeds.isEmpty {
-                badges.append("\(groupVisaNeeds.count) visa flag\(groupVisaNeeds.count == 1 ? "" : "s")")
+                badges.append(String(format: String(localized: "trip_planner.visa.flag_count_format"), locale: Locale.current, groupVisaNeeds.count))
             }
         } else if !visaPrepCountries.isEmpty {
-            badges.append("\(visaPrepCountries.count) stop\(visaPrepCountries.count == 1 ? "" : "s") to prep")
+            badges.append(String(format: String(localized: "trip_planner.visa.stop_prep_count_format"), locale: Locale.current, visaPrepCountries.count))
         }
 
         if let tripLengthDays {
-            badges.append("\(tripLengthDays) day\(tripLengthDays == 1 ? "" : "s")")
+            badges.append(String(format: String(localized: "trip_planner.visa.day_count_format"), locale: Locale.current, tripLengthDays))
         }
 
         return badges
@@ -4635,13 +4676,13 @@ private struct TripPlannerStatsSection: View {
 
     private var visaAllClearMessage: String? {
         if isGroupTrip, groupVisaNeeds.isEmpty {
-            return "No one in the group currently needs advance visa prep for these stops."
+            return String(localized: "trip_planner.visa.group_all_clear")
         }
         if allCountriesVisaFreeForTrip {
-            return "Every stop is currently visa-free for this trip."
+            return String(localized: "trip_planner.visa.every_stop_visa_free")
         }
         if allCountriesNeedNoAdvanceVisa {
-            return "Every stop can be handled without advance visa prep."
+            return String(localized: "trip_planner.visa.every_stop_no_advance")
         }
         return nil
     }
@@ -4664,10 +4705,10 @@ private struct TripPlannerTravelerVisaNeed: Identifiable, Hashable {
 
     func summaryText(tripLengthDays: Int?) -> String {
         if exceedsAllowedStay, let tripLengthDays, let allowedDays {
-            return "\(travelerName) may exceed the allowed stay in \(countryFlag) \(countryName) on their best saved passport (\(passportLabel)): about \(allowedDays) day\(allowedDays == 1 ? "" : "s") allowed for a \(tripLengthDays)-day trip."
+            return String(format: String(localized: "trip_planner.visa.traveler_overstay_summary_format"), locale: Locale.current, travelerName, countryFlag, countryName, passportLabel, allowedDays, tripLengthDays)
         }
 
-        return "\(travelerName) may need visa prep for \(countryFlag) \(countryName). Best saved passport for that stop: \(passportLabel)."
+        return String(format: String(localized: "trip_planner.visa.traveler_prep_summary_format"), locale: Locale.current, travelerName, countryFlag, countryName, passportLabel)
     }
 }
 
@@ -4752,7 +4793,7 @@ private struct TripPlannerVisaSummaryCard: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Visa plan")
+                    Text("trip_planner.visa.title")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(.black.opacity(0.58))
 
@@ -4791,7 +4832,7 @@ private struct TripPlannerVisaSummaryCard: View {
 
                 if hiddenSummaryCount > 0 {
                     TripPlannerInfoCard(
-                        text: "\(hiddenSummaryCount) more stop\(hiddenSummaryCount == 1 ? "" : "s") still need attention in this itinerary.",
+                        text: String(format: String(localized: "trip_planner.visa.hidden_summary_format"), locale: Locale.current, hiddenSummaryCount),
                         systemImage: "ellipsis.circle.fill"
                     )
                 }
@@ -4847,16 +4888,16 @@ private struct TripPlannerVisaCountryRow: View {
     private var statusText: String {
         if summary.exceedsAllowedStay, let tripLengthDays, let allowedDays = summary.allowedDays {
             if isGroupTrip, summary.travelerCount > 0 {
-                return "\(travelerPreview) may exceed the \(allowedDays)-day stay on this \(tripLengthDays)-day trip."
+                return String(format: String(localized: "trip_planner.visa.group_overstay_status_format"), locale: Locale.current, travelerPreview, allowedDays, tripLengthDays)
             }
-            return "This stop may exceed the \(allowedDays)-day stay on your \(tripLengthDays)-day trip."
+            return String(format: String(localized: "trip_planner.visa.solo_overstay_status_format"), locale: Locale.current, allowedDays, tripLengthDays)
         }
 
         if isGroupTrip, summary.travelerCount > 0 {
             if summary.travelerCount == 1 {
-                return "\(travelerPreview) needs a visa here."
+                return String(format: String(localized: "trip_planner.visa.one_traveler_needs_visa_format"), locale: Locale.current, travelerPreview)
             }
-            return "\(travelerPreview) need visas here."
+            return String(format: String(localized: "trip_planner.visa.multiple_travelers_need_visa_format"), locale: Locale.current, travelerPreview)
         }
 
         let label = summary.passportLabels.first ?? passportLabel
@@ -4880,7 +4921,7 @@ private struct TripPlannerVisaCountryRow: View {
         } label: {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("\(summary.countryFlag) \(summary.countryName)")
+                    Text("\(summary.countryFlag) \(Locale.autoupdatingCurrent.localizedString(forRegionCode: summary.countryID.uppercased()) ?? summary.countryName)")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.black)
 
@@ -4923,7 +4964,7 @@ private struct TripPlannerScoreHighlightCard: View {
                 ScorePill(score: score)
                     .fixedSize(horizontal: true, vertical: true)
             } else {
-                Text("N/A")
+                Text("trip_planner.stats.na")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.black)
                     .fixedSize(horizontal: true, vertical: true)
@@ -4967,7 +5008,7 @@ private struct TripPlannerCategoryAverageCard: View {
                 ScorePill(score: score)
                     .fixedSize(horizontal: true, vertical: true)
             } else {
-                Text("N/A")
+                Text("trip_planner.stats.na")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.black.opacity(0.58))
                     .fixedSize(horizontal: true, vertical: true)
@@ -5113,8 +5154,8 @@ private struct TripPlannerAvailabilitySection: View {
             if trip.availability.isEmpty {
                 TripPlannerInfoCard(
                     text: trip.isGroupTrip
-                        ? "Start collecting free months or exact date ranges so the planner can spotlight the best shared window."
-                        : "Add a couple of date ideas here to keep your planning options visible."
+                        ? String(localized: "trip_planner.availability.summary_empty_group")
+                        : String(localized: "trip_planner.availability.summary_empty_solo")
                     ,
                     systemImage: "calendar.badge.plus"
                 )
@@ -5122,7 +5163,7 @@ private struct TripPlannerAvailabilitySection: View {
                 TripPlannerAvailabilityCalendarBoard(trip: trip)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Trip route")
+                    Text("trip_planner.availability.trip_route_title")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.black)
 
@@ -5130,13 +5171,13 @@ private struct TripPlannerAvailabilitySection: View {
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Best shared windows")
+                    Text("trip_planner.availability.best_shared_windows")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.black)
 
                     if overlaps.isEmpty {
                         TripPlannerInfoCard(
-                            text: "No shared window yet. Ask everyone to add a few more free months or date ranges so the planner can find a better match.",
+                            text: String(localized: "trip_planner.availability.summary_no_shared_window"),
                             systemImage: "sparkles"
                         )
                     } else {
@@ -5149,9 +5190,17 @@ private struct TripPlannerAvailabilitySection: View {
                 }
 
                 HStack(spacing: 8) {
-                    TripPlannerBadge(text: "\(exactProposalCount) date range\(exactProposalCount == 1 ? "" : "s")")
+                    TripPlannerBadge(text: String(
+                        format: String(localized: "trip_planner.availability.date_range_count"),
+                        locale: Locale.current,
+                        exactProposalCount
+                    ))
                     if monthProposalCount > 0 {
-                        TripPlannerBadge(text: "\(monthProposalCount) flexible month\(monthProposalCount == 1 ? "" : "s")")
+                        TripPlannerBadge(text: String(
+                            format: String(localized: "trip_planner.availability.flexible_month_count"),
+                            locale: Locale.current,
+                            monthProposalCount
+                        ))
                     }
                 }
             }
@@ -5210,7 +5259,7 @@ private struct TripPlannerAvailabilityCalendarBoard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Calendar view")
+            Text("trip_planner.availability.calendar_view")
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(.black)
 
@@ -5242,7 +5291,7 @@ private struct TripPlannerAvailabilityCalendarBoard: View {
                                 .fill(.black)
                                 .frame(width: 10, height: 10)
 
-                            Text("Trip dates")
+                            Text("trip_planner.availability.trip_dates")
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundStyle(.black)
                         }
@@ -5258,7 +5307,7 @@ private struct TripPlannerAvailabilityCalendarBoard: View {
 
             if !monthsToDisplay.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Swipe sideways to move across months.")
+                    Text("trip_planner.availability.swipe_months")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.black.opacity(0.58))
 
@@ -5451,13 +5500,18 @@ private struct TripPlannerOverlapCard: View {
                 .foregroundStyle(.black)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(TripPlannerDateFormatter.rangeText(start: overlap.startDate, end: overlap.endDate) ?? "Shared window")
+                Text(TripPlannerDateFormatter.rangeText(start: overlap.startDate, end: overlap.endDate) ?? String(localized: "trip_planner.availability.shared_window"))
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.black)
 
                 Text(overlap.isFullMatch
-                    ? "Works across everyone’s current proposals."
-                    : "This lines up for \(overlap.exactParticipantCount) of \(overlap.totalParticipantCount) people so far.")
+                    ? String(localized: "trip_planner.availability.overlap_full_match")
+                    : String(
+                        format: String(localized: "trip_planner.availability.overlap_partial_match"),
+                        locale: Locale.current,
+                        overlap.exactParticipantCount,
+                        overlap.totalParticipantCount
+                    ))
                     .font(.system(size: 13))
                     .foregroundStyle(.black.opacity(0.68))
             }
@@ -5485,7 +5539,7 @@ private struct TripPlannerSavedTripCard: View {
                         .font(.system(size: 19, weight: .bold))
                         .foregroundStyle(.black)
 
-                    Text(trip.isGroupTrip ? "Group trip" : "Solo trip")
+                    Text(trip.isGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip"))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.black.opacity(0.62))
                 }
@@ -5515,7 +5569,11 @@ private struct TripPlannerSavedTripCard: View {
             }
 
             if !trip.friendNames.isEmpty {
-                Text("With \(trip.friendNames.joined(separator: ", "))")
+                Text(String(
+                    format: String(localized: "trip_planner.saved_trip.with_format"),
+                    locale: Locale.current,
+                    trip.friendNames.joined(separator: ", ")
+                ))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(.black.opacity(0.8))
             }
@@ -5531,7 +5589,7 @@ private struct TripPlannerSavedTripCard: View {
                 Button {
                     onAddToCalendar()
                 } label: {
-                    Label("Add To Apple Calendar", systemImage: "calendar.badge.plus")
+                    Label("trip_planner.actions.add_to_calendar", systemImage: "calendar.badge.plus")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.black)
                         .frame(maxWidth: .infinity)
@@ -5564,16 +5622,16 @@ private struct TripPlannerEmptyStateCard: View {
                 .font(.system(size: 32))
                 .foregroundStyle(.black.opacity(0.82))
 
-            Text("No Trips Yet")
+            Text("trip_planner.empty.title")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(.black)
 
-            Text("Start with one rough trip idea and refine it as dates, countries, and people come into focus.")
+            Text("trip_planner.empty.subtitle")
                 .font(.system(size: 15))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.black.opacity(0.72))
 
-            Text("Create New Trip")
+            Text("trip_planner.empty.cta")
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(.black)
                 .padding(.horizontal, 18)
@@ -5711,17 +5769,17 @@ private struct TripPlannerCountryList: View {
                             .font(.title3)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(country.name)
+                            Text(country.localizedDisplayName)
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(.black)
 
                             HStack(spacing: 6) {
                                 if bucketIds.contains(country.id) {
-                                    TripPlannerBadge(text: "Bucket")
+                                    TripPlannerBadge(text: String(localized: "planning.list_kind.bucket.short"))
                                 }
 
                                 if sharedIds.contains(country.id) {
-                                    TripPlannerBadge(text: "Shared")
+                                    TripPlannerBadge(text: String(localized: "trip_planner.shared"))
                                 }
                             }
                         }
@@ -5769,7 +5827,7 @@ private struct TripPlannerFriendRow: View {
                     Spacer(minLength: 8)
 
                     if let mutualBucketCount {
-                        Text("\(mutualBucketCount) mutual")
+                        Text(String(format: String(localized: "trip_planner.friends.mutual_count_format"), locale: Locale.current, mutualBucketCount))
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.black.opacity(0.62))
                             .padding(.horizontal, 8)
@@ -5936,9 +5994,9 @@ private struct TripPlannerFriendPickerSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 TripPlannerTextInput(
-                    title: "Search friends",
+                    title: String(localized: "trip_planner.friends.search_title"),
                     text: $searchText,
-                    placeholder: "Hadi, Layal, @username..."
+                    placeholder: String(localized: "trip_planner.friends.search_placeholder")
                 )
 
                 LazyVStack(spacing: 10) {
@@ -5965,11 +6023,11 @@ private struct TripPlannerFriendPickerSheet: View {
             Theme.pageBackground("travel1")
                 .ignoresSafeArea()
         )
-        .navigationTitle("Travel Friends")
+        .navigationTitle(String(localized: "trip_planner.travel_friends"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") {
+                Button(String(localized: "common.done")) {
                     dismiss()
                 }
                 .foregroundStyle(.black)
@@ -6003,7 +6061,9 @@ private struct TripPlannerCountryPickerSheet: View {
 
         return sections.compactMap { section in
             let filteredCountries = section.countries.filter { country in
-                country.name.localizedCaseInsensitiveContains(trimmed)
+                country.localizedSearchableNames.contains {
+                    $0.localizedCaseInsensitiveContains(trimmed)
+                }
                     || country.id.localizedCaseInsensitiveContains(trimmed)
             }
             guard !filteredCountries.isEmpty else { return nil }
@@ -6015,9 +6075,9 @@ private struct TripPlannerCountryPickerSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 TripPlannerTextInput(
-                    title: "Search countries",
+                    title: String(localized: "trip_planner.countries.search_title"),
                     text: $searchText,
-                    placeholder: "Japan, Brazil, Morocco..."
+                    placeholder: String(localized: "trip_planner.countries.search_placeholder")
                 )
 
                 ForEach(filteredSections) { section in
@@ -6048,7 +6108,7 @@ private struct TripPlannerCountryPickerSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") {
+                Button(String(localized: "common.done")) {
                     dismiss()
                 }
                 .foregroundStyle(.black)
@@ -6078,7 +6138,7 @@ private struct TripPlannerCountryNavigationGrid: View {
                     CountryDetailView(country: country)
                 } label: {
                     HStack(spacing: 8) {
-                        Text("\(country.flagEmoji) \(country.name)")
+                        Text("\(country.flagEmoji) \(country.localizedDisplayName)")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(.black)
                             .multilineTextAlignment(.leading)
@@ -6370,9 +6430,9 @@ private enum TripPlannerAvailabilityCalculator {
     static func label(for proposal: TripPlannerAvailabilityProposal) -> String {
         switch proposal.kind {
         case .exactDates:
-            return "Exact: \(TripPlannerDateFormatter.rangeText(start: proposal.startDate, end: proposal.endDate) ?? "Dates")"
+            return String(format: String(localized: "trip_planner.availability.label_exact_format"), locale: Locale.current, TripPlannerDateFormatter.rangeText(start: proposal.startDate, end: proposal.endDate) ?? String(localized: "trip_planner.availability.label_dates"))
         case .flexibleMonth:
-            return "Flexible: \(monthTitle(for: proposal.startDate))"
+            return String(format: String(localized: "trip_planner.availability.label_flexible_format"), locale: Locale.current, monthTitle(for: proposal.startDate))
         }
     }
 

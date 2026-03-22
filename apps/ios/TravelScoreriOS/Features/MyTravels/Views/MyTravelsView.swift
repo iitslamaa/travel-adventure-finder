@@ -20,7 +20,7 @@ struct MyTravelsView: View {
     private var visitedCountries: [Country] {
         countries
             .filter { traveledCountryIds.contains($0.id) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending }
     }
 
     var body: some View {
@@ -31,7 +31,7 @@ struct MyTravelsView: View {
             if isLoading {
                 VStack(spacing: 12) {
                     ProgressView()
-                    Text("Loading...")
+                    Text("common.loading")
                         .font(.subheadline)
                         .foregroundColor(.black)
                 }
@@ -55,7 +55,7 @@ struct MyTravelsView: View {
                                         .font(.largeTitle)
 
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(country.name)
+                                        Text(country.localizedDisplayName)
                                             .font(.headline)
                                             .foregroundColor(Theme.textPrimary)
                                     }
@@ -101,13 +101,13 @@ struct MyTravelsView: View {
                 .scrollIndicators(.hidden)
             }
         }
-        .navigationTitle("🎒 My Travels")
+        .navigationTitle("planning.visited_list.title")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showingAddCountries = true
                 } label: {
-                    Text("Edit")
+                    Text("common.edit")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.black)
                 }

@@ -53,7 +53,7 @@ struct ScorePill: View {
                 Capsule()
                     .stroke(resolvedColor.opacity(0.45), lineWidth: 1.5)
             )
-            .accessibilityLabel("Score \(Int(score))")
+            .accessibilityLabel(String(format: String(localized: "common.score_accessibility_format"), Int(score)))
     }
 
     private var formattedScore: String {

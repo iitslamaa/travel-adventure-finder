@@ -45,10 +45,10 @@ struct ProfileInfoSection: View {
     private var languagesSection: some View {
         card {
             VStack(alignment: .leading, spacing: 16) {
-                sectionHeader("Languages")
+                sectionHeader(String(localized: "profile.info.languages"))
 
                 if languages.isEmpty {
-                    secondaryText("Not set")
+                    secondaryText(String(localized: "profile.settings.not_set"))
                 } else {
                     VStack(spacing: 14) {
                         ForEach(languages, id: \.self) { language in
@@ -63,7 +63,7 @@ struct ProfileInfoSection: View {
     private var sharedLanguagesSection: some View {
         card {
             VStack(alignment: .leading, spacing: 16) {
-                sectionHeader("Shared Languages")
+                sectionHeader(String(localized: "profile.info.shared_languages"))
 
                 VStack(spacing: 14) {
                     ForEach(mutualLanguages, id: \.self) { language in
@@ -82,7 +82,7 @@ struct ProfileInfoSection: View {
 
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Travel Mode")
+                        Text("profile.settings.travel.mode")
                             .font(.subheadline.weight(.semibold))
                             .foregroundColor(.black)
 
@@ -91,7 +91,7 @@ struct ProfileInfoSection: View {
                                 .font(.subheadline)
                                 .foregroundColor(.black)
                         } else {
-                            Text("Not set")
+                            Text("profile.settings.not_set")
                                 .font(.subheadline)
                                 .foregroundColor(.black)
                         }
@@ -100,7 +100,7 @@ struct ProfileInfoSection: View {
                     Spacer()
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Travel Style")
+                        Text("profile.settings.travel.style")
                             .font(.subheadline.weight(.semibold))
                             .foregroundColor(.black)
 
@@ -109,7 +109,7 @@ struct ProfileInfoSection: View {
                                 .font(.subheadline)
                                 .foregroundColor(.black)
                         } else {
-                            Text("Not set")
+                            Text("profile.settings.not_set")
                                 .font(.subheadline)
                                 .foregroundColor(.black)
                         }
@@ -127,13 +127,13 @@ struct ProfileInfoSection: View {
             if relationshipState == .selfProfile {
 
                 CollapsibleCountrySection(
-                    title: "Countries Traveled",
+                    title: String(localized: "profile.info.countries_traveled"),
                     countryCodes: orderedTraveledCountries,
                     highlightColor: .gold
                 )
 
                 CollapsibleCountrySection(
-                    title: "Bucket List",
+                    title: String(localized: "profile.info.bucket_list"),
                     countryCodes: orderedBucketListCountries,
                     highlightColor: .blue
                 )
@@ -141,14 +141,14 @@ struct ProfileInfoSection: View {
             } else if relationshipState == .friends {
 
                 CollapsibleCountrySection(
-                    title: "Countries Traveled",
+                    title: String(localized: "profile.info.countries_traveled"),
                     countryCodes: orderedTraveledCountries,
                     highlightColor: .gold,
                     mutualCountries: Set(mutualTraveledCountries)
                 )
 
                 CollapsibleCountrySection(
-                    title: "Bucket List",
+                    title: String(localized: "profile.info.bucket_list"),
                     countryCodes: orderedBucketListCountries,
                     highlightColor: .blue,
                     mutualCountries: Set(mutualBucketCountries)
@@ -265,21 +265,21 @@ struct ProfileInfoSection: View {
         let upper = countryCode.uppercased()
         switch upper {
         case "US":
-            return "USA"
+            return String(localized: "country.short.us")
         case "GB":
-            return "UK"
+            return String(localized: "country.short.gb")
         case "PS":
-            return "Palestine"
+            return String(localized: "country.short.ps")
         case "AE":
-            return "UAE"
+            return String(localized: "country.short.ae")
         case "CD":
-            return "DRC"
+            return String(localized: "country.short.cd")
         case "CF":
-            return "CAR"
+            return String(localized: "country.short.cf")
         default:
             break
         }
-        let locale = Locale(identifier: "en_US")
+        let locale = Locale.autoupdatingCurrent
         return locale.localizedString(forRegionCode: upper) ?? upper
     }
 
@@ -290,7 +290,7 @@ struct ProfileInfoSection: View {
                     .font(.title3)
                     .foregroundColor(.black)
 
-                Text("Add this user as a friend to see more details.")
+                Text("profile.info.locked_message")
                     .font(.subheadline)
                     .multilineTextAlignment(.center)
                     .foregroundColor(.black)

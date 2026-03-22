@@ -23,7 +23,7 @@ struct FeedbackView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Feedback")
+                Theme.titleBanner(String(localized: "feedback.title"))
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -39,26 +39,26 @@ struct FeedbackView: View {
                                             .stroke(Color(.systemGray5), lineWidth: 1)
                                     )
 
-                                Text("I’m Lama, the developer behind Travel Adventure Finder!")
+                                Text("feedback.intro.headline")
                                     .font(.title3.weight(.semibold))
                                     .foregroundStyle(Theme.textPrimary)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
 
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("I built TAF because I kept looking up the same travel statistics when deciding where to go, and I couldn’t believe a tool like this didn’t already exist.")
+                                Text("feedback.intro.body_1")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
 
-                                Text("I’m passionate about traveling and connecting with people, and I genuinely want TAF to be something travelers find useful.")
+                                Text("feedback.intro.body_2")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
 
-                                Text("I truly want to hear from you.")
+                                Text("feedback.intro.body_3")
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(Theme.textPrimary)
 
-                                Text("I read every message personally and work daily to make TAF better. Thank you for being here and travel on!")
+                                Text("feedback.intro.body_4")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
@@ -87,7 +87,7 @@ struct FeedbackView: View {
                                         ProgressView()
                                             .frame(maxWidth: .infinity)
                                     } else {
-                                        Text(didSubmit ? "Sent ✓" : "Send Feedback")
+                                        Text(didSubmit ? String(localized: "feedback.sent") : String(localized: "feedback.send"))
                                             .fontWeight(.semibold)
                                             .frame(maxWidth: .infinity)
                                     }
@@ -129,7 +129,7 @@ struct FeedbackView: View {
             dismiss()
             
         } catch {
-            errorMessage = "Something went wrong. Please try again."
+            errorMessage = String(localized: "feedback.error")
             isSubmitting = false
         }
     }

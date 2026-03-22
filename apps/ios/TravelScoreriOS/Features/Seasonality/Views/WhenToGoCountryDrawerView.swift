@@ -48,7 +48,7 @@ struct WhenToGoCountryDrawerView: View {
                         if let overall = country.country.score {
                             ScorePill(score: overall)
                         } else {
-                            Text("—")
+                            Text("common.em_dash")
                                 .font(.system(size: 18, weight: .bold, design: .rounded))
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
@@ -62,7 +62,7 @@ struct WhenToGoCountryDrawerView: View {
                                 )
                         }
 
-                        Text("Overall")
+                        Text("seasonality.drawer.overall")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -82,10 +82,10 @@ struct WhenToGoCountryDrawerView: View {
 
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Seasonality in \(selectedMonthName)")
+                        Text(String(format: String(localized: "country_detail.seasonality.title_format"), locale: Locale.current, selectedMonthName))
                             .font(.headline)
 
-                        Text("Monthly travel conditions")
+                        Text("seasonality.drawer.monthly_conditions")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -106,7 +106,7 @@ struct WhenToGoCountryDrawerView: View {
                                     .stroke(CountryScoreStyling.borderColor(for: seasonalityScore), lineWidth: 1)
                             )
                     } else {
-                        Text("—")
+                        Text("common.em_dash")
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
@@ -135,7 +135,7 @@ struct WhenToGoCountryDrawerView: View {
                 if let months = country.country.seasonalityBestMonths,
                    !months.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Best months")
+                        Text("country_detail.seasonality.best_months")
                             .font(.caption)
                             .foregroundStyle(.secondary)
 
@@ -182,7 +182,7 @@ struct WhenToGoCountryDrawerView: View {
             } label: {
                 HStack(spacing: 8) {
                     Spacer()
-                    Text("View Full Country Details")
+                    Text("seasonality.drawer.view_full_country_details")
                         .font(.headline.weight(.bold))
                     Image(systemName: "arrow.right")
                         .font(.headline.weight(.bold))
@@ -233,7 +233,7 @@ struct WhenToGoCountryDrawerView: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
 
-                Text("Weight: \(weightPercentage)%")
+                Text(String(format: String(localized: "country_detail.seasonality.weight_format"), locale: Locale.current, weightPercentage))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

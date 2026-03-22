@@ -14,7 +14,7 @@ struct AuthSheetView: View {
         NavigationStack {
             VStack(spacing: 20) {
 
-                Text("Sign in to save your bucket list and sync across devices.")
+                Text("auth.sheet.subtitle")
                     .font(.headline)
                     .multilineTextAlignment(.center)
                     .padding(.top, 12)
@@ -23,7 +23,7 @@ struct AuthSheetView: View {
                 Button {
                     sessionManager.continueAsGuest()
                 } label: {
-                    Text("Continue as Guest")
+                    Text("auth.continue_guest")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -37,7 +37,7 @@ struct AuthSheetView: View {
                 Spacer(minLength: 0)
             }
             .padding()
-            .navigationTitle("Sign In")
+            .navigationTitle(String(localized: "auth.sheet.title"))
             .navigationBarTitleDisplayMode(.inline)
         }
     }

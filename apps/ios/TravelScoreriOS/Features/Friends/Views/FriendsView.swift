@@ -61,7 +61,7 @@ struct FriendsView: View {
 
             ZStack {
                 VStack(spacing: 0) {
-                    Theme.titleBanner("Friends")
+                    Theme.titleBanner(String(localized: "friends.title"))
 
                     contentView(contentWidth: contentWidth)
                         .padding(.top, 12)
@@ -138,8 +138,8 @@ struct FriendsView: View {
                 guard isOwnFriendsPage else { return }
                 Task { await friendsVM.searchUsers() }
             }
-            .alert("Error", isPresented: .constant(friendsVM.errorMessage != nil)) {
-                Button("OK") { friendsVM.errorMessage = nil }
+            .alert(String(localized: "common.error"), isPresented: .constant(friendsVM.errorMessage != nil)) {
+                Button(String(localized: "common.ok")) { friendsVM.errorMessage = nil }
             } message: {
                 Text(friendsVM.errorMessage ?? "")
             }
@@ -270,7 +270,7 @@ struct FriendsView: View {
             TextField(
                 "",
                 text: $friendsVM.searchText,
-                prompt: Text("Search by username")
+                prompt: Text("friends.search.placeholder")
                     .foregroundStyle(.black.opacity(0.55))
             )
                 .textFieldStyle(.plain)

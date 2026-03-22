@@ -29,9 +29,9 @@ enum LanguageProficiency: String, CaseIterable, Identifiable, Codable {
 
     var label: String {
         switch self {
-        case .beginner: return "Beginner"
-        case .conversational: return "Conversational"
-        case .fluent: return "Fluent"
+        case .beginner: return String(localized: "profile.settings.language.beginner")
+        case .conversational: return String(localized: "profile.settings.language.conversational")
+        case .fluent: return String(localized: "profile.settings.language.fluent")
         }
     }
 
@@ -57,9 +57,9 @@ enum TravelMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .solo: return "Solo"
-        case .group: return "Group"
-        case .both: return "Solo + Group"
+        case .solo: return String(localized: "profile.settings.travel_mode.solo")
+        case .group: return String(localized: "profile.settings.travel_mode.group")
+        case .both: return String(localized: "profile.settings.travel_mode.both")
         }
     }
 }
@@ -69,10 +69,10 @@ enum TravelStyle: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .budget: return "Budget"
-        case .comfortable: return "Comfortable"
-        case .inBetween: return "Between Budget and Comfy"
-        case .both: return "Budget or comfy, depending"
+        case .budget: return String(localized: "profile.settings.travel_style.budget")
+        case .comfortable: return String(localized: "profile.settings.travel_style.comfortable")
+        case .inBetween: return String(localized: "profile.settings.travel_style.in_between")
+        case .both: return String(localized: "profile.settings.travel_style.both")
         }
     }
 }
@@ -116,7 +116,7 @@ struct PassportPreferences: Codable, Equatable {
 }
 
 enum CountrySelectionFormatter {
-    private static let locale = Locale(identifier: "en_US")
+    private static let locale = Locale.autoupdatingCurrent
 
     static func localizedName(for code: String) -> String {
         let upper = code.uppercased()

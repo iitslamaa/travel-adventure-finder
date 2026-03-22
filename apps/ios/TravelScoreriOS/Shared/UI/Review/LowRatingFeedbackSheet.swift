@@ -28,7 +28,7 @@ struct LowRatingFeedbackSheet: View {
                             .font(.system(size: 50))
                             .foregroundColor(.green)
                         
-                        Text("Thanks for your feedback!")
+                        Text("review.thanks")
                             .font(.system(size: 18, weight: .semibold))
                             .multilineTextAlignment(.center)
                     }
@@ -36,10 +36,10 @@ struct LowRatingFeedbackSheet: View {
                 } else {
                     VStack(alignment: .leading, spacing: 20) {
                         
-                        Text("What could we improve?")
+                        Text("review.improve_prompt")
                             .font(.system(size: 22, weight: .semibold))
                         
-                        Text("Your feedback helps us make Travel Adventure Finder better.")
+                        Text("review.feedback_helps")
                             .font(.system(size: 15))
                             .foregroundColor(.secondary)
                         
@@ -59,7 +59,7 @@ struct LowRatingFeedbackSheet: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
                             } else {
-                                Text("Send")
+                                Text("common.send")
                                     .font(.system(size: 16, weight: .semibold))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
@@ -75,11 +75,11 @@ struct LowRatingFeedbackSheet: View {
                     .padding(24)
                 }
             }
-            .navigationTitle("Feedback")
+            .navigationTitle(String(localized: "feedback.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("common.cancel") {
                         dismiss()
                         onFinished()
                     }

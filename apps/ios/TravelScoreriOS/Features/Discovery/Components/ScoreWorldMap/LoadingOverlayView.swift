@@ -21,7 +21,7 @@ struct LoadingOverlayView: View {
                     .progressViewStyle(.circular)
                     .scaleEffect(1.1)
 
-                Text("Preparing your world…")
+                Text("discovery.world_map.preparing")
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)

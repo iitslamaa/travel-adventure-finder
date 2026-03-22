@@ -160,7 +160,7 @@ struct DiscoveryView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Explore")
+                Theme.titleBanner(String(localized: "discovery.title"))
                 ScrollView {
                     VStack(spacing: 24) {
                         VStack(spacing: 24) {
@@ -170,8 +170,8 @@ struct DiscoveryView: View {
                             } label: {
                                 Theme.featureCard(
                                     icon: "globe.americas",
-                                    title: "Countries",
-                                    subtitle: "Browse every destination"
+                                    title: String(localized: "discovery.countries.title"),
+                                    subtitle: String(localized: "discovery.countries.subtitle")
                                 ) {
                                     Image(systemName: "chevron.right")
                                         .foregroundColor(.black)
@@ -187,8 +187,8 @@ struct DiscoveryView: View {
                             } label: {
                                 Theme.featureCard(
                                     icon: "calendar",
-                                    title: "When To Go",
-                                    subtitle: "Find peak seasons"
+                                    title: String(localized: "discovery.when_to_go.title"),
+                                    subtitle: String(localized: "discovery.when_to_go.subtitle")
                                 ) {
                                     Image(systemName: "chevron.right")
                                         .foregroundColor(.black)
@@ -201,8 +201,8 @@ struct DiscoveryView: View {
                             } label: {
                                 Theme.featureCard(
                                     icon: "map.fill",
-                                    title: "Explore the World",
-                                    subtitle: "Open the interactive world map"
+                                    title: String(localized: "discovery.map.title"),
+                                    subtitle: String(localized: "discovery.map.subtitle")
                                 ) {
                                     Image(systemName: "chevron.right")
                                         .foregroundColor(.black)
@@ -377,7 +377,7 @@ struct DiscoveryView: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.black)
 
-                    TextField("Search countries and territories", text: $text)
+                    TextField("discovery.search_countries_and_territories", text: $text)
                         .focused(isFocused)
                         .submitLabel(.search)
                         .textInputAutocapitalization(.never)

@@ -115,7 +115,7 @@ struct ProfileSettingsView: View {
                 VStack {
                     ProgressView()
                         .padding(.top, 40)
-                    Text("Loading profile…")
+                    Text("profile.settings.loading_profile")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -216,7 +216,7 @@ struct ProfileSettingsView: View {
                             }
 
                         case .usernameTaken:
-                            usernameError = "Username is already taken"
+                            usernameError = String(localized: "profile.settings.username_taken")
 
                         case .failure(let message):
                             usernameError = message
@@ -228,7 +228,7 @@ struct ProfileSettingsView: View {
                             ProgressView()
                                 .tint(.white)
                         } else {
-                            Text("Save")
+                            Text("common.save")
                                 .font(.subheadline.weight(.semibold))
                         }
                     }
@@ -250,21 +250,21 @@ struct ProfileSettingsView: View {
 
             case .home:
                 CountryMultiSelectView(
-                    title: "Home Countries",
-                    subtitle: "Add any flag that represents you! (countries you've lived in, background, ethnicity, etc.)",
+                    title: String(localized: "profile.settings.sheet.home_countries_title"),
+                    subtitle: String(localized: "profile.settings.sheet.home_countries_subtitle"),
                     selection: $homeCountries
                 )
 
             case .currentCountry:
                 CountrySingleSelectView(
-                    title: "Select current country",
+                    title: String(localized: "profile.settings.sheet.select_current_country"),
                     selection: $currentCountry
                 )
 
             case .favoriteCountries:
                 CountryMultiSelectView(
-                    title: "Favorite Countries",
-                    subtitle: "Select your favorite destinations.",
+                    title: String(localized: "profile.settings.sheet.favorite_countries_title"),
+                    subtitle: String(localized: "profile.settings.sheet.favorite_countries_subtitle"),
                     selection: Binding(
                         get: { Set(favoriteCountries) },
                         set: { favoriteCountries = Array($0) }
@@ -273,7 +273,7 @@ struct ProfileSettingsView: View {
 
             case .nextDestination:
                 CountrySingleSelectView(
-                    title: "Select next destination",
+                    title: String(localized: "profile.settings.sheet.select_next_destination"),
                     selection: $nextDestination
                 )
 
@@ -294,7 +294,7 @@ struct ProfileSettingsView: View {
                             }
                         }
                     }
-                    .navigationTitle("Travel Mode")
+                    .navigationTitle(String(localized: "profile.settings.travel.mode"))
                     .navigationBarTitleDisplayMode(.inline)
                 }
                 .presentationDetents([.medium])
@@ -310,7 +310,7 @@ struct ProfileSettingsView: View {
                             }
                         }
                     }
-                    .navigationTitle("Travel Style")
+                    .navigationTitle(String(localized: "profile.settings.travel.style"))
                     .navigationBarTitleDisplayMode(.inline)
                 }
                 .presentationDetents([.medium])
@@ -318,8 +318,8 @@ struct ProfileSettingsView: View {
 
             case .passportNationalities:
                 CountryMultiSelectView(
-                    title: "Nationalities",
-                    subtitle: "Private only. These are saved for visa matching and never shown on your public profile.",
+                    title: String(localized: "profile.settings.sheet.nationalities_title"),
+                    subtitle: String(localized: "profile.settings.sheet.nationalities_subtitle"),
                     selection: $passportNationalities,
                     excludedCodes: Self.passportSelectionExcludedCodes
                 )
@@ -410,7 +410,7 @@ struct ProfileSettingsView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                    Text("Profile updated")
+                    Text("profile.settings.updated")
                         .font(.subheadline.weight(.semibold))
                 }
                 .padding(.horizontal, 16)
@@ -428,12 +428,12 @@ struct ProfileSettingsView: View {
     // MARK: - Display helpers
 
     private var homeCountriesDisplay: String {
-        guard !homeCountries.isEmpty else { return "Not set" }
+        guard !homeCountries.isEmpty else { return String(localized: "profile.settings.not_set") }
         return homeCountries.sorted().map(countryCodeToFlag).joined(separator: " ")
     }
 
     private var nextDestinationDisplay: String {
-        guard let nextDestination else { return "Not set" }
+        guard let nextDestination else { return String(localized: "profile.settings.not_set") }
         return countryCodeToFlag(nextDestination)
     }
 
@@ -496,7 +496,7 @@ struct SettingsScrollContent: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Theme.titleBanner("Profile Settings")
+                Theme.titleBanner(String(localized: "profile.settings.title"))
 
                 SectionCard {
                     HStack(alignment: .top, spacing: 20) {
@@ -518,7 +518,7 @@ struct SettingsScrollContent: View {
                                 "",
                                 text: $firstName,
                                 prompt:
-                                    (Text("Full name")
+                                    (Text("profile.settings.full_name")
                                         .foregroundStyle(.secondary)
                                      +
                                      Text(" *")
@@ -542,7 +542,7 @@ struct SettingsScrollContent: View {
                                     "",
                                     text: $username,
                                     prompt:
-                                        (Text("username")
+                                        (Text("profile.settings.username")
                                             .foregroundStyle(.secondary)
                                          +
                                          Text(" *")
@@ -611,7 +611,7 @@ struct SettingsScrollContent: View {
                         } label: {
                             HStack {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")
-                                Text("Log Out")
+                                Text("profile.settings.log_out")
                                     .fontWeight(.semibold)
                                 Spacer()
                             }
@@ -626,7 +626,7 @@ struct SettingsScrollContent: View {
                         } label: {
                             HStack {
                                 Image(systemName: "trash")
-                                Text("Delete Account")
+                                Text("profile.settings.delete_account")
                                     .fontWeight(.semibold)
                                 Spacer()
                             }
@@ -634,11 +634,11 @@ struct SettingsScrollContent: View {
                         }
                         .disabled(isDeletingAccount)
                         .confirmationDialog(
-                            "Are you sure you want to permanently delete your account? This cannot be undone.",
+                            String(localized: "profile.settings.delete_confirmation"),
                             isPresented: $showDeleteConfirmation,
                             titleVisibility: .visible
                         ) {
-                            Button("Delete Account", role: .destructive) {
+                            Button(String(localized: "profile.settings.delete_account"), role: .destructive) {
                                 Task {
                                     isDeletingAccount = true
                                     do {
@@ -651,7 +651,7 @@ struct SettingsScrollContent: View {
                                 }
                             }
 
-                            Button("Cancel", role: .cancel) {}
+                            Button(String(localized: "common.cancel"), role: .cancel) {}
                         }
                     }
                     .padding(.horizontal, 16)
@@ -675,9 +675,9 @@ private struct ProfileSettingsPassportSection: View {
     @State private var pendingDeletionCode: String?
 
     var body: some View {
-        SectionCard(title: "Passports") {
+        SectionCard(title: String(localized: "profile.settings.passports.title")) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Private to you. Used to personalize visa rules and passport recommendations with your strongest saved passport for each destination.")
+                Text("profile.settings.passports.subtitle")
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
 
@@ -685,7 +685,7 @@ private struct ProfileSettingsPassportSection: View {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(spacing: 12) {
                             HStack(spacing: 10) {
-                                Text("Saved passports")
+                                Text("profile.settings.passports.saved")
                                     .foregroundStyle(.primary)
 
                                 Button {
@@ -705,7 +705,7 @@ private struct ProfileSettingsPassportSection: View {
                         }
 
                         if passportNationalities.isEmpty {
-                            Text("No passports added yet")
+                            Text("profile.settings.passports.empty")
                                 .font(.system(size: 14))
                                 .foregroundStyle(.secondary)
                         } else {
@@ -743,13 +743,13 @@ private struct ProfileSettingsPassportSection: View {
             titleVisibility: .visible
         ) {
             if let code = pendingDeletionCode {
-                Button("Delete \(CountrySelectionFormatter.localizedName(for: code)) passport", role: .destructive) {
+                Button(String(format: String(localized: "profile.settings.passports.delete_format"), locale: Locale.current, CountrySelectionFormatter.localizedName(for: code)), role: .destructive) {
                     passportNationalities.remove(code)
                     pendingDeletionCode = nil
                 }
             }
 
-            Button("Cancel", role: .cancel) {
+            Button(String(localized: "common.cancel"), role: .cancel) {
                 pendingDeletionCode = nil
             }
         }
@@ -760,7 +760,7 @@ private struct ProfileSettingsPassportSection: View {
     }
 
     private var deletionDialogTitle: String {
-        guard let pendingDeletionCode else { return "Delete passport" }
+        guard let pendingDeletionCode else { return String(localized: "profile.settings.passports.delete_title") }
         return CountrySelectionFormatter.localizedName(for: pendingDeletionCode)
     }
 }

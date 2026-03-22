@@ -120,7 +120,7 @@ final class ProfileService {
             throw NSError(
                 domain: "ProfileService",
                 code: 404,
-                userInfo: [NSLocalizedDescriptionKey: "Profile not found"]
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.not_found")]
             )
         }
 
@@ -152,7 +152,7 @@ final class ProfileService {
             throw NSError(
                 domain: "ProfileService",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "No auth user found"]
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.no_auth_user")]
             )
         }
 
@@ -217,7 +217,7 @@ final class ProfileService {
         throw lastError ?? NSError(
             domain: "ProfileService",
             code: 1,
-            userInfo: [NSLocalizedDescriptionKey: "Failed to create profile after retries"]
+            userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.create_after_retries_failed")]
         )
     }
 

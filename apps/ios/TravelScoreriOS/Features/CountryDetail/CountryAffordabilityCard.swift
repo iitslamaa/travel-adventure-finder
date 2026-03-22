@@ -17,10 +17,10 @@ struct CountryAffordabilityCard: View {
 
             // Title row
             HStack {
-                Text("Affordability")
+                Text("country_detail.affordability.title")
                     .font(.headline)
                 Spacer()
-                Text("Estimated daily cost · \(weightPercentage)%")
+                Text(String(format: String(localized: "country_detail.affordability.estimated_daily_cost_format"), locale: Locale.current, weightPercentage))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -44,7 +44,7 @@ struct CountryAffordabilityCard: View {
                                 )
                         )
                 } else {
-                    Text("—")
+                    Text("common.em_dash")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
@@ -77,19 +77,19 @@ struct CountryAffordabilityCard: View {
             // Optional daily spend breakdown (if available)
             VStack(alignment: .leading, spacing: 4) {
                 if let total = country.dailySpendTotalUsd {
-                    Text(String(format: "Typical daily total: $%.0f USD", total))
+                    Text(String(format: String(localized: "country_detail.affordability.daily_total_format"), locale: Locale.current, total))
                 }
 
                 if let hotel = country.dailySpendHotelUsd {
-                    Text(String(format: "Hotel (per night): $%.0f USD", hotel))
+                    Text(String(format: String(localized: "country_detail.affordability.hotel_per_night_format"), locale: Locale.current, hotel))
                 }
 
                 if let food = country.dailySpendFoodUsd {
-                    Text(String(format: "Food (per day): $%.0f USD", food))
+                    Text(String(format: String(localized: "country_detail.affordability.food_per_day_format"), locale: Locale.current, food))
                 }
 
                 if let activities = country.dailySpendActivitiesUsd {
-                    Text(String(format: "Activities (per day): $%.0f USD", activities))
+                    Text(String(format: String(localized: "country_detail.affordability.activities_per_day_format"), locale: Locale.current, activities))
                 }
             }
             .font(.footnote)
@@ -98,14 +98,14 @@ struct CountryAffordabilityCard: View {
             // Footer
             HStack(spacing: 12) {
                 if let affordabilityScore = country.affordabilityScore {
-                    Text("Normalized: \(affordabilityScore)")
+                    Text(String(format: String(localized: "country_detail.affordability.normalized_format"), locale: Locale.current, affordabilityScore))
                 }
-                Text("Weight: \(weightPercentage)%")
+                Text(String(format: String(localized: "country_detail.affordability.weight_format"), locale: Locale.current, weightPercentage))
             }
             .font(.caption)
             .foregroundStyle(.secondary)
 
-            Text("Estimated daily travel costs based on cost-of-living indices and hotel price modeling.")
+            Text("country_detail.affordability.footer")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
