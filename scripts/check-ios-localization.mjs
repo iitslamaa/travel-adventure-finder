@@ -102,9 +102,7 @@ for (const [catalogName, catalog] of [
     if (!keyUsages.has(key) && !dottedKeyPattern.test(key)) {
       continue;
     }
-    const localesToCheck = key.startsWith("country.description.")
-      ? ["en"]
-      : requiredLocales;
+    const localesToCheck = requiredLocales;
     for (const locale of localesToCheck) {
       const value = localizations[locale]?.stringUnit?.value;
       if (!value) {
