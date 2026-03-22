@@ -45,6 +45,12 @@
             "state": "translated",
             "value": "Поиск приключений для путешествий"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستكشف مغامرات السفر"
+          }
         }
       }
     },
@@ -92,6 +98,12 @@
             "state": "translated",
             "value": "Поиск приключений для путешествий"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستكشف مغامرات السفر"
+          }
         }
       }
     },
@@ -138,6 +150,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trip Planner использует ваш календарь, чтобы вы могли сохранять примерные даты поездки как события Apple Calendar."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستخدم Trip Planner التقويم الخاص بك حتى تتمكن من حفظ تواريخ الرحلة المبدئية كأحداث في Apple Calendar."
           }
         }
       }
