@@ -5824,8 +5824,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Entry permit"
+            "state": "translated",
+            "value": "Разрешение на въезд"
           }
         }
       }
@@ -5870,8 +5870,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Freedom of movement"
+            "state": "translated",
+            "value": "Свобода передвижения"
           }
         }
       }
@@ -5916,8 +5916,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Own passport"
+            "state": "translated",
+            "value": "Собственный паспорт"
           }
         }
       }
@@ -5962,8 +5962,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Visa free"
+            "state": "translated",
+            "value": "Без визы"
           }
         }
       }
@@ -6008,8 +6008,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Visa required"
+            "state": "translated",
+            "value": "Требуется виза"
           }
         }
       }
@@ -6054,8 +6054,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "View official visa source"
+            "state": "translated",
+            "value": "Открыть официальный источник по визе"
           }
         }
       }
@@ -6146,8 +6146,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "UAE"
+            "state": "translated",
+            "value": "ОАЭ"
           }
         }
       }
@@ -6192,8 +6192,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "DRC"
+            "state": "translated",
+            "value": "ДР Конго"
           }
         }
       }
@@ -6238,8 +6238,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "CAR"
+            "state": "translated",
+            "value": "ЦАР"
           }
         }
       }
@@ -6284,8 +6284,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "UK"
+            "state": "translated",
+            "value": "Великобритания"
           }
         }
       }
@@ -6330,8 +6330,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Palestine"
+            "state": "translated",
+            "value": "Палестина"
           }
         }
       }
@@ -6376,8 +6376,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "USA"
+            "state": "translated",
+            "value": "США"
           }
         }
       }
@@ -8182,8 +8182,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel Advisory"
+            "state": "translated",
+            "value": "Рекомендации по безопасности"
           }
         }
       }
@@ -8228,8 +8228,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Visa Ease"
+            "state": "translated",
+            "value": "Простота визы"
           }
         }
       }
@@ -8274,8 +8274,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Weights"
+            "state": "translated",
+            "value": "Веса"
           }
         }
       }
@@ -8320,8 +8320,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "At least one category must have weight."
+            "state": "translated",
+            "value": "Хотя бы у одной категории должен быть вес."
           }
         }
       }
@@ -8366,8 +8366,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Find peak seasons"
+            "state": "translated",
+            "value": "Найдите лучшие сезоны"
           }
         }
       }
@@ -8412,8 +8412,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "When To Go"
+            "state": "translated",
+            "value": "Когда ехать"
           }
         }
       }
@@ -8458,8 +8458,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Preparing your world…"
+            "state": "translated",
+            "value": "Готовим вашу карту мира…"
           }
         }
       }
@@ -8512,8 +8512,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Something went wrong. Please try again."
+            "state": "translated",
+            "value": "Что-то пошло не так. Попробуйте еще раз."
           }
         }
       }
@@ -8558,8 +8558,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "I built TAF because I kept looking up the same travel statistics when deciding where to go, and I could not believe a tool like this did not already exist."
+            "state": "translated",
+            "value": "Я создала TAF, потому что постоянно искала одни и те же туристические показатели, когда решала, куда поехать, и не могла поверить, что такого инструмента еще не существует."
           }
         }
       }
@@ -8604,8 +8604,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "I am passionate about traveling and connecting with people, and I genuinely want TAF to be something travelers find useful."
+            "state": "translated",
+            "value": "Я очень люблю путешествия и общение с людьми и искренне хочу, чтобы TAF был полезным для путешественников."
           }
         }
       }
@@ -8650,8 +8650,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "I truly want to hear from you."
+            "state": "translated",
+            "value": "Мне действительно важно услышать вас."
           }
         }
       }
@@ -8696,8 +8696,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "I read every message personally and work daily to make TAF better. Thank you for being here and travel on!"
+            "state": "translated",
+            "value": "Я лично читаю каждое сообщение и каждый день работаю над тем, чтобы сделать TAF лучше. Спасибо, что вы здесь, и счастливых путешествий!"
           }
         }
       }
@@ -8742,8 +8742,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "I am Lama, the developer behind Travel Adventure Finder!"
+            "state": "translated",
+            "value": "Я Лама, разработчица Travel Adventure Finder!"
           }
         }
       }
@@ -8788,8 +8788,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Send Feedback"
+            "state": "translated",
+            "value": "Отправить отзыв"
           }
         }
       }
@@ -8834,8 +8834,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sent ✓"
+            "state": "translated",
+            "value": "Отправлено ✓"
           }
         }
       }
@@ -8880,8 +8880,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Feedback"
+            "state": "translated",
+            "value": "Обратная связь"
           }
         }
       }
@@ -8926,8 +8926,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Accept"
+            "state": "translated",
+            "value": "Принять"
           }
         }
       }
@@ -8972,8 +8972,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Decline"
+            "state": "translated",
+            "value": "Отклонить"
           }
         }
       }
@@ -9018,8 +9018,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "When someone sends you a friend request, it will show up here."
+            "state": "translated",
+            "value": "Когда кто-то отправит вам запрос в друзья, он появится здесь."
           }
         }
       }
@@ -9064,8 +9064,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No friend requests"
+            "state": "translated",
+            "value": "Нет запросов в друзья"
           }
         }
       }
@@ -9110,8 +9110,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Loading requests..."
+            "state": "translated",
+            "value": "Загрузка запросов..."
           }
         }
       }
@@ -9156,8 +9156,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Friend Requests"
+            "state": "translated",
+            "value": "Запросы в друзья"
           }
         }
       }
@@ -9901,8 +9901,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Safety advisories and scores are derived from publicly available sources and third-party data. Conditions may change rapidly, and Travel Adventure Finder does not guarantee accuracy, completeness, or timeliness."
+            "state": "translated",
+            "value": "Рекомендации по безопасности и оценки основаны на общедоступных источниках и сторонних данных. Условия могут быстро меняться, и Travel Adventure Finder не гарантирует точность, полноту или актуальность информации."
           }
         }
       }
@@ -9947,8 +9947,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Advisories & Safety Scores"
+            "state": "translated",
+            "value": "Рекомендации и оценки безопасности"
           }
         }
       }
@@ -9993,8 +9993,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel Adventure Finder provides informational travel insights only. All scores, advisories, and recommendations are intended for general guidance and educational purposes. Seasonality insights are based on historical climate averages and typical travel patterns."
+            "state": "translated",
+            "value": "Travel Adventure Finder предоставляет только информационные сведения о путешествиях. Все оценки, рекомендации и советы предназначены для общего ориентирования и образовательных целей. Сведения о сезонности основаны на исторических климатических средних и типичных туристических паттернах."
           }
         }
       }
@@ -10039,8 +10039,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "General Information"
+            "state": "translated",
+            "value": "Общая информация"
           }
         }
       }
@@ -10085,8 +10085,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel Adventure Finder is not responsible for decisions made based on information presented in the app. Use of this app is at your own discretion."
+            "state": "translated",
+            "value": "Travel Adventure Finder не несет ответственности за решения, принятые на основе информации, представленной в приложении. Вы используете это приложение по своему усмотрению."
           }
         }
       }
@@ -10131,8 +10131,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Limitation of Liability"
+            "state": "translated",
+            "value": "Ограничение ответственности"
           }
         }
       }
@@ -10177,8 +10177,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel Adventure Finder does not provide legal, medical, or governmental advice. Users should verify information with official sources before making travel decisions."
+            "state": "translated",
+            "value": "Travel Adventure Finder не предоставляет юридических, медицинских или государственных консультаций. Перед принятием решений о поездке пользователям следует проверять информацию в официальных источниках."
           }
         }
       }
@@ -10223,8 +10223,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No Professional Advice"
+            "state": "translated",
+            "value": "Не является профессиональной консультацией"
           }
         }
       }
@@ -10269,8 +10269,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Legal"
+            "state": "translated",
+            "value": "Юридическая информация"
           }
         }
       }
@@ -10315,8 +10315,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Let us know what you think"
+            "state": "translated",
+            "value": "Расскажите, что вы думаете"
           }
         }
       }
@@ -10361,8 +10361,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Send Feedback"
+            "state": "translated",
+            "value": "Отправить отзыв"
           }
         }
       }
@@ -10407,8 +10407,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Privacy, terms, and app policies"
+            "state": "translated",
+            "value": "Конфиденциальность, условия и политики приложения"
           }
         }
       }
@@ -10453,8 +10453,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Legal"
+            "state": "translated",
+            "value": "Юридическая информация"
           }
         }
       }
@@ -10499,8 +10499,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "More"
+            "state": "translated",
+            "value": "Еще"
           }
         }
       }
@@ -11656,8 +11656,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Failed to create profile after retries"
+            "state": "translated",
+            "value": "Не удалось создать профиль после нескольких попыток"
           }
         }
       }
@@ -11702,8 +11702,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Name and username are required."
+            "state": "translated",
+            "value": "Имя и имя пользователя обязательны."
           }
         }
       }
@@ -11748,8 +11748,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No active session. Please log in again."
+            "state": "translated",
+            "value": "Нет активной сессии. Пожалуйста, войдите снова."
           }
         }
       }
@@ -11794,8 +11794,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No auth user found"
+            "state": "translated",
+            "value": "Пользователь авторизации не найден"
           }
         }
       }
@@ -11840,8 +11840,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Not authenticated. Please log in again."
+            "state": "translated",
+            "value": "Нет авторизации. Пожалуйста, войдите снова."
           }
         }
       }
@@ -11886,8 +11886,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Profile not found"
+            "state": "translated",
+            "value": "Профиль не найден"
           }
         }
       }
@@ -11932,8 +11932,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Profile not loaded yet. Please try again."
+            "state": "translated",
+            "value": "Профиль еще не загружен. Попробуйте еще раз."
           }
         }
       }
@@ -13496,8 +13496,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Select Language"
+            "state": "translated",
+            "value": "Выберите язык"
           }
         }
       }
@@ -13542,8 +13542,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Languages spoken"
+            "state": "translated",
+            "value": "Языки, на которых вы говорите"
           }
         }
       }
@@ -13588,8 +13588,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Loading profile..."
+            "state": "translated",
+            "value": "Загрузка профиля..."
           }
         }
       }
@@ -13634,8 +13634,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Log Out"
+            "state": "translated",
+            "value": "Выйти"
           }
         }
       }
@@ -13680,8 +13680,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "None"
+            "state": "translated",
+            "value": "Нет"
           }
         }
       }
@@ -13726,8 +13726,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Not set"
+            "state": "translated",
+            "value": "Не указано"
           }
         }
       }
@@ -13772,8 +13772,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Delete %@ passport"
+            "state": "translated",
+            "value": "Удалить паспорт %@"
           }
         }
       }
@@ -13818,8 +13818,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Delete passport"
+            "state": "translated",
+            "value": "Удалить паспорт"
           }
         }
       }
@@ -13864,8 +13864,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No passports added yet"
+            "state": "translated",
+            "value": "Паспорта еще не добавлены"
           }
         }
       }
@@ -13910,8 +13910,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Saved passports"
+            "state": "translated",
+            "value": "Сохраненные паспорта"
           }
         }
       }
@@ -13956,8 +13956,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Private to you. Used to personalize visa rules and passport recommendations with your strongest saved passport for each destination."
+            "state": "translated",
+            "value": "Только для вас. Используются для персонализации визовых правил и рекомендаций по паспортам на основе вашего самого сильного сохраненного паспорта для каждого направления."
           }
         }
       }
@@ -14002,8 +14002,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Passports"
+            "state": "translated",
+            "value": "Паспорта"
           }
         }
       }
@@ -14048,8 +14048,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Search"
+            "state": "translated",
+            "value": "Поиск"
           }
         }
       }
@@ -14094,8 +14094,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Select your favorite destinations."
+            "state": "translated",
+            "value": "Выберите ваши любимые направления."
           }
         }
       }
@@ -14140,8 +14140,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Favorite Countries"
+            "state": "translated",
+            "value": "Любимые страны"
           }
         }
       }
@@ -14186,8 +14186,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add any flag that represents you! (countries you've lived in, background, ethnicity, etc.)"
+            "state": "translated",
+            "value": "Добавьте любой флаг, который вас представляет! (страны, где вы жили, ваше происхождение, этничность и т. д.)"
           }
         }
       }
@@ -14232,8 +14232,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Home Countries"
+            "state": "translated",
+            "value": "Домашние страны"
           }
         }
       }
@@ -14278,8 +14278,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Private only. These are saved for visa matching and never shown on your public profile."
+            "state": "translated",
+            "value": "Только приватно. Эти данные сохраняются для визового сопоставления и никогда не отображаются в вашем публичном профиле."
           }
         }
       }
@@ -14324,8 +14324,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Nationalities"
+            "state": "translated",
+            "value": "Гражданства"
           }
         }
       }
@@ -14370,8 +14370,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Select current country"
+            "state": "translated",
+            "value": "Выберите текущую страну"
           }
         }
       }
@@ -14416,8 +14416,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Select next destination"
+            "state": "translated",
+            "value": "Выберите следующее направление"
           }
         }
       }
@@ -14462,8 +14462,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Profile Settings"
+            "state": "translated",
+            "value": "Настройки профиля"
           }
         }
       }
@@ -14508,8 +14508,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Solo + Group"
+            "state": "translated",
+            "value": "Соло + группа"
           }
         }
       }
@@ -14554,8 +14554,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Group"
+            "state": "translated",
+            "value": "Группа"
           }
         }
       }
@@ -14600,8 +14600,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Solo"
+            "state": "translated",
+            "value": "Соло"
           }
         }
       }
@@ -14646,8 +14646,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Budget or comfy, depending"
+            "state": "translated",
+            "value": "Бюджетно или комфортно, по ситуации"
           }
         }
       }
@@ -14692,8 +14692,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Budget"
+            "state": "translated",
+            "value": "Бюджетно"
           }
         }
       }
@@ -14738,8 +14738,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Comfortable"
+            "state": "translated",
+            "value": "Комфортно"
           }
         }
       }
@@ -14784,8 +14784,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Between Budget and Comfy"
+            "state": "translated",
+            "value": "Между бюджетом и комфортом"
           }
         }
       }
@@ -14830,8 +14830,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel mode"
+            "state": "translated",
+            "value": "Формат поездки"
           }
         }
       }
@@ -14876,8 +14876,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel style"
+            "state": "translated",
+            "value": "Стиль путешествий"
           }
         }
       }
@@ -14922,8 +14922,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel preferences"
+            "state": "translated",
+            "value": "Предпочтения в путешествиях"
           }
         }
       }
@@ -14968,8 +14968,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Profile updated"
+            "state": "translated",
+            "value": "Профиль обновлен"
           }
         }
       }
@@ -15014,8 +15014,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "username"
+            "state": "translated",
+            "value": "имя пользователя"
           }
         }
       }
@@ -15060,8 +15060,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Username is already taken"
+            "state": "translated",
+            "value": "Имя пользователя уже занято"
           }
         }
       }
@@ -15106,8 +15106,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Profile"
+            "state": "translated",
+            "value": "Профиль"
           }
         }
       }
@@ -15152,8 +15152,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Enjoying Travel Adventure Finder?"
+            "state": "translated",
+            "value": "Вам нравится Travel Adventure Finder?"
           }
         }
       }
@@ -15198,8 +15198,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Your feedback helps us make Travel Adventure Finder better."
+            "state": "translated",
+            "value": "Ваш отзыв помогает нам сделать Travel Adventure Finder лучше."
           }
         }
       }
@@ -15244,8 +15244,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Type feedback here..."
+            "state": "translated",
+            "value": "Напишите отзыв здесь..."
           }
         }
       }
@@ -15290,8 +15290,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "What could we improve?"
+            "state": "translated",
+            "value": "Что мы можем улучшить?"
           }
         }
       }
@@ -15336,8 +15336,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Thanks for your feedback!"
+            "state": "translated",
+            "value": "Спасибо за ваш отзыв!"
           }
         }
       }
@@ -15387,8 +15387,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Monthly travel conditions"
+            "state": "translated",
+            "value": "Условия для поездок по месяцам"
           }
         }
       }
@@ -15433,8 +15433,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Overall"
+            "state": "translated",
+            "value": "Общее"
           }
         }
       }
@@ -15479,8 +15479,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "View Full Country Details"
+            "state": "translated",
+            "value": "Открыть полную страницу страны"
           }
         }
       }
@@ -15525,8 +15525,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No destinations in this category for the selected month."
+            "state": "translated",
+            "value": "Для выбранного месяца в этой категории нет направлений."
           }
         }
       }
@@ -15571,8 +15571,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Peak season"
+            "state": "translated",
+            "value": "Высокий сезон"
           }
         }
       }
@@ -15617,8 +15617,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Best weather and overall conditions — usually the busiest and priciest."
+            "state": "translated",
+            "value": "Лучшая погода и общие условия, но обычно самый загруженный и дорогой период."
           }
         }
       }
@@ -15663,8 +15663,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Shoulder season"
+            "state": "translated",
+            "value": "Переходный сезон"
           }
         }
       }
@@ -15709,8 +15709,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Still good conditions, often fewer crowds and better value."
+            "state": "translated",
+            "value": "Условия все еще хорошие, часто меньше людей и лучше соотношение цены и качества."
           }
         }
       }
@@ -16021,8 +16021,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add To Apple Calendar"
+            "state": "translated",
+            "value": "Добавить в Apple Calendar"
           }
         }
       }
@@ -16067,8 +16067,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Delete Trip"
+            "state": "translated",
+            "value": "Удалить поездку"
           }
         }
       }
@@ -16113,8 +16113,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Update the plan, send it to Calendar, or remove it."
+            "state": "translated",
+            "value": "Обновите план, отправьте его в Календарь или удалите."
           }
         }
       }
@@ -16159,8 +16159,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Actions"
+            "state": "translated",
+            "value": "Действия"
           }
         }
       }
@@ -16205,8 +16205,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add All"
+            "state": "translated",
+            "value": "Добавить все"
           }
         }
       }
@@ -16251,8 +16251,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add Countries"
+            "state": "translated",
+            "value": "Добавить страны"
           }
         }
       }
@@ -16297,8 +16297,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add more countries"
+            "state": "translated",
+            "value": "Добавить больше стран"
           }
         }
       }
@@ -16343,8 +16343,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add tentative dates"
+            "state": "translated",
+            "value": "Добавить примерные даты"
           }
         }
       }
@@ -16389,8 +16389,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Best shared windows"
+            "state": "translated",
+            "value": "Лучшие общие окна"
           }
         }
       }
@@ -16435,8 +16435,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Calendar view"
+            "state": "translated",
+            "value": "Вид календаря"
           }
         }
       }
@@ -16481,8 +16481,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Cancel Editing"
+            "state": "translated",
+            "value": "Отменить редактирование"
           }
         }
       }
@@ -16527,8 +16527,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Each traveler can have multiple windows."
+            "state": "translated",
+            "value": "У каждого путешественника может быть несколько окон."
           }
         }
       }
@@ -16573,8 +16573,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Current proposals"
+            "state": "translated",
+            "value": "Текущие предложения"
           }
         }
       }
@@ -16619,8 +16619,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld date ranges"
+            "state": "translated",
+            "value": "%lld диапазонов дат"
           }
         }
       }
@@ -16665,8 +16665,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Edit your availability"
+            "state": "translated",
+            "value": "Изменить вашу доступность"
           }
         }
       }
@@ -16711,8 +16711,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Update your submitted window without deleting it first."
+            "state": "translated",
+            "value": "Обновите отправленное окно, не удаляя его сначала."
           }
         }
       }
@@ -16757,8 +16757,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld flexible months"
+            "state": "translated",
+            "value": "%lld гибких месяцев"
           }
         }
       }
@@ -16803,8 +16803,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add either exact windows or flexible months for each traveler, then let the planner surface the strongest overlap."
+            "state": "translated",
+            "value": "Добавьте либо точные окна, либо гибкие месяцы для каждого путешественника, а планировщик покажет наилучшее пересечение."
           }
         }
       }
@@ -16849,8 +16849,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "How this works"
+            "state": "translated",
+            "value": "Как это работает"
           }
         }
       }
@@ -16895,8 +16895,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Use exact dates when someone already knows the week they’re free. Use flexible months when they only know the general timing."
+            "state": "translated",
+            "value": "Используйте точные даты, когда человек уже знает неделю, в которую он свободен. Используйте гибкие месяцы, когда известен только общий период."
           }
         }
       }
@@ -16941,8 +16941,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Exact dates"
+            "state": "translated",
+            "value": "Точные даты"
           }
         }
       }
@@ -16987,8 +16987,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A specific range someone knows works."
+            "state": "translated",
+            "value": "Конкретный диапазон, который человеку точно подходит."
           }
         }
       }
@@ -17033,8 +17033,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Flexible month"
+            "state": "translated",
+            "value": "Гибкий месяц"
           }
         }
       }
@@ -17079,8 +17079,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "A month someone could likely make work."
+            "state": "translated",
+            "value": "Месяц, который человеку, скорее всего, подойдет."
           }
         }
       }
@@ -17125,8 +17125,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Dates"
+            "state": "translated",
+            "value": "Даты"
           }
         }
       }
@@ -17171,8 +17171,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Exact: %@"
+            "state": "translated",
+            "value": "Точно: %@"
           }
         }
       }
@@ -17217,8 +17217,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Flexible: %@"
+            "state": "translated",
+            "value": "Гибко: %@"
           }
         }
       }
@@ -17263,8 +17263,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Month"
+            "state": "translated",
+            "value": "Месяц"
           }
         }
       }
@@ -17309,8 +17309,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No shared window yet. Add a few more ideas across the group and the planner will suggest stronger matches here."
+            "state": "translated",
+            "value": "Общего окна пока нет. Добавьте еще несколько идей по группе, и планировщик предложит здесь более сильные совпадения."
           }
         }
       }
@@ -17355,8 +17355,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No availability has been proposed yet."
+            "state": "translated",
+            "value": "Пока никто не предложил доступность."
           }
         }
       }
@@ -17401,8 +17401,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Only you can edit these submissions."
+            "state": "translated",
+            "value": "Только вы можете редактировать эти отправки."
           }
         }
       }
@@ -17447,8 +17447,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Works across everyone’s current proposals."
+            "state": "translated",
+            "value": "Подходит всем по текущим предложениям."
           }
         }
       }
@@ -17493,8 +17493,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "This lines up for %lld of %lld people so far."
+            "state": "translated",
+            "value": "Пока это подходит %lld из %lld человек."
           }
         }
       }
@@ -17539,8 +17539,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Save Availability"
+            "state": "translated",
+            "value": "Сохранить доступность"
           }
         }
       }
@@ -17585,8 +17585,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Shared window"
+            "state": "translated",
+            "value": "Общее окно"
           }
         }
       }
@@ -17631,8 +17631,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Start collecting free months or exact date ranges so the planner can spotlight the best shared window."
+            "state": "translated",
+            "value": "Начните собирать свободные месяцы или точные диапазоны дат, чтобы планировщик смог выделить лучшее общее окно."
           }
         }
       }
@@ -17677,8 +17677,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add a couple of date ideas here to keep your planning options visible."
+            "state": "translated",
+            "value": "Добавьте сюда пару идей по датам, чтобы ваши варианты планирования оставались на виду."
           }
         }
       }
@@ -17723,8 +17723,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No shared window yet. Ask everyone to add a few more free months or date ranges so the planner can find a better match."
+            "state": "translated",
+            "value": "Общего окна пока нет. Попросите всех добавить еще несколько свободных месяцев или диапазонов дат, чтобы планировщик смог найти лучшее совпадение."
           }
         }
       }
@@ -17769,8 +17769,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Swipe sideways to move across months."
+            "state": "translated",
+            "value": "Листайте в стороны, чтобы переходить между месяцами."
           }
         }
       }
@@ -17815,8 +17815,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Availability"
+            "state": "translated",
+            "value": "Доступность"
           }
         }
       }
@@ -17861,8 +17861,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Trip dates"
+            "state": "translated",
+            "value": "Даты поездки"
           }
         }
       }
@@ -17907,8 +17907,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add exact trip dates first, then assign each day to a country or mark it as travel."
+            "state": "translated",
+            "value": "Сначала добавьте точные даты поездки, а затем распределите каждый день по стране или отметьте его как день дороги."
           }
         }
       }
@@ -17953,8 +17953,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add trip dates above before assigning days to countries."
+            "state": "translated",
+            "value": "Добавьте даты поездки выше, прежде чем распределять дни по странам."
           }
         }
       }
@@ -17999,8 +17999,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Choose which country each day belongs to, or mark the day as travel."
+            "state": "translated",
+            "value": "Выберите, к какой стране относится каждый день, или отметьте день как день дороги."
           }
         }
       }
@@ -18045,8 +18045,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Trip route"
+            "state": "translated",
+            "value": "Маршрут поездки"
           }
         }
       }
@@ -18091,8 +18091,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Update Availability"
+            "state": "translated",
+            "value": "Обновить доступность"
           }
         }
       }
@@ -18137,8 +18137,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Your availability"
+            "state": "translated",
+            "value": "Ваша доступность"
           }
         }
       }
@@ -18183,8 +18183,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Share the months or exact dates that work for you. Everyone else’s availability stays read-only here."
+            "state": "translated",
+            "value": "Поделитесь месяцами или точными датами, которые вам подходят. Доступность остальных здесь остается только для чтения."
           }
         }
       }
@@ -18229,8 +18229,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Give it a name and rough timing so you can start shaping it."
+            "state": "translated",
+            "value": "Дайте поездке название и примерные сроки, чтобы начать ее формировать."
           }
         }
       }
@@ -18275,8 +18275,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Trip Basics"
+            "state": "translated",
+            "value": "Основы поездки"
           }
         }
       }
@@ -18321,8 +18321,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Calendar Access"
+            "state": "translated",
+            "value": "Доступ к календарю"
           }
         }
       }
@@ -18367,8 +18367,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Calendar access was denied. You can enable it later in Settings."
+            "state": "translated",
+            "value": "Доступ к календарю был отклонен. Позже его можно включить в настройках."
           }
         }
       }
@@ -18413,8 +18413,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "We could not access Apple Calendar right now. Please try again."
+            "state": "translated",
+            "value": "Сейчас не удалось получить доступ к Apple Calendar. Попробуйте еще раз."
           }
         }
       }
@@ -18459,8 +18459,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "This trip needs tentative dates before it can be added to Apple Calendar."
+            "state": "translated",
+            "value": "Для добавления этой поездки в Apple Calendar сначала нужны примерные даты."
           }
         }
       }
@@ -18505,8 +18505,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Countries: %@"
+            "state": "translated",
+            "value": "Страны: %@"
           }
         }
       }
@@ -18551,8 +18551,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Friends: %@"
+            "state": "translated",
+            "value": "Друзья: %@"
           }
         }
       }
@@ -18597,8 +18597,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Comparing bucket lists..."
+            "state": "translated",
+            "value": "Сравниваем bucket list..."
           }
         }
       }
@@ -18643,8 +18643,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Update which countries belong in this plan."
+            "state": "translated",
+            "value": "Обновите список стран, входящих в этот план."
           }
         }
       }
@@ -18689,8 +18689,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Included Countries"
+            "state": "translated",
+            "value": "Включенные страны"
           }
         }
       }
@@ -18735,8 +18735,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Loading countries..."
+            "state": "translated",
+            "value": "Загрузка стран..."
           }
         }
       }
@@ -18781,8 +18781,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mutual bucket list"
+            "state": "translated",
+            "value": "Общий bucket list"
           }
         }
       }
@@ -18827,8 +18827,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Japan, Brazil, Morocco..."
+            "state": "translated",
+            "value": "Япония, Бразилия, Марокко..."
           }
         }
       }
@@ -18873,8 +18873,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Search countries"
+            "state": "translated",
+            "value": "Искать страны"
           }
         }
       }
@@ -18919,8 +18919,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Keep the route here, then open the ranked country list when you want to add more."
+            "state": "translated",
+            "value": "Держите маршрут здесь, а когда захотите добавить больше, откройте ранжированный список стран."
           }
         }
       }
@@ -18965,8 +18965,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Countries"
+            "state": "translated",
+            "value": "Страны"
           }
         }
       }
@@ -19011,8 +19011,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "All other countries"
+            "state": "translated",
+            "value": "Все остальные страны"
           }
         }
       }
@@ -19057,8 +19057,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Already in this trip"
+            "state": "translated",
+            "value": "Уже в этой поездке"
           }
         }
       }
@@ -19103,8 +19103,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Everyone's bucket list"
+            "state": "translated",
+            "value": "Bucket list всех"
           }
         }
       }
@@ -19149,8 +19149,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "From your bucket list"
+            "state": "translated",
+            "value": "Из вашего bucket list"
           }
         }
       }
@@ -19195,8 +19195,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld of %lld bucket lists"
+            "state": "translated",
+            "value": "%lld из %lld bucket list"
           }
         }
       }
@@ -19241,8 +19241,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "In one person's bucket list"
+            "state": "translated",
+            "value": "В bucket list одного человека"
           }
         }
       }
@@ -19287,8 +19287,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Create Trip"
+            "state": "translated",
+            "value": "Создать поездку"
           }
         }
       }
@@ -19333,8 +19333,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Compare when everyone is free and lock in the best window."
+            "state": "translated",
+            "value": "Сравните, когда все свободны, и закрепите лучшее окно."
           }
         }
       }
@@ -19379,8 +19379,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Keep rough options visible until your dates are finalized."
+            "state": "translated",
+            "value": "Держите примерные варианты на виду, пока даты не будут окончательно определены."
           }
         }
       }
@@ -19425,8 +19425,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Basics"
+            "state": "translated",
+            "value": "Основы"
           }
         }
       }
@@ -19471,8 +19471,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Update the trip name, notes, and dates."
+            "state": "translated",
+            "value": "Обновите название поездки, заметки и даты."
           }
         }
       }
@@ -19517,8 +19517,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Everything currently included in this trip."
+            "state": "translated",
+            "value": "Все, что сейчас включено в эту поездку."
           }
         }
       }
@@ -19563,8 +19563,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Everyone currently included in this trip."
+            "state": "translated",
+            "value": "Все, кто сейчас включен в эту поездку."
           }
         }
       }
@@ -19609,8 +19609,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Group trip"
+            "state": "translated",
+            "value": "Групповая поездка"
           }
         }
       }
@@ -19655,8 +19655,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Just you for now."
+            "state": "translated",
+            "value": "Пока только вы."
           }
         }
       }
@@ -19701,8 +19701,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Loading profiles..."
+            "state": "translated",
+            "value": "Загрузка профилей..."
           }
         }
       }
@@ -19747,8 +19747,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No friends have been added to this trip yet."
+            "state": "translated",
+            "value": "В эту поездку еще не добавлены друзья."
           }
         }
       }
@@ -19793,8 +19793,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Solo trip"
+            "state": "translated",
+            "value": "Сольная поездка"
           }
         }
       }
@@ -19839,8 +19839,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Trip Details"
+            "state": "translated",
+            "value": "Детали поездки"
           }
         }
       }
@@ -19885,8 +19885,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Trip Stats"
+            "state": "translated",
+            "value": "Статистика поездки"
           }
         }
       }
@@ -19931,8 +19931,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Based on the countries currently in this plan."
+            "state": "translated",
+            "value": "На основе стран, которые сейчас включены в этот план."
           }
         }
       }
@@ -19977,8 +19977,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Create New Trip"
+            "state": "translated",
+            "value": "Создать новую поездку"
           }
         }
       }
@@ -20023,8 +20023,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Start with one rough trip idea and refine it as dates, countries, and people come into focus."
+            "state": "translated",
+            "value": "Начните с одной примерной идеи поездки и уточняйте ее по мере того, как проясняются даты, страны и люди."
           }
         }
       }
@@ -20069,8 +20069,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No Trips Yet"
+            "state": "translated",
+            "value": "Пока нет поездок"
           }
         }
       }
@@ -20115,8 +20115,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "End"
+            "state": "translated",
+            "value": "Конец"
           }
         }
       }
@@ -20161,8 +20161,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add expense"
+            "state": "translated",
+            "value": "Добавить расход"
           }
         }
       }
@@ -20207,8 +20207,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add people to the trip to start tracking who owes what."
+            "state": "translated",
+            "value": "Сначала добавьте людей в поездку, чтобы начать отслеживать, кто кому должен."
           }
         }
       }
@@ -20253,8 +20253,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Amount (USD)"
+            "state": "translated",
+            "value": "Сумма (USD)"
           }
         }
       }
@@ -20299,7 +20299,7 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Apple Pay"
           }
         }
@@ -20345,8 +20345,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Delete Expense"
+            "state": "translated",
+            "value": "Удалить расход"
           }
         }
       }
@@ -20391,8 +20391,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Edit expense"
+            "state": "translated",
+            "value": "Изменить расход"
           }
         }
       }
@@ -20437,8 +20437,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Expense title"
+            "state": "translated",
+            "value": "Название расхода"
           }
         }
       }
@@ -20483,8 +20483,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Hotel, dinner, train tickets..."
+            "state": "translated",
+            "value": "Отель, ужин, билеты на поезд..."
           }
         }
       }
@@ -20529,8 +20529,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Logged expenses"
+            "state": "translated",
+            "value": "Записанные расходы"
           }
         }
       }
@@ -20575,8 +20575,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Manual"
+            "state": "translated",
+            "value": "Вручную"
           }
         }
       }
@@ -20621,8 +20621,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mark Paid"
+            "state": "translated",
+            "value": "Отметить как оплачено"
           }
         }
       }
@@ -20667,8 +20667,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Mark Unpaid"
+            "state": "translated",
+            "value": "Отметить как не оплачено"
           }
         }
       }
@@ -20713,8 +20713,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "New"
+            "state": "translated",
+            "value": "Новый"
           }
         }
       }
@@ -20759,8 +20759,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No one owes anything on this expense."
+            "state": "translated",
+            "value": "По этому расходу никто ничего не должен."
           }
         }
       }
@@ -20805,8 +20805,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No expenses yet."
+            "state": "translated",
+            "value": "Расходов пока нет."
           }
         }
       }
@@ -20851,8 +20851,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Not paid"
+            "state": "translated",
+            "value": "Не оплачено"
           }
         }
       }
@@ -20897,8 +20897,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Outstanding balances"
+            "state": "translated",
+            "value": "Непогашенные балансы"
           }
         }
       }
@@ -20943,8 +20943,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Track what was paid, who benefited, and who still owes."
+            "state": "translated",
+            "value": "Отслеживайте, что было оплачено, кто получил выгоду и кто все еще должен."
           }
         }
       }
@@ -20989,8 +20989,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ owes %@"
+            "state": "translated",
+            "value": "%@ должен %@"
           }
         }
       }
@@ -21035,8 +21035,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Paid"
+            "state": "translated",
+            "value": "Оплачено"
           }
         }
       }
@@ -21081,8 +21081,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Paid by"
+            "state": "translated",
+            "value": "Оплатил"
           }
         }
       }
@@ -21127,8 +21127,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ paid by %@"
+            "state": "translated",
+            "value": "%@ оплачено пользователем %@"
           }
         }
       }
@@ -21173,8 +21173,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Settled up"
+            "state": "translated",
+            "value": "Расчеты завершены"
           }
         }
       }
@@ -21219,8 +21219,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Should receive"
+            "state": "translated",
+            "value": "Должен получить"
           }
         }
       }
@@ -21265,8 +21265,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Split"
+            "state": "translated",
+            "value": "Разделить"
           }
         }
       }
@@ -21311,8 +21311,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Split between"
+            "state": "translated",
+            "value": "Разделить между"
           }
         }
       }
@@ -21357,8 +21357,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Everyone"
+            "state": "translated",
+            "value": "Все"
           }
         }
       }
@@ -21403,8 +21403,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Selected"
+            "state": "translated",
+            "value": "Выбранные"
           }
         }
       }
@@ -21449,8 +21449,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No expenses logged yet. Add hotels, meals, tickets, or shared costs here."
+            "state": "translated",
+            "value": "Расходы пока не записаны. Добавьте сюда отели, еду, билеты или общие траты."
           }
         }
       }
@@ -21495,8 +21495,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Everyone is settled"
+            "state": "translated",
+            "value": "У всех все закрыто"
           }
         }
       }
@@ -21541,8 +21541,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld expenses"
+            "state": "translated",
+            "value": "%lld расходов"
           }
         }
       }
@@ -21587,8 +21587,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld more expenses in this trip."
+            "state": "translated",
+            "value": "Еще %lld расходов в этой поездке."
           }
         }
       }
@@ -21633,8 +21633,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Still owed"
+            "state": "translated",
+            "value": "Еще должны"
           }
         }
       }
@@ -21679,8 +21679,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Total logged"
+            "state": "translated",
+            "value": "Всего записано"
           }
         }
       }
@@ -21725,8 +21725,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Unpaid balances remaining"
+            "state": "translated",
+            "value": "Остались неоплаченные балансы"
           }
         }
       }
@@ -21771,8 +21771,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Still owes"
+            "state": "translated",
+            "value": "Все еще должен"
           }
         }
       }
@@ -21817,8 +21817,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Track who paid, who owes, and what’s still outstanding."
+            "state": "translated",
+            "value": "Отслеживайте, кто заплатил, кто должен и что еще осталось закрыть."
           }
         }
       }
@@ -21863,8 +21863,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Expenses"
+            "state": "translated",
+            "value": "Расходы"
           }
         }
       }
@@ -21909,7 +21909,7 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "USD"
           }
         }
@@ -21955,7 +21955,7 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Venmo"
           }
         }
@@ -22001,8 +22001,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Friend matching needs a signed-in account."
+            "state": "translated",
+            "value": "Для сопоставления друзей нужен аккаунт с входом."
           }
         }
       }
@@ -22047,8 +22047,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "We couldn't load your friends right now."
+            "state": "translated",
+            "value": "Сейчас не удалось загрузить ваших друзей."
           }
         }
       }
@@ -22093,8 +22093,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Loading friends..."
+            "state": "translated",
+            "value": "Загрузка друзей..."
           }
         }
       }
@@ -22139,8 +22139,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld mutual"
+            "state": "translated",
+            "value": "%lld общих"
           }
         }
       }
@@ -22185,8 +22185,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "You don’t have any friends added yet."
+            "state": "translated",
+            "value": "У вас пока нет добавленных друзей."
           }
         }
       }
@@ -22231,8 +22231,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Hadi, Layal, @username..."
+            "state": "translated",
+            "value": "Хади, Лаяль, @username..."
           }
         }
       }
@@ -22277,8 +22277,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Search friends"
+            "state": "translated",
+            "value": "Искать друзей"
           }
         }
       }
@@ -22323,8 +22323,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Sign in to edit trip companions."
+            "state": "translated",
+            "value": "Войдите, чтобы редактировать попутчиков."
           }
         }
       }
@@ -22369,8 +22369,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Choose who’s joining this trip."
+            "state": "translated",
+            "value": "Выберите, кто присоединится к этой поездке."
           }
         }
       }
@@ -22415,8 +22415,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ Trip"
+            "state": "translated",
+            "value": "Поездка в %@"
           }
         }
       }
@@ -22461,8 +22461,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Included in this trip"
+            "state": "translated",
+            "value": "Включено в эту поездку"
           }
         }
       }
@@ -22507,8 +22507,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Country"
+            "state": "translated",
+            "value": "Страна"
           }
         }
       }
@@ -22553,8 +22553,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Country day"
+            "state": "translated",
+            "value": "День в стране"
           }
         }
       }
@@ -22599,8 +22599,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Choose the country for each day, or mark a day as travel so trip costs reflect your actual routing."
+            "state": "translated",
+            "value": "Выберите страну для каждого дня или отметьте день как дорогу, чтобы расходы на поездку отражали ваш реальный маршрут."
           }
         }
       }
@@ -22645,8 +22645,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Day-by-day route"
+            "state": "translated",
+            "value": "Маршрут по дням"
           }
         }
       }
@@ -22691,8 +22691,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld more days in this itinerary."
+            "state": "translated",
+            "value": "Еще %lld дней в этом маршруте."
           }
         }
       }
@@ -22737,8 +22737,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add trip dates to map each day to a country or mark it as travel."
+            "state": "translated",
+            "value": "Добавьте даты поездки, чтобы привязать каждый день к стране или отметить его как день дороги."
           }
         }
       }
@@ -22783,8 +22783,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Itinerary"
+            "state": "translated",
+            "value": "Маршрут"
           }
         }
       }
@@ -22829,8 +22829,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel"
+            "state": "translated",
+            "value": "Дорога"
           }
         }
       }
@@ -22875,8 +22875,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel day"
+            "state": "translated",
+            "value": "День дороги"
           }
         }
       }
@@ -22921,8 +22921,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Type"
+            "state": "translated",
+            "value": "Тип"
           }
         }
       }
@@ -22967,8 +22967,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Loading planner..."
+            "state": "translated",
+            "value": "Загрузка планировщика..."
           }
         }
       }
@@ -23013,8 +23013,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "New Trip"
+            "state": "translated",
+            "value": "Новая поездка"
           }
         }
       }
@@ -23059,8 +23059,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "You do not have any friends added yet, so this trip will stay solo for now."
+            "state": "translated",
+            "value": "У вас пока нет добавленных друзей, поэтому эта поездка пока останется сольной."
           }
         }
       }
@@ -23105,8 +23105,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Notes"
+            "state": "translated",
+            "value": "Заметки"
           }
         }
       }
@@ -23151,8 +23151,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "What kind of trip are you imagining?"
+            "state": "translated",
+            "value": "Какую поездку вы себе представляете?"
           }
         }
       }
@@ -23197,8 +23197,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Pick at least one country before saving the trip."
+            "state": "translated",
+            "value": "Перед сохранением поездки выберите хотя бы одну страну."
           }
         }
       }
@@ -23243,8 +23243,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Plan with friends"
+            "state": "translated",
+            "value": "Планировать с друзьями"
           }
         }
       }
@@ -23289,8 +23289,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Preview in Apple Calendar"
+            "state": "translated",
+            "value": "Предпросмотр в Apple Calendar"
           }
         }
       }
@@ -23335,8 +23335,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "With %@"
+            "state": "translated",
+            "value": "С %@"
           }
         }
       }
@@ -23381,8 +23381,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "See more"
+            "state": "translated",
+            "value": "Показать больше"
           }
         }
       }
@@ -23427,8 +23427,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Shared"
+            "state": "translated",
+            "value": "Общий"
           }
         }
       }
@@ -23473,8 +23473,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Shared bucket-list matches"
+            "state": "translated",
+            "value": "Совпадения в общих bucket list"
           }
         }
       }
@@ -23519,8 +23519,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Start"
+            "state": "translated",
+            "value": "Начало"
           }
         }
       }
@@ -23565,8 +23565,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Across selected countries"
+            "state": "translated",
+            "value": "По выбранным странам"
           }
         }
       }
@@ -23611,8 +23611,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Across %lld stop(s)"
+            "state": "translated",
+            "value": "По %lld остановкам"
           }
         }
       }
@@ -23657,8 +23657,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Add trip dates"
+            "state": "translated",
+            "value": "Добавить даты поездки"
           }
         }
       }
@@ -23703,8 +23703,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Average advisory"
+            "state": "translated",
+            "value": "Средняя рекомендация"
           }
         }
       }
@@ -23749,8 +23749,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Shared safety picture"
+            "state": "translated",
+            "value": "Общая картина по безопасности"
           }
         }
       }
@@ -23795,8 +23795,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Average overall"
+            "state": "translated",
+            "value": "Средний итог"
           }
         }
       }
@@ -23841,8 +23841,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Average seasonality"
+            "state": "translated",
+            "value": "Средняя сезонность"
           }
         }
       }
@@ -23887,8 +23887,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Leans more budget-friendly"
+            "state": "translated",
+            "value": "Скорее подходит для бюджета"
           }
         }
       }
@@ -23933,8 +23933,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Advisory"
+            "state": "translated",
+            "value": "Рекомендации"
           }
         }
       }
@@ -23979,8 +23979,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Safety and travel guidance"
+            "state": "translated",
+            "value": "Безопасность и туристические рекомендации"
           }
         }
       }
@@ -24025,8 +24025,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Budget"
+            "state": "translated",
+            "value": "Бюджет"
           }
         }
       }
@@ -24071,8 +24071,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Affordability across stops"
+            "state": "translated",
+            "value": "Доступность по остановкам"
           }
         }
       }
@@ -24117,8 +24117,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Language"
+            "state": "translated",
+            "value": "Язык"
           }
         }
       }
@@ -24163,8 +24163,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Group language coverage"
+            "state": "translated",
+            "value": "Языковое покрытие группы"
           }
         }
       }
@@ -24209,8 +24209,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Your language coverage"
+            "state": "translated",
+            "value": "Ваше языковое покрытие"
           }
         }
       }
@@ -24255,8 +24255,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Overall"
+            "state": "translated",
+            "value": "Общее"
           }
         }
       }
@@ -24301,8 +24301,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Weighted trip score"
+            "state": "translated",
+            "value": "Взвешенный балл поездки"
           }
         }
       }
@@ -24347,8 +24347,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Seasonality"
+            "state": "translated",
+            "value": "Сезонность"
           }
         }
       }
@@ -24393,8 +24393,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Visa"
+            "state": "translated",
+            "value": "Виза"
           }
         }
       }
@@ -24439,8 +24439,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Entry ease across stops"
+            "state": "translated",
+            "value": "Простота въезда по остановкам"
           }
         }
       }
@@ -24485,8 +24485,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "We’ll estimate this once trip dates are set"
+            "state": "translated",
+            "value": "Мы оценим это, когда будут выбраны даты поездки"
           }
         }
       }
@@ -24531,8 +24531,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Estimated total per person"
+            "state": "translated",
+            "value": "Оценка общей суммы на человека"
           }
         }
       }
@@ -24577,8 +24577,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Leans expensive overall"
+            "state": "translated",
+            "value": "Скорее дорогая в целом"
           }
         }
       }
@@ -24623,8 +24623,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Group snapshot"
+            "state": "translated",
+            "value": "Снимок группы"
           }
         }
       }
@@ -24669,8 +24669,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld travelers, %lld countries, one cleaner view of how the trip balances overall score, safety, seasonality, and logistics."
+            "state": "translated",
+            "value": "%lld путешественников, %lld стран и более ясная картина того, как поездка балансирует общий балл, безопасность, сезонность и логистику."
           }
         }
       }
@@ -24715,8 +24715,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "More mid-range to pricey"
+            "state": "translated",
+            "value": "От среднего до дорогого"
           }
         }
       }
@@ -24761,8 +24761,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ timing"
+            "state": "translated",
+            "value": "Период %@"
           }
         }
       }
@@ -24807,8 +24807,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "N/A"
+            "state": "translated",
+            "value": "Н/Д"
           }
         }
       }
@@ -24853,8 +24853,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Pretty balanced overall"
+            "state": "translated",
+            "value": "В целом довольно сбалансированная"
           }
         }
       }
@@ -24899,8 +24899,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Score breakdown"
+            "state": "translated",
+            "value": "Разбивка баллов"
           }
         }
       }
@@ -24945,8 +24945,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld selected countr(y/ies) with a combined scoring view for the trip."
+            "state": "translated",
+            "value": "%lld выбранных стран с объединенным представлением оценок для поездки."
           }
         }
       }
@@ -24991,8 +24991,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld-day estimate across selected countries"
+            "state": "translated",
+            "value": "Оценка на %lld дней по выбранным странам"
           }
         }
       }
@@ -25037,8 +25037,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Trip snapshot"
+            "state": "translated",
+            "value": "Снимок поездки"
           }
         }
       }
@@ -25083,8 +25083,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Typical daily spend"
+            "state": "translated",
+            "value": "Типичные дневные траты"
           }
         }
       }
@@ -25129,8 +25129,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Weighted by your day-by-day itinerary"
+            "state": "translated",
+            "value": "Взвешено по вашему маршруту по дням"
           }
         }
       }
@@ -25175,8 +25175,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Weighted by assigned days, excluding %lld travel day(s)"
+            "state": "translated",
+            "value": "Взвешено по назначенным дням, исключая %lld дней дороги"
           }
         }
       }
@@ -25221,8 +25221,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Trip Planner"
+            "state": "translated",
+            "value": "Планировщик поездок"
           }
         }
       }
@@ -25267,8 +25267,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Travel friends"
+            "state": "translated",
+            "value": "Друзья для поездки"
           }
         }
       }
@@ -25313,8 +25313,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Trip name"
+            "state": "translated",
+            "value": "Название поездки"
           }
         }
       }
@@ -25359,8 +25359,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Summer city escape"
+            "state": "translated",
+            "value": "Летний побег в города"
           }
         }
       }
@@ -25405,8 +25405,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "best saved passport"
+            "state": "translated",
+            "value": "лучший сохраненный паспорт"
           }
         }
       }
@@ -25451,8 +25451,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld day(s)"
+            "state": "translated",
+            "value": "%lld дней"
           }
         }
       }
@@ -25497,8 +25497,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "United States"
+            "state": "translated",
+            "value": "Соединенные Штаты"
           }
         }
       }
@@ -25543,8 +25543,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Every stop can be handled without advance visa prep."
+            "state": "translated",
+            "value": "Каждую остановку можно пройти без предварительной визовой подготовки."
           }
         }
       }
@@ -25589,8 +25589,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Every stop is currently visa-free for this trip."
+            "state": "translated",
+            "value": "Все остановки в этой поездке сейчас безвизовые."
           }
         }
       }
@@ -25635,8 +25635,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld visa flag(s)"
+            "state": "translated",
+            "value": "%lld визовых флагов"
           }
         }
       }
@@ -25681,8 +25681,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No one in the group currently needs advance visa prep for these stops."
+            "state": "translated",
+            "value": "Сейчас никому в группе не нужна предварительная визовая подготовка для этих остановок."
           }
         }
       }
@@ -25727,8 +25727,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ may exceed the %lld-day stay on this %lld-day trip."
+            "state": "translated",
+            "value": "%@ может превысить срок пребывания в %lld дней в этой поездке длительностью %lld дней."
           }
         }
       }
@@ -25773,8 +25773,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld more stop(s) still need attention in this itinerary."
+            "state": "translated",
+            "value": "Еще %lld остановок в этом маршруте требуют внимания."
           }
         }
       }
@@ -25819,8 +25819,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ need visas here."
+            "state": "translated",
+            "value": "%@ нужны визы здесь."
           }
         }
       }
@@ -25865,8 +25865,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No advance visa needed"
+            "state": "translated",
+            "value": "Предварительная виза не нужна"
           }
         }
       }
@@ -25911,8 +25911,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "No visa required"
+            "state": "translated",
+            "value": "Виза не требуется"
           }
         }
       }
@@ -25957,8 +25957,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ needs a visa here."
+            "state": "translated",
+            "value": "%@ нужна виза здесь."
           }
         }
       }
@@ -26003,8 +26003,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ may exceed the allowed visa-free stay for a %lld-day trip."
+            "state": "translated",
+            "value": "%@ может превысить разрешенный безвизовый срок для поездки на %lld дней."
           }
         }
       }
@@ -26049,8 +26049,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "One or more stops may exceed the allowed stay for this trip."
+            "state": "translated",
+            "value": "Одна или несколько остановок могут превысить разрешенный срок пребывания для этой поездки."
           }
         }
       }
@@ -26095,8 +26095,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Visa plan needed"
+            "state": "translated",
+            "value": "Нужен визовый план"
           }
         }
       }
@@ -26141,8 +26141,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "saved passport"
+            "state": "translated",
+            "value": "сохраненный паспорт"
           }
         }
       }
@@ -26187,8 +26187,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "This stop may exceed the %lld-day stay on your %lld-day trip."
+            "state": "translated",
+            "value": "Эта остановка может превысить срок пребывания в %lld дней в вашей поездке длительностью %lld дней."
           }
         }
       }
@@ -26233,8 +26233,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld stop(s)"
+            "state": "translated",
+            "value": "%lld остановок"
           }
         }
       }
@@ -26279,8 +26279,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld stop(s) to prep"
+            "state": "translated",
+            "value": "%lld остановок для подготовки"
           }
         }
       }
@@ -26325,8 +26325,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld stop(s) to prep for"
+            "state": "translated",
+            "value": "%lld остановок, к которым нужно подготовиться"
           }
         }
       }
@@ -26371,8 +26371,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Visa plan"
+            "state": "translated",
+            "value": "Визовый план"
           }
         }
       }
@@ -26417,8 +26417,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld traveler(s)"
+            "state": "translated",
+            "value": "%lld путешественников"
           }
         }
       }
@@ -26463,8 +26463,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ may exceed the allowed stay in %@ %@ on their best saved passport (%@): about %lld day(s) allowed for a %lld-day trip."
+            "state": "translated",
+            "value": "%@ может превысить разрешенный срок пребывания в %@ %@ по своему лучшему сохраненному паспорту (%@): разрешено около %lld дней для поездки длительностью %lld дней."
           }
         }
       }
@@ -26509,8 +26509,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%lld traveler(s) need prep"
+            "state": "translated",
+            "value": "%lld путешественников нужно подготовить"
           }
         }
       }
@@ -26555,8 +26555,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "%@ may need visa prep for %@ %@. Best saved passport for that stop: %@."
+            "state": "translated",
+            "value": "%@ может понадобиться визовая подготовка для %@ %@. Лучший сохраненный паспорт для этой остановки: %@."
           }
         }
       }
@@ -26601,8 +26601,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Keep it solo or add friends to compare shared bucket-list countries."
+            "state": "translated",
+            "value": "Оставьте поездку сольной или добавьте друзей, чтобы сравнить общие страны из bucket list."
           }
         }
       }
@@ -26647,8 +26647,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Who is Going"
+            "state": "translated",
+            "value": "Кто едет"
           }
         }
       }
@@ -26693,8 +26693,8 @@
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "You"
+            "state": "translated",
+            "value": "Вы"
           }
         }
       }
