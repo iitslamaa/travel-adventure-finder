@@ -10,6 +10,11 @@ import PostgREST
 import Supabase
 import Combine
 import MapKit
+import CryptoKit
+
+#if canImport(Translation)
+import Translation
+#endif
 
 struct CountryDetailView: View {
     @State var country: Country
@@ -1198,10 +1203,11 @@ private struct CountryLanguageCompatibilityCard: View {
 
 private struct CountryOverviewCard: View {
     let country: Country
+    @StateObject private var viewModel = CountryOverviewDescriptionViewModel()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(country.overviewDescription)
+            Text(viewModel.displayedDescription)
                 .font(.subheadline)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1218,6 +1224,170 @@ private struct CountryOverviewCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.countryDetailCardBackground(corner: 14))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .task(id: country.iso2.uppercased()) {
+            viewModel.load(country: country)
+        }
+        #if canImport(Translation)
+        .modifier(CountryOverviewTranslationModifier(country: country, viewModel: viewModel))
+        #endif
+    }
+}
+
+#if canImport(Translation)
+private struct CountryOverviewTranslationModifier: ViewModifier {
+    let country: Country
+    @ObservedObject var viewModel: CountryOverviewDescriptionViewModel
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *), let target = viewModel.translationTargetLanguage {
+            content.translationTask(
+                source: Locale.Language(identifier: "en"),
+                target: target
+            ) { session in
+                await viewModel.translateIfNeeded(country: country, session: session)
+            }
+        } else {
+            content
+        }
+    }
+}
+#endif
+
+@MainActor
+private final class CountryOverviewDescriptionViewModel: ObservableObject {
+    @Published private(set) var displayedDescription = ""
+
+    private let cache = CountryOverviewTranslationCache.shared
+    private var lastTranslationKey: String?
+
+    var translationTargetLanguage: Locale.Language? {
+        let language = Locale.autoupdatingCurrent.language
+        guard language.languageCode?.identifier.lowercased() != "en" else { return nil }
+        return language
+    }
+
+    func load(country: Country) {
+        let localeIdentifier = Locale.autoupdatingCurrent.identifier
+
+        if let bundled = CountryOverviewDescriptionStore.bundledLocalizedDescription(
+            for: country,
+            localeIdentifier: localeIdentifier
+        ) {
+            displayedDescription = bundled
+            lastTranslationKey = nil
+            return
+        }
+
+        guard let canonical = CountryOverviewDescriptionStore.canonicalDescription(for: country) else {
+            displayedDescription = CountryOverviewDescriptionStore.description(for: country)
+            lastTranslationKey = nil
+            return
+        }
+
+        displayedDescription = canonical
+        let cacheKey = Self.cacheKey(
+            iso: country.iso2,
+            localeIdentifier: localeIdentifier,
+            source: canonical
+        )
+        lastTranslationKey = cacheKey
+
+        Task {
+            if let cached = await cache.translation(for: cacheKey) {
+                await MainActor.run {
+                    guard self.lastTranslationKey == cacheKey else { return }
+                    self.displayedDescription = cached
+                }
+            }
+        }
+    }
+
+    #if canImport(Translation)
+    @available(iOS 18.0, *)
+    func translateIfNeeded(country: Country, session: TranslationSession) async {
+        let localeIdentifier = Locale.autoupdatingCurrent.identifier
+
+        if CountryOverviewDescriptionStore.bundledLocalizedDescription(
+            for: country,
+            localeIdentifier: localeIdentifier
+        ) != nil {
+            return
+        }
+
+        guard
+            let canonical = CountryOverviewDescriptionStore.canonicalDescription(for: country),
+            let cacheKey = lastTranslationKey
+        else {
+            return
+        }
+
+        if let cached = await cache.translation(for: cacheKey) {
+            guard lastTranslationKey == cacheKey else { return }
+            displayedDescription = cached
+            return
+        }
+
+        do {
+            try await session.prepareTranslation()
+            let response = try await session.translate(canonical)
+            let translated = response.targetText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !translated.isEmpty else { return }
+
+            await cache.store(translated, for: cacheKey)
+            guard lastTranslationKey == cacheKey else { return }
+            displayedDescription = translated
+        } catch {
+            return
+        }
+    }
+    #endif
+
+    private static func cacheKey(iso: String, localeIdentifier: String, source: String) -> String {
+        let digest = SHA256.hash(data: Data(source.utf8))
+            .map { String(format: "%02x", $0) }
+            .joined()
+        return "\(iso.uppercased())|\(localeIdentifier.lowercased())|\(digest)"
+    }
+}
+
+private actor CountryOverviewTranslationCache {
+    static let shared = CountryOverviewTranslationCache()
+
+    private struct CacheFile: Codable {
+        var entries: [String: String]
+    }
+
+    private let fileURL: URL
+    private var entries: [String: String]
+
+    init() {
+        let baseURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        let directoryURL = baseURL.appendingPathComponent("CountryOverviewTranslations", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        fileURL = directoryURL.appendingPathComponent("cache.json")
+
+        if
+            let data = try? Data(contentsOf: fileURL),
+            let file = try? JSONDecoder().decode(CacheFile.self, from: data)
+        {
+            entries = file.entries
+        } else {
+            entries = [:]
+        }
+    }
+
+    func translation(for key: String) -> String? {
+        entries[key]
+    }
+
+    func store(_ translation: String, for key: String) {
+        entries[key] = translation
+        let file = CacheFile(entries: entries)
+        if let data = try? JSONEncoder().encode(file) {
+            try? data.write(to: fileURL, options: [.atomic])
+        }
     }
 }
 

@@ -4,263 +4,44 @@ enum CountryOverviewDescriptionStore {
     private static let missingSentinel = "__missing_country_description__"
 
     private static let descriptionCodes: Set<String> = [
-        "AD",
-        "AE",
-        "AF",
-        "AG",
-        "AI",
-        "AL",
-        "AM",
-        "AO",
-        "AQ",
-        "AR",
-        "AS",
-        "AT",
-        "AU",
-        "AW",
-        "AX",
-        "AZ",
-        "BA",
-        "BB",
-        "BD",
-        "BE",
-        "BF",
-        "BG",
-        "BH",
-        "BI",
-        "BJ",
-        "BL",
-        "BM",
-        "BN",
-        "BO",
-        "BQ",
-        "BR",
-        "BS",
-        "BT",
-        "BV",
-        "BW",
-        "BY",
-        "BZ",
-        "CA",
-        "CC",
-        "CD",
-        "CF",
-        "CG",
-        "CH",
-        "CI",
-        "CK",
-        "CL",
-        "CM",
-        "CN",
-        "CO",
-        "CR",
-        "CU",
-        "CV",
-        "CW",
-        "CX",
-        "CY",
-        "CZ",
-        "DE",
-        "DJ",
-        "DK",
-        "DM",
-        "DO",
-        "DZ",
-        "EC",
-        "EE",
-        "EG",
-        "EH",
-        "ER",
-        "ES",
-        "ET",
-        "FI",
-        "FJ",
-        "FK",
-        "FM",
-        "FO",
-        "FR",
-        "GA",
-        "GB",
-        "GD",
-        "GE",
-        "GF",
-        "GG",
-        "GH",
-        "GI",
-        "GL",
-        "GM",
-        "GN",
-        "GP",
-        "GQ",
-        "GR",
-        "GS",
-        "GT",
-        "GU",
-        "GW",
-        "GY",
-        "HK",
-        "HM",
-        "HN",
-        "HR",
-        "HT",
-        "HU",
-        "ID",
-        "IE",
-        "IL",
-        "IM",
-        "IN",
-        "IO",
-        "IQ",
-        "IR",
-        "IS",
-        "IT",
-        "JE",
-        "JM",
-        "JO",
-        "JP",
-        "KE",
-        "KG",
-        "KH",
-        "KI",
-        "KM",
-        "KN",
-        "KP",
-        "KR",
-        "KW",
-        "KY",
-        "KZ",
-        "LA",
-        "LB",
-        "LC",
-        "LI",
-        "LK",
-        "LR",
-        "LS",
-        "LT",
-        "LU",
-        "LV",
-        "LY",
-        "MA",
-        "MC",
-        "MD",
-        "ME",
-        "MF",
-        "MG",
-        "MH",
-        "MK",
-        "ML",
-        "MM",
-        "MN",
-        "MO",
-        "MP",
-        "MQ",
-        "MR",
-        "MS",
-        "MT",
-        "MU",
-        "MV",
-        "MW",
-        "MX",
-        "MY",
-        "MZ",
-        "NA",
-        "NC",
-        "NE",
-        "NF",
-        "NG",
-        "NI",
-        "NL",
-        "NO",
-        "NP",
-        "NR",
-        "NU",
-        "NZ",
-        "OM",
-        "PA",
-        "PE",
-        "PF",
-        "PG",
-        "PH",
-        "PK",
-        "PL",
-        "PM",
-        "PN",
-        "PR",
-        "PS",
-        "PT",
-        "PW",
-        "PY",
-        "QA",
-        "RE",
-        "RO",
-        "RS",
-        "RU",
-        "RW",
-        "SA",
-        "SB",
-        "SC",
-        "SD",
-        "SE",
-        "SG",
-        "SH",
-        "SI",
-        "SJ",
-        "SK",
-        "SL",
-        "SM",
-        "SN",
-        "SO",
-        "SR",
-        "SS",
-        "ST",
-        "SV",
-        "SX",
-        "SY",
-        "SZ",
-        "TC",
-        "TD",
-        "TF",
-        "TG",
-        "TH",
-        "TJ",
-        "TK",
-        "TL",
-        "TM",
-        "TN",
-        "TO",
-        "TR",
-        "TT",
-        "TV",
-        "TW",
-        "TZ",
-        "UA",
-        "UG",
-        "UM",
-        "US",
-        "UY",
-        "UZ",
-        "VA",
-        "VC",
-        "VE",
-        "VG",
-        "VI",
-        "VN",
-        "VU",
-        "WF",
-        "WS",
-        "XD",
-        "XK",
-        "YE",
-        "YT",
-        "ZA",
-        "ZM",
-        "ZW",
+        "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ",
+        "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS",
+        "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN",
+        "CO", "CR", "CU", "CV", "CW", "CX", "CY", "CZ", "DE", "DJ", "DK", "DM", "DO", "DZ", "EC", "EE",
+        "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO", "FR", "GA", "GB", "GD", "GE", "GF",
+        "GG", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HM",
+        "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IM", "IN", "IO", "IQ", "IR", "IS", "IT", "JE", "JM",
+        "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN", "KP", "KR", "KW", "KY", "KZ", "LA", "LB", "LC",
+        "LI", "LK", "LR", "LS", "LT", "LU", "LV", "LY", "MA", "MC", "MD", "ME", "MF", "MG", "MH", "MK",
+        "ML", "MM", "MN", "MO", "MP", "MQ", "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA",
+        "NC", "NE", "NF", "NG", "NI", "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PA", "PE", "PF", "PG",
+        "PH", "PK", "PL", "PM", "PN", "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RS", "RU", "RW",
+        "SA", "SB", "SC", "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "SS",
+        "ST", "SV", "SX", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TO",
+        "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VI",
+        "VN", "VU", "WF", "WS", "XD", "XK", "YE", "YT", "ZA", "ZM", "ZW",
     ]
 
     static func description(for country: Country) -> String {
+        canonicalDescription(for: country) ?? fallbackDescription(for: country)
+    }
+
+    static func canonicalDescription(for country: Country) -> String? {
+        description(forISO: country.iso2.uppercased(), localization: "en")
+    }
+
+    static func bundledLocalizedDescription(for country: Country, localeIdentifier: String) -> String? {
         let iso = country.iso2.uppercased()
-        let description = localizedDescription(forISO: iso) ?? fallbackDescription(for: country)
-        return firstSentences(in: description, maxCount: 3)
+        guard descriptionCodes.contains(iso) else { return nil }
+
+        let candidates = localizationCandidates(for: localeIdentifier)
+        for candidate in candidates {
+            if let value = description(forISO: iso, localization: candidate) {
+                return value
+            }
+        }
+
+        return nil
     }
 
     static func missingDescriptionCodes(in countries: [Country]) -> [String] {
@@ -268,27 +49,66 @@ enum CountryOverviewDescriptionStore {
         return countryCodes.subtracting(descriptionCodes).sorted()
     }
 
-    private static func localizedDescription(forISO iso: String) -> String? {
+    private static func description(forISO iso: String, localization: String) -> String? {
         guard descriptionCodes.contains(iso) else { return nil }
 
         let key = "country.description.\(iso.lowercased())"
-        let value = NSLocalizedString(key, tableName: nil, bundle: .main, value: missingSentinel, comment: "")
-        guard value != missingSentinel else { return nil }
+        let bundle = bundle(for: localization) ?? .main
+        let value = bundle.localizedString(forKey: key, value: missingSentinel, table: nil)
+        guard value != missingSentinel, value != key else { return nil }
         return value
     }
 
-    private static func firstSentences(in text: String, maxCount: Int) -> String {
-        let sentences = text
-            .split(separator: ".")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+    private static func bundle(for localization: String) -> Bundle? {
+        guard let path = Bundle.main.path(forResource: localization, ofType: "lproj") else {
+            return nil
+        }
+        return Bundle(path: path)
+    }
 
-        guard !sentences.isEmpty else { return text }
+    private static func localizationCandidates(for localeIdentifier: String) -> [String] {
+        let normalized = localeIdentifier.replacingOccurrences(of: "_", with: "-")
+        let lower = normalized.lowercased()
 
-        return sentences
-            .prefix(maxCount)
-            .map { "\($0)." }
-            .joined(separator: " ")
+        var candidates: [String] = []
+        if lower.hasPrefix("pt") {
+            candidates.append("pt-BR")
+        }
+        if lower.hasPrefix("fr") {
+            candidates.append("fr")
+        }
+        if lower.hasPrefix("es") {
+            candidates.append("es")
+        }
+        if lower.hasPrefix("de") {
+            candidates.append("de")
+        }
+        if lower.hasPrefix("it") {
+            candidates.append("it")
+        }
+        if lower.hasPrefix("ru") {
+            candidates.append("ru")
+        }
+        if lower.hasPrefix("en") {
+            candidates.append("en")
+        }
+
+        let languagePart = normalized
+            .split(separator: "-")
+            .first
+            .map(String.init)
+
+        if let languagePart, !candidates.contains(languagePart) {
+            candidates.append(languagePart)
+        }
+        if !candidates.contains(normalized) {
+            candidates.append(normalized)
+        }
+        if !candidates.contains("en") {
+            candidates.append("en")
+        }
+
+        return candidates
     }
 
     private static func fallbackDescription(for country: Country) -> String {
