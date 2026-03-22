@@ -491,6 +491,42 @@ struct TripPlannerAvailabilityProposal: Codable, Identifiable, Hashable {
     let endDate: Date
 }
 
+enum TripPlannerDayPlanKind: String, Codable, CaseIterable, Identifiable {
+    case country
+    case travel
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .country: return "Country"
+        case .travel: return "Travel"
+        }
+    }
+}
+
+struct TripPlannerDayPlan: Codable, Identifiable, Hashable {
+    let id: UUID
+    let date: Date
+    let kind: TripPlannerDayPlanKind
+    let countryId: String?
+    let countryName: String?
+
+    init(
+        id: UUID = UUID(),
+        date: Date,
+        kind: TripPlannerDayPlanKind,
+        countryId: String? = nil,
+        countryName: String? = nil
+    ) {
+        self.id = id
+        self.date = Calendar.current.startOfDay(for: date)
+        self.kind = kind
+        self.countryId = countryId
+        self.countryName = countryName
+    }
+}
+
 struct TripPlannerTrip: Codable, Identifiable, Hashable {
     let id: UUID
     let createdAt: Date
@@ -504,6 +540,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
     let friendNames: [String]
     let friends: [TripPlannerFriendSnapshot]
     let availability: [TripPlannerAvailabilityProposal]
+    let dayPlans: [TripPlannerDayPlan]
 
     var isGroupTrip: Bool {
         !friendIds.isEmpty
@@ -522,6 +559,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         case friendNames
         case friends
         case availability
+        case dayPlans
     }
 
     init(
@@ -536,7 +574,8 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         friendIds: [UUID],
         friendNames: [String],
         friends: [TripPlannerFriendSnapshot],
-        availability: [TripPlannerAvailabilityProposal]
+        availability: [TripPlannerAvailabilityProposal],
+        dayPlans: [TripPlannerDayPlan] = []
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -550,6 +589,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         self.friendNames = friendNames
         self.friends = friends
         self.availability = availability
+        self.dayPlans = dayPlans
     }
 
     init(from decoder: Decoder) throws {
@@ -575,6 +615,72 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
                 )
             }
         availability = try container.decodeIfPresent([TripPlannerAvailabilityProposal].self, forKey: .availability) ?? []
+        dayPlans = try container.decodeIfPresent([TripPlannerDayPlan].self, forKey: .dayPlans) ?? []
+    }
+}
+
+private enum TripPlannerDayPlanBuilder {
+    static func syncedDayPlans(
+        existingPlans: [TripPlannerDayPlan],
+        startDate: Date?,
+        endDate: Date?,
+        countries: [(id: String, name: String)]
+    ) -> [TripPlannerDayPlan] {
+        guard let startDate, let endDate else { return [] }
+
+        let calendar = Calendar.current
+        let validCountryIDs = Set(countries.map(\.id))
+        let namesByID = Dictionary(uniqueKeysWithValues: countries)
+        let existingByDate = Dictionary(
+            uniqueKeysWithValues: existingPlans.map { (calendar.startOfDay(for: $0.date), $0) }
+        )
+
+        return dateRange(from: startDate, to: endDate).map { date in
+            if let existing = existingByDate[date] {
+                if existing.kind == .travel {
+                    return TripPlannerDayPlan(id: existing.id, date: date, kind: .travel)
+                }
+
+                if let countryId = existing.countryId, validCountryIDs.contains(countryId) {
+                    return TripPlannerDayPlan(
+                        id: existing.id,
+                        date: date,
+                        kind: .country,
+                        countryId: countryId,
+                        countryName: namesByID[countryId]
+                    )
+                }
+            }
+
+            if let firstCountry = countries.first {
+                return TripPlannerDayPlan(
+                    date: date,
+                    kind: .country,
+                    countryId: firstCountry.id,
+                    countryName: firstCountry.name
+                )
+            }
+
+            return TripPlannerDayPlan(date: date, kind: .travel)
+        }
+    }
+
+    static func dateRange(from startDate: Date, to endDate: Date) -> [Date] {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: startDate)
+        let end = calendar.startOfDay(for: endDate)
+        guard start <= end else { return [] }
+
+        var dates: [Date] = []
+        var current = start
+
+        while current <= end {
+            dates.append(current)
+            guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
+            current = next
+        }
+
+        return dates
     }
 }
 
@@ -1517,7 +1623,13 @@ private struct TripPlannerComposerView: View {
             friendIds: selectedFriends.map(\.id),
             friendNames: selectedFriends.map(displayName),
             friends: selectedFriends.map(friendSnapshot),
-            availability: existingTrip?.availability ?? defaultAvailability()
+            availability: existingTrip?.availability ?? defaultAvailability(),
+            dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
+                existingPlans: existingTrip?.dayPlans ?? [],
+                startDate: includeDates ? startDate : nil,
+                endDate: includeDates ? endDate : nil,
+                countries: selectedCountries.map { ($0.id, $0.name) }
+            )
         )
 
         onSave(trip)
@@ -1726,6 +1838,26 @@ private struct TripPlannerDetailView: View {
                             TripPlannerCountryNavigationGrid(countries: displayedCountries)
                         }
 
+                        TripPlannerEditableSectionCard(
+                            title: "Itinerary",
+                            subtitle: trip.startDate != nil && trip.endDate != nil
+                                ? "Assign each day to a country or mark it as a travel day."
+                                : "Add trip dates first so you can map days to countries."
+                        ) {
+                            if trip.startDate != nil, trip.endDate != nil {
+                                NavigationLink {
+                                    TripPlannerItineraryEditorView(trip: trip, onSave: saveTripChanges)
+                                } label: {
+                                    Text("Edit")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundStyle(.black)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        } content: {
+                            TripPlannerItineraryPreview(trip: trip)
+                        }
+
                         TripPlannerSectionCard(
                             title: "Trip Stats",
                             subtitle: "Based on the countries currently in this plan."
@@ -1734,6 +1866,7 @@ private struct TripPlannerDetailView: View {
                                 countries: displayedCountries,
                                 startDate: trip.startDate,
                                 endDate: trip.endDate,
+                                tripDayPlans: trip.dayPlans,
                                 weights: scoreWeightsStore.weights,
                                 preferredMonth: scoreWeightsStore.selectedMonth,
                                 isGroupTrip: trip.isGroupTrip,
@@ -2119,7 +2252,13 @@ private struct TripPlannerBasicsEditorView: View {
                         friendIds: trip.friendIds,
                         friendNames: trip.friendNames,
                         friends: trip.friends,
-                        availability: updatedAvailability()
+                        availability: updatedAvailability(),
+                        dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
+                            existingPlans: trip.dayPlans,
+                            startDate: includeDates ? startDate : nil,
+                            endDate: includeDates ? endDate : nil,
+                            countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
+                        )
                     )
                 )
                 dismiss()
@@ -2252,7 +2391,8 @@ private struct TripPlannerFriendsEditorView: View {
                         friendIds: selectedFriends.map(\.id),
                         friendNames: selectedFriends.map(displayName),
                         friends: selectedFriends.map(friendSnapshot),
-                        availability: preservedAvailability(with: selectedFriends.map(friendSnapshot))
+                        availability: preservedAvailability(with: selectedFriends.map(friendSnapshot)),
+                        dayPlans: trip.dayPlans
                     )
                 )
                 dismiss()
@@ -2577,7 +2717,8 @@ private struct TripPlannerAvailabilityEditorView: View {
                         friendIds: trip.friendIds,
                         friendNames: trip.friendNames,
                         friends: trip.friends,
-                        availability: proposals.sorted { $0.startDate < $1.startDate }
+                        availability: proposals.sorted { $0.startDate < $1.startDate },
+                        dayPlans: trip.dayPlans
                     )
                 )
                 dismiss()
@@ -2754,7 +2895,13 @@ private struct TripPlannerCountriesEditorView: View {
                         friendIds: trip.friendIds,
                         friendNames: trip.friendNames,
                         friends: trip.friends,
-                        availability: trip.availability
+                        availability: trip.availability,
+                        dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
+                            existingPlans: trip.dayPlans,
+                            startDate: trip.startDate,
+                            endDate: trip.endDate,
+                            countries: selectedCountries.map { ($0.id, $0.name) }
+                        )
                     )
                 )
                 dismiss()
@@ -2787,6 +2934,271 @@ private struct TripPlannerCountriesEditorView: View {
         } else {
             selectedCountryIds.insert(id)
         }
+    }
+}
+
+private struct TripPlannerItineraryPreview: View {
+    let trip: TripPlannerTrip
+
+    private var normalizedPlans: [TripPlannerDayPlan] {
+        TripPlannerDayPlanBuilder.syncedDayPlans(
+            existingPlans: trip.dayPlans,
+            startDate: trip.startDate,
+            endDate: trip.endDate,
+            countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
+        )
+    }
+
+    var body: some View {
+        if normalizedPlans.isEmpty {
+            TripPlannerInfoCard(
+                text: "Add trip dates to map each day to a country or mark it as travel.",
+                systemImage: "calendar.badge.plus"
+            )
+        } else {
+            VStack(spacing: 10) {
+                ForEach(Array(normalizedPlans.prefix(4))) { plan in
+                    TripPlannerDayPlanRow(plan: plan)
+                }
+
+                if normalizedPlans.count > 4 {
+                    TripPlannerInfoCard(
+                        text: "\(normalizedPlans.count - 4) more day\(normalizedPlans.count - 4 == 1 ? "" : "s") in this itinerary.",
+                        systemImage: "ellipsis.circle.fill"
+                    )
+                }
+            }
+        }
+    }
+}
+
+private struct TripPlannerItineraryEditorView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let trip: TripPlannerTrip
+    let onSave: (TripPlannerTrip) -> Void
+
+    @State private var dayPlans: [TripPlannerDayPlan]
+
+    init(trip: TripPlannerTrip, onSave: @escaping (TripPlannerTrip) -> Void) {
+        self.trip = trip
+        self.onSave = onSave
+        _dayPlans = State(initialValue: TripPlannerDayPlanBuilder.syncedDayPlans(
+            existingPlans: trip.dayPlans,
+            startDate: trip.startDate,
+            endDate: trip.endDate,
+            countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
+        ))
+    }
+
+    private var countryOptions: [(id: String, name: String)] {
+        zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
+    }
+
+    var body: some View {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Theme.titleBanner("Itinerary")
+
+                ScrollView {
+                    VStack(spacing: 18) {
+                        TripPlannerSectionCard(
+                            title: "Day-by-day route",
+                            subtitle: "Choose the country for each day, or mark a day as travel so trip costs reflect your actual routing."
+                        ) {
+                            VStack(spacing: 10) {
+                                ForEach(dayPlans.indices, id: \.self) { index in
+                                    TripPlannerDayPlanEditorRow(
+                                        plan: binding(for: index),
+                                        countryOptions: countryOptions
+                                    )
+                                }
+                            }
+                        }
+                        .padding(.horizontal, Theme.pageHorizontalInset)
+                        .padding(.top, 18)
+                        .padding(.bottom, 32)
+                    }
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .tripPlannerNavigationChrome {
+            Button("Save") {
+                onSave(
+                    TripPlannerTrip(
+                        id: trip.id,
+                        createdAt: trip.createdAt,
+                        title: trip.title,
+                        notes: trip.notes,
+                        startDate: trip.startDate,
+                        endDate: trip.endDate,
+                        countryIds: trip.countryIds,
+                        countryNames: trip.countryNames,
+                        friendIds: trip.friendIds,
+                        friendNames: trip.friendNames,
+                        friends: trip.friends,
+                        availability: trip.availability,
+                        dayPlans: normalizedDayPlans()
+                    )
+                )
+                dismiss()
+            }
+            .foregroundStyle(.black)
+            .font(.system(size: 17, weight: .semibold))
+        }
+    }
+
+    private func binding(for index: Int) -> Binding<TripPlannerDayPlan> {
+        Binding(
+            get: { dayPlans[index] },
+            set: { newValue in
+                dayPlans[index] = newValue
+            }
+        )
+    }
+
+    private func normalizedDayPlans() -> [TripPlannerDayPlan] {
+        dayPlans.sorted { $0.date < $1.date }.map { plan in
+            if plan.kind == .travel {
+                return TripPlannerDayPlan(id: plan.id, date: plan.date, kind: .travel)
+            }
+
+            let matchingCountry = countryOptions.first { $0.id == plan.countryId } ?? countryOptions.first
+            return TripPlannerDayPlan(
+                id: plan.id,
+                date: plan.date,
+                kind: matchingCountry == nil ? .travel : .country,
+                countryId: matchingCountry?.id,
+                countryName: matchingCountry?.name
+            )
+        }
+    }
+}
+
+private struct TripPlannerDayPlanEditorRow: View {
+    @Binding var plan: TripPlannerDayPlan
+    let countryOptions: [(id: String, name: String)]
+
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        formatter.dateStyle = .full
+        return formatter
+    }()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(dateFormatter.string(from: plan.date))
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.black)
+
+            Picker("Type", selection: kindBinding) {
+                Text("Country").tag(TripPlannerDayPlanKind.country)
+                Text("Travel").tag(TripPlannerDayPlanKind.travel)
+            }
+            .pickerStyle(.segmented)
+
+            if plan.kind == .country {
+                Picker("Country", selection: countryBinding) {
+                    ForEach(countryOptions, id: \.id) { option in
+                        Text(option.name).tag(Optional(option.id))
+                    }
+                }
+                .pickerStyle(.menu)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.82))
+                )
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.72))
+        )
+    }
+
+    private var kindBinding: Binding<TripPlannerDayPlanKind> {
+        Binding(
+            get: { plan.kind },
+            set: { newKind in
+                if newKind == .travel {
+                    plan = TripPlannerDayPlan(id: plan.id, date: plan.date, kind: .travel)
+                } else {
+                    let country = countryOptions.first
+                    plan = TripPlannerDayPlan(
+                        id: plan.id,
+                        date: plan.date,
+                        kind: .country,
+                        countryId: country?.id,
+                        countryName: country?.name
+                    )
+                }
+            }
+        )
+    }
+
+    private var countryBinding: Binding<String?> {
+        Binding(
+            get: { plan.countryId ?? countryOptions.first?.id },
+            set: { newCountryID in
+                let country = countryOptions.first { $0.id == newCountryID } ?? countryOptions.first
+                plan = TripPlannerDayPlan(
+                    id: plan.id,
+                    date: plan.date,
+                    kind: country == nil ? .travel : .country,
+                    countryId: country?.id,
+                    countryName: country?.name
+                )
+            }
+        )
+    }
+}
+
+private struct TripPlannerDayPlanRow: View {
+    let plan: TripPlannerDayPlan
+
+    private let formatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        formatter.dateFormat = "EEE, MMM d"
+        return formatter
+    }()
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(formatter.string(from: plan.date))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.black)
+
+                Text(labelText)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.black.opacity(0.74))
+            }
+
+            Spacer()
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.78))
+        )
+    }
+
+    private var labelText: String {
+        if plan.kind == .travel {
+            return "Travel day"
+        }
+        return plan.countryName ?? "Country day"
     }
 }
 
@@ -2839,6 +3251,7 @@ private struct TripPlannerStatsSection: View {
     let countries: [Country]
     let startDate: Date?
     let endDate: Date?
+    let tripDayPlans: [TripPlannerDayPlan]
     let weights: ScoreWeights
     let preferredMonth: Int
     let isGroupTrip: Bool
@@ -2866,12 +3279,36 @@ private struct TripPlannerStatsSection: View {
         countries.compactMap(\.dailySpendTotalUsd)
     }
 
+    private var countryByID: [String: Country] {
+        Dictionary(uniqueKeysWithValues: countries.map { ($0.id, $0) })
+    }
+
+    private var normalizedDayPlans: [TripPlannerDayPlan] {
+        TripPlannerDayPlanBuilder.syncedDayPlans(
+            existingPlans: tripDayPlans,
+            startDate: startDate,
+            endDate: endDate,
+            countries: countries.map { ($0.id, $0.name) }
+        )
+    }
+
+    private var weightedCountryDays: [Country] {
+        normalizedDayPlans.compactMap { plan in
+            guard plan.kind == .country, let countryId = plan.countryId else { return nil }
+            return countryByID[countryId]
+        }
+    }
+
     private var averageAffordability: Int? {
         guard !affordabilityScores.isEmpty else { return nil }
         return Int((Double(affordabilityScores.reduce(0, +)) / Double(affordabilityScores.count)).rounded())
     }
 
     private var averageDailySpend: Int? {
+        let weightedSpend = weightedCountryDays.compactMap(\.dailySpendTotalUsd)
+        if !weightedSpend.isEmpty {
+            return Int((weightedSpend.reduce(0, +) / Double(weightedSpend.count)).rounded())
+        }
         guard !dailySpendValues.isEmpty else { return nil }
         return Int((dailySpendValues.reduce(0, +) / Double(dailySpendValues.count)).rounded())
     }
@@ -2883,6 +3320,10 @@ private struct TripPlannerStatsSection: View {
     }
 
     private var estimatedTripCostPerPerson: Int? {
+        let weightedSpend = weightedCountryDays.compactMap(\.dailySpendTotalUsd)
+        if !weightedSpend.isEmpty {
+            return Int(weightedSpend.reduce(0, +).rounded())
+        }
         guard let averageDailySpend, let tripLengthDays else { return nil }
         return averageDailySpend * tripLengthDays
     }
@@ -3098,6 +3539,13 @@ private struct TripPlannerStatsSection: View {
     }
 
     private var dailySpendDetail: String {
+        if !weightedCountryDays.isEmpty {
+            let travelDayCount = normalizedDayPlans.filter { $0.kind == .travel }.count
+            if travelDayCount > 0 {
+                return "Weighted by assigned days, excluding \(travelDayCount) travel day\(travelDayCount == 1 ? "" : "s")"
+            }
+            return "Weighted by your day-by-day itinerary"
+        }
         guard let averageAffordability else { return "Across selected countries" }
         switch averageAffordability {
         case 80...:
@@ -3383,30 +3831,34 @@ private struct TripPlannerVisaCountryRow: View {
     let passportLabel: String
     let isGroupTrip: Bool
 
-    private var passportText: String {
-        let uniqueLabels = Array(NSOrderedSet(array: summary.passportLabels)) as? [String] ?? summary.passportLabels
-        return uniqueLabels.joined(separator: ", ")
-    }
-
     private var travelerPreview: String {
         let names = summary.travelerNames
         guard !names.isEmpty else { return "" }
-        if names.count <= 2 {
-            return names.joined(separator: ", ")
+        if names.count == 1 {
+            return names[0]
         }
-        return "\(names.prefix(2).joined(separator: ", ")) +\(names.count - 2) more"
+        if names.count == 2 {
+            return "\(names[0]) and \(names[1])"
+        }
+        if names.count == 3 {
+            return "\(names[0]), \(names[1]) and \(names[2])"
+        }
+        return "\(names[0]), \(names[1]), \(names[2]) +\(names.count - 3) more"
     }
 
     private var statusText: String {
         if summary.exceedsAllowedStay, let tripLengthDays, let allowedDays = summary.allowedDays {
             if isGroupTrip, summary.travelerCount > 0 {
-                return "\(summary.travelerCount) traveler\(summary.travelerCount == 1 ? "" : "s") may exceed the \(allowedDays)-day stay on this \(tripLengthDays)-day trip."
+                return "\(travelerPreview) may exceed the \(allowedDays)-day stay on this \(tripLengthDays)-day trip."
             }
             return "This stop may exceed the \(allowedDays)-day stay on your \(tripLengthDays)-day trip."
         }
 
         if isGroupTrip, summary.travelerCount > 0 {
-            return "\(summary.travelerCount) traveler\(summary.travelerCount == 1 ? "" : "s") need visa prep here."
+            if summary.travelerCount == 1 {
+                return "\(travelerPreview) needs a visa here."
+            }
+            return "\(travelerPreview) need visas here."
         }
 
         let label = summary.passportLabels.first ?? passportLabel
@@ -3424,18 +3876,6 @@ private struct TripPlannerVisaCountryRow: View {
         return CountryVisaHelpers.headline(for: country, passportLabel: label)
     }
 
-    private var secondaryText: String {
-        if isGroupTrip, !travelerPreview.isEmpty {
-            return "Affected: \(travelerPreview) • Passport: \(passportText)"
-        }
-
-        if !passportText.isEmpty {
-            return "Passport used: \(passportText)"
-        }
-
-        return ""
-    }
-
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 5) {
@@ -3446,12 +3886,6 @@ private struct TripPlannerVisaCountryRow: View {
                 Text(statusText)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.black.opacity(0.78))
-
-                if !secondaryText.isEmpty {
-                    Text(secondaryText)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.black.opacity(0.6))
-                }
             }
 
             Spacer(minLength: 0)
