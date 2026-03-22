@@ -19,10 +19,10 @@ struct CountryAdvisoryCard: View {
 
                 // Title row
                 HStack {
-                    Text("Travel advisory")
+                    Text("country_detail.advisory.title")
                         .font(.headline)
                     Spacer()
-                    Text("U.S. Dept. of State · \(weightPercentage)%")
+                    Text(String(format: String(localized: "country_detail.advisory.source_weight_format"), locale: Locale.current, weightPercentage))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -62,7 +62,7 @@ struct CountryAdvisoryCard: View {
                                         showFullAdvisory.toggle()
                                     }
                                 } label: {
-                                    Text(showFullAdvisory ? "Show less" : "Show more")
+                                    Text(showFullAdvisory ? String(localized: "common.show_less") : String(localized: "common.show_more"))
                                         .font(.footnote)
                                         .fontWeight(.semibold)
                                 }
@@ -73,19 +73,19 @@ struct CountryAdvisoryCard: View {
 
                 if let updated = country.advisoryUpdatedAt,
                    !updated.isEmpty {
-                    Text("Last updated: \(updated)")
+                    Text(String(format: String(localized: "country_detail.advisory.last_updated_format"), locale: Locale.current, updated))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
 
                 if let url = country.advisoryUrl {
-                    Link("View official advisory", destination: url)
+                    Link(String(localized: "country_detail.advisory.view_official"), destination: url)
                         .font(.footnote)
                 }
 
                 HStack(spacing: 12) {
-                    Text("Normalized: \(advisoryScore)")
-                    Text("Weight: \(weightPercentage)%")
+                    Text(String(format: String(localized: "country_detail.advisory.normalized_format"), locale: Locale.current, advisoryScore))
+                    Text(String(format: String(localized: "country_detail.advisory.weight_format"), locale: Locale.current, weightPercentage))
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

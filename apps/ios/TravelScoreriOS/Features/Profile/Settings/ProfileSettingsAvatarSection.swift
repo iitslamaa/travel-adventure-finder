@@ -48,21 +48,21 @@ struct ProfileSettingsAvatarSection: View {
             }
             .buttonStyle(.plain)
             .confirmationDialog(
-                "Profile Photo",
+                "profile.settings.avatar.photo_title",
                 isPresented: $showPhotoOptions,
                 titleVisibility: .visible
             ) {
-                Button(hasAvatar ? "Change Photo" : "Add Photo") {
+                Button(hasAvatar ? "profile.settings.avatar.change_photo" : "profile.settings.avatar.add_photo") {
                     showImagePicker = true
                 }
 
                 if hasAvatar {
-                    Button("Remove Photo", role: .destructive) {
+                    Button("profile.settings.avatar.remove_photo", role: .destructive) {
                         onRemoveAvatar()
                     }
                 }
 
-                Button("Cancel", role: .cancel) {}
+                Button("common.cancel", role: .cancel) {}
             }
             .photosPicker(
                 isPresented: $showImagePicker,

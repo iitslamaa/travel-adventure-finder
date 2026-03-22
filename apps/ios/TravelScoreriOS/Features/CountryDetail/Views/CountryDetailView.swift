@@ -481,20 +481,20 @@ private struct CountryFriendEngagementPreviewCard: View {
                 friendPreviewStack
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Your friends")
+                    Text("country_detail.friends.preview_title")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
 
                     if isLoading {
-                        Text(country.name)
+                        Text(country.localizedDisplayName)
                             .font(TAFTypography.body(.semibold))
                             .foregroundStyle(.primary)
 
-                        Text("Loading travel signals from your circle")
+                        Text("country_detail.friends.loading_signals")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     } else {
-                        Text(country.name)
+                        Text(country.localizedDisplayName)
                             .font(TAFTypography.body(.semibold))
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.leading)
@@ -523,18 +523,18 @@ private struct CountryFriendEngagementPreviewCard: View {
 
     private var secondaryCopy: String {
         if engagement.totalFriends == 0 {
-            return "Add friends to unlock travel signals here."
+            return String(localized: "country_detail.friends.unlock_signals")
         }
 
         let parts = [
-            summaryPart(count: engagement.visited.count, singular: "visited"),
-            summaryPart(count: engagement.bucketList.count, singular: "want to go"),
-            summaryPart(count: engagement.fromHere.count, singular: "from here")
+            summaryPart(count: engagement.visited.count, singular: String(localized: "country_detail.friends.visited")),
+            summaryPart(count: engagement.bucketList.count, singular: String(localized: "country_detail.friends.want_to_go")),
+            summaryPart(count: engagement.fromHere.count, singular: String(localized: "country_detail.friends.from_here"))
         ]
         .compactMap { $0 }
 
         if parts.isEmpty {
-            return "\(engagement.totalFriends) friends, no travel signals yet"
+            return String(format: String(localized: "country_detail.friends.no_signals_format"), locale: Locale.current, engagement.totalFriends)
         }
 
         return parts.joined(separator: " • ")
@@ -599,7 +599,7 @@ private struct CountryFriendEngagementCard: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("See who has visited, wants to go, or is from here.")
+                        Text("country_detail.friends.see_who")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -608,7 +608,7 @@ private struct CountryFriendEngagementCard: View {
                     Spacer()
 
                     if engagement.totalFriends > 0 {
-                        Text("\(engagement.totalFriends) friends")
+                        Text(String(format: String(localized: "country_detail.friends.friend_count_format"), locale: Locale.current, engagement.totalFriends))
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -621,19 +621,19 @@ private struct CountryFriendEngagementCard: View {
 
                 VStack(alignment: .leading, spacing: 14) {
                     engagementGroup(
-                        title: "Visited",
+                        title: String(localized: "country_detail.friends.visited"),
                         symbol: "checkmark.circle.fill",
                         tint: Color(red: 0.38, green: 0.56, blue: 0.34),
                         profiles: engagement.visited
                     )
                     engagementGroup(
-                        title: "Bucket list",
+                        title: String(localized: "country_detail.friends.bucket_list"),
                         symbol: "bookmark.fill",
                         tint: Color(red: 0.72, green: 0.46, blue: 0.20),
                         profiles: engagement.bucketList
                     )
                     engagementGroup(
-                        title: "From here",
+                        title: String(localized: "country_detail.friends.from_here"),
                         symbol: "house.fill",
                         tint: Color(red: 0.46, green: 0.47, blue: 0.60),
                         profiles: engagement.fromHere
@@ -688,7 +688,7 @@ private struct CountryFriendEngagementCard: View {
             }
 
             if profiles.isEmpty {
-                Text("Nobody yet")
+                Text("country_detail.friends.nobody_yet")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } else {
@@ -828,7 +828,7 @@ private struct CountryFriendEngagementSheet: View {
 
                 VStack(spacing: 0) {
                     ZStack(alignment: .topTrailing) {
-                        Theme.titleBanner("\(country.name) \(country.flagEmoji)")
+                        Theme.titleBanner("\(country.localizedDisplayName) \(country.flagEmoji)")
 
                         Button {
                             dismiss()
@@ -911,23 +911,23 @@ private struct CountryLanguageCompatibilityResult {
     let evidence: CountryLanguageEvidence?
 
     var evidenceLinkLabel: String {
-        guard let evidence else { return "Why this score?" }
+        guard let evidence else { return String(localized: "country_detail.language.why_score") }
 
         if let title = evidence.title, title.localizedCaseInsensitiveContains("glottolog") {
-            return "Source: Glottolog"
+            return String(localized: "country_detail.language.source_glottolog")
         }
 
         if let title = evidence.title, title.localizedCaseInsensitiveContains("britannica") {
-            return "Source: Britannica"
+            return String(localized: "country_detail.language.source_britannica")
         }
 
         if let host = evidence.url?.host(percentEncoded: false)?
             .replacingOccurrences(of: "www.", with: ""),
            !host.isEmpty {
-            return "Why this score?"
+            return String(localized: "country_detail.language.why_score")
         }
 
-        return "Why this score?"
+        return String(localized: "country_detail.language.why_score")
     }
 }
 
@@ -997,8 +997,8 @@ private enum CountryLanguageCompatibilityScorer {
         if countryProfile.languages.isEmpty {
             return CountryLanguageCompatibilityResult(
                 score: 0,
-                headline: "A normal language score does not really apply here.",
-                detail: "This territory has no permanent settled population, so there is no typical resident language environment to score against.",
+                headline: String(localized: "country_detail.language.empty.headline"),
+                detail: String(localized: "country_detail.language.empty.detail"),
                 primaryLanguageCode: "",
                 evidence: evidence
             )
@@ -1045,7 +1045,7 @@ private enum CountryLanguageCompatibilityScorer {
         }) else {
             return CountryLanguageCompatibilityResult(
                 score: 0,
-                headline: "Language may be a barrier here.",
+                headline: String(localized: "country_detail.language.barrier"),
                 detail: nil,
                 primaryLanguageCode: "",
                 evidence: evidence
@@ -1077,21 +1077,21 @@ private enum CountryLanguageCompatibilityScorer {
     }
 
     private static func headline(for match: ExactLanguageMatch, score: Int) -> String {
-        let languageName = LanguageRepository.shared.displayName(for: match.code)
+        let languageName = LanguageRepository.shared.localizedDisplayName(for: match.code)
 
         switch score {
         case 100:
-            return "You'll be comfortable traveling here in \(languageName)."
+            return String(format: String(localized: "country_detail.language.headline.comfortable"), languageName)
         case 50:
             if match.proficiency == .conversational {
-                return "You can likely get by here in \(languageName)."
+                return String(format: String(localized: "country_detail.language.headline.get_by"), languageName)
             }
-            return "\(languageName) should help in many travel situations here."
+            return String(format: String(localized: "country_detail.language.headline.helpful"), languageName)
         default:
             if match.proficiency == .beginner {
-                return "You can practice your \(languageName) here, but you may not want to rely on it."
+                return String(format: String(localized: "country_detail.language.headline.practice"), languageName)
             }
-            return "Language may still be a barrier in parts of the country."
+            return String(localized: "country_detail.language.headline.barrier_parts")
         }
     }
 
@@ -1104,16 +1104,16 @@ private enum CountryLanguageCompatibilityScorer {
             .sorted { $0.coverage > $1.coverage }
 
         if let practice = practiceMatches.first {
-            let practiceLanguage = LanguageRepository.shared.displayName(for: practice.code)
-            return "You can also practice your \(practiceLanguage) here."
+            let practiceLanguage = LanguageRepository.shared.localizedDisplayName(for: practice.code)
+            return String(format: String(localized: "country_detail.language.detail.practice_also"), practiceLanguage)
         }
 
         if strongestMatch.proficiency == .conversational && strongestMatch.coverage < 0.65 {
-            return "Expect things to feel easiest in major tourist areas."
+            return String(localized: "country_detail.language.detail.tourist_areas")
         }
 
         if strongestMatch.proficiency == .fluent && strongestMatch.coverage < 0.65 {
-            return "It should be most useful in tourism-heavy areas rather than everywhere."
+            return String(localized: "country_detail.language.detail.tourism_heavy")
         }
 
         return nil
@@ -1140,12 +1140,12 @@ private struct CountryLanguageCompatibilityCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Language Compatibility")
+                Text("country_detail.language.title")
                     .font(.headline)
 
                 Spacer()
 
-                Text("Your languages · \(weightPercentage)%")
+                Text(String(format: String(localized: "country_detail.language.your_languages_weight_format"), locale: Locale.current, weightPercentage))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -1184,7 +1184,7 @@ private struct CountryLanguageCompatibilityCard: View {
                     .font(.footnote.weight(.semibold))
             }
 
-            Text("Based on country-level language coverage and your saved language codes. Real-world experience can vary by city and region.")
+            Text("country_detail.language.footer")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

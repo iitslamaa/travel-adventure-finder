@@ -21,7 +21,7 @@ struct ProfileSettingsBackgroundSection: View {
     @Binding var showFavoriteCountriesPicker: Bool
 
     var body: some View {
-        SectionCard(title: "Your background") {
+        SectionCard(title: String(localized: "profile.settings.background.title")) {
 
             VStack(spacing: 0) {
 
@@ -30,13 +30,13 @@ struct ProfileSettingsBackgroundSection: View {
                     showHomePicker = true
                 } label: {
                     HStack(spacing: 12) {
-                        Text("My flags")
+                        Text("profile.settings.background.my_flags")
                             .foregroundStyle(.primary)
 
                         Spacer()
 
                         if homeCountries.isEmpty {
-                            Text("None")
+                            Text("profile.settings.none")
                                 .foregroundStyle(.secondary)
                                 .font(.subheadline)
                         } else {
@@ -64,7 +64,7 @@ struct ProfileSettingsBackgroundSection: View {
                     showCurrentCountryPicker = true
                 } label: {
                     HStack(spacing: 12) {
-                        Text("Current country")
+                        Text("profile.settings.background.current_country")
                             .foregroundStyle(.primary)
 
                         Spacer()
@@ -78,7 +78,7 @@ struct ProfileSettingsBackgroundSection: View {
                             .foregroundStyle(.primary)
                             .font(.subheadline)
                         } else {
-                            Text("Not set")
+                            Text("profile.settings.not_set")
                                 .foregroundStyle(.secondary)
                                 .font(.subheadline)
                         }
@@ -99,7 +99,7 @@ struct ProfileSettingsBackgroundSection: View {
                     showNextDestinationPicker = true
                 } label: {
                     HStack(spacing: 12) {
-                        Text("Next destination")
+                        Text("profile.settings.background.next_destination")
                             .foregroundStyle(.primary)
 
                         Spacer()
@@ -113,7 +113,7 @@ struct ProfileSettingsBackgroundSection: View {
                             .foregroundStyle(.primary)
                             .font(.subheadline)
                         } else {
-                            Text("Not set")
+                            Text("profile.settings.not_set")
                                 .foregroundStyle(.secondary)
                                 .font(.subheadline)
                         }
@@ -134,13 +134,13 @@ struct ProfileSettingsBackgroundSection: View {
                     showFavoriteCountriesPicker = true
                 } label: {
                     HStack(spacing: 12) {
-                        Text("Favorite countries")
+                        Text("profile.settings.background.favorite_countries")
                             .foregroundStyle(.primary)
 
                         Spacer()
 
                         if favoriteCountries.isEmpty {
-                            Text("None")
+                            Text("profile.settings.none")
                                 .foregroundStyle(.secondary)
                                 .font(.subheadline)
                         } else {
@@ -166,7 +166,7 @@ struct ProfileSettingsBackgroundSection: View {
 
     private func localizedName(for code: String) -> String {
         let upper = code.uppercased()
-        let locale = Locale(identifier: "en_US")
+        let locale = Locale.autoupdatingCurrent
         return locale.localizedString(forRegionCode: upper) ?? upper
     }
 

@@ -66,7 +66,7 @@ struct CustomWeightsView: View {
                     VStack(spacing: 20) {
                         topBanner
 
-                        sectionCard(title: "Quick Presets") {
+                        sectionCard(title: String(localized: "discovery.weights.quick_presets")) {
                             LazyVGrid(
                                 columns: [
                                     GridItem(.flexible(), spacing: 12),
@@ -74,38 +74,38 @@ struct CustomWeightsView: View {
                                 ],
                                 spacing: 12
                             ) {
-                                presetButton(title: "Balanced", preset: .balanced)
-                                presetButton(title: "Budget", preset: .budget)
-                                presetButton(title: "Easy Travel", preset: .easyTravel)
-                                presetButton(title: "Safety First", preset: .safetyFirst)
+                                presetButton(title: String(localized: "discovery.weights.preset.balanced"), preset: .balanced)
+                                presetButton(title: String(localized: "discovery.weights.preset.budget"), preset: .budget)
+                                presetButton(title: String(localized: "discovery.weights.preset.easy_travel"), preset: .easyTravel)
+                                presetButton(title: String(localized: "discovery.weights.preset.safety_first"), preset: .safetyFirst)
                             }
                         }
 
-                        sectionCard(title: "Weights") {
+                        sectionCard(title: String(localized: "discovery.weights.weights")) {
                             VStack(spacing: 18) {
                                 if isZeroSum {
-                                    Text("At least one category must have weight.")
+                                    Text("discovery.weights.zero_sum_error")
                                         .font(.footnote)
                                         .foregroundStyle(.red)
                                 }
 
                                 weightSlider(
-                                    title: "Affordability",
+                                    title: String(localized: "discovery.weights.affordability"),
                                     value: binding(for: \.affordability)
                                 )
 
                                 weightSlider(
-                                    title: "Visa Ease",
+                                    title: String(localized: "discovery.weights.visa_ease"),
                                     value: binding(for: \.visa)
                                 )
 
                                 weightSlider(
-                                    title: "Travel Advisory",
+                                    title: String(localized: "discovery.weights.travel_advisory"),
                                     value: binding(for: \.advisory)
                                 )
 
                                 weightSlider(
-                                    title: "Language",
+                                    title: String(localized: "discovery.weights.language"),
                                     value: binding(for: \.language)
                                 )
 
@@ -114,14 +114,14 @@ struct CustomWeightsView: View {
                             }
                         }
 
-                        sectionCard(title: "Actions") {
+                        sectionCard(title: String(localized: "discovery.weights.actions")) {
                             VStack(spacing: 12) {
                                 Button {
                                     Task {
                                         await saveWeights()
                                     }
                                 } label: {
-                                    Text(hasSaved ? "Saved" : "Save Preferences")
+                                    Text(hasSaved ? String(localized: "discovery.weights.saved") : String(localized: "discovery.weights.save_preferences"))
                                         .font(.headline)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 14)
@@ -136,7 +136,7 @@ struct CustomWeightsView: View {
                                     draftWeights = defaults
                                     draftSelectedMonth = weightsStore.selectedMonth
                                 } label: {
-                                    Text("Reset to Default")
+                                    Text("discovery.weights.reset_default")
                                         .font(.headline)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 14)
@@ -246,7 +246,7 @@ struct CustomWeightsView: View {
 
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center, spacing: 10) {
-                Text("Seasonality")
+                Text("discovery.weights.seasonality")
                     .font(.headline)
                     .foregroundStyle(.black)
 
@@ -302,7 +302,7 @@ struct CustomWeightsView: View {
                 }
             }
 
-            Text("Uses your selected travel month. Changing it here also updates When To Go.")
+            Text("discovery.weights.month_helper")
                 .font(.caption)
                 .foregroundStyle(Color.black.opacity(0.52))
         }
@@ -311,11 +311,11 @@ struct CustomWeightsView: View {
 
     private var topBanner: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Travel Preferences")
+            Text("discovery.weights.title")
                 .font(.system(size: 32, weight: .bold))
                 .foregroundStyle(.black)
 
-            Text("Your selected weights determine how Travelability Scores are calculated throughout the app. Rankings update after you save.")
+            Text("discovery.weights.subtitle")
                 .font(.subheadline)
                 .foregroundStyle(Color.black.opacity(0.58))
                 .fixedSize(horizontal: false, vertical: true)

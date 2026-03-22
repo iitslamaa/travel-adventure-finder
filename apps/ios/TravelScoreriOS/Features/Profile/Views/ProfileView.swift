@@ -18,7 +18,7 @@ struct LockedProfileView: View {
                 .font(.system(size: 28))
                 .foregroundColor(.white)
 
-            Text("Learn more about this user by adding them as a friend!")
+            Text("profile.locked.message")
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.white)
@@ -108,7 +108,7 @@ struct ProfileView: View {
     }
 
     private var navigationTitle: String {
-        "Profile"
+        String(localized: "profile.title")
     }
 
     private func resolveCountry(for isoCode: String) -> Country {
@@ -118,7 +118,7 @@ struct ProfileView: View {
             return cached
         }
 
-        let locale = Locale(identifier: "en_US")
+        let locale = Locale.autoupdatingCurrent
         let countryName = locale.localizedString(forRegionCode: normalizedISO) ?? normalizedISO
 
         return Country(

@@ -1,6 +1,18 @@
 import Foundation
 
 enum CountryOverviewDescriptionStore {
+    private static let localizedDescriptions: [String: [String: String]] = [
+        "fr": [
+            "BB": "La Barbade est une ile des Caraibes orientales connue pour ses plages soignees, sa culture du cricket, son rhum et un style national assure a la fois elegant et detendu. Elle n'est devenue une republique qu'en 2021, ce qui est etonnamment recent pour un pays aussi connu dans le monde. L'ile est compacte, sociable et tres douee pour faire de la vie en bord de mer une part de son identite."
+        ],
+        "pt": [
+            "BB": "Barbados e uma ilha do Caribe oriental conhecida por praias bem cuidadas, cultura do cricket, rum e um estilo nacional confiante que parece ao mesmo tempo elegante e descontraido. Tornou-se uma republica apenas em 2021, o que e surpreendentemente recente para um pais tao conhecido no mundo. A ilha e compacta, sociavel e muito boa em transformar a vida a beira-mar em parte da propria identidade."
+        ],
+        "es": [
+            "BB": "Barbados es una isla del Caribe oriental conocida por sus playas cuidadas, su cultura del cricket, el ron y un estilo nacional seguro que se siente a la vez elegante y relajado. Se convirtio en republica apenas en 2021, lo cual es sorprendentemente reciente para un pais tan conocido en el mundo. La isla es compacta, sociable y muy buena para convertir la vida junto al mar en parte de su identidad."
+        ]
+    ]
+
     private static let customDescriptions: [String: String] = [
         "AD": "Andorra is a tiny Pyrenean principality wedged between France and Spain, and for centuries it survived by leaning into mountain autonomy rather than imperial scale. It is best known now for skiing, hiking, and duty-free shopping, but its older identity is tied to medieval charters and high valleys that were difficult to control from outside. The result is a country that feels improbably compact yet historically durable.",
         "AE": "The United Arab Emirates is a federation of seven emirates on the Arabian Gulf, built from old pearling and trading ports into one of the most engineered landscapes in the region. Dubai and Abu Dhabi dominate the global image, but the federation also includes mountain wadis, desert interiors, mangroves, and smaller emirates with very different rhythms. It is a modern state whose story only makes sense if you put glass towers beside Bedouin, maritime, and oil-era history.",
@@ -257,6 +269,12 @@ enum CountryOverviewDescriptionStore {
 
     static func description(for country: Country) -> String {
         let iso = country.iso2.uppercased()
+        if let localized = localizedDescription(forISO: iso) {
+            return firstSentences(in: localized, maxCount: 3)
+        }
+        if currentLanguageCode != "en" {
+            return fallbackDescription(for: country)
+        }
         guard let description = customDescriptions[iso] else {
             assertionFailure("Missing overview description for \(iso) (\(country.name))")
             return fallbackDescription(for: country)
@@ -284,9 +302,61 @@ enum CountryOverviewDescriptionStore {
     }
 
     private static func fallbackDescription(for country: Country) -> String {
-        if let label = country.regionLabel, !label.isEmpty {
-            return "\(country.name) is part of \(label). This entry is missing its full custom description in the current app dataset, but the country detail view is still available while the description list is being completed."
+        switch currentLanguageCode {
+        case "fr":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) fait partie de \(label). Cette fiche n'a pas encore sa description complete localisee dans les donnees actuelles de l'application, mais la page du pays reste disponible pendant que la liste est en cours de finalisation."
+            }
+            return "\(country.localizedDisplayName) fait partie des donnees pays de l'application. Cette fiche n'a pas encore sa description complete localisee dans les donnees actuelles de l'application, mais la page du pays reste disponible pendant que la liste est en cours de finalisation."
+        case "de":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) gehoert zu \(label). Fuer diesen Eintrag liegt in den aktuellen App-Daten noch keine vollstaendig lokalisierte Laenderbeschreibung vor, aber die Landerseite bleibt verfuegbar, waehrend diese Liste fertiggestellt wird."
+            }
+            return "\(country.localizedDisplayName) ist im Laenderdatensatz der App enthalten. Fuer diesen Eintrag liegt in den aktuellen App-Daten noch keine vollstaendig lokalisierte Laenderbeschreibung vor, aber die Landerseite bleibt verfuegbar, waehrend diese Liste fertiggestellt wird."
+        case "it":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) fa parte di \(label). Questa scheda non ha ancora una descrizione completa localizzata nell'attuale dataset dell'app, ma la pagina del paese resta disponibile mentre la raccolta viene completata."
+            }
+            return "\(country.localizedDisplayName) e incluso nel dataset dei paesi dell'app. Questa scheda non ha ancora una descrizione completa localizzata nell'attuale dataset dell'app, ma la pagina del paese resta disponibile mentre la raccolta viene completata."
+        case "pt":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) faz parte de \(label). Esta entrada ainda nao tem sua descricao completa localizada no conjunto atual de dados do app, mas a tela do pais continua disponivel enquanto essa lista e concluida."
+            }
+            return "\(country.localizedDisplayName) faz parte do conjunto de paises do app. Esta entrada ainda nao tem sua descricao completa localizada no conjunto atual de dados do app, mas a tela do pais continua disponivel enquanto essa lista e concluida."
+        case "es":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) forma parte de \(label). Esta entrada todavia no tiene su descripcion completa localizada en el conjunto actual de datos de la app, pero la vista del pais sigue disponible mientras se completa la lista."
+            }
+            return "\(country.localizedDisplayName) esta incluido en el conjunto de paises de la app. Esta entrada todavia no tiene su descripcion completa localizada en el conjunto actual de datos de la app, pero la vista del pais sigue disponible mientras se completa la lista."
+        default:
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) is part of \(label). This entry is missing its full custom description in the current app dataset, but the country detail view is still available while the description list is being completed."
+            }
+            return "\(country.localizedDisplayName) is included in the app's country dataset. This entry is missing its full custom description in the current app dataset, but the country detail view is still available while the description list is being completed."
         }
-        return "\(country.name) is included in the app's country dataset. This entry is missing its full custom description in the current app dataset, but the country detail view is still available while the description list is being completed."
+    }
+
+    private static func localizedDescription(forISO iso: String) -> String? {
+        let languageCode = currentLanguageCode
+        return localizedDescriptions[languageCode]?[iso]
+    }
+
+    private static var currentLanguageCode: String {
+        let candidates = [
+            Bundle.main.preferredLocalizations.first?.lowercased(),
+            Locale.autoupdatingCurrent.language.languageCode?.identifier.lowercased(),
+            Locale.preferredLanguages.first?.lowercased()
+        ]
+
+        for candidate in candidates.compactMap({ $0 }) {
+            if candidate.hasPrefix("pt") { return "pt" }
+            if candidate.hasPrefix("fr") { return "fr" }
+            if candidate.hasPrefix("es") { return "es" }
+            if candidate.hasPrefix("de") { return "de" }
+            if candidate.hasPrefix("it") { return "it" }
+            if candidate.hasPrefix("en") { return "en" }
+        }
+
+        return "en"
     }
 }

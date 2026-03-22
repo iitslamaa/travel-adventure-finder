@@ -20,7 +20,7 @@ struct ProfileSettingsNextDestinationSection: View {
                 showNextDestinationPicker = true
             } label: {
                 HStack(spacing: 12) {
-                    Text("Next destination")
+                    Text("profile.settings.background.next_destination")
                         .foregroundStyle(.primary)
 
                     Spacer()
@@ -39,10 +39,10 @@ struct ProfileSettingsNextDestinationSection: View {
     }
 
     private var displayValue: String {
-        guard let nextDestination else { return "Not set" }
+        guard let nextDestination else { return String(localized: "profile.settings.not_set") }
 
         let upper = nextDestination.uppercased()
-        let locale = Locale(identifier: "en_US")
+        let locale = Locale.autoupdatingCurrent
         let countryName = locale.localizedString(forRegionCode: upper) ?? upper
 
         return "\(countryName) \(flag(for: upper))"

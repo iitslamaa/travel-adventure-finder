@@ -20,7 +20,7 @@ struct BucketListView: View {
     private var bucketedCountries: [Country] {
         countries
             .filter { bucketCountryIds.contains($0.id) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending }
     }
 
     var body: some View {
@@ -31,7 +31,7 @@ struct BucketListView: View {
             if isLoading {
                 VStack(spacing: 12) {
                     ProgressView()
-                    Text("Loading...")
+                    Text("common.loading")
                         .font(.subheadline)
                         .foregroundColor(.black)
                 }
@@ -55,7 +55,7 @@ struct BucketListView: View {
                                         .font(.largeTitle)
 
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(country.name)
+                                        Text(country.localizedDisplayName)
                                             .font(.headline)
                                             .foregroundColor(Theme.textPrimary)
                                     }
@@ -101,13 +101,13 @@ struct BucketListView: View {
                 .scrollIndicators(.hidden)
             }
         }
-        .navigationTitle("🪣 Bucket List")
+        .navigationTitle("planning.bucket_list.title")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showingAddCountries = true
                 } label: {
-                    Text("Edit")
+                    Text("common.edit")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.black)
                 }

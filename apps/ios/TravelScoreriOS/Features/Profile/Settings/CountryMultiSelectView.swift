@@ -55,7 +55,7 @@ struct CountryMultiSelectView: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(.secondary)
 
-                    TextField("Search", text: $searchText)
+                    TextField("profile.settings.search_countries", text: $searchText)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
@@ -92,7 +92,7 @@ struct CountryMultiSelectView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("common.save") {
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -101,7 +101,7 @@ struct CountryMultiSelectView: View {
                 }
 
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("common.cancel") {
                         selection = initialSelection
                         dismiss()
                     }

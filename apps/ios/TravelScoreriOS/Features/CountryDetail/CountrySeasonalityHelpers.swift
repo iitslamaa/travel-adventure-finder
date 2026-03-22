@@ -12,15 +12,15 @@ enum CountrySeasonalityHelpers {
     static func headline(for country: Country, selectedMonth: Int? = nil) -> String {
         switch country.resolvedSeasonalityLabel(for: selectedMonth) {
         case "best":
-            return "Peak time to go ✅"
+            return String(localized: "country_detail.seasonality.headline.best")
         case "good":
-            return "Good time to go ✅"
+            return String(localized: "country_detail.seasonality.headline.good")
         case "shoulder":
-            return "Shoulder season"
+            return String(localized: "country_detail.seasonality.headline.shoulder")
         case "poor":
-            return "Less ideal timing"
+            return String(localized: "country_detail.seasonality.headline.poor")
         default:
-            return "Current timing"
+            return String(localized: "country_detail.seasonality.headline.current")
         }
     }
 
@@ -31,29 +31,29 @@ enum CountrySeasonalityHelpers {
 
         switch country.resolvedSeasonalityLabel(for: selectedMonth) {
         case "best":
-            return "Weather and crowd patterns are ideal for this month."
+            return String(localized: "country_detail.seasonality.body.best")
         case "good":
-            return "Conditions are generally favorable for this month, with decent weather and crowds."
+            return String(localized: "country_detail.seasonality.body.good")
         case "shoulder":
-            return "This month offers a decent balance of weather, crowds, and prices, with some trade-offs."
+            return String(localized: "country_detail.seasonality.body.shoulder")
         case "poor":
-            return "This month isn’t an ideal time for weather or crowds; consider different months if possible."
+            return String(localized: "country_detail.seasonality.body.poor")
         default:
-            return "Seasonality data is limited; timing may still be fine, but check local conditions."
+            return String(localized: "country_detail.seasonality.body.current")
         }
     }
 
     static func shortMonthName(for month: Int) -> String {
-        let names = ["Jan","Feb","Mar","Apr","May","Jun",
-                     "Jul","Aug","Sep","Oct","Nov","Dec"]
-        guard (1...12).contains(month) else { return "Month" }
-        return names[month - 1]
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        guard (1...12).contains(month) else { return String(localized: "common.month") }
+        return formatter.shortMonthSymbols[month - 1]
     }
 
     static func fullMonthName(for month: Int) -> String {
-        let names = ["January", "February", "March", "April", "May", "June",
-                     "July", "August", "September", "October", "November", "December"]
-        guard (1...12).contains(month) else { return "this month" }
-        return names[month - 1]
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        guard (1...12).contains(month) else { return String(localized: "common.this_month") }
+        return formatter.monthSymbols[month - 1]
     }
 }

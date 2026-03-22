@@ -14,6 +14,15 @@
 	<false/>
 	<key>CFBundleDisplayName</key>
 	<string>Travel Adventure Finder</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>es</string>
+		<string>fr</string>
+		<string>de</string>
+		<string>it</string>
+		<string>pt-BR</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>Travel Adventure Finder</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>

@@ -65,6 +65,32 @@ final class LanguageRepository {
         return rawValue
     }
 
+    func localizedDisplayName(for rawValue: String, locale: Locale = .autoupdatingCurrent) -> String {
+        if let language = resolveLanguage(for: rawValue) {
+            let canonicalCode = canonicalLanguageCode(for: language.travelLanguageCode)
+                ?? language.travelLanguageCode
+
+            if let localized = locale.localizedString(forLanguageCode: canonicalCode), !localized.isEmpty {
+                return localized.localizedCapitalized
+            }
+
+            if let localized = locale.localizedString(forLanguageCode: language.code), !localized.isEmpty {
+                return localized.localizedCapitalized
+            }
+
+            return preferredDisplayName(for: language)
+        }
+
+        let normalized = normalizeLookupKey(rawValue)
+        guard !normalized.isEmpty else { return rawValue }
+
+        if let localized = locale.localizedString(forLanguageCode: normalized), !localized.isEmpty {
+            return localized.localizedCapitalized
+        }
+
+        return rawValue
+    }
+
     func preferredDisplayName(for language: AppLanguage) -> String {
         let travelCode = canonicalLanguageCode(for: language.travelLanguageCode)
             ?? language.travelLanguageCode

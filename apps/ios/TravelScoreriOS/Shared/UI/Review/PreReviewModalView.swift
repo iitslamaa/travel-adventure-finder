@@ -65,7 +65,7 @@ private var thankYouView: some View {
             .font(.system(size: 44))
             .foregroundColor(.green)
         
-        Text("Thanks for your feedback!")
+        Text("review.thanks")
             .font(.system(size: 17, weight: .semibold))
             .multilineTextAlignment(.center)
     }
@@ -74,12 +74,12 @@ private var thankYouView: some View {
 
 private var lowRatingView: some View {
     VStack(alignment: .leading, spacing: 14) {
-        Text("What could we improve?")
+        Text("review.improve_prompt")
             .font(.system(size: 18, weight: .semibold))
         
         ZStack(alignment: .topLeading) {
             if feedbackText.isEmpty {
-                Text("Type feedback here...")
+                Text("review.feedback_placeholder")
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 14)
@@ -95,7 +95,7 @@ private var lowRatingView: some View {
         )
         
         HStack {
-            Button("Back") {
+            Button("common.back") {
                 withAnimation {
                     showLowRatingForm = false
                 }
@@ -104,7 +104,7 @@ private var lowRatingView: some View {
             
             Spacer()
             
-            Button("Send") {
+            Button("common.send") {
                 submitLowRating()
             }
             .font(.system(size: 15, weight: .semibold))
@@ -118,7 +118,7 @@ private var lowRatingView: some View {
 
 private var ratingView: some View {
     VStack(spacing: 16) {
-        Text("Enjoying Travel Adventure Finder?")
+        Text("review.enjoying_app")
             .font(.system(size: 20, weight: .semibold))
             .multilineTextAlignment(.center)
         
@@ -138,7 +138,7 @@ private var ratingView: some View {
         HStack {
             if selectedRating == 0 { Spacer() }
             
-            Button("Not Now") {
+            Button("common.not_now") {
                 onDismiss()
             }
             .foregroundColor(.secondary)
@@ -148,7 +148,7 @@ private var ratingView: some View {
             } else {
                 Spacer()
                 
-                Button("Submit") {
+                Button("common.submit") {
                     if selectedRating <= 3 {
                         showLowRatingForm = true
                     } else {

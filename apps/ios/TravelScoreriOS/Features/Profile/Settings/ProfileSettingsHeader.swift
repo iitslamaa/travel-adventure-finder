@@ -12,7 +12,7 @@ struct ProfileSettingsHeader: View {
     var body: some View {
         VStack {
             HStack {
-                Text("Profile Settings")
+                Text("profile.settings.title")
                     .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(.primary)
                     .padding(.top, 24)

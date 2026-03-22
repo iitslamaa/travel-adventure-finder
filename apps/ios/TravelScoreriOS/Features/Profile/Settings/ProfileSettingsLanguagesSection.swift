@@ -18,12 +18,12 @@ struct ProfileSettingsLanguagesSection: View {
     }
 
     var body: some View {
-        SectionCard(title: "Languages spoken") {
+        SectionCard(title: String(localized: "profile.settings.languages.title")) {
 
             VStack(spacing: 0) {
 
                 if languages.isEmpty {
-                    Text("Add languages you speak or are learning")
+                    Text("profile.settings.languages.empty")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 12)
@@ -47,7 +47,7 @@ struct ProfileSettingsLanguagesSection: View {
                             }
 
                             Picker(
-                                "Proficiency",
+                                String(localized: "profile.settings.languages.proficiency"),
                                 selection: Binding(
                                     get: { languages[index].proficiency },
                                     set: { languages[index].proficiency = $0 }
@@ -72,7 +72,7 @@ struct ProfileSettingsLanguagesSection: View {
                 Button {
                     showAddLanguage = true
                 } label: {
-                    Label("Add language", systemImage: "plus")
+                    Label("profile.settings.languages.add", systemImage: "plus")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }

@@ -41,7 +41,7 @@ struct FriendRequestsView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    Theme.titleBanner("Friend Requests")
+                    Theme.titleBanner(String(localized: "friend_requests.title"))
 
                     contentView(contentWidth: contentWidth)
                         .padding(.top, 14)
@@ -77,8 +77,8 @@ struct FriendRequestsView: View {
         .task {
             await vm.loadIncomingRequests()
         }
-        .alert("Error", isPresented: .constant(vm.errorMessage != nil)) {
-            Button("OK") {
+        .alert(String(localized: "common.error"), isPresented: .constant(vm.errorMessage != nil)) {
+            Button(String(localized: "common.ok")) {
                 vm.errorMessage = nil
             }
         } message: {
@@ -89,7 +89,7 @@ struct FriendRequestsView: View {
     @ViewBuilder
     private func contentView(contentWidth: CGFloat) -> some View {
         if vm.isLoading {
-            ProgressView("Loading requests…")
+            ProgressView("friend_requests.loading")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if vm.incomingRequests.isEmpty {
             VStack(spacing: 12) {
@@ -97,11 +97,11 @@ struct FriendRequestsView: View {
                     .font(.system(size: 48))
                     .foregroundStyle(.black.opacity(0.7))
 
-                Text("No friend requests")
+                Text("friend_requests.empty.title")
                     .font(TAFTypography.title(.bold))
                     .foregroundStyle(.black)
 
-                Text("When someone sends you a friend request, it’ll show up here.")
+                Text("friend_requests.empty.subtitle")
                     .font(TAFTypography.section())
                     .foregroundStyle(.black.opacity(0.75))
                     .multilineTextAlignment(.center)
@@ -157,7 +157,7 @@ struct FriendRequestsView: View {
 
             HStack(spacing: 12) {
                 actionButton(
-                    title: "Accept",
+                    title: String(localized: "friend_requests.accept"),
                     foreground: .white,
                     background: Theme.accent.opacity(0.88),
                     border: .white.opacity(0.22)
@@ -174,7 +174,7 @@ struct FriendRequestsView: View {
                 }
 
                 actionButton(
-                    title: "Decline",
+                    title: String(localized: "friend_requests.decline"),
                     foreground: .black.opacity(0.78),
                     background: Color(red: 0.95, green: 0.93, blue: 0.89).opacity(0.96),
                     border: .white.opacity(0.35)

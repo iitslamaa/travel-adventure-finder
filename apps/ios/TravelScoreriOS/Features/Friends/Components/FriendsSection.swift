@@ -27,7 +27,7 @@ struct FriendsSection: View {
     private var drawerView: some View {
         VStack(spacing: 20) {
 
-            Text("Friends")
+            Text("friends.section.title")
                 .font(.title2.bold())
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -36,7 +36,7 @@ struct FriendsSection: View {
                 onViewFriends()
             } label: {
                 HStack {
-                    Label("View Friends", systemImage: "person.2.fill")
+                    Label("friends.section.view_friends", systemImage: "person.2.fill")
                         .font(.headline)
                     Spacer()
                     Text("\(friendCount)")
@@ -60,7 +60,7 @@ struct FriendsSection: View {
                 } label: {
                     HStack {
                         Image(systemName: "person.crop.circle.badge.minus")
-                        Text("Unfriend")
+                        Text("friends.section.unfriend")
                         Spacer()
                     }
                     .padding()
@@ -76,7 +76,7 @@ struct FriendsSection: View {
                 } label: {
                     HStack {
                         Image(systemName: "xmark.circle")
-                        Text("Cancel Friend Request")
+                        Text("friends.section.cancel_request")
                         Spacer()
                     }
                     .padding()
@@ -94,9 +94,9 @@ struct FriendsSection: View {
             Theme.themedSheetBackground(corner: 30)
                 .ignoresSafeArea()
         )
-        .alert("Unfriend?", isPresented: $showUnfriendConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Confirm", role: .destructive) {
+        .alert(String(localized: "friends.section.unfriend_confirm_title"), isPresented: $showUnfriendConfirmation) {
+            Button(String(localized: "common.cancel"), role: .cancel) {}
+            Button(String(localized: "common.confirm"), role: .destructive) {
                 onToggleFriend()
             }
         }

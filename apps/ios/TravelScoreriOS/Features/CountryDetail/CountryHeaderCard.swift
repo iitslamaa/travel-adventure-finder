@@ -17,11 +17,11 @@ struct CountryHeaderCard: View {
                 .font(.system(size: 60))
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(country.name)
+                Text(country.localizedDisplayName)
                     .font(.title2)
                     .bold()
 
-                if let regionLabel = country.regionLabel {
+                if let regionLabel = country.localizedRegionLabel {
                     Text(regionLabel)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)

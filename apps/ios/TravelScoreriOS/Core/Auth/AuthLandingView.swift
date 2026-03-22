@@ -25,7 +25,7 @@ struct AuthLandingView: View {
                                 alignment: .top
                             )
 
-                        Button("Continue as Guest") {
+                        Button("auth.continue_guest") {
                             sessionManager.continueAsGuest()
                         }
                         .font(.system(size: 15, weight: .semibold))

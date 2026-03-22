@@ -49,10 +49,10 @@ struct AddLanguageView: View {
                 }
             }
             .searchable(text: $searchText)
-            .navigationTitle("Select Language")
+            .navigationTitle(String(localized: "profile.settings.languages.select"))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cancel") { dismiss() }
+                    Button(String(localized: "common.cancel")) { dismiss() }
                 }
             }
         }

@@ -39,11 +39,11 @@ struct FriendsActionSheetView: View {
                     .padding(.top, 8)
                 
                 // Title
-                Text("Unfriend \(username)?")
+                Text(String(format: String(localized: "friends.action_sheet.unfriend_user_format"), locale: Locale.current, username))
                     .font(.title3.weight(.semibold))
                 
                 // Subtitle
-                Text("You will no longer be friends.")
+                Text("friends.action_sheet.subtitle")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 
@@ -56,7 +56,7 @@ struct FriendsActionSheetView: View {
                     Button(action: {
                         onConfirm()
                     }) {
-                        Text("Unfriend")
+                        Text("friends.section.unfriend")
                             .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -69,7 +69,7 @@ struct FriendsActionSheetView: View {
                     Button(action: {
                         onCancel()
                     }) {
-                        Text("Cancel")
+                        Text("common.cancel")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()

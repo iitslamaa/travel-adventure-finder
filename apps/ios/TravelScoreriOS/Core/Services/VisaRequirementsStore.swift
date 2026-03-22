@@ -75,7 +75,7 @@ private struct HydratedVisaResult {
 }
 
 private enum VisaRowMatcher {
-    private static let countryLabelLocale = Locale(identifier: "en_US")
+    private static let countryLabelLocale = Locale.autoupdatingCurrent
 
     static func normalize(_ text: String) -> String {
         let normalized = text

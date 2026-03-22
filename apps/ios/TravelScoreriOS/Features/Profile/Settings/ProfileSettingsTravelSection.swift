@@ -17,18 +17,18 @@ struct ProfileSettingsTravelSection: View {
     @Binding var showTravelStyleDialog: Bool
 
     var body: some View {
-        SectionCard(title: "Travel preferences") {
+        SectionCard(title: String(localized: "profile.settings.travel.title")) {
             VStack(spacing: 0) {
                 Button {
                     showTravelModeDialog = true
                 } label: {
                     HStack(spacing: 12) {
-                        Text("Travel mode")
+                        Text("profile.settings.travel.mode")
                             .foregroundStyle(.primary)
 
                         Spacer()
 
-                        Text(travelMode?.label ?? "Not set")
+                        Text(travelMode?.label ?? String(localized: "profile.settings.not_set"))
                             .foregroundStyle(travelMode == nil ? .secondary : .primary)
 
                         Image(systemName: "chevron.up.chevron.down")
@@ -47,12 +47,12 @@ struct ProfileSettingsTravelSection: View {
                     showTravelStyleDialog = true
                 } label: {
                     HStack(spacing: 12) {
-                        Text("Travel style")
+                        Text("profile.settings.travel.style")
                             .foregroundStyle(.primary)
 
                         Spacer()
 
-                        Text(travelStyle?.label ?? "Not set")
+                        Text(travelStyle?.label ?? String(localized: "profile.settings.not_set"))
                             .foregroundStyle(travelStyle == nil ? .secondary : .primary)
 
                         Image(systemName: "chevron.up.chevron.down")
