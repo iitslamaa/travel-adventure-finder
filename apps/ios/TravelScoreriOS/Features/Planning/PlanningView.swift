@@ -847,9 +847,9 @@ struct TripPlannerView: View {
                                             onDelete: {
                                                 store.delete(id: trip.id)
                                             },
-                                            onAddToCalendar: {
+                                            onAddToCalendar: { selectedTrip in
                                                 Task {
-                                                    await openCalendar(for: trip)
+                                                    await openCalendar(for: selectedTrip)
                                                 }
                                             }
                                         )
@@ -1553,10 +1553,10 @@ private struct TripPlannerComposerView: View {
 private struct TripPlannerDetailView: View {
     @EnvironmentObject private var sessionManager: SessionManager
 
-    let trip: TripPlannerTrip
+    @State private var trip: TripPlannerTrip
     let onSave: (TripPlannerTrip) -> Void
     let onDelete: () -> Void
-    let onAddToCalendar: () -> Void
+    let onAddToCalendar: (TripPlannerTrip) -> Void
 
     @State private var resolvedFriends: [TripPlannerFriendSnapshot]
     @State private var isLoadingFriendProfiles = false
@@ -1576,13 +1576,26 @@ private struct TripPlannerDetailView: View {
         trip: TripPlannerTrip,
         onSave: @escaping (TripPlannerTrip) -> Void,
         onDelete: @escaping () -> Void,
-        onAddToCalendar: @escaping () -> Void
+        onAddToCalendar: @escaping (TripPlannerTrip) -> Void
     ) {
-        self.trip = trip
+        _trip = State(initialValue: trip)
         self.onSave = onSave
         self.onDelete = onDelete
         self.onAddToCalendar = onAddToCalendar
         _resolvedFriends = State(initialValue: trip.friends)
+    }
+
+    private var tripContentRefreshKey: String {
+        let startInterval = trip.startDate?.timeIntervalSince1970 ?? 0
+        let endInterval = trip.endDate?.timeIntervalSince1970 ?? 0
+        let countryKey = trip.countryIds.joined(separator: ",")
+        let friendKey = trip.friendIds.map(\.uuidString).joined(separator: ",")
+        return "\(trip.id.uuidString)|\(startInterval)|\(endInterval)|\(countryKey)|\(friendKey)"
+    }
+
+    private func saveTripChanges(_ updatedTrip: TripPlannerTrip) {
+        trip = updatedTrip
+        onSave(updatedTrip)
     }
 
     private var displayedFriends: [TripPlannerFriendSnapshot] {
@@ -1625,7 +1638,7 @@ private struct TripPlannerDetailView: View {
                             subtitle: trip.isGroupTrip ? "Group trip" : "Solo trip"
                         ) {
                             NavigationLink {
-                                TripPlannerBasicsEditorView(trip: trip, onSave: onSave)
+                                TripPlannerBasicsEditorView(trip: trip, onSave: saveTripChanges)
                             } label: {
                                 Text("Edit")
                                     .font(.system(size: 13, weight: .bold))
@@ -1659,7 +1672,7 @@ private struct TripPlannerDetailView: View {
                             subtitle: displayedTravelers.isEmpty ? "Just you for now." : "Everyone currently included in this trip."
                         ) {
                             NavigationLink {
-                                TripPlannerFriendsEditorView(trip: trip, onSave: onSave)
+                                TripPlannerFriendsEditorView(trip: trip, onSave: saveTripChanges)
                             } label: {
                                 Text("Edit")
                                     .font(.system(size: 13, weight: .bold))
@@ -1702,7 +1715,7 @@ private struct TripPlannerDetailView: View {
                             subtitle: "Everything currently included in this trip."
                         ) {
                             NavigationLink {
-                                TripPlannerCountriesEditorView(trip: trip, onSave: onSave)
+                                TripPlannerCountriesEditorView(trip: trip, onSave: saveTripChanges)
                             } label: {
                                 Text("Edit")
                                     .font(.system(size: 13, weight: .bold))
@@ -1736,7 +1749,7 @@ private struct TripPlannerDetailView: View {
                             subtitle: trip.isGroupTrip ? "Compare when everyone is free and lock in the best window." : "Keep rough options visible until your dates are finalized."
                         ) {
                             NavigationLink {
-                                TripPlannerAvailabilityEditorView(trip: trip, onSave: onSave)
+                                TripPlannerAvailabilityEditorView(trip: trip, onSave: saveTripChanges)
                             } label: {
                                 Text("Edit")
                                     .font(.system(size: 13, weight: .bold))
@@ -1754,7 +1767,7 @@ private struct TripPlannerDetailView: View {
                             VStack(spacing: 12) {
                                 if trip.startDate != nil, trip.endDate != nil {
                                     Button {
-                                        onAddToCalendar()
+                                        onAddToCalendar(trip)
                                     } label: {
                                         Label("Add To Apple Calendar", systemImage: "calendar.badge.plus")
                                             .font(.system(size: 15, weight: .bold))
@@ -1798,7 +1811,7 @@ private struct TripPlannerDetailView: View {
         .tripPlannerNavigationChrome {
             EmptyView()
         }
-        .task(id: trip.id) {
+        .task(id: tripContentRefreshKey) {
             await loadTravelerProfiles()
             await loadCountryStats()
             await loadGroupLanguageScores()
@@ -1899,7 +1912,11 @@ private struct TripPlannerDetailView: View {
                 return lhsIndex < rhsIndex
             }
 
-        if selected.isEmpty { return }
+        guard !selected.isEmpty else {
+            resolvedCountries = []
+            groupVisaNeeds = []
+            return
+        }
 
         let hydratedCountries = await visaStore.hydrate(
             countries: selected,
