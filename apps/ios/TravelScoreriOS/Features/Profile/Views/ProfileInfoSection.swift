@@ -170,7 +170,28 @@ struct ProfileInfoSection: View {
             .padding(.vertical, 22)
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.profileHeaderImageBackground(corner: 24))
+            .background(innerCardBackground(corner: 24))
+    }
+
+    private func innerCardBackground(corner: CGFloat) -> some View {
+        GeometryReader { proxy in
+            ZStack {
+                Image("profile_header")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(Color.white.opacity(0.18))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(.white.opacity(0.28), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
+        }
     }
 
     private var sectionBackground: some View {

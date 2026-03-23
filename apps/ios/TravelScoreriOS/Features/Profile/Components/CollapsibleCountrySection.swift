@@ -158,7 +158,7 @@ struct CollapsibleCountrySection: View {
             }
         }
         .padding(16)
-        .background(Theme.profileHeaderImageBackground(corner: 20))
+        .background(cardBackground(corner: 20))
         .onAppear {
         }
         .onDisappear {
@@ -173,6 +173,27 @@ struct CollapsibleCountrySection: View {
                !normalizedCodes.contains(selectedCountryISO) {
                 self.selectedCountryISO = nil
             }
+        }
+    }
+
+    private func cardBackground(corner: CGFloat) -> some View {
+        GeometryReader { proxy in
+            ZStack {
+                Image("profile_header")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(Color.white.opacity(0.18))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(.white.opacity(0.28), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
         }
     }
 
