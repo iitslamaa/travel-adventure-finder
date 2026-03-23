@@ -9,26 +9,33 @@ import Foundation
 import SwiftUI
 
 struct CollapsibleCountrySection: View {
+    let sectionID: String
     let title: String
     let countryCodes: [String]
     let highlightColor: Color
     let mutualCountries: Set<String>?
+    let isExpanded: Bool
+    let onToggle: () -> Void
 
-    @State private var isExpanded = false
     @State private var selectedCountryISO: String? = nil
-    @State private var hasLoadedMap = false
     @State private var isLoadingMap: Bool = false
 
     init(
+        sectionID: String,
         title: String,
         countryCodes: [String],
         highlightColor: Color,
-        mutualCountries: Set<String>? = nil
+        mutualCountries: Set<String>? = nil,
+        isExpanded: Bool = false,
+        onToggle: @escaping () -> Void = {}
     ) {
+        self.sectionID = sectionID
         self.title = title
         self.countryCodes = countryCodes
         self.highlightColor = highlightColor
         self.mutualCountries = mutualCountries
+        self.isExpanded = isExpanded
+        self.onToggle = onToggle
     }
 
     var body: some View {
@@ -52,10 +59,7 @@ struct CollapsibleCountrySection: View {
         VStack(alignment: .leading, spacing: 12) {
 
             Button {
-                if !isExpanded && !hasLoadedMap {
-                    hasLoadedMap = true
-                }
-                isExpanded.toggle()
+                onToggle()
             } label: {
                 HStack {
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
@@ -70,11 +74,13 @@ struct CollapsibleCountrySection: View {
                     Spacer()
                 }
             }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
 
-            if hasLoadedMap {
+            if isExpanded {
                 VStack(spacing: 16) {
 
-                    // 🔎 Normalize ISO codes once (ISO2 contract)
+                    // Normalize ISO codes once for the map/flag strip contract.
                     let normalizedISOs = countryCodes
                         .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
 
@@ -98,12 +104,6 @@ struct CollapsibleCountrySection: View {
                         .onAppear {
                             scrollToSelectedCountry(with: proxy, animated: false)
                         }
-                        .onChange(of: isExpanded) { _, expanded in
-                            guard expanded else { return }
-                            DispatchQueue.main.async {
-                                scrollToSelectedCountry(with: proxy, animated: false)
-                            }
-                        }
                         .onChange(of: selectedCountryISO) {
                             scrollToSelectedCountry(with: proxy, animated: true)
                         }
@@ -117,11 +117,7 @@ struct CollapsibleCountrySection: View {
                             selectedCountryISO: $selectedCountryISO,
                             isLoading: $isLoadingMap
                         )
-                        .id(title + normalizedISOs.joined())
-                        .onAppear {
-                        }
-                        .onDisappear {
-                        }
+                        .id(sectionID + normalizedISOs.joined())
                         .transaction { transaction in
                             transaction.animation = nil
                         }
@@ -152,20 +148,15 @@ struct CollapsibleCountrySection: View {
                     }
                 }
                 .padding(.top, 8)
-                .opacity(isExpanded ? 1 : 0)
-                .frame(height: isExpanded ? nil : 0)
-                .clipped()
             }
         }
         .padding(16)
-        .background(Theme.profileCardBackground(corner: 20))
+        .background(cardBackground(corner: 20))
         .onAppear {
         }
         .onDisappear {
         }
         .onChange(of: countryCodes) {
-            isExpanded = false
-            hasLoadedMap = false
             let normalizedCodes = orderedFlags.map {
                 $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
             }
@@ -173,6 +164,30 @@ struct CollapsibleCountrySection: View {
                !normalizedCodes.contains(selectedCountryISO) {
                 self.selectedCountryISO = nil
             }
+        }
+    }
+
+    private func cardBackground(corner: CGFloat) -> some View {
+        GeometryReader { proxy in
+            ZStack {
+                Image("profile_header")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .scaleEffect(1.35, anchor: .trailing)
+                    .offset(x: 36)
+                    .clipped()
+
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(Color.white.opacity(0.18))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(.white.opacity(0.28), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
+            .allowsHitTesting(false)
         }
     }
 

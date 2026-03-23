@@ -22,6 +22,7 @@ struct ProfileInfoSection: View {
     let nextDestination: String?
     let currentCountry: String?
     let favoriteCountries: [String]
+    @State private var expandedCountrySectionID: String? = nil
 
     var body: some View {
         LazyVStack(spacing: 32) {
@@ -35,15 +36,16 @@ struct ProfileInfoSection: View {
 
             countriesSection
         }
-        .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 20)
+        .padding(.horizontal, 20)
+        .background(sectionBackground)
     }
 
     // MARK: - Languages
 
     private var languagesSection: some View {
-        card {
+        card(imageScale: 1.18, imageAnchor: .trailing) {
             VStack(alignment: .leading, spacing: 16) {
                 sectionHeader(String(localized: "profile.info.languages"))
 
@@ -61,7 +63,7 @@ struct ProfileInfoSection: View {
     }
 
     private var sharedLanguagesSection: some View {
-        card {
+        card(imageScale: 1.18, imageAnchor: .trailing) {
             VStack(alignment: .leading, spacing: 16) {
                 sectionHeader(String(localized: "profile.info.shared_languages"))
 
@@ -77,7 +79,7 @@ struct ProfileInfoSection: View {
     // MARK: - Preferences
 
     private var combinedPreferencesSection: some View {
-        card {
+        card(imageScale: 1.18, imageAnchor: .trailing) {
             VStack(spacing: 18) {
 
                 HStack {
@@ -122,36 +124,48 @@ struct ProfileInfoSection: View {
     // MARK: - Countries
 
     private var countriesSection: some View {
-        LazyVStack(spacing: 16) {
+        VStack(spacing: 16) {
 
             if relationshipState == .selfProfile {
 
                 CollapsibleCountrySection(
+                    sectionID: "countries_traveled_self",
                     title: String(localized: "profile.info.countries_traveled"),
                     countryCodes: orderedTraveledCountries,
-                    highlightColor: .gold
+                    highlightColor: .gold,
+                    isExpanded: expandedCountrySectionID == "countries_traveled_self",
+                    onToggle: { toggleCountrySection("countries_traveled_self") }
                 )
 
                 CollapsibleCountrySection(
+                    sectionID: "bucket_list_self",
                     title: String(localized: "profile.info.bucket_list"),
                     countryCodes: orderedBucketListCountries,
-                    highlightColor: .blue
+                    highlightColor: .blue,
+                    isExpanded: expandedCountrySectionID == "bucket_list_self",
+                    onToggle: { toggleCountrySection("bucket_list_self") }
                 )
 
             } else if relationshipState == .friends {
 
                 CollapsibleCountrySection(
+                    sectionID: "countries_traveled_friends",
                     title: String(localized: "profile.info.countries_traveled"),
                     countryCodes: orderedTraveledCountries,
                     highlightColor: .gold,
-                    mutualCountries: Set(mutualTraveledCountries)
+                    mutualCountries: Set(mutualTraveledCountries),
+                    isExpanded: expandedCountrySectionID == "countries_traveled_friends",
+                    onToggle: { toggleCountrySection("countries_traveled_friends") }
                 )
 
                 CollapsibleCountrySection(
+                    sectionID: "bucket_list_friends",
                     title: String(localized: "profile.info.bucket_list"),
                     countryCodes: orderedBucketListCountries,
                     highlightColor: .blue,
-                    mutualCountries: Set(mutualBucketCountries)
+                    mutualCountries: Set(mutualBucketCountries),
+                    isExpanded: expandedCountrySectionID == "bucket_list_friends",
+                    onToggle: { toggleCountrySection("bucket_list_friends") }
                 )
 
             } else {
@@ -163,6 +177,8 @@ struct ProfileInfoSection: View {
     // MARK: - Reusable Components
 
     private func card<Content: View>(
+        imageScale: CGFloat = 1,
+        imageAnchor: UnitPoint = .center,
         @ViewBuilder content: () -> Content
     ) -> some View {
         content()
@@ -170,13 +186,63 @@ struct ProfileInfoSection: View {
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color.white)
+                innerCardBackground(
+                    corner: 24,
+                    imageScale: imageScale,
+                    imageAnchor: imageAnchor
+                )
             )
+    }
+
+    private func innerCardBackground(
+        corner: CGFloat,
+        imageScale: CGFloat = 1,
+        imageAnchor: UnitPoint = .center
+    ) -> some View {
+        GeometryReader { proxy in
+            ZStack {
+                Image("profile_header")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .scaleEffect(imageScale, anchor: imageAnchor)
+                    .clipped()
+
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .fill(Color.white.opacity(0.18))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(.white.opacity(0.28), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
+            .allowsHitTesting(false)
+        }
+    }
+
+    private var sectionBackground: some View {
+        GeometryReader { proxy in
+            ZStack {
+                Image("profile_info")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .saturation(0.82)
+                    .brightness(0.04)
+                    .clipped()
+
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color(red: 0.97, green: 0.92, blue: 0.82).opacity(0.34))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
             )
+            .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
+            .allowsHitTesting(false)
+        }
     }
 
     private func sectionHeader(_ text: String) -> some View {
@@ -189,6 +255,14 @@ struct ProfileInfoSection: View {
         Text(text)
             .font(.subheadline)
             .foregroundColor(.black)
+    }
+
+    private func toggleCountrySection(_ sectionID: String) {
+        if expandedCountrySectionID == sectionID {
+            expandedCountrySectionID = nil
+        } else {
+            expandedCountrySectionID = sectionID
+        }
     }
 
     private func languageRow(_ text: String) -> some View {
