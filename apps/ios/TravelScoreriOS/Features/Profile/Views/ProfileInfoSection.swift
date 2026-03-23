@@ -35,9 +35,10 @@ struct ProfileInfoSection: View {
 
             countriesSection
         }
-        .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 20)
+        .padding(.horizontal, 20)
+        .background(sectionBackground)
     }
 
     // MARK: - Languages
@@ -169,11 +170,10 @@ struct ProfileInfoSection: View {
             .padding(.vertical, 22)
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .background(Theme.profileHeaderImageBackground(corner: 24))
     }
 
-    private var cardBackground: some View {
+    private var sectionBackground: some View {
         GeometryReader { proxy in
             ZStack {
                 Image("profile_info")
@@ -188,7 +188,7 @@ struct ProfileInfoSection: View {
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color.white.opacity(0.32), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
             )
             .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
         }
