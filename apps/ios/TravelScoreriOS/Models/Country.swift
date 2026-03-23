@@ -402,6 +402,72 @@ struct Country: Identifiable, Hashable {
         case ("sv", .veryHigh, let amount?):
             headline = "Mycket hoga dagliga kostnader (~ \(amount)/dag)"
 
+        case ("fi", .veryLow, let amount?):
+            headline = "Hyvin matalat paivittaiset kustannukset (~ \(amount)/paiva)"
+        case ("fi", .low, let amount?):
+            headline = "Matalat paivittaiset kustannukset (~ \(amount)/paiva)"
+        case ("fi", .moderate, let amount?):
+            headline = "Kohtalaiset paivittaiset kustannukset (~ \(amount)/paiva)"
+        case ("fi", .high, let amount?):
+            headline = "Korkeat paivittaiset kustannukset (~ \(amount)/paiva)"
+        case ("fi", .veryHigh, let amount?):
+            headline = "Erittain korkeat paivittaiset kustannukset (~ \(amount)/paiva)"
+
+        case ("da", .veryLow, let amount?):
+            headline = "Meget lave daglige omkostninger (~ \(amount)/dag)"
+        case ("da", .low, let amount?):
+            headline = "Lave daglige omkostninger (~ \(amount)/dag)"
+        case ("da", .moderate, let amount?):
+            headline = "Moderate daglige omkostninger (~ \(amount)/dag)"
+        case ("da", .high, let amount?):
+            headline = "Hoje daglige omkostninger (~ \(amount)/dag)"
+        case ("da", .veryHigh, let amount?):
+            headline = "Meget hoje daglige omkostninger (~ \(amount)/dag)"
+
+        case ("el", .veryLow, let amount?):
+            headline = "Πολύ χαμηλό ημερήσιο κόστος (~ \(amount)/ημέρα)"
+        case ("el", .low, let amount?):
+            headline = "Χαμηλό ημερήσιο κόστος (~ \(amount)/ημέρα)"
+        case ("el", .moderate, let amount?):
+            headline = "Μέτριο ημερήσιο κόστος (~ \(amount)/ημέρα)"
+        case ("el", .high, let amount?):
+            headline = "Υψηλό ημερήσιο κόστος (~ \(amount)/ημέρα)"
+        case ("el", .veryHigh, let amount?):
+            headline = "Πολύ υψηλό ημερήσιο κόστος (~ \(amount)/ημέρα)"
+
+        case ("id", .veryLow, let amount?):
+            headline = "Biaya harian sangat rendah (~ \(amount)/hari)"
+        case ("id", .low, let amount?):
+            headline = "Biaya harian rendah (~ \(amount)/hari)"
+        case ("id", .moderate, let amount?):
+            headline = "Biaya harian sedang (~ \(amount)/hari)"
+        case ("id", .high, let amount?):
+            headline = "Biaya harian tinggi (~ \(amount)/hari)"
+        case ("id", .veryHigh, let amount?):
+            headline = "Biaya harian sangat tinggi (~ \(amount)/hari)"
+
+        case ("uk", .veryLow, let amount?):
+            headline = "Дуже низькі щоденні витрати (~ \(amount)/день)"
+        case ("uk", .low, let amount?):
+            headline = "Низькі щоденні витрати (~ \(amount)/день)"
+        case ("uk", .moderate, let amount?):
+            headline = "Помірні щоденні витрати (~ \(amount)/день)"
+        case ("uk", .high, let amount?):
+            headline = "Високі щоденні витрати (~ \(amount)/день)"
+        case ("uk", .veryHigh, let amount?):
+            headline = "Дуже високі щоденні витрати (~ \(amount)/день)"
+
+        case ("zh-Hant", .veryLow, let amount?):
+            headline = "每日花費很低（約\(amount)/天）"
+        case ("zh-Hant", .low, let amount?):
+            headline = "每日花費較低（約\(amount)/天）"
+        case ("zh-Hant", .moderate, let amount?):
+            headline = "每日花費中等（約\(amount)/天）"
+        case ("zh-Hant", .high, let amount?):
+            headline = "每日花費較高（約\(amount)/天）"
+        case ("zh-Hant", .veryHigh, let amount?):
+            headline = "每日花費很高（約\(amount)/天）"
+
         case (_, .veryLow, let amount?):
             headline = "Very low daily costs (~ \(amount)/day)"
         case (_, .low, let amount?):
@@ -588,6 +654,72 @@ struct Country: Identifiable, Hashable {
             headline = "Hoga dagliga kostnader"
         case ("sv", .veryHigh, nil):
             headline = "Mycket hoga dagliga kostnader"
+
+        case ("fi", .veryLow, nil):
+            headline = "Hyvin matalat paivittaiset kustannukset"
+        case ("fi", .low, nil):
+            headline = "Matalat paivittaiset kustannukset"
+        case ("fi", .moderate, nil):
+            headline = "Kohtalaiset paivittaiset kustannukset"
+        case ("fi", .high, nil):
+            headline = "Korkeat paivittaiset kustannukset"
+        case ("fi", .veryHigh, nil):
+            headline = "Erittain korkeat paivittaiset kustannukset"
+
+        case ("da", .veryLow, nil):
+            headline = "Meget lave daglige omkostninger"
+        case ("da", .low, nil):
+            headline = "Lave daglige omkostninger"
+        case ("da", .moderate, nil):
+            headline = "Moderate daglige omkostninger"
+        case ("da", .high, nil):
+            headline = "Hoje daglige omkostninger"
+        case ("da", .veryHigh, nil):
+            headline = "Meget hoje daglige omkostninger"
+
+        case ("el", .veryLow, nil):
+            headline = "Πολύ χαμηλό ημερήσιο κόστος"
+        case ("el", .low, nil):
+            headline = "Χαμηλό ημερήσιο κόστος"
+        case ("el", .moderate, nil):
+            headline = "Μέτριο ημερήσιο κόστος"
+        case ("el", .high, nil):
+            headline = "Υψηλό ημερήσιο κόστος"
+        case ("el", .veryHigh, nil):
+            headline = "Πολύ υψηλό ημερήσιο κόστος"
+
+        case ("id", .veryLow, nil):
+            headline = "Biaya harian sangat rendah"
+        case ("id", .low, nil):
+            headline = "Biaya harian rendah"
+        case ("id", .moderate, nil):
+            headline = "Biaya harian sedang"
+        case ("id", .high, nil):
+            headline = "Biaya harian tinggi"
+        case ("id", .veryHigh, nil):
+            headline = "Biaya harian sangat tinggi"
+
+        case ("uk", .veryLow, nil):
+            headline = "Дуже низькі щоденні витрати"
+        case ("uk", .low, nil):
+            headline = "Низькі щоденні витрати"
+        case ("uk", .moderate, nil):
+            headline = "Помірні щоденні витрати"
+        case ("uk", .high, nil):
+            headline = "Високі щоденні витрати"
+        case ("uk", .veryHigh, nil):
+            headline = "Дуже високі щоденні витрати"
+
+        case ("zh-Hant", .veryLow, nil):
+            headline = "每日花費很低"
+        case ("zh-Hant", .low, nil):
+            headline = "每日花費較低"
+        case ("zh-Hant", .moderate, nil):
+            headline = "每日花費中等"
+        case ("zh-Hant", .high, nil):
+            headline = "每日花費較高"
+        case ("zh-Hant", .veryHigh, nil):
+            headline = "每日花費很高"
 
         case (_, .veryLow, nil):
             headline = "Very low daily costs"
@@ -778,6 +910,72 @@ struct Country: Identifiable, Hashable {
             body = "Dagliga kostnader ligger over globala genomsnitt, sarskilt for boende."
         case ("sv", .veryHigh):
             body = "En premiumdestination med genomgaende hoga resekostnader."
+
+        case ("fi", .veryLow):
+            body = "Majoitus, ruoka ja liikkuminen tarjoavat erinomaista vastinetta rahalle maailmanlaajuisiin keskiarvoihin verrattuna."
+        case ("fi", .low):
+            body = "Useimmille matkailijoille melko edullinen kohde, jossa on varaa matkustaa mukavasti."
+        case ("fi", .moderate):
+            body = "Matkakustannukset ovat maailmanlaajuisiin keskiarvoihin verrattuna keskitasoa."
+        case ("fi", .high):
+            body = "Paivittaiset kustannukset ovat maailmanlaajuisen keskitason ylapuolella, erityisesti majoituksessa."
+        case ("fi", .veryHigh):
+            body = "Premium-kohde, jossa matkakustannukset ovat johdonmukaisesti korkeat."
+
+        case ("da", .veryLow):
+            body = "Meget god vaerdi for overnatning, mad og transport sammenlignet med globale gennemsnit."
+        case ("da", .low):
+            body = "Relativt overkommelig for de fleste rejsende med plads til at rejse komfortabelt."
+        case ("da", .moderate):
+            body = "Rejseomkostningerne ligger pa mellemniveau sammenlignet med globale gennemsnit."
+        case ("da", .high):
+            body = "Daglige omkostninger ligger over de globale gennemsnit, isaer for overnatning."
+        case ("da", .veryHigh):
+            body = "Et premiumrejsemaal med gennemgaende hoje rejseomkostninger."
+
+        case ("el", .veryLow):
+            body = "Πολύ καλή αξία για διαμονή, φαγητό και μεταφορές σε σύγκριση με τους παγκόσμιους μέσους όρους."
+        case ("el", .low):
+            body = "Σχετικά προσιτός προορισμός για τους περισσότερους ταξιδιώτες, με περιθώριο για άνετο ταξίδι."
+        case ("el", .moderate):
+            body = "Το κόστος ταξιδιού κινείται σε μεσαίο επίπεδο σε σύγκριση με τους παγκόσμιους μέσους όρους."
+        case ("el", .high):
+            body = "Οι ημερήσιες δαπάνες είναι πάνω από τους παγκόσμιους μέσους όρους, ιδιαίτερα στη διαμονή."
+        case ("el", .veryHigh):
+            body = "Προορισμός premium με σταθερά υψηλό ταξιδιωτικό κόστος."
+
+        case ("id", .veryLow):
+            body = "Sangat bernilai untuk akomodasi, makanan, dan transportasi dibandingkan rata-rata global."
+        case ("id", .low):
+            body = "Relatif terjangkau bagi sebagian besar pelancong, dengan ruang untuk tetap nyaman."
+        case ("id", .moderate):
+            body = "Biaya perjalanan berada di tingkat menengah dibandingkan rata-rata global."
+        case ("id", .high):
+            body = "Biaya harian berada di atas rata-rata global, terutama untuk akomodasi."
+        case ("id", .veryHigh):
+            body = "Destinasi premium dengan biaya perjalanan yang konsisten tinggi."
+
+        case ("uk", .veryLow):
+            body = "Дуже вигідний напрямок для житла, харчування та транспорту порівняно зі світовими середніми показниками."
+        case ("uk", .low):
+            body = "Відносно доступний для більшості мандрівників, із запасом для комфортної подорожі."
+        case ("uk", .moderate):
+            body = "Витрати на подорож перебувають на середньому рівні порівняно зі світовими середніми."
+        case ("uk", .high):
+            body = "Щоденні витрати вищі за світові середні, особливо на проживання."
+        case ("uk", .veryHigh):
+            body = "Преміальний напрямок зі стабільно високими витратами на подорож."
+
+        case ("zh-Hant", .veryLow):
+            body = "與全球平均相比，這裡的住宿、餐飲和交通都有很高的性價比。"
+        case ("zh-Hant", .low):
+            body = "對大多數旅客來說相對實惠，也有空間維持舒適體驗。"
+        case ("zh-Hant", .moderate):
+            body = "旅遊成本與全球平均相比處於中等水平。"
+        case ("zh-Hant", .high):
+            body = "每日花費高於全球平均，尤其是住宿。"
+        case ("zh-Hant", .veryHigh):
+            body = "這是一個旅遊成本持續偏高的高端目的地。"
 
         case (_, .veryLow):
             body = "Strong value for accommodation, food, and transport compared to global averages."
@@ -1181,6 +1379,186 @@ struct Country: Identifiable, Hashable {
             "Western Asia": "Vastasien",
             "Western Europe": "Vasteuropa",
             "Latin America & Caribbean": "Latinamerika och Karibien"
+        ],
+        "fi": [
+            "Africa": "Afrikka",
+            "Americas": "Amerikat",
+            "Antarctic": "Antarktis",
+            "Asia": "Aasia",
+            "Europe": "Eurooppa",
+            "Oceania": "Oseania",
+            "Caribbean": "Karibia",
+            "Central America": "Keski-Amerikka",
+            "Central Asia": "Keski-Aasia",
+            "Eastern Africa": "Ita-Afrikka",
+            "Eastern Asia": "Ita-Aasia",
+            "Eastern Europe": "Ita-Eurooppa",
+            "Melanesia": "Melanesia",
+            "Micronesia": "Mikronesia",
+            "Middle Africa": "Keski-Afrikka",
+            "North America": "Pohjois-Amerikka",
+            "Northern Africa": "Pohjois-Afrikka",
+            "Northern Europe": "Pohjois-Eurooppa",
+            "Polynesia": "Polynesia",
+            "South America": "Etela-Amerikka",
+            "Southeast Asia": "Kaakkois-Aasia",
+            "Southern Africa": "Etelainen Afrikka",
+            "Southern Asia": "Etela-Aasia",
+            "Southern Europe": "Etela-Eurooppa",
+            "Western Africa": "Lansi-Afrikka",
+            "Western Asia": "Lansi-Aasia",
+            "Western Europe": "Lansi-Eurooppa",
+            "Latin America & Caribbean": "Latinalainen Amerikka ja Karibia"
+        ],
+        "da": [
+            "Africa": "Afrika",
+            "Americas": "Amerika",
+            "Antarctic": "Antarktis",
+            "Asia": "Asien",
+            "Europe": "Europa",
+            "Oceania": "Oceanien",
+            "Caribbean": "Caribien",
+            "Central America": "Mellemamerika",
+            "Central Asia": "Centralasien",
+            "Eastern Africa": "Ostafrika",
+            "Eastern Asia": "Ostasien",
+            "Eastern Europe": "Osteuropa",
+            "Melanesia": "Melanesien",
+            "Micronesia": "Mikronesien",
+            "Middle Africa": "Centralafrika",
+            "North America": "Nordamerika",
+            "Northern Africa": "Nordafrika",
+            "Northern Europe": "Nordeuropa",
+            "Polynesia": "Polynesien",
+            "South America": "Sydamerika",
+            "Southeast Asia": "Sydostasien",
+            "Southern Africa": "Det sydlige Afrika",
+            "Southern Asia": "Sydasien",
+            "Southern Europe": "Sydeuropa",
+            "Western Africa": "Vestafrika",
+            "Western Asia": "Vestasien",
+            "Western Europe": "Vesteuropa",
+            "Latin America & Caribbean": "Latinamerika og Caribien"
+        ],
+        "el": [
+            "Africa": "Αφρική",
+            "Americas": "Αμερικές",
+            "Antarctic": "Ανταρκτική",
+            "Asia": "Ασία",
+            "Europe": "Ευρώπη",
+            "Oceania": "Ωκεανία",
+            "Caribbean": "Καραϊβική",
+            "Central America": "Κεντρική Αμερική",
+            "Central Asia": "Κεντρική Ασία",
+            "Eastern Africa": "Ανατολική Αφρική",
+            "Eastern Asia": "Ανατολική Ασία",
+            "Eastern Europe": "Ανατολική Ευρώπη",
+            "Melanesia": "Μελανησία",
+            "Micronesia": "Μικρονησία",
+            "Middle Africa": "Κεντρική Αφρική",
+            "North America": "Βόρεια Αμερική",
+            "Northern Africa": "Βόρεια Αφρική",
+            "Northern Europe": "Βόρεια Ευρώπη",
+            "Polynesia": "Πολυνησία",
+            "South America": "Νότια Αμερική",
+            "Southeast Asia": "Νοτιοανατολική Ασία",
+            "Southern Africa": "Νότια Αφρική",
+            "Southern Asia": "Νότια Ασία",
+            "Southern Europe": "Νότια Ευρώπη",
+            "Western Africa": "Δυτική Αφρική",
+            "Western Asia": "Δυτική Ασία",
+            "Western Europe": "Δυτική Ευρώπη",
+            "Latin America & Caribbean": "Λατινική Αμερική και Καραϊβική"
+        ],
+        "id": [
+            "Africa": "Afrika",
+            "Americas": "Amerika",
+            "Antarctic": "Antarktika",
+            "Asia": "Asia",
+            "Europe": "Eropa",
+            "Oceania": "Oseania",
+            "Caribbean": "Karibia",
+            "Central America": "Amerika Tengah",
+            "Central Asia": "Asia Tengah",
+            "Eastern Africa": "Afrika Timur",
+            "Eastern Asia": "Asia Timur",
+            "Eastern Europe": "Eropa Timur",
+            "Melanesia": "Melanesia",
+            "Micronesia": "Mikronesia",
+            "Middle Africa": "Afrika Tengah",
+            "North America": "Amerika Utara",
+            "Northern Africa": "Afrika Utara",
+            "Northern Europe": "Eropa Utara",
+            "Polynesia": "Polinesia",
+            "South America": "Amerika Selatan",
+            "Southeast Asia": "Asia Tenggara",
+            "Southern Africa": "Afrika Selatan",
+            "Southern Asia": "Asia Selatan",
+            "Southern Europe": "Eropa Selatan",
+            "Western Africa": "Afrika Barat",
+            "Western Asia": "Asia Barat",
+            "Western Europe": "Eropa Barat",
+            "Latin America & Caribbean": "Amerika Latin dan Karibia"
+        ],
+        "uk": [
+            "Africa": "Африка",
+            "Americas": "Америки",
+            "Antarctic": "Антарктика",
+            "Asia": "Азія",
+            "Europe": "Європа",
+            "Oceania": "Океанія",
+            "Caribbean": "Карибський басейн",
+            "Central America": "Центральна Америка",
+            "Central Asia": "Центральна Азія",
+            "Eastern Africa": "Східна Африка",
+            "Eastern Asia": "Східна Азія",
+            "Eastern Europe": "Східна Європа",
+            "Melanesia": "Меланезія",
+            "Micronesia": "Мікронезія",
+            "Middle Africa": "Центральна Африка",
+            "North America": "Північна Америка",
+            "Northern Africa": "Північна Африка",
+            "Northern Europe": "Північна Європа",
+            "Polynesia": "Полінезія",
+            "South America": "Південна Америка",
+            "Southeast Asia": "Південно-Східна Азія",
+            "Southern Africa": "Південна Африка",
+            "Southern Asia": "Південна Азія",
+            "Southern Europe": "Південна Європа",
+            "Western Africa": "Західна Африка",
+            "Western Asia": "Західна Азія",
+            "Western Europe": "Західна Європа",
+            "Latin America & Caribbean": "Латинська Америка та Кариби"
+        ],
+        "zh-Hant": [
+            "Africa": "非洲",
+            "Americas": "美洲",
+            "Antarctic": "南極洲",
+            "Asia": "亞洲",
+            "Europe": "歐洲",
+            "Oceania": "大洋洲",
+            "Caribbean": "加勒比",
+            "Central America": "中美洲",
+            "Central Asia": "中亞",
+            "Eastern Africa": "東非",
+            "Eastern Asia": "東亞",
+            "Eastern Europe": "東歐",
+            "Melanesia": "美拉尼西亞",
+            "Micronesia": "密克羅尼西亞",
+            "Middle Africa": "中非",
+            "North America": "北美洲",
+            "Northern Africa": "北非",
+            "Northern Europe": "北歐",
+            "Polynesia": "玻里尼西亞",
+            "South America": "南美洲",
+            "Southeast Asia": "東南亞",
+            "Southern Africa": "南部非洲",
+            "Southern Asia": "南亞",
+            "Southern Europe": "南歐",
+            "Western Africa": "西非",
+            "Western Asia": "西亞",
+            "Western Europe": "西歐",
+            "Latin America & Caribbean": "拉丁美洲與加勒比"
         ]
     ]
 }

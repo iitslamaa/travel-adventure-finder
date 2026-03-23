@@ -105,6 +105,42 @@
             "state": "needs_review",
             "value": "Reseäventyrsletare"
           }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Matkaseikkailujen Löytäjä"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rejseeventyrfinder"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Εξερευνητής Ταξιδιωτικών Περιπετειών"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Penjelajah Petualangan Perjalanan"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Пошук пригод для подорожей"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "旅遊冒險搜尋器"
+          }
         }
       }
     },
@@ -212,6 +248,42 @@
             "state": "needs_review",
             "value": "Reseäventyrsletare"
           }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Matkaseikkailujen Löytäjä"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rejseeventyrfinder"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Εξερευνητής Ταξιδιωτικών Περιπετειών"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Penjelajah Petualangan Perjalanan"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Пошук пригод для подорожей"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "旅遊冒險搜尋器"
+          }
         }
       }
     },
@@ -318,6 +390,42 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Reseplaneraren använder din kalender så att du kan spara preliminära resdatum som Apple Calendar-händelser."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Trip Planner käyttää kalenteriasi, jotta voit tallentaa alustavat matkapäivät Apple Calendar -tapahtumina."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rejseplanlægger bruger din kalender, så du kan gemme foreløbige rejsedatoer som Apple Calendar-begivenheder."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ο Σχεδιαστής Ταξιδιών χρησιμοποιεί το ημερολόγιό σας ώστε να μπορείτε να αποθηκεύετε ενδεικτικές ημερομηνίες ταξιδιού ως εκδηλώσεις στο Apple Calendar."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Perencana Perjalanan menggunakan kalender Anda sehingga Anda dapat menyimpan tanggal perjalanan sementara sebagai acara di Kalender Apple."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Планувальник подорожей використовує ваш календар, щоб ви могли зберігати попередні дати поїздок як події в Apple Calendar."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "行程規劃工具會使用你的行事曆，讓你可以將暫定的旅行日期儲存為 Apple 行事曆事件。"
           }
         }
       }

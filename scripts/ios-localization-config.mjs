@@ -16,6 +16,12 @@ export const requiredLocales = [
   "pl",
   "he",
   "sv",
+  "fi",
+  "da",
+  "el",
+  "id",
+  "uk",
+  "zh-Hant",
 ];
 
 export const machineTranslationLocales = [
@@ -29,6 +35,12 @@ export const machineTranslationLocales = [
   "pl",
   "he",
   "sv",
+  "fi",
+  "da",
+  "el",
+  "id",
+  "uk",
+  "zh-Hant",
 ];
 
 const machineTranslationLocaleSet = new Set(machineTranslationLocales);
