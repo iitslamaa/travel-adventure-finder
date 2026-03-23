@@ -3,7 +3,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { localizedStringState, machineTranslationLocales } from "./ios-localization-config.mjs";
+import { localizedStringState, requiredLocales } from "./ios-localization-config.mjs";
 
 const root = process.cwd();
 const catalogPaths = [
@@ -18,7 +18,8 @@ for (const catalogPath of catalogPaths) {
   const catalog = JSON.parse(raw);
 
   for (const entry of Object.values(catalog.strings ?? {})) {
-    for (const locale of machineTranslationLocales) {
+    for (const locale of requiredLocales) {
+      if (locale === "en") continue;
       const stringUnit = entry.localizations?.[locale]?.stringUnit;
       if (!stringUnit?.value) continue;
 
@@ -33,4 +34,4 @@ for (const catalogPath of catalogPaths) {
   await fs.writeFile(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`);
 }
 
-console.log(`marked ${updated} localizations as needs_review`);
+console.log(`synced ${updated} localization states`);

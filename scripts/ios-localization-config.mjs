@@ -25,22 +25,6 @@ export const requiredLocales = [
 ];
 
 export const machineTranslationLocales = [
-  "nl",
-  "ar",
-  "ja",
-  "ko",
-  "zh-Hans",
-  "hi",
-  "tr",
-  "pl",
-  "he",
-  "sv",
-  "fi",
-  "da",
-  "el",
-  "id",
-  "uk",
-  "zh-Hant",
 ];
 
 const machineTranslationLocaleSet = new Set(machineTranslationLocales);
