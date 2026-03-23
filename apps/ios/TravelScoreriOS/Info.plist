@@ -45,6 +45,10 @@
 		<string>vi</string>
 		<string>cs</string>
 		<string>hu</string>
+		<string>nb</string>
+		<string>ca</string>
+		<string>hr</string>
+		<string>sk</string>
 	</array>
 	<key>CFBundleName</key>
 	<string>Travel Adventure Finder</string>

@@ -155,6 +155,18 @@ enum CountryOverviewDescriptionStore {
         if lower.hasPrefix("hu") {
             candidates.append("hu")
         }
+        if lower.hasPrefix("nb") || lower.hasPrefix("no") {
+            candidates.append("nb")
+        }
+        if lower.hasPrefix("ca") {
+            candidates.append("ca")
+        }
+        if lower.hasPrefix("hr") {
+            candidates.append("hr")
+        }
+        if lower.hasPrefix("sk") {
+            candidates.append("sk")
+        }
         if lower.hasPrefix("en") {
             candidates.append("en")
         }
@@ -294,6 +306,26 @@ enum CountryOverviewDescriptionStore {
                 return "\(country.localizedDisplayName) a(z) \(label) regio resze. Ehhez a bejegyzeshez az alkalmazas jelenlegi adathalmazaban meg nincs teljes lokalizalt leiras, de az orszag oldala addig is elerheto marad, amig a leirasok listaja keszul."
             }
             return "\(country.localizedDisplayName) szerepel az alkalmazas orszagadat-keszleteben. Ehhez a bejegyzeshez az alkalmazas jelenlegi adathalmazaban meg nincs teljes lokalizalt leiras, de az orszag oldala addig is elerheto marad, amig a leirasok listaja keszul."
+        case "nb":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) er en del av \(label). Denne oppforingen mangler fortsatt en fullstendig lokalisert beskrivelse i appens naavaerende datagrunnlag, men landsiden er fortsatt tilgjengelig mens listen over beskrivelser ferdigstilles."
+            }
+            return "\(country.localizedDisplayName) er inkludert i appens landsdatasett. Denne oppforingen mangler fortsatt en fullstendig lokalisert beskrivelse i appens naavaerende datagrunnlag, men landsiden er fortsatt tilgjengelig mens listen over beskrivelser ferdigstilles."
+        case "ca":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) forma part de \(label). Aquesta entrada encara no te la descripcio localitzada completa al conjunt de dades actual de l'app, pero la pagina del pais continua disponible mentre s'acaba la llista de descripcions."
+            }
+            return "\(country.localizedDisplayName) esta inclos al conjunt de dades de paisos de l'app. Aquesta entrada encara no te la descripcio localitzada completa al conjunt de dades actual de l'app, pero la pagina del pais continua disponible mentre s'acaba la llista de descripcions."
+        case "hr":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) pripada regiji \(label). Ovaj zapis jos nema potpuni lokalizirani opis u trenutnom skupu podataka aplikacije, ali stranica drzave ostaje dostupna dok se popis opisa dovrsava."
+            }
+            return "\(country.localizedDisplayName) ukljucena je u skup podataka drzava aplikacije. Ovaj zapis jos nema potpuni lokalizirani opis u trenutnom skupu podataka aplikacije, ali stranica drzave ostaje dostupna dok se popis opisa dovrsava."
+        case "sk":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) patri do regionu \(label). Tento zaznam este nema uplny lokalizovany popis v aktualnej datovej sade aplikacie, ale stranka krajiny zostava dostupna, kym sa zoznam popisov dokoncuje."
+            }
+            return "\(country.localizedDisplayName) je zahrnuta v datovej sade krajin aplikacie. Tento zaznam este nema uplny lokalizovany popis v aktualnej datovej sade aplikacie, ale stranka krajiny zostava dostupna, kym sa zoznam popisov dokoncuje."
         default:
             if let label = country.localizedRegionLabel, !label.isEmpty {
                 return "\(country.localizedDisplayName) is part of \(label). This entry is missing its full custom description in the current app dataset, but the country detail view is still available while the description list is being completed."
@@ -338,6 +370,10 @@ enum CountryOverviewDescriptionStore {
             if candidate.hasPrefix("vi") { return "vi" }
             if candidate.hasPrefix("cs") { return "cs" }
             if candidate.hasPrefix("hu") { return "hu" }
+            if candidate.hasPrefix("nb") || candidate.hasPrefix("no") { return "nb" }
+            if candidate.hasPrefix("ca") { return "ca" }
+            if candidate.hasPrefix("hr") { return "hr" }
+            if candidate.hasPrefix("sk") { return "sk" }
             if candidate.hasPrefix("en") { return "en" }
         }
 

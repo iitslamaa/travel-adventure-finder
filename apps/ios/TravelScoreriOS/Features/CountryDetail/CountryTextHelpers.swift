@@ -40,6 +40,10 @@ enum CountryTextHelpers {
         if preferred.hasPrefix("vi") { return "vi" }
         if preferred.hasPrefix("cs") { return "cs" }
         if preferred.hasPrefix("hu") { return "hu" }
+        if preferred.hasPrefix("nb") || preferred.hasPrefix("no") { return "nb" }
+        if preferred.hasPrefix("ca") { return "ca" }
+        if preferred.hasPrefix("hr") { return "hr" }
+        if preferred.hasPrefix("sk") { return "sk" }
         return "en"
     }
 
@@ -138,6 +142,14 @@ enum CountryTextHelpers {
                 return "Pred cestou si zkontrolujte nejnovejsi oficialni upozorneni, protoze podminky se mohou rychle zmenit."
             case "hu":
                 return "Utazas elott ellenorizze a legfrissebb hivatalos tajekoztatast, mert a korulmenyek gyorsan valtozhatnak."
+            case "nb":
+                return "Sjekk de nyeste offisielle reiseradene for du reiser, fordi forholdene kan endre seg raskt."
+            case "ca":
+                return "Consulta l'avis oficial mes recent abans de viatjar, perque les condicions poden canviar rapidament."
+            case "hr":
+                return "Provjerite najnoviju sluzbenu preporuku prije putovanja jer se uvjeti mogu brzo promijeniti."
+            case "sk":
+                return "Pred cestou si skontrolujte najnovsie oficialne odporucanie, pretoze podmienky sa mozu rychlo zmenit."
             default:
                 return "Check the latest official advisory before traveling, since conditions can change quickly."
             }
@@ -395,6 +407,42 @@ enum CountryTextHelpers {
             return "3. szint: gondolja ujra az utazast, es nezze meg a hivatalos tajekoztatast a legfrissebb reszletekert."
         case ("hu", 4):
             return "4. szint: ne utazzon, es nezze meg a hivatalos tajekoztatast a legfrissebb reszletekert."
+
+        case ("nb", 1):
+            return "Niva 1: ta vanlige forholdsregler og se det offisielle radet for de nyeste detaljene."
+        case ("nb", 2):
+            return "Niva 2: vaer ekstra oppmerksom og se det offisielle radet for de nyeste detaljene."
+        case ("nb", 3):
+            return "Niva 3: vurder reisen pa nytt og se det offisielle radet for de nyeste detaljene."
+        case ("nb", 4):
+            return "Niva 4: ikke reis og se det offisielle radet for de nyeste detaljene."
+
+        case ("ca", 1):
+            return "Nivell 1: pren les precaucions habituals i consulta l'avis oficial per als detalls mes recents."
+        case ("ca", 2):
+            return "Nivell 2: extrema la precaucio i consulta l'avis oficial per als detalls mes recents."
+        case ("ca", 3):
+            return "Nivell 3: reconsidera el viatge i consulta l'avis oficial per als detalls mes recents."
+        case ("ca", 4):
+            return "Nivell 4: no viatgis i consulta l'avis oficial per als detalls mes recents."
+
+        case ("hr", 1):
+            return "Razina 1: poduzmite uobicajene mjere opreza i pogledajte sluzbenu preporuku za najnovije pojedinosti."
+        case ("hr", 2):
+            return "Razina 2: budite dodatno oprezni i pogledajte sluzbenu preporuku za najnovije pojedinosti."
+        case ("hr", 3):
+            return "Razina 3: preispitajte putovanje i pogledajte sluzbenu preporuku za najnovije pojedinosti."
+        case ("hr", 4):
+            return "Razina 4: ne putujte i pogledajte sluzbenu preporuku za najnovije pojedinosti."
+
+        case ("sk", 1):
+            return "Uroven 1: dodrziavajte bezne opatrenia a sledujte oficialne odporucanie pre najnovsie podrobnosti."
+        case ("sk", 2):
+            return "Uroven 2: zvyste opatrnost a sledujte oficialne odporucanie pre najnovsie podrobnosti."
+        case ("sk", 3):
+            return "Uroven 3: zvazte cestu znova a sledujte oficialne odporucanie pre najnovsie podrobnosti."
+        case ("sk", 4):
+            return "Uroven 4: necestujte a sledujte oficialne odporucanie pre najnovsie podrobnosti."
 
         case (_, 1):
             return "Level 1: exercise normal precautions and check the official advisory for the latest details."
