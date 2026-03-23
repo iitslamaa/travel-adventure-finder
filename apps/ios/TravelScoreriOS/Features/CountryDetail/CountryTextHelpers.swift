@@ -90,6 +90,16 @@ enum CountryTextHelpers {
                 return "상황은 빠르게 바뀔 수 있으니 출발 전에 최신 공식 여행 권고를 확인하세요."
             case "zh":
                 return "出行前请查看最新官方旅行提示，因为情况可能会迅速变化。"
+            case "hi":
+                return "यात्रा से पहले नवीनतम आधिकारिक सलाह जरूर देखें, क्योंकि परिस्थितियां तेजी से बदल सकती हैं।"
+            case "tr":
+                return "Kosullar hizla degisebilecegi icin yolculuktan once en guncel resmi uyarilari kontrol edin."
+            case "pl":
+                return "Przed wyjazdem sprawdz najnowsze oficjalne zalecenia, bo warunki moga szybko sie zmienic."
+            case "he":
+                return "לפני הנסיעה כדאי לבדוק את האזהרה הרשמית העדכנית ביותר, כי התנאים יכולים להשתנות במהירות."
+            case "sv":
+                return "Kontrollera de senaste officiella reseraden innan du reser, eftersom forhallandena kan andras snabbt."
             default:
                 return "Check the latest official advisory before traveling, since conditions can change quickly."
             }
@@ -194,6 +204,51 @@ enum CountryTextHelpers {
             return "第3级：重新考虑出行，并查看官方旅行提示了解最新细节。"
         case ("zh", 4):
             return "第4级：不要出行，并查看官方旅行提示了解最新细节。"
+
+        case ("hi", 1):
+            return "स्तर 1: सामान्य सावधानियां बरतें और नवीनतम जानकारी के लिए आधिकारिक सलाह देखें।"
+        case ("hi", 2):
+            return "स्तर 2: अतिरिक्त सावधानी बरतें और नवीनतम जानकारी के लिए आधिकारिक सलाह देखें।"
+        case ("hi", 3):
+            return "स्तर 3: यात्रा पर पुनर्विचार करें और नवीनतम जानकारी के लिए आधिकारिक सलाह देखें।"
+        case ("hi", 4):
+            return "स्तर 4: यात्रा न करें और नवीनतम जानकारी के लिए आधिकारिक सलाह देखें।"
+
+        case ("tr", 1):
+            return "Seviye 1: Normal onlemleri alin ve en guncel ayrintilar icin resmi uyarilari kontrol edin."
+        case ("tr", 2):
+            return "Seviye 2: Daha dikkatli olun ve en guncel ayrintilar icin resmi uyarilari kontrol edin."
+        case ("tr", 3):
+            return "Seviye 3: Seyahati yeniden degerlendirin ve en guncel ayrintilar icin resmi uyarilari kontrol edin."
+        case ("tr", 4):
+            return "Seviye 4: Seyahat etmeyin ve en guncel ayrintilar icin resmi uyarilari kontrol edin."
+
+        case ("pl", 1):
+            return "Poziom 1: zachowaj zwykle srodki ostroznosci i sprawdz oficjalne zalecenia po najnowsze szczegoly."
+        case ("pl", 2):
+            return "Poziom 2: zachowaj zwiekszona ostroznosc i sprawdz oficjalne zalecenia po najnowsze szczegoly."
+        case ("pl", 3):
+            return "Poziom 3: ponownie rozwaz wyjazd i sprawdz oficjalne zalecenia po najnowsze szczegoly."
+        case ("pl", 4):
+            return "Poziom 4: nie podrozuj i sprawdz oficjalne zalecenia po najnowsze szczegoly."
+
+        case ("he", 1):
+            return "רמה 1: נקטו באמצעי זהירות רגילים ובדקו את ההנחיות הרשמיות לפרטים העדכניים ביותר."
+        case ("he", 2):
+            return "רמה 2: גלו זהירות מוגברת ובדקו את ההנחיות הרשמיות לפרטים העדכניים ביותר."
+        case ("he", 3):
+            return "רמה 3: שקלו מחדש את הנסיעה ובדקו את ההנחיות הרשמיות לפרטים העדכניים ביותר."
+        case ("he", 4):
+            return "רמה 4: אל תיסעו ובדקו את ההנחיות הרשמיות לפרטים העדכניים ביותר."
+
+        case ("sv", 1):
+            return "Niva 1: vidta normala forsiktighetsatgarder och se officiella rad for de senaste detaljerna."
+        case ("sv", 2):
+            return "Niva 2: var extra forsiktig och se officiella rad for de senaste detaljerna."
+        case ("sv", 3):
+            return "Niva 3: overvag resan igen och se officiella rad for de senaste detaljerna."
+        case ("sv", 4):
+            return "Niva 4: res inte och se officiella rad for de senaste detaljerna."
 
         case (_, 1):
             return "Level 1: exercise normal precautions and check the official advisory for the latest details."
