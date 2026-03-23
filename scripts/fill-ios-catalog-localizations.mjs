@@ -27,6 +27,12 @@ const localeMap = new Map([
   ["id", { google: "id", bing: "id" }],
   ["uk", { google: "uk", bing: "uk" }],
   ["zh-Hant", { google: "zh-TW", bing: "zh-Hant" }],
+  ["ms", { google: "ms", bing: "ms" }],
+  ["ro", { google: "ro", bing: "ro" }],
+  ["th", { google: "th", bing: "th" }],
+  ["vi", { google: "vi", bing: "vi" }],
+  ["cs", { google: "cs", bing: "cs" }],
+  ["hu", { google: "hu", bing: "hu" }],
 ]);
 
 const root = process.cwd();

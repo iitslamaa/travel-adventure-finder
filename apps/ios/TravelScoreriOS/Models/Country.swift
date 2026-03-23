@@ -721,6 +721,72 @@ struct Country: Identifiable, Hashable {
         case ("zh-Hant", .veryHigh, nil):
             headline = "每日花費很高"
 
+        case ("ms", .veryLow, nil):
+            headline = "Kos harian sangat rendah"
+        case ("ms", .low, nil):
+            headline = "Kos harian rendah"
+        case ("ms", .moderate, nil):
+            headline = "Kos harian sederhana"
+        case ("ms", .high, nil):
+            headline = "Kos harian tinggi"
+        case ("ms", .veryHigh, nil):
+            headline = "Kos harian sangat tinggi"
+
+        case ("ro", .veryLow, nil):
+            headline = "Costuri zilnice foarte mici"
+        case ("ro", .low, nil):
+            headline = "Costuri zilnice mici"
+        case ("ro", .moderate, nil):
+            headline = "Costuri zilnice moderate"
+        case ("ro", .high, nil):
+            headline = "Costuri zilnice ridicate"
+        case ("ro", .veryHigh, nil):
+            headline = "Costuri zilnice foarte ridicate"
+
+        case ("th", .veryLow, nil):
+            headline = "ค่าใช้จ่ายรายวันต่ำมาก"
+        case ("th", .low, nil):
+            headline = "ค่าใช้จ่ายรายวันต่ำ"
+        case ("th", .moderate, nil):
+            headline = "ค่าใช้จ่ายรายวันปานกลาง"
+        case ("th", .high, nil):
+            headline = "ค่าใช้จ่ายรายวันสูง"
+        case ("th", .veryHigh, nil):
+            headline = "ค่าใช้จ่ายรายวันสูงมาก"
+
+        case ("vi", .veryLow, nil):
+            headline = "Chi phi hang ngay rat thap"
+        case ("vi", .low, nil):
+            headline = "Chi phi hang ngay thap"
+        case ("vi", .moderate, nil):
+            headline = "Chi phi hang ngay trung binh"
+        case ("vi", .high, nil):
+            headline = "Chi phi hang ngay cao"
+        case ("vi", .veryHigh, nil):
+            headline = "Chi phi hang ngay rat cao"
+
+        case ("cs", .veryLow, nil):
+            headline = "Velmi nizke denni naklady"
+        case ("cs", .low, nil):
+            headline = "Nizke denni naklady"
+        case ("cs", .moderate, nil):
+            headline = "Stredni denni naklady"
+        case ("cs", .high, nil):
+            headline = "Vysoke denni naklady"
+        case ("cs", .veryHigh, nil):
+            headline = "Velmi vysoke denni naklady"
+
+        case ("hu", .veryLow, nil):
+            headline = "Nagyon alacsony napi koltsegek"
+        case ("hu", .low, nil):
+            headline = "Alacsony napi koltsegek"
+        case ("hu", .moderate, nil):
+            headline = "Kozepes napi koltsegek"
+        case ("hu", .high, nil):
+            headline = "Magas napi koltsegek"
+        case ("hu", .veryHigh, nil):
+            headline = "Nagyon magas napi koltsegek"
+
         case (_, .veryLow, nil):
             headline = "Very low daily costs"
         case (_, .low, nil):
@@ -976,6 +1042,72 @@ struct Country: Identifiable, Hashable {
             body = "每日花費高於全球平均，尤其是住宿。"
         case ("zh-Hant", .veryHigh):
             body = "這是一個旅遊成本持續偏高的高端目的地。"
+
+        case ("ms", .veryLow):
+            body = "Nilai yang sangat baik untuk penginapan, makanan, dan pengangkutan berbanding purata global."
+        case ("ms", .low):
+            body = "Destinasi yang agak mampu milik bagi kebanyakan pelancong, dengan ruang untuk kekal selesa."
+        case ("ms", .moderate):
+            body = "Kos perjalanan berada pada tahap pertengahan berbanding purata global."
+        case ("ms", .high):
+            body = "Kos harian melebihi purata global, terutamanya untuk penginapan."
+        case ("ms", .veryHigh):
+            body = "Destinasi premium dengan kos perjalanan yang konsisten tinggi."
+
+        case ("ro", .veryLow):
+            body = "Raport foarte bun calitate-pret pentru cazare, mancare si transport comparativ cu mediile globale."
+        case ("ro", .low):
+            body = "Destinatie relativ accesibila pentru majoritatea calatorilor, cu spatiu pentru confort."
+        case ("ro", .moderate):
+            body = "Costurile de calatorie sunt la nivel mediu comparativ cu mediile globale."
+        case ("ro", .high):
+            body = "Costurile zilnice sunt peste media globala, mai ales pentru cazare."
+        case ("ro", .veryHigh):
+            body = "Destinatie premium cu costuri de calatorie constant ridicate."
+
+        case ("th", .veryLow):
+            body = "คุ้มค่ามากสำหรับที่พัก อาหาร และการเดินทางเมื่อเทียบกับค่าเฉลี่ยทั่วโลก"
+        case ("th", .low):
+            body = "เป็นจุดหมายที่ค่อนข้างประหยัดสำหรับนักเดินทางส่วนใหญ่ และยังมีพื้นที่ให้เที่ยวได้อย่างสบาย"
+        case ("th", .moderate):
+            body = "ค่าใช้จ่ายในการเดินทางอยู่ในระดับปานกลางเมื่อเทียบกับค่าเฉลี่ยทั่วโลก"
+        case ("th", .high):
+            body = "ค่าใช้จ่ายรายวันสูงกว่าค่าเฉลี่ยทั่วโลก โดยเฉพาะค่าที่พัก"
+        case ("th", .veryHigh):
+            body = "เป็นจุดหมายปลายทางระดับพรีเมียมที่มีค่าใช้จ่ายในการเดินทางสูงอย่างต่อเนื่อง"
+
+        case ("vi", .veryLow):
+            body = "Gia tri rat tot cho luu tru, an uong va di chuyen so voi mat bang chung toan cau."
+        case ("vi", .low):
+            body = "Day la diem den tuong doi phai chang doi voi da so du khach, van du de giu su thoai mai."
+        case ("vi", .moderate):
+            body = "Chi phi du lich nam o muc trung binh so voi mat bang chung toan cau."
+        case ("vi", .high):
+            body = "Chi phi hang ngay cao hon mat bang chung toan cau, dac biet la luu tru."
+        case ("vi", .veryHigh):
+            body = "Day la diem den cao cap voi chi phi du lich luon o muc cao."
+
+        case ("cs", .veryLow):
+            body = "Velmi dobra hodnota za ubytovani, jidlo a dopravu ve srovnani s globalnimi prumery."
+        case ("cs", .low):
+            body = "Pro vetsinu cestovatelu pomerne dostupna destinace s prostorem pro pohodlne cestovani."
+        case ("cs", .moderate):
+            body = "Naklady na cestovani jsou ve srovnani s globalnimi prumery stredni."
+        case ("cs", .high):
+            body = "Denni naklady jsou nad globalnim prumerem, zejmena u ubytovani."
+        case ("cs", .veryHigh):
+            body = "Premiova destinace s trvale vysokymi cestovnimi naklady."
+
+        case ("hu", .veryLow):
+            body = "Szallast, etkezest es kozlekedest tekintve nagyon jo erteket nyujt a globalis atlagokhoz kepest."
+        case ("hu", .low):
+            body = "A legtobb utazo szamara viszonylag megfizetheto, es marad ter a kenyelmes utazashoz is."
+        case ("hu", .moderate):
+            body = "Az utazasi koltsegek a globalis atlagokhoz kepest kozepes szinten vannak."
+        case ("hu", .high):
+            body = "A napi koltsegek meghaladjak a globalis atlagot, kulonosen a szallasnal."
+        case ("hu", .veryHigh):
+            body = "Premium uticel, ahol az utazasi koltsegek tartosan magasak."
 
         case (_, .veryLow):
             body = "Strong value for accommodation, food, and transport compared to global averages."
@@ -1559,6 +1691,186 @@ struct Country: Identifiable, Hashable {
             "Western Asia": "西亞",
             "Western Europe": "西歐",
             "Latin America & Caribbean": "拉丁美洲與加勒比"
+        ],
+        "ms": [
+            "Africa": "Afrika",
+            "Americas": "Amerika",
+            "Antarctic": "Antartika",
+            "Asia": "Asia",
+            "Europe": "Eropah",
+            "Oceania": "Oceania",
+            "Caribbean": "Caribbean",
+            "Central America": "Amerika Tengah",
+            "Central Asia": "Asia Tengah",
+            "Eastern Africa": "Afrika Timur",
+            "Eastern Asia": "Asia Timur",
+            "Eastern Europe": "Eropah Timur",
+            "Melanesia": "Melanesia",
+            "Micronesia": "Micronesia",
+            "Middle Africa": "Afrika Tengah",
+            "North America": "Amerika Utara",
+            "Northern Africa": "Afrika Utara",
+            "Northern Europe": "Eropah Utara",
+            "Polynesia": "Polinesia",
+            "South America": "Amerika Selatan",
+            "Southeast Asia": "Asia Tenggara",
+            "Southern Africa": "Afrika Selatan",
+            "Southern Asia": "Asia Selatan",
+            "Southern Europe": "Eropah Selatan",
+            "Western Africa": "Afrika Barat",
+            "Western Asia": "Asia Barat",
+            "Western Europe": "Eropah Barat",
+            "Latin America & Caribbean": "Amerika Latin dan Caribbean"
+        ],
+        "ro": [
+            "Africa": "Africa",
+            "Americas": "Americi",
+            "Antarctic": "Antarctica",
+            "Asia": "Asia",
+            "Europe": "Europa",
+            "Oceania": "Oceania",
+            "Caribbean": "Caraibe",
+            "Central America": "America Centrala",
+            "Central Asia": "Asia Centrala",
+            "Eastern Africa": "Africa de Est",
+            "Eastern Asia": "Asia de Est",
+            "Eastern Europe": "Europa de Est",
+            "Melanesia": "Melanezia",
+            "Micronesia": "Micronezia",
+            "Middle Africa": "Africa Centrala",
+            "North America": "America de Nord",
+            "Northern Africa": "Africa de Nord",
+            "Northern Europe": "Europa de Nord",
+            "Polynesia": "Polinezia",
+            "South America": "America de Sud",
+            "Southeast Asia": "Asia de Sud-Est",
+            "Southern Africa": "Africa Australa",
+            "Southern Asia": "Asia de Sud",
+            "Southern Europe": "Europa de Sud",
+            "Western Africa": "Africa de Vest",
+            "Western Asia": "Asia de Vest",
+            "Western Europe": "Europa de Vest",
+            "Latin America & Caribbean": "America Latina si Caraibe"
+        ],
+        "th": [
+            "Africa": "แอฟริกา",
+            "Americas": "ทวีปอเมริกา",
+            "Antarctic": "แอนตาร์กติกา",
+            "Asia": "เอเชีย",
+            "Europe": "ยุโรป",
+            "Oceania": "โอเชียเนีย",
+            "Caribbean": "แคริบเบียน",
+            "Central America": "อเมริกากลาง",
+            "Central Asia": "เอเชียกลาง",
+            "Eastern Africa": "แอฟริกาตะวันออก",
+            "Eastern Asia": "เอเชียตะวันออก",
+            "Eastern Europe": "ยุโรปตะวันออก",
+            "Melanesia": "เมลานีเซีย",
+            "Micronesia": "ไมโครนีเซีย",
+            "Middle Africa": "แอฟริกากลาง",
+            "North America": "อเมริกาเหนือ",
+            "Northern Africa": "แอฟริกาเหนือ",
+            "Northern Europe": "ยุโรปเหนือ",
+            "Polynesia": "โพลินีเซีย",
+            "South America": "อเมริกาใต้",
+            "Southeast Asia": "เอเชียตะวันออกเฉียงใต้",
+            "Southern Africa": "แอฟริกาตอนใต้",
+            "Southern Asia": "เอเชียใต้",
+            "Southern Europe": "ยุโรปใต้",
+            "Western Africa": "แอฟริกาตะวันตก",
+            "Western Asia": "เอเชียตะวันตก",
+            "Western Europe": "ยุโรปตะวันตก",
+            "Latin America & Caribbean": "ลาตินอเมริกาและแคริบเบียน"
+        ],
+        "vi": [
+            "Africa": "Chau Phi",
+            "Americas": "Chau My",
+            "Antarctic": "Nam Cuc",
+            "Asia": "Chau A",
+            "Europe": "Chau Au",
+            "Oceania": "Chau Dai Duong",
+            "Caribbean": "Caribe",
+            "Central America": "Trung My",
+            "Central Asia": "Trung A",
+            "Eastern Africa": "Dong Phi",
+            "Eastern Asia": "Dong A",
+            "Eastern Europe": "Dong Au",
+            "Melanesia": "Melanesia",
+            "Micronesia": "Micronesia",
+            "Middle Africa": "Trung Phi",
+            "North America": "Bac My",
+            "Northern Africa": "Bac Phi",
+            "Northern Europe": "Bac Au",
+            "Polynesia": "Polynesia",
+            "South America": "Nam My",
+            "Southeast Asia": "Dong Nam A",
+            "Southern Africa": "Nam Phi",
+            "Southern Asia": "Nam A",
+            "Southern Europe": "Nam Au",
+            "Western Africa": "Tay Phi",
+            "Western Asia": "Tay A",
+            "Western Europe": "Tay Au",
+            "Latin America & Caribbean": "My Latinh va Caribe"
+        ],
+        "cs": [
+            "Africa": "Afrika",
+            "Americas": "Amerika",
+            "Antarctic": "Antarktida",
+            "Asia": "Asie",
+            "Europe": "Evropa",
+            "Oceania": "Oceanie",
+            "Caribbean": "Karibik",
+            "Central America": "Stredni Amerika",
+            "Central Asia": "Stredni Asie",
+            "Eastern Africa": "Vychodni Afrika",
+            "Eastern Asia": "Vychodni Asie",
+            "Eastern Europe": "Vychodni Evropa",
+            "Melanesia": "Melanesie",
+            "Micronesia": "Mikronesie",
+            "Middle Africa": "Stredni Afrika",
+            "North America": "Severni Amerika",
+            "Northern Africa": "Severni Afrika",
+            "Northern Europe": "Severni Evropa",
+            "Polynesia": "Polynesie",
+            "South America": "Jizni Amerika",
+            "Southeast Asia": "Jihovychodni Asie",
+            "Southern Africa": "Jizni Afrika",
+            "Southern Asia": "Jizni Asie",
+            "Southern Europe": "Jizni Evropa",
+            "Western Africa": "Zapadni Afrika",
+            "Western Asia": "Zapadni Asie",
+            "Western Europe": "Zapadni Evropa",
+            "Latin America & Caribbean": "Latinska Amerika a Karibik"
+        ],
+        "hu": [
+            "Africa": "Afrika",
+            "Americas": "Amerikak",
+            "Antarctic": "Antarktisz",
+            "Asia": "Azsia",
+            "Europe": "Europa",
+            "Oceania": "Oceania",
+            "Caribbean": "Karib-terseg",
+            "Central America": "Kozep-Amerika",
+            "Central Asia": "Kozep-Azsia",
+            "Eastern Africa": "Kelet-Afrika",
+            "Eastern Asia": "Kelet-Azsia",
+            "Eastern Europe": "Kelet-Europa",
+            "Melanesia": "Melanezia",
+            "Micronesia": "Mikronezia",
+            "Middle Africa": "Kozep-Afrika",
+            "North America": "Eszak-Amerika",
+            "Northern Africa": "Eszak-Afrika",
+            "Northern Europe": "Eszak-Europa",
+            "Polynesia": "Polinezia",
+            "South America": "Del-Amerika",
+            "Southeast Asia": "Delkelet-Azsia",
+            "Southern Africa": "Del-Afrika",
+            "Southern Asia": "Del-Azsia",
+            "Southern Europe": "Del-Europa",
+            "Western Africa": "Nyugat-Afrika",
+            "Western Asia": "Nyugat-Azsia",
+            "Western Europe": "Nyugat-Europa",
+            "Latin America & Caribbean": "Latin-Amerika es a Karib-terseg"
         ]
     ]
 }

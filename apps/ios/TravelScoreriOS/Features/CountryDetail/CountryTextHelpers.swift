@@ -34,6 +34,12 @@ enum CountryTextHelpers {
         if preferred.hasPrefix("el") { return "el" }
         if preferred.hasPrefix("id") { return "id" }
         if preferred.hasPrefix("uk") { return "uk" }
+        if preferred.hasPrefix("ms") { return "ms" }
+        if preferred.hasPrefix("ro") { return "ro" }
+        if preferred.hasPrefix("th") { return "th" }
+        if preferred.hasPrefix("vi") { return "vi" }
+        if preferred.hasPrefix("cs") { return "cs" }
+        if preferred.hasPrefix("hu") { return "hu" }
         return "en"
     }
 
@@ -120,6 +126,18 @@ enum CountryTextHelpers {
                 return "Перед поїздкою перевірте найновіше офіційне попередження, адже умови можуть швидко змінюватися."
             case "zh-Hant":
                 return "出發前請查看最新官方旅遊提示，因為情況可能會迅速變化。"
+            case "ms":
+                return "Semak nasihat rasmi terkini sebelum anda melancong, kerana keadaan boleh berubah dengan cepat."
+            case "ro":
+                return "Verifica cel mai recent aviz oficial inainte de a calatori, deoarece conditiile se pot schimba rapid."
+            case "th":
+                return "ตรวจสอบคำแนะนำการเดินทางอย่างเป็นทางการล่าสุดก่อนออกเดินทาง เพราะสถานการณ์อาจเปลี่ยนแปลงได้อย่างรวดเร็ว"
+            case "vi":
+                return "Hay kiem tra khuyen cao chinh thuc moi nhat truoc khi di, vi dieu kien co the thay doi nhanh."
+            case "cs":
+                return "Pred cestou si zkontrolujte nejnovejsi oficialni upozorneni, protoze podminky se mohou rychle zmenit."
+            case "hu":
+                return "Utazas elott ellenorizze a legfrissebb hivatalos tajekoztatast, mert a korulmenyek gyorsan valtozhatnak."
             default:
                 return "Check the latest official advisory before traveling, since conditions can change quickly."
             }
@@ -323,6 +341,60 @@ enum CountryTextHelpers {
             return "第3級：重新考慮出行，並查看官方旅遊提示以了解最新細節。"
         case ("zh-Hant", 4):
             return "第4級：不要出行，並查看官方旅遊提示以了解最新細節。"
+
+        case ("ms", 1):
+            return "Tahap 1: ambil langkah berjaga-jaga biasa dan semak nasihat rasmi untuk butiran terkini."
+        case ("ms", 2):
+            return "Tahap 2: tingkatkan kewaspadaan dan semak nasihat rasmi untuk butiran terkini."
+        case ("ms", 3):
+            return "Tahap 3: pertimbangkan semula perjalanan dan semak nasihat rasmi untuk butiran terkini."
+        case ("ms", 4):
+            return "Tahap 4: jangan melancong dan semak nasihat rasmi untuk butiran terkini."
+
+        case ("ro", 1):
+            return "Nivelul 1: luati masuri normale de precautie si consultati avizul oficial pentru cele mai noi detalii."
+        case ("ro", 2):
+            return "Nivelul 2: manifestati prudenta sporita si consultati avizul oficial pentru cele mai noi detalii."
+        case ("ro", 3):
+            return "Nivelul 3: reconsiderati calatoria si consultati avizul oficial pentru cele mai noi detalii."
+        case ("ro", 4):
+            return "Nivelul 4: nu calatoriti si consultati avizul oficial pentru cele mai noi detalii."
+
+        case ("th", 1):
+            return "ระดับ 1: ใช้มาตรการป้องกันตามปกติและดูคำแนะนำอย่างเป็นทางการเพื่อรายละเอียดล่าสุด"
+        case ("th", 2):
+            return "ระดับ 2: เพิ่มความระมัดระวังและดูคำแนะนำอย่างเป็นทางการเพื่อรายละเอียดล่าสุด"
+        case ("th", 3):
+            return "ระดับ 3: พิจารณาการเดินทางอีกครั้งและดูคำแนะนำอย่างเป็นทางการเพื่อรายละเอียดล่าสุด"
+        case ("th", 4):
+            return "ระดับ 4: อย่าเดินทางและดูคำแนะนำอย่างเป็นทางการเพื่อรายละเอียดล่าสุด"
+
+        case ("vi", 1):
+            return "Cap do 1: thuc hien cac bien phap phong ngua thong thuong va xem khuyen cao chinh thuc de biet chi tiet moi nhat."
+        case ("vi", 2):
+            return "Cap do 2: can than hon va xem khuyen cao chinh thuc de biet chi tiet moi nhat."
+        case ("vi", 3):
+            return "Cap do 3: can nhac lai chuyen di va xem khuyen cao chinh thuc de biet chi tiet moi nhat."
+        case ("vi", 4):
+            return "Cap do 4: khong nen di va xem khuyen cao chinh thuc de biet chi tiet moi nhat."
+
+        case ("cs", 1):
+            return "Uroven 1: dodrzujte bezna bezpecnostni opatreni a sledujte oficialni upozorneni pro nejnovejsi podrobnosti."
+        case ("cs", 2):
+            return "Uroven 2: zvyste opatrnost a sledujte oficialni upozorneni pro nejnovejsi podrobnosti."
+        case ("cs", 3):
+            return "Uroven 3: znovu zvazte cestu a sledujte oficialni upozorneni pro nejnovejsi podrobnosti."
+        case ("cs", 4):
+            return "Uroven 4: necestujte a sledujte oficialni upozorneni pro nejnovejsi podrobnosti."
+
+        case ("hu", 1):
+            return "1. szint: tegyen szokasos ovintezkedeseket, es nezze meg a hivatalos tajekoztatast a legfrissebb reszletekert."
+        case ("hu", 2):
+            return "2. szint: legyen fokozottan ovatos, es nezze meg a hivatalos tajekoztatast a legfrissebb reszletekert."
+        case ("hu", 3):
+            return "3. szint: gondolja ujra az utazast, es nezze meg a hivatalos tajekoztatast a legfrissebb reszletekert."
+        case ("hu", 4):
+            return "4. szint: ne utazzon, es nezze meg a hivatalos tajekoztatast a legfrissebb reszletekert."
 
         case (_, 1):
             return "Level 1: exercise normal precautions and check the official advisory for the latest details."

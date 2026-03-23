@@ -22,6 +22,12 @@ export const requiredLocales = [
   "id",
   "uk",
   "zh-Hant",
+  "ms",
+  "ro",
+  "th",
+  "vi",
+  "cs",
+  "hu",
 ];
 
 export const machineTranslationLocales = [

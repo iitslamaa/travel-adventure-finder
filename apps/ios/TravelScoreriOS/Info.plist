@@ -39,6 +39,12 @@
 		<string>id</string>
 		<string>uk</string>
 		<string>zh-Hant</string>
+		<string>ms</string>
+		<string>ro</string>
+		<string>th</string>
+		<string>vi</string>
+		<string>cs</string>
+		<string>hu</string>
 	</array>
 	<key>CFBundleName</key>
 	<string>Travel Adventure Finder</string>
