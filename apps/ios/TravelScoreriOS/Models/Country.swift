@@ -190,42 +190,36 @@ struct Country: Identifiable, Hashable {
     // MARK: - Advisory Headline + Body (for CountryDetail consistency)
 
     var advisoryHeadline: String? {
-        splitHeadline(from: advisorySummary)
+        nil
     }
 
     var advisoryBody: String? {
-        splitBody(from: advisorySummary)
+        nil
     }
 
     // MARK: - Visa Headline + Body
 
     var visaHeadline: String? {
-        splitHeadline(from: visaNotes)
+        nil
     }
 
     var visaBody: String? {
-        splitBody(from: visaNotes)
+        nil
     }
 
     // MARK: - Seasonality Headline + Body
 
     var seasonalityHeadline: String? {
-        splitHeadline(from: seasonalityNotes)
+        nil
     }
 
     var seasonalityBody: String? {
-        splitBody(from: seasonalityNotes)
+        nil
     }
 
     // MARK: - Shared Text Splitting Logic
 
     private var localizedAffordabilityContent: (headline: String?, body: String?) {
-        if Self.currentLanguageCode == "en" {
-            if let englishHeadline = splitHeadline(from: affordabilityExplanation) {
-                return (englishHeadline, splitBody(from: affordabilityExplanation))
-            }
-        }
-
         let tier = affordabilityTier
         let locale = Locale.autoupdatingCurrent
         let formattedDailySpend = formattedUSD(dailySpendTotalUsd, locale: locale)
@@ -286,6 +280,72 @@ struct Country: Identifiable, Hashable {
             headline = "Costi giornalieri alti (~ \(amount)/giorno)"
         case ("it", .veryHigh, let amount?):
             headline = "Costi giornalieri molto alti (~ \(amount)/giorno)"
+
+        case ("ru", .veryLow, let amount?):
+            headline = "Очень низкие ежедневные расходы (~ \(amount)/день)"
+        case ("ru", .low, let amount?):
+            headline = "Низкие ежедневные расходы (~ \(amount)/день)"
+        case ("ru", .moderate, let amount?):
+            headline = "Умеренные ежедневные расходы (~ \(amount)/день)"
+        case ("ru", .high, let amount?):
+            headline = "Высокие ежедневные расходы (~ \(amount)/день)"
+        case ("ru", .veryHigh, let amount?):
+            headline = "Очень высокие ежедневные расходы (~ \(amount)/день)"
+
+        case ("nl", .veryLow, let amount?):
+            headline = "Zeer lage dagelijkse kosten (~ \(amount)/dag)"
+        case ("nl", .low, let amount?):
+            headline = "Lage dagelijkse kosten (~ \(amount)/dag)"
+        case ("nl", .moderate, let amount?):
+            headline = "Gemiddelde dagelijkse kosten (~ \(amount)/dag)"
+        case ("nl", .high, let amount?):
+            headline = "Hoge dagelijkse kosten (~ \(amount)/dag)"
+        case ("nl", .veryHigh, let amount?):
+            headline = "Zeer hoge dagelijkse kosten (~ \(amount)/dag)"
+
+        case ("ar", .veryLow, let amount?):
+            headline = "تكاليف يومية منخفضة جدا (~ \(amount)/يوم)"
+        case ("ar", .low, let amount?):
+            headline = "تكاليف يومية منخفضة (~ \(amount)/يوم)"
+        case ("ar", .moderate, let amount?):
+            headline = "تكاليف يومية متوسطة (~ \(amount)/يوم)"
+        case ("ar", .high, let amount?):
+            headline = "تكاليف يومية مرتفعة (~ \(amount)/يوم)"
+        case ("ar", .veryHigh, let amount?):
+            headline = "تكاليف يومية مرتفعة جدا (~ \(amount)/يوم)"
+
+        case ("ja", .veryLow, let amount?):
+            headline = "非常に低い1日コスト（約\(amount)/日）"
+        case ("ja", .low, let amount?):
+            headline = "低い1日コスト（約\(amount)/日）"
+        case ("ja", .moderate, let amount?):
+            headline = "中程度の1日コスト（約\(amount)/日）"
+        case ("ja", .high, let amount?):
+            headline = "高い1日コスト（約\(amount)/日）"
+        case ("ja", .veryHigh, let amount?):
+            headline = "非常に高い1日コスト（約\(amount)/日）"
+
+        case ("ko", .veryLow, let amount?):
+            headline = "매우 낮은 일일 비용(약 \(amount)/일)"
+        case ("ko", .low, let amount?):
+            headline = "낮은 일일 비용(약 \(amount)/일)"
+        case ("ko", .moderate, let amount?):
+            headline = "보통 수준의 일일 비용(약 \(amount)/일)"
+        case ("ko", .high, let amount?):
+            headline = "높은 일일 비용(약 \(amount)/일)"
+        case ("ko", .veryHigh, let amount?):
+            headline = "매우 높은 일일 비용(약 \(amount)/일)"
+
+        case ("zh", .veryLow, let amount?):
+            headline = "每日花费很低（约\(amount)/天）"
+        case ("zh", .low, let amount?):
+            headline = "每日花费较低（约\(amount)/天）"
+        case ("zh", .moderate, let amount?):
+            headline = "每日花费中等（约\(amount)/天）"
+        case ("zh", .high, let amount?):
+            headline = "每日花费较高（约\(amount)/天）"
+        case ("zh", .veryHigh, let amount?):
+            headline = "每日花费很高（约\(amount)/天）"
 
         case (_, .veryLow, let amount?):
             headline = "Very low daily costs (~ \(amount)/day)"
@@ -352,6 +412,72 @@ struct Country: Identifiable, Hashable {
             headline = "Costi giornalieri alti"
         case ("it", .veryHigh, nil):
             headline = "Costi giornalieri molto alti"
+
+        case ("ru", .veryLow, nil):
+            headline = "Очень низкие ежедневные расходы"
+        case ("ru", .low, nil):
+            headline = "Низкие ежедневные расходы"
+        case ("ru", .moderate, nil):
+            headline = "Умеренные ежедневные расходы"
+        case ("ru", .high, nil):
+            headline = "Высокие ежедневные расходы"
+        case ("ru", .veryHigh, nil):
+            headline = "Очень высокие ежедневные расходы"
+
+        case ("nl", .veryLow, nil):
+            headline = "Zeer lage dagelijkse kosten"
+        case ("nl", .low, nil):
+            headline = "Lage dagelijkse kosten"
+        case ("nl", .moderate, nil):
+            headline = "Gemiddelde dagelijkse kosten"
+        case ("nl", .high, nil):
+            headline = "Hoge dagelijkse kosten"
+        case ("nl", .veryHigh, nil):
+            headline = "Zeer hoge dagelijkse kosten"
+
+        case ("ar", .veryLow, nil):
+            headline = "تكاليف يومية منخفضة جدا"
+        case ("ar", .low, nil):
+            headline = "تكاليف يومية منخفضة"
+        case ("ar", .moderate, nil):
+            headline = "تكاليف يومية متوسطة"
+        case ("ar", .high, nil):
+            headline = "تكاليف يومية مرتفعة"
+        case ("ar", .veryHigh, nil):
+            headline = "تكاليف يومية مرتفعة جدا"
+
+        case ("ja", .veryLow, nil):
+            headline = "非常に低い1日コスト"
+        case ("ja", .low, nil):
+            headline = "低い1日コスト"
+        case ("ja", .moderate, nil):
+            headline = "中程度の1日コスト"
+        case ("ja", .high, nil):
+            headline = "高い1日コスト"
+        case ("ja", .veryHigh, nil):
+            headline = "非常に高い1日コスト"
+
+        case ("ko", .veryLow, nil):
+            headline = "매우 낮은 일일 비용"
+        case ("ko", .low, nil):
+            headline = "낮은 일일 비용"
+        case ("ko", .moderate, nil):
+            headline = "보통 수준의 일일 비용"
+        case ("ko", .high, nil):
+            headline = "높은 일일 비용"
+        case ("ko", .veryHigh, nil):
+            headline = "매우 높은 일일 비용"
+
+        case ("zh", .veryLow, nil):
+            headline = "每日花费很低"
+        case ("zh", .low, nil):
+            headline = "每日花费较低"
+        case ("zh", .moderate, nil):
+            headline = "每日花费中等"
+        case ("zh", .high, nil):
+            headline = "每日花费较高"
+        case ("zh", .veryHigh, nil):
+            headline = "每日花费很高"
 
         case (_, .veryLow, nil):
             headline = "Very low daily costs"
@@ -421,6 +547,72 @@ struct Country: Identifiable, Hashable {
             body = "Le spese giornaliere sono sopra la media globale, soprattutto per l'alloggio."
         case ("it", .veryHigh):
             body = "Destinazione premium con costi di viaggio costantemente elevati."
+
+        case ("ru", .veryLow):
+            body = "Очень выгодное направление по жилью, еде и транспорту по сравнению с мировыми средними."
+        case ("ru", .low):
+            body = "В целом доступное направление для большинства путешественников с запасом на комфорт."
+        case ("ru", .moderate):
+            body = "Расходы на поездку находятся на среднем уровне по сравнению с мировыми значениями."
+        case ("ru", .high):
+            body = "Ежедневные расходы выше мирового среднего, особенно на проживание."
+        case ("ru", .veryHigh):
+            body = "Премиальное направление со стабильно высокими расходами на поездку."
+
+        case ("nl", .veryLow):
+            body = "Sterke prijs-kwaliteitverhouding voor verblijf, eten en vervoer vergeleken met wereldwijde gemiddelden."
+        case ("nl", .low):
+            body = "Relatief betaalbare bestemming voor de meeste reizigers, met ruimte om comfortabel te reizen."
+        case ("nl", .moderate):
+            body = "Reiskosten in het middensegment vergeleken met wereldwijde gemiddelden."
+        case ("nl", .high):
+            body = "Dagelijkse kosten liggen boven het wereldwijde gemiddelde, vooral voor accommodatie."
+        case ("nl", .veryHigh):
+            body = "Premium bestemming met consequent hoge reiskosten."
+
+        case ("ar", .veryLow):
+            body = "قيمة ممتازة مقابل المال في الاقامة والطعام والتنقل مقارنة بالمتوسطات العالمية."
+        case ("ar", .low):
+            body = "وجهة ميسورة نسبيا لمعظم المسافرين مع مساحة كافية للسفر براحة."
+        case ("ar", .moderate):
+            body = "تكاليف السفر متوسطة مقارنة بالمتوسطات العالمية."
+        case ("ar", .high):
+            body = "التكاليف اليومية اعلى من المتوسط العالمي، خاصة في الاقامة."
+        case ("ar", .veryHigh):
+            body = "وجهة مرتفعة التكلفة مع مصاريف سفر عالية باستمرار."
+
+        case ("ja", .veryLow):
+            body = "宿泊、食事、移動のコストは世界平均と比べてかなり割安です。"
+        case ("ja", .low):
+            body = "多くの旅行者にとって比較的手頃で、快適さを保つ余地もあります。"
+        case ("ja", .moderate):
+            body = "旅行コストは世界平均と比べて中程度です。"
+        case ("ja", .high):
+            body = "1日の費用は世界平均より高く、特に宿泊費がかさみます。"
+        case ("ja", .veryHigh):
+            body = "継続的に旅行費用が高いプレミアム寄りの目的地です。"
+
+        case ("ko", .veryLow):
+            body = "숙박, 식사, 교통비가 세계 평균과 비교해 매우 좋은 편입니다."
+        case ("ko", .low):
+            body = "대부분의 여행자에게 비교적 부담이 적고, 편안하게 여행할 여유도 있습니다."
+        case ("ko", .moderate):
+            body = "여행 비용은 세계 평균과 비교해 중간 수준입니다."
+        case ("ko", .high):
+            body = "일일 비용이 세계 평균보다 높으며 특히 숙박비가 큽니다."
+        case ("ko", .veryHigh):
+            body = "여행 비용이 꾸준히 높은 프리미엄 목적지입니다."
+
+        case ("zh", .veryLow):
+            body = "与全球平均相比，这里的住宿、餐饮和交通性价比很高。"
+        case ("zh", .low):
+            body = "对大多数旅行者来说相对实惠，也有空间保持舒适。"
+        case ("zh", .moderate):
+            body = "旅行成本与全球平均相比处于中等水平。"
+        case ("zh", .high):
+            body = "每日花费高于全球平均，尤其是住宿。"
+        case ("zh", .veryHigh):
+            body = "这是一个旅行成本持续偏高的高端目的地。"
 
         case (_, .veryLow):
             body = "Strong value for accommodation, food, and transport compared to global averages."
@@ -521,13 +713,7 @@ struct Country: Identifiable, Hashable {
     }
 
     private static var currentLanguageCode: String {
-        let preferred = Locale.preferredLanguages.first?.lowercased() ?? "en"
-        if preferred.hasPrefix("pt") { return "pt" }
-        if preferred.hasPrefix("fr") { return "fr" }
-        if preferred.hasPrefix("es") { return "es" }
-        if preferred.hasPrefix("de") { return "de" }
-        if preferred.hasPrefix("it") { return "it" }
-        return "en"
+        CountryTextHelpers.currentLanguageCode
     }
 
     private static let regionTranslations: [String: [String: String]] = [

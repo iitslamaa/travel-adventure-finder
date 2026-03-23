@@ -68,11 +68,14 @@ struct ProfileView: View {
         guard let entries = profileVM.profile?.languages else { return [] }
 
         return entries.map { entry in
-            let displayName = LanguageRepository.shared.allLanguages
-                .first(where: { $0.code == entry.code })?
-                .displayName ?? entry.code
-
-            return "\(displayName) — \(entry.proficiency)"
+            let displayName = LanguageRepository.shared.localizedDisplayName(for: entry.code)
+            let proficiency = LanguageProficiency(storageValue: entry.proficiency).label
+            return "\(displayName) — \(proficiency)"
+        }
+    }
+    private var mutualLanguageLabels: [String] {
+        profileVM.mutualLanguages.map { code in
+            LanguageRepository.shared.localizedDisplayName(for: code)
         }
     }
     private var friendCount: Int {
@@ -203,7 +206,7 @@ struct ProfileView: View {
                                                 orderedBucketListCountries: profileVM.orderedBucketListCountries,
                                                 mutualTraveledCountries: profileVM.mutualTraveledCountries,
                                                 mutualBucketCountries: profileVM.mutualBucketCountries,
-                                                mutualLanguages: profileVM.mutualLanguages,
+                                                mutualLanguages: mutualLanguageLabels,
                                                 languages: languages,
                                                 travelMode: travelModeLabel,
                                                 travelStyle: travelStyleLabel,

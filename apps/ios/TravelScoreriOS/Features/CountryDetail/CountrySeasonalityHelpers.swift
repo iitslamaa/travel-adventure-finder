@@ -25,10 +25,6 @@ enum CountrySeasonalityHelpers {
     }
 
     static func body(for country: Country, selectedMonth: Int? = nil) -> String {
-        if let notes = country.seasonalityNotes, !notes.isEmpty {
-            return notes
-        }
-
         switch country.resolvedSeasonalityLabel(for: selectedMonth) {
         case "best":
             return String(localized: "country_detail.seasonality.body.best")

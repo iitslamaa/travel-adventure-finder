@@ -8,6 +8,21 @@
 import Foundation
 
 enum CountryTextHelpers {
+    static var currentLanguageCode: String {
+        let preferred = Locale.preferredLanguages.first?.lowercased() ?? "en"
+        if preferred.hasPrefix("pt") { return "pt" }
+        if preferred.hasPrefix("fr") { return "fr" }
+        if preferred.hasPrefix("es") { return "es" }
+        if preferred.hasPrefix("de") { return "de" }
+        if preferred.hasPrefix("it") { return "it" }
+        if preferred.hasPrefix("ru") { return "ru" }
+        if preferred.hasPrefix("nl") { return "nl" }
+        if preferred.hasPrefix("ar") { return "ar" }
+        if preferred.hasPrefix("ja") { return "ja" }
+        if preferred.hasPrefix("ko") { return "ko" }
+        if preferred.hasPrefix("zh") { return "zh" }
+        return "en"
+    }
 
     static func cleanAdvisory(_ text: String) -> String {
         var s = text
@@ -43,5 +58,148 @@ enum CountryTextHelpers {
         }
 
         return s
+    }
+
+    static func advisorySummary(level: Int?) -> String {
+        guard let level else {
+            switch currentLanguageCode {
+            case "fr":
+                return "Consultez l'avis officiel le plus recent avant de voyager, car les conditions peuvent changer rapidement."
+            case "es":
+                return "Consulta el aviso oficial mas reciente antes de viajar, ya que las condiciones pueden cambiar rapidamente."
+            case "de":
+                return "Pruefen Sie vor der Reise den offiziellen Hinweis, da sich die Bedingungen schnell aendern koennen."
+            case "it":
+                return "Controlla l'avviso ufficiale piu recente prima di partire, perche le condizioni possono cambiare rapidamente."
+            case "pt":
+                return "Consulte o aviso oficial mais recente antes de viajar, pois as condicoes podem mudar rapidamente."
+            case "ru":
+                return "Перед поездкой проверьте официальный совет, потому что условия могут быстро меняться."
+            case "nl":
+                return "Controleer voor vertrek het officiele reisadvies, omdat omstandigheden snel kunnen veranderen."
+            case "ar":
+                return "راجع التنبيه الرسمي الاحدث قبل السفر، لان الظروف قد تتغير بسرعة."
+            case "ja":
+                return "状況は急に変わることがあるため、出発前に最新の公式渡航情報を確認してください。"
+            case "ko":
+                return "상황은 빠르게 바뀔 수 있으니 출발 전에 최신 공식 여행 권고를 확인하세요."
+            case "zh":
+                return "出行前请查看最新官方旅行提示，因为情况可能会迅速变化。"
+            default:
+                return "Check the latest official advisory before traveling, since conditions can change quickly."
+            }
+        }
+
+        switch (currentLanguageCode, level) {
+        case ("fr", 1):
+            return "Niveau 1: appliquez les precautions normales et consultez l'avis officiel pour les details les plus recents."
+        case ("fr", 2):
+            return "Niveau 2: faites preuve d'une vigilance accrue et consultez l'avis officiel pour les details les plus recents."
+        case ("fr", 3):
+            return "Niveau 3: reconsiderez le voyage et consultez l'avis officiel pour les details les plus recents."
+        case ("fr", 4):
+            return "Niveau 4: ne voyagez pas et consultez l'avis officiel pour les details les plus recents."
+
+        case ("es", 1):
+            return "Nivel 1: toma las precauciones normales y consulta el aviso oficial para ver los detalles mas recientes."
+        case ("es", 2):
+            return "Nivel 2: extrema la precaucion y consulta el aviso oficial para ver los detalles mas recientes."
+        case ("es", 3):
+            return "Nivel 3: reconsidera el viaje y consulta el aviso oficial para ver los detalles mas recientes."
+        case ("es", 4):
+            return "Nivel 4: no viajes y consulta el aviso oficial para ver los detalles mas recientes."
+
+        case ("de", 1):
+            return "Stufe 1: Treffen Sie normale Vorsichtsmassnahmen und lesen Sie den offiziellen Hinweis fuer aktuelle Details."
+        case ("de", 2):
+            return "Stufe 2: Erhoehen Sie Ihre Vorsicht und lesen Sie den offiziellen Hinweis fuer aktuelle Details."
+        case ("de", 3):
+            return "Stufe 3: Ueberdenken Sie die Reise und lesen Sie den offiziellen Hinweis fuer aktuelle Details."
+        case ("de", 4):
+            return "Stufe 4: Reisen Sie nicht und lesen Sie den offiziellen Hinweis fuer aktuelle Details."
+
+        case ("it", 1):
+            return "Livello 1: adotta le normali precauzioni e consulta l'avviso ufficiale per i dettagli piu recenti."
+        case ("it", 2):
+            return "Livello 2: usa maggiore cautela e consulta l'avviso ufficiale per i dettagli piu recenti."
+        case ("it", 3):
+            return "Livello 3: riconsidera il viaggio e consulta l'avviso ufficiale per i dettagli piu recenti."
+        case ("it", 4):
+            return "Livello 4: non viaggiare e consulta l'avviso ufficiale per i dettagli piu recenti."
+
+        case ("pt", 1):
+            return "Nivel 1: tome as precaucoes normais e consulte o aviso oficial para os detalhes mais recentes."
+        case ("pt", 2):
+            return "Nivel 2: tenha mais cautela e consulte o aviso oficial para os detalhes mais recentes."
+        case ("pt", 3):
+            return "Nivel 3: reavalie a viagem e consulte o aviso oficial para os detalhes mais recentes."
+        case ("pt", 4):
+            return "Nivel 4: nao viaje e consulte o aviso oficial para os detalhes mais recentes."
+
+        case ("ru", 1):
+            return "Уровень 1: соблюдайте обычные меры предосторожности и смотрите официальный совет для актуальных деталей."
+        case ("ru", 2):
+            return "Уровень 2: проявляйте повышенную осторожность и смотрите официальный совет для актуальных деталей."
+        case ("ru", 3):
+            return "Уровень 3: пересмотрите поездку и смотрите официальный совет для актуальных деталей."
+        case ("ru", 4):
+            return "Уровень 4: не путешествуйте и смотрите официальный совет для актуальных деталей."
+
+        case ("nl", 1):
+            return "Niveau 1: neem normale voorzorgsmaatregelen en bekijk het officiele reisadvies voor de nieuwste details."
+        case ("nl", 2):
+            return "Niveau 2: wees extra voorzichtig en bekijk het officiele reisadvies voor de nieuwste details."
+        case ("nl", 3):
+            return "Niveau 3: heroverweeg je reis en bekijk het officiele reisadvies voor de nieuwste details."
+        case ("nl", 4):
+            return "Niveau 4: reis niet en bekijk het officiele reisadvies voor de nieuwste details."
+
+        case ("ar", 1):
+            return "المستوى 1: اتخذ الاحتياطات المعتادة وراجع التنبيه الرسمي لاحدث التفاصيل."
+        case ("ar", 2):
+            return "المستوى 2: كن اكثر حذرا وراجع التنبيه الرسمي لاحدث التفاصيل."
+        case ("ar", 3):
+            return "المستوى 3: اعد النظر في السفر وراجع التنبيه الرسمي لاحدث التفاصيل."
+        case ("ar", 4):
+            return "المستوى 4: لا تسافر وراجع التنبيه الرسمي لاحدث التفاصيل."
+
+        case ("ja", 1):
+            return "レベル1: 通常の注意を払い、最新の詳細は公式の渡航情報を確認してください。"
+        case ("ja", 2):
+            return "レベル2: 一段と注意し、最新の詳細は公式の渡航情報を確認してください。"
+        case ("ja", 3):
+            return "レベル3: 渡航を再検討し、最新の詳細は公式の渡航情報を確認してください。"
+        case ("ja", 4):
+            return "レベル4: 渡航しないでください。最新の詳細は公式の渡航情報を確認してください。"
+
+        case ("ko", 1):
+            return "1단계: 일반적인 주의를 기울이고 최신 세부 내용은 공식 여행 권고를 확인하세요."
+        case ("ko", 2):
+            return "2단계: 각별히 주의하고 최신 세부 내용은 공식 여행 권고를 확인하세요."
+        case ("ko", 3):
+            return "3단계: 여행을 재고하고 최신 세부 내용은 공식 여행 권고를 확인하세요."
+        case ("ko", 4):
+            return "4단계: 여행하지 마세요. 최신 세부 내용은 공식 여행 권고를 확인하세요."
+
+        case ("zh", 1):
+            return "第1级：采取正常预防措施，并查看官方旅行提示了解最新细节。"
+        case ("zh", 2):
+            return "第2级：提高警惕，并查看官方旅行提示了解最新细节。"
+        case ("zh", 3):
+            return "第3级：重新考虑出行，并查看官方旅行提示了解最新细节。"
+        case ("zh", 4):
+            return "第4级：不要出行，并查看官方旅行提示了解最新细节。"
+
+        case (_, 1):
+            return "Level 1: exercise normal precautions and check the official advisory for the latest details."
+        case (_, 2):
+            return "Level 2: exercise increased caution and check the official advisory for the latest details."
+        case (_, 3):
+            return "Level 3: reconsider travel and check the official advisory for the latest details."
+        case (_, 4):
+            return "Level 4: do not travel and check the official advisory for the latest details."
+        default:
+            return "Check the latest official advisory before traveling, since conditions can change quickly."
+        }
     }
 }

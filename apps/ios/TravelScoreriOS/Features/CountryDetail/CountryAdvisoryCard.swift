@@ -13,6 +13,16 @@ struct CountryAdvisoryCard: View {
     let weightPercentage: Int
     @State private var showFullAdvisory = false
 
+    private var advisoryLevel: Int? {
+        guard let advisoryScore = country.advisoryScore else { return nil }
+        switch advisoryScore {
+        case 88...: return 1
+        case 63...: return 2
+        case 38...: return 3
+        default: return 4
+        }
+    }
+
     var body: some View {
         if let advisoryScore = country.advisoryScore {
             VStack(alignment: .leading, spacing: 12) {
@@ -44,12 +54,9 @@ struct CountryAdvisoryCard: View {
                         )
 
                     VStack(alignment: .leading, spacing: 4) {
+                        let advisoryText = CountryTextHelpers.advisorySummary(level: advisoryLevel)
 
-                        if let rawSummary = country.advisorySummary,
-                           !rawSummary.isEmpty {
-
-                            let advisoryText = CountryTextHelpers.cleanAdvisory(rawSummary)
-
+                        if !advisoryText.isEmpty {
                             Text(advisoryText)
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)

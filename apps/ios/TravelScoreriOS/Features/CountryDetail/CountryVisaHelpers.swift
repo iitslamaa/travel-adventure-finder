@@ -37,10 +37,6 @@ enum CountryVisaHelpers {
     }
 
     static func body(for country: Country, passportLabel: String) -> String {
-        if let notes = country.visaNotes, !notes.isEmpty {
-            return notes
-        }
-
         guard let type = country.visaType else {
             return String(localized: "country_detail.visa.body.limited")
         }
