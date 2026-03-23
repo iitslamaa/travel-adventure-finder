@@ -82,8 +82,8 @@ enum PlanningListKind {
 
     var navigationTitle: String {
         switch self {
-        case .bucket: return "🪣 Bucket List"
-        case .visited: return "🎒 My Travels"
+        case .bucket: return "🪣 \(String(localized: "planning.bucket_list.title"))"
+        case .visited: return "🎒 \(String(localized: "planning.visited.title"))"
         }
     }
 
@@ -4873,16 +4873,7 @@ private struct TripPlannerVisaCountryRow: View {
     private var travelerPreview: String {
         let names = summary.travelerNames
         guard !names.isEmpty else { return "" }
-        if names.count == 1 {
-            return names[0]
-        }
-        if names.count == 2 {
-            return "\(names[0]) and \(names[1])"
-        }
-        if names.count == 3 {
-            return "\(names[0]), \(names[1]) and \(names[2])"
-        }
-        return "\(names[0]), \(names[1]), \(names[2]) +\(names.count - 3) more"
+        return ListFormatter.localizedString(byJoining: names)
     }
 
     private var statusText: String {
