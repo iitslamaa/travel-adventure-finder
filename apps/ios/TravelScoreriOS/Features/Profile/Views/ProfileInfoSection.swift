@@ -169,14 +169,26 @@ struct ProfileInfoSection: View {
             .padding(.vertical, 22)
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
+            .background(cardBackground)
+    }
+
+    private var cardBackground: some View {
+        Image("profile_info")
+            .resizable(
+                capInsets: EdgeInsets(top: 140, leading: 120, bottom: 140, trailing: 120),
+                resizingMode: .stretch
+            )
+            .scaledToFill()
+            .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color.white)
+                    .fill(Color.white.opacity(0.18))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.32), lineWidth: 1)
             )
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
     }
 
     private func sectionHeader(_ text: String) -> some View {
