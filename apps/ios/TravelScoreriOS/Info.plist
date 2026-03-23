@@ -28,6 +28,11 @@
 		<string>ja</string>
 		<string>ko</string>
 		<string>zh-Hans</string>
+		<string>hi</string>
+		<string>tr</string>
+		<string>pl</string>
+		<string>he</string>
+		<string>sv</string>
 	</array>
 	<key>CFBundleName</key>
 	<string>Travel Adventure Finder</string>

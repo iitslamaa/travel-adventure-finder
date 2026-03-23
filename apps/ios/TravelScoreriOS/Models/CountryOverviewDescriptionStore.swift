@@ -104,6 +104,21 @@ enum CountryOverviewDescriptionStore {
         if lower.hasPrefix("ru") {
             candidates.append("ru")
         }
+        if lower.hasPrefix("hi") {
+            candidates.append("hi")
+        }
+        if lower.hasPrefix("tr") {
+            candidates.append("tr")
+        }
+        if lower.hasPrefix("pl") {
+            candidates.append("pl")
+        }
+        if lower.hasPrefix("he") || lower.hasPrefix("iw") {
+            candidates.append("he")
+        }
+        if lower.hasPrefix("sv") {
+            candidates.append("sv")
+        }
         if lower.hasPrefix("en") {
             candidates.append("en")
         }
@@ -185,6 +200,11 @@ enum CountryOverviewDescriptionStore {
             if candidate.hasPrefix("ja") { return "ja" }
             if candidate.hasPrefix("ko") { return "ko" }
             if candidate.hasPrefix("zh") { return "zh" }
+            if candidate.hasPrefix("hi") { return "hi" }
+            if candidate.hasPrefix("tr") { return "tr" }
+            if candidate.hasPrefix("pl") { return "pl" }
+            if candidate.hasPrefix("he") || candidate.hasPrefix("iw") { return "he" }
+            if candidate.hasPrefix("sv") { return "sv" }
             if candidate.hasPrefix("en") { return "en" }
         }
 

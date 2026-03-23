@@ -21,6 +21,11 @@ enum CountryTextHelpers {
         if preferred.hasPrefix("ja") { return "ja" }
         if preferred.hasPrefix("ko") { return "ko" }
         if preferred.hasPrefix("zh") { return "zh" }
+        if preferred.hasPrefix("hi") { return "hi" }
+        if preferred.hasPrefix("tr") { return "tr" }
+        if preferred.hasPrefix("pl") { return "pl" }
+        if preferred.hasPrefix("he") || preferred.hasPrefix("iw") { return "he" }
+        if preferred.hasPrefix("sv") { return "sv" }
         return "en"
     }
 
