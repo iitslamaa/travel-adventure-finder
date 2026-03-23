@@ -28,6 +28,10 @@ export const requiredLocales = [
   "vi",
   "cs",
   "hu",
+  "nb",
+  "ca",
+  "hr",
+  "sk",
 ];
 
 export const machineTranslationLocales = [

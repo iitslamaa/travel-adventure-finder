@@ -787,6 +787,50 @@ struct Country: Identifiable, Hashable {
         case ("hu", .veryHigh, nil):
             headline = "Nagyon magas napi koltsegek"
 
+        case ("nb", .veryLow, nil):
+            headline = "Svaert lave daglige kostnader"
+        case ("nb", .low, nil):
+            headline = "Lave daglige kostnader"
+        case ("nb", .moderate, nil):
+            headline = "Moderate daglige kostnader"
+        case ("nb", .high, nil):
+            headline = "Hoye daglige kostnader"
+        case ("nb", .veryHigh, nil):
+            headline = "Svaert hoye daglige kostnader"
+
+        case ("ca", .veryLow, nil):
+            headline = "Costos diaris molt baixos"
+        case ("ca", .low, nil):
+            headline = "Costos diaris baixos"
+        case ("ca", .moderate, nil):
+            headline = "Costos diaris moderats"
+        case ("ca", .high, nil):
+            headline = "Costos diaris elevats"
+        case ("ca", .veryHigh, nil):
+            headline = "Costos diaris molt elevats"
+
+        case ("hr", .veryLow, nil):
+            headline = "Vrlo niski dnevni troskovi"
+        case ("hr", .low, nil):
+            headline = "Niski dnevni troskovi"
+        case ("hr", .moderate, nil):
+            headline = "Umjereni dnevni troskovi"
+        case ("hr", .high, nil):
+            headline = "Visoki dnevni troskovi"
+        case ("hr", .veryHigh, nil):
+            headline = "Vrlo visoki dnevni troskovi"
+
+        case ("sk", .veryLow, nil):
+            headline = "Velmi nizke denne naklady"
+        case ("sk", .low, nil):
+            headline = "Nizke denne naklady"
+        case ("sk", .moderate, nil):
+            headline = "Stredne denne naklady"
+        case ("sk", .high, nil):
+            headline = "Vysoke denne naklady"
+        case ("sk", .veryHigh, nil):
+            headline = "Velmi vysoke denne naklady"
+
         case (_, .veryLow, nil):
             headline = "Very low daily costs"
         case (_, .low, nil):
@@ -1108,6 +1152,50 @@ struct Country: Identifiable, Hashable {
             body = "A napi koltsegek meghaladjak a globalis atlagot, kulonosen a szallasnal."
         case ("hu", .veryHigh):
             body = "Premium uticel, ahol az utazasi koltsegek tartosan magasak."
+
+        case ("nb", .veryLow):
+            body = "Svaert god verdi for overnatting, mat og transport sammenlignet med globale gjennomsnitt."
+        case ("nb", .low):
+            body = "Relativt rimelig for de fleste reisende, med rom for a reise komfortabelt."
+        case ("nb", .moderate):
+            body = "Reisekostnadene ligger pa et middels niva sammenlignet med globale gjennomsnitt."
+        case ("nb", .high):
+            body = "Daglige kostnader ligger over det globale gjennomsnittet, spesielt for overnatting."
+        case ("nb", .veryHigh):
+            body = "Et premium reisemal med gjennomgaende hoye reisekostnader."
+
+        case ("ca", .veryLow):
+            body = "Molt bona relacio qualitat-preu per a allotjament, menjar i transport en comparacio amb les mitjanes globals."
+        case ("ca", .low):
+            body = "Destinacio relativament assequible per a la majoria de viatgers, amb marge per viatjar amb comoditat."
+        case ("ca", .moderate):
+            body = "Els costos del viatge se situen en una franja mitjana en comparacio amb les mitjanes globals."
+        case ("ca", .high):
+            body = "Les despeses diaries estan per sobre de la mitjana global, especialment en allotjament."
+        case ("ca", .veryHigh):
+            body = "Destinacio premium amb costos de viatge constantment elevats."
+
+        case ("hr", .veryLow):
+            body = "Vrlo dobra vrijednost za smjestaj, hranu i prijevoz u usporedbi s globalnim prosjecima."
+        case ("hr", .low):
+            body = "Relativno pristupacna destinacija za vecinu putnika, uz dovoljno prostora za ugodno putovanje."
+        case ("hr", .moderate):
+            body = "Troskovi putovanja su na srednjoj razini u usporedbi s globalnim prosjecima."
+        case ("hr", .high):
+            body = "Dnevni troskovi su iznad globalnog prosjeka, posebno za smjestaj."
+        case ("hr", .veryHigh):
+            body = "Premium destinacija sa stalno visokim troskovima putovanja."
+
+        case ("sk", .veryLow):
+            body = "Velmi dobra hodnota za ubytovanie, jedlo a dopravu v porovnani s globalnymi priemermi."
+        case ("sk", .low):
+            body = "Relativne dostupna destinacia pre vacsinu cestovatelov, s priestorom na pohodlne cestovanie."
+        case ("sk", .moderate):
+            body = "Naklady na cestovanie su na strednej urovni v porovnani s globalnymi priemermi."
+        case ("sk", .high):
+            body = "Denne naklady su nad globalnym priemerom, najma pri ubytovani."
+        case ("sk", .veryHigh):
+            body = "Premierova destinacia s dlhodobo vysokymi cestovnymi nakladmi."
 
         case (_, .veryLow):
             body = "Strong value for accommodation, food, and transport compared to global averages."
@@ -1871,6 +1959,126 @@ struct Country: Identifiable, Hashable {
             "Western Asia": "Nyugat-Azsia",
             "Western Europe": "Nyugat-Europa",
             "Latin America & Caribbean": "Latin-Amerika es a Karib-terseg"
+        ],
+        "nb": [
+            "Africa": "Afrika",
+            "Americas": "Amerika",
+            "Antarctic": "Antarktis",
+            "Asia": "Asia",
+            "Europe": "Europa",
+            "Oceania": "Oseania",
+            "Caribbean": "Karibia",
+            "Central America": "Mellom-Amerika",
+            "Central Asia": "Sentral-Asia",
+            "Eastern Africa": "Ost-Afrika",
+            "Eastern Asia": "Ost-Asia",
+            "Eastern Europe": "Ost-Europa",
+            "Melanesia": "Melanesia",
+            "Micronesia": "Mikronesia",
+            "Middle Africa": "Sentral-Afrika",
+            "North America": "Nord-Amerika",
+            "Northern Africa": "Nord-Afrika",
+            "Northern Europe": "Nord-Europa",
+            "Polynesia": "Polynesia",
+            "South America": "Sor-Amerika",
+            "Southeast Asia": "Sorost-Asia",
+            "Southern Africa": "Sor-Afrika",
+            "Southern Asia": "Sor-Asia",
+            "Southern Europe": "Sor-Europa",
+            "Western Africa": "Vest-Afrika",
+            "Western Asia": "Vest-Asia",
+            "Western Europe": "Vest-Europa",
+            "Latin America & Caribbean": "Latin-Amerika og Karibia"
+        ],
+        "ca": [
+            "Africa": "Africa",
+            "Americas": "Ameriques",
+            "Antarctic": "Antartida",
+            "Asia": "Asia",
+            "Europe": "Europa",
+            "Oceania": "Oceania",
+            "Caribbean": "Carib",
+            "Central America": "America Central",
+            "Central Asia": "Asia Central",
+            "Eastern Africa": "Africa Oriental",
+            "Eastern Asia": "Asia Oriental",
+            "Eastern Europe": "Europa Oriental",
+            "Melanesia": "Melanesia",
+            "Micronesia": "Micronesia",
+            "Middle Africa": "Africa Central",
+            "North America": "America del Nord",
+            "Northern Africa": "Africa del Nord",
+            "Northern Europe": "Europa del Nord",
+            "Polynesia": "Polinesia",
+            "South America": "America del Sud",
+            "Southeast Asia": "Sud-est Asiatic",
+            "Southern Africa": "Africa Austral",
+            "Southern Asia": "Asia del Sud",
+            "Southern Europe": "Europa del Sud",
+            "Western Africa": "Africa Occidental",
+            "Western Asia": "Asia Occidental",
+            "Western Europe": "Europa Occidental",
+            "Latin America & Caribbean": "America Llatina i Carib"
+        ],
+        "hr": [
+            "Africa": "Afrika",
+            "Americas": "Amerike",
+            "Antarctic": "Antarktika",
+            "Asia": "Azija",
+            "Europe": "Europa",
+            "Oceania": "Oceanija",
+            "Caribbean": "Karibi",
+            "Central America": "Sredisnja Amerika",
+            "Central Asia": "Sredisnja Azija",
+            "Eastern Africa": "Istocna Afrika",
+            "Eastern Asia": "Istocna Azija",
+            "Eastern Europe": "Istocna Europa",
+            "Melanesia": "Melanezija",
+            "Micronesia": "Mikronezija",
+            "Middle Africa": "Sredisnja Afrika",
+            "North America": "Sjeverna Amerika",
+            "Northern Africa": "Sjeverna Afrika",
+            "Northern Europe": "Sjeverna Europa",
+            "Polynesia": "Polinezija",
+            "South America": "Juzna Amerika",
+            "Southeast Asia": "Jugoistocna Azija",
+            "Southern Africa": "Juzna Afrika",
+            "Southern Asia": "Juzna Azija",
+            "Southern Europe": "Juzna Europa",
+            "Western Africa": "Zapadna Afrika",
+            "Western Asia": "Zapadna Azija",
+            "Western Europe": "Zapadna Europa",
+            "Latin America & Caribbean": "Latinska Amerika i Karibi"
+        ],
+        "sk": [
+            "Africa": "Afrika",
+            "Americas": "Ameriky",
+            "Antarctic": "Antarktida",
+            "Asia": "Azia",
+            "Europe": "Europa",
+            "Oceania": "Oceania",
+            "Caribbean": "Karibik",
+            "Central America": "Stredna Amerika",
+            "Central Asia": "Stredna Azia",
+            "Eastern Africa": "Vychodna Afrika",
+            "Eastern Asia": "Vychodna Azia",
+            "Eastern Europe": "Vychodna Europa",
+            "Melanesia": "Melanezia",
+            "Micronesia": "Mikronezia",
+            "Middle Africa": "Stredna Afrika",
+            "North America": "Severna Amerika",
+            "Northern Africa": "Severna Afrika",
+            "Northern Europe": "Severna Europa",
+            "Polynesia": "Polynesia",
+            "South America": "Juzna Amerika",
+            "Southeast Asia": "Juhovychodna Azia",
+            "Southern Africa": "Juzna Afrika",
+            "Southern Asia": "Juzna Azia",
+            "Southern Europe": "Juzna Europa",
+            "Western Africa": "Zapadna Afrika",
+            "Western Asia": "Zapadna Azia",
+            "Western Europe": "Zapadna Europa",
+            "Latin America & Caribbean": "Latinska Amerika a Karibik"
         ]
     ]
 }

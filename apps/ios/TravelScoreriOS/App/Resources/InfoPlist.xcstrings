@@ -177,6 +177,30 @@
             "state": "translated",
             "value": "Utazási Kalandkereső"
           }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reiseeventyrfinner"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cercador d'Aventures de Viatge"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tražilica putničkih avantura"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vyhľadávač cestovateľských dobrodružstiev"
+          }
         }
       }
     },
@@ -356,6 +380,30 @@
             "state": "translated",
             "value": "Utazási Kalandkereső"
           }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reiseeventyrfinner"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cercador d'Aventures de Viatge"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tražilica putničkih avantura"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vyhľadávač cestovateľských dobrodružstiev"
+          }
         }
       }
     },
@@ -534,6 +582,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Az Utazástervező az Ön naptárát használja, így ideiglenes utazási dátumokat menthet az Apple Naptár eseményeként."
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reiseplanlegger bruker kalenderen din slik at du kan lagre foreløpige reisedatoer som Apple Kalender-hendelser."
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trip Planner utilitza el teu calendari perquè puguis desar dates de viatge provisionals com a esdeveniments del Calendari d’Apple."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planer putovanja koristi vaš kalendar kako biste mogli spremiti privremene datume putovanja kao događaje u Apple Kalendaru."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plánovač ciest používa váš kalendár, takže si môžete uložiť predbežné termíny ciest ako udalosti v Apple Kalendári."
           }
         }
       }
