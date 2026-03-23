@@ -137,6 +137,24 @@ enum CountryOverviewDescriptionStore {
         if lower.hasPrefix("uk") {
             candidates.append("uk")
         }
+        if lower.hasPrefix("ms") {
+            candidates.append("ms")
+        }
+        if lower.hasPrefix("ro") {
+            candidates.append("ro")
+        }
+        if lower.hasPrefix("th") {
+            candidates.append("th")
+        }
+        if lower.hasPrefix("vi") {
+            candidates.append("vi")
+        }
+        if lower.hasPrefix("cs") {
+            candidates.append("cs")
+        }
+        if lower.hasPrefix("hu") {
+            candidates.append("hu")
+        }
         if lower.hasPrefix("en") {
             candidates.append("en")
         }
@@ -246,6 +264,36 @@ enum CountryOverviewDescriptionStore {
                 return "\(country.localizedDisplayName) 屬於\(label)。這筆資料在應用程式目前的資料集中還沒有完整的本地化描述，但國家頁面會在描述清單完成前保持可用。"
             }
             return "\(country.localizedDisplayName) 已包含在應用程式的國家資料集中。這筆資料在應用程式目前的資料集中還沒有完整的本地化描述，但國家頁面會在描述清單完成前保持可用。"
+        case "ms":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) ialah sebahagian daripada \(label). Entri ini masih belum mempunyai penerangan setempat penuh dalam set data semasa aplikasi, tetapi halaman negara kekal tersedia sementara senarai penerangan dilengkapkan."
+            }
+            return "\(country.localizedDisplayName) termasuk dalam set data negara aplikasi. Entri ini masih belum mempunyai penerangan setempat penuh dalam set data semasa aplikasi, tetapi halaman negara kekal tersedia sementara senarai penerangan dilengkapkan."
+        case "ro":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) face parte din \(label). Aceasta intrare nu are inca descrierea completa localizata in setul actual de date al aplicatiei, dar pagina tarii ramane disponibila in timp ce lista descrierilor este finalizata."
+            }
+            return "\(country.localizedDisplayName) este inclusa in setul de date al tarilor din aplicatie. Aceasta intrare nu are inca descrierea completa localizata in setul actual de date al aplicatiei, dar pagina tarii ramane disponibila in timp ce lista descrierilor este finalizata."
+        case "th":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) อยู่ในภูมิภาค\(label) รายการนี้ยังไม่มีคำอธิบายฉบับแปลเต็มในชุดข้อมูลปัจจุบันของแอป แต่หน้าประเทศยังคงใช้งานได้ระหว่างที่กำลังทำรายการคำอธิบายให้เสร็จ"
+            }
+            return "\(country.localizedDisplayName) อยู่ในชุดข้อมูลประเทศของแอป รายการนี้ยังไม่มีคำอธิบายฉบับแปลเต็มในชุดข้อมูลปัจจุบันของแอป แต่หน้าประเทศยังคงใช้งานได้ระหว่างที่กำลังทำรายการคำอธิบายให้เสร็จ"
+        case "vi":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) thuoc khu vuc \(label). Muc nay van chua co mo ta day du duoc dia phuong hoa trong bo du lieu hien tai cua ung dung, nhung trang quoc gia van co san trong khi danh sach mo ta duoc hoan tat."
+            }
+            return "\(country.localizedDisplayName) nam trong bo du lieu quoc gia cua ung dung. Muc nay van chua co mo ta day du duoc dia phuong hoa trong bo du lieu hien tai cua ung dung, nhung trang quoc gia van co san trong khi danh sach mo ta duoc hoan tat."
+        case "cs":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) je soucasti regionu \(label). Tato polozka zatim nema plne lokalizovany popis v aktualni datove sade aplikace, ale stranka zeme zustava dostupna, zatimco se seznam popisu dokoncuje."
+            }
+            return "\(country.localizedDisplayName) je zahrnuta v datove sade zemi aplikace. Tato polozka zatim nema plne lokalizovany popis v aktualni datove sade aplikace, ale stranka zeme zustava dostupna, zatimco se seznam popisu dokoncuje."
+        case "hu":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) a(z) \(label) regio resze. Ehhez a bejegyzeshez az alkalmazas jelenlegi adathalmazaban meg nincs teljes lokalizalt leiras, de az orszag oldala addig is elerheto marad, amig a leirasok listaja keszul."
+            }
+            return "\(country.localizedDisplayName) szerepel az alkalmazas orszagadat-keszleteben. Ehhez a bejegyzeshez az alkalmazas jelenlegi adathalmazaban meg nincs teljes lokalizalt leiras, de az orszag oldala addig is elerheto marad, amig a leirasok listaja keszul."
         default:
             if let label = country.localizedRegionLabel, !label.isEmpty {
                 return "\(country.localizedDisplayName) is part of \(label). This entry is missing its full custom description in the current app dataset, but the country detail view is still available while the description list is being completed."
@@ -284,6 +332,12 @@ enum CountryOverviewDescriptionStore {
             if candidate.hasPrefix("el") { return "el" }
             if candidate.hasPrefix("id") { return "id" }
             if candidate.hasPrefix("uk") { return "uk" }
+            if candidate.hasPrefix("ms") { return "ms" }
+            if candidate.hasPrefix("ro") { return "ro" }
+            if candidate.hasPrefix("th") { return "th" }
+            if candidate.hasPrefix("vi") { return "vi" }
+            if candidate.hasPrefix("cs") { return "cs" }
+            if candidate.hasPrefix("hu") { return "hu" }
             if candidate.hasPrefix("en") { return "en" }
         }
 
