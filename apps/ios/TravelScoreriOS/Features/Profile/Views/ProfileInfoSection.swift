@@ -174,10 +174,7 @@ struct ProfileInfoSection: View {
 
     private var cardBackground: some View {
         Image("profile_info")
-            .resizable(
-                capInsets: EdgeInsets(top: 140, leading: 120, bottom: 140, trailing: 120),
-                resizingMode: .stretch
-            )
+            .resizable()
             .scaledToFill()
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
