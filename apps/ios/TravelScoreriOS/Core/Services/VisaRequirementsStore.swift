@@ -247,7 +247,7 @@ private enum VisaRowMatcher {
             visaEaseScore: 100,
             visaAllowedDays: nil,
             visaFeeUsd: nil,
-            visaNotes: "Traveling on your own passport for your own country.",
+            visaNotes: nil,
             visaSourceUrl: nil
         )
     }

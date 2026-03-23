@@ -62,14 +62,14 @@ struct CountryDetailView: View {
         }
 
         if profileVM.passportNationalities.count > 1 {
-            return "best saved passport"
+            return String(localized: "trip_planner.visa.best_saved_passport")
         }
 
         if let code = profileVM.effectivePassportCountryCode {
             return CountrySelectionFormatter.localizedName(for: code)
         }
 
-        return visaStore.activePassportLabel ?? "United States"
+        return visaStore.activePassportLabel ?? String(localized: "trip_planner.visa.default_passport_label")
     }
 
     private var shouldShowPassportRecommendation: Bool {
