@@ -20,12 +20,20 @@ enum CountryTextHelpers {
         if preferred.hasPrefix("ar") { return "ar" }
         if preferred.hasPrefix("ja") { return "ja" }
         if preferred.hasPrefix("ko") { return "ko" }
+        if preferred.contains("hant") || preferred.hasPrefix("zh-tw") || preferred.hasPrefix("zh-hk") || preferred.hasPrefix("zh-mo") {
+            return "zh-Hant"
+        }
         if preferred.hasPrefix("zh") { return "zh" }
         if preferred.hasPrefix("hi") { return "hi" }
         if preferred.hasPrefix("tr") { return "tr" }
         if preferred.hasPrefix("pl") { return "pl" }
         if preferred.hasPrefix("he") || preferred.hasPrefix("iw") { return "he" }
         if preferred.hasPrefix("sv") { return "sv" }
+        if preferred.hasPrefix("fi") { return "fi" }
+        if preferred.hasPrefix("da") { return "da" }
+        if preferred.hasPrefix("el") { return "el" }
+        if preferred.hasPrefix("id") { return "id" }
+        if preferred.hasPrefix("uk") { return "uk" }
         return "en"
     }
 
@@ -100,6 +108,18 @@ enum CountryTextHelpers {
                 return "לפני הנסיעה כדאי לבדוק את האזהרה הרשמית העדכנית ביותר, כי התנאים יכולים להשתנות במהירות."
             case "sv":
                 return "Kontrollera de senaste officiella reseraden innan du reser, eftersom forhallandena kan andras snabbt."
+            case "fi":
+                return "Tarkista uusin virallinen matkustustiedote ennen matkaa, koska olosuhteet voivat muuttua nopeasti."
+            case "da":
+                return "Tjek de nyeste officielle rejserad inden du rejser, da forholdene hurtigt kan aendre sig."
+            case "el":
+                return "Ελέγξτε την πιο πρόσφατη επίσημη ταξιδιωτική οδηγία πριν ταξιδέψετε, γιατί οι συνθήκες μπορεί να αλλάξουν γρήγορα."
+            case "id":
+                return "Periksa anjuran resmi terbaru sebelum bepergian, karena kondisi dapat berubah dengan cepat."
+            case "uk":
+                return "Перед поїздкою перевірте найновіше офіційне попередження, адже умови можуть швидко змінюватися."
+            case "zh-Hant":
+                return "出發前請查看最新官方旅遊提示，因為情況可能會迅速變化。"
             default:
                 return "Check the latest official advisory before traveling, since conditions can change quickly."
             }
@@ -249,6 +269,60 @@ enum CountryTextHelpers {
             return "Niva 3: overvag resan igen och se officiella rad for de senaste detaljerna."
         case ("sv", 4):
             return "Niva 4: res inte och se officiella rad for de senaste detaljerna."
+
+        case ("fi", 1):
+            return "Taso 1: noudata tavallista varovaisuutta ja tarkista uusimmat tiedot virallisesta tiedotteesta."
+        case ("fi", 2):
+            return "Taso 2: noudata erityista varovaisuutta ja tarkista uusimmat tiedot virallisesta tiedotteesta."
+        case ("fi", 3):
+            return "Taso 3: harkitse matkustamista uudelleen ja tarkista uusimmat tiedot virallisesta tiedotteesta."
+        case ("fi", 4):
+            return "Taso 4: ala matkusta ja tarkista uusimmat tiedot virallisesta tiedotteesta."
+
+        case ("da", 1):
+            return "Niveau 1: udvis normal forsigtighed og se de officielle rad for de nyeste detaljer."
+        case ("da", 2):
+            return "Niveau 2: vaer ekstra forsigtig og se de officielle rad for de nyeste detaljer."
+        case ("da", 3):
+            return "Niveau 3: overvej rejsen igen og se de officielle rad for de nyeste detaljer."
+        case ("da", 4):
+            return "Niveau 4: rejs ikke og se de officielle rad for de nyeste detaljer."
+
+        case ("el", 1):
+            return "Επίπεδο 1: λάβετε τις συνήθεις προφυλάξεις και δείτε την επίσημη οδηγία για τις τελευταίες λεπτομέρειες."
+        case ("el", 2):
+            return "Επίπεδο 2: δείξτε αυξημένη προσοχή και δείτε την επίσημη οδηγία για τις τελευταίες λεπτομέρειες."
+        case ("el", 3):
+            return "Επίπεδο 3: επανεξετάστε το ταξίδι και δείτε την επίσημη οδηγία για τις τελευταίες λεπτομέρειες."
+        case ("el", 4):
+            return "Επίπεδο 4: μην ταξιδέψετε και δείτε την επίσημη οδηγία για τις τελευταίες λεπτομέρειες."
+
+        case ("id", 1):
+            return "Level 1: lakukan kewaspadaan normal dan lihat anjuran resmi untuk rincian terbaru."
+        case ("id", 2):
+            return "Level 2: tingkatkan kewaspadaan dan lihat anjuran resmi untuk rincian terbaru."
+        case ("id", 3):
+            return "Level 3: pertimbangkan kembali perjalanan dan lihat anjuran resmi untuk rincian terbaru."
+        case ("id", 4):
+            return "Level 4: jangan bepergian dan lihat anjuran resmi untuk rincian terbaru."
+
+        case ("uk", 1):
+            return "Рівень 1: дотримуйтеся звичайних заходів обережності та дивіться офіційну пораду для найновіших деталей."
+        case ("uk", 2):
+            return "Рівень 2: будьте особливо обережні та дивіться офіційну пораду для найновіших деталей."
+        case ("uk", 3):
+            return "Рівень 3: перегляньте плани поїздки та дивіться офіційну пораду для найновіших деталей."
+        case ("uk", 4):
+            return "Рівень 4: не подорожуйте та дивіться офіційну пораду для найновіших деталей."
+
+        case ("zh-Hant", 1):
+            return "第1級：採取一般預防措施，並查看官方旅遊提示以了解最新細節。"
+        case ("zh-Hant", 2):
+            return "第2級：提高警覺，並查看官方旅遊提示以了解最新細節。"
+        case ("zh-Hant", 3):
+            return "第3級：重新考慮出行，並查看官方旅遊提示以了解最新細節。"
+        case ("zh-Hant", 4):
+            return "第4級：不要出行，並查看官方旅遊提示以了解最新細節。"
 
         case (_, 1):
             return "Level 1: exercise normal precautions and check the official advisory for the latest details."

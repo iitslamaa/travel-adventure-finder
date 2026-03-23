@@ -16,19 +16,15 @@ export const requiredLocales = [
   "pl",
   "he",
   "sv",
+  "fi",
+  "da",
+  "el",
+  "id",
+  "uk",
+  "zh-Hant",
 ];
 
 export const machineTranslationLocales = [
-  "nl",
-  "ar",
-  "ja",
-  "ko",
-  "zh-Hans",
-  "hi",
-  "tr",
-  "pl",
-  "he",
-  "sv",
 ];
 
 const machineTranslationLocaleSet = new Set(machineTranslationLocales);

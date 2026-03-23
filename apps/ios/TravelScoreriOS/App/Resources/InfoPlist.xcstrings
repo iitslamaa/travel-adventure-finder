@@ -48,62 +48,98 @@
         },
         "nl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Reisavonturenzoeker"
           }
         },
         "ar": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "مكتشف مغامرات السفر"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "旅行冒険探し"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "여행 모험 찾기"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "旅行探险发现者"
           }
         },
         "hi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "यात्रा साहसिक खोजक"
           }
         },
         "tr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Seyahat Macerası Bulucu"
           }
         },
         "pl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Wyszukiwarka Przygód Podróżniczych"
           }
         },
         "he": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "מאתר הרפתקאות נסיעה"
           }
         },
         "sv": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Reseäventyrsletare"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matkaseikkailujen Löytäjä"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejseeventyrfinder"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εξερευνητής Ταξιδιωτικών Περιπετειών"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Penjelajah Petualangan Perjalanan"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пошук пригод для подорожей"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旅遊冒險搜尋器"
           }
         }
       }
@@ -155,62 +191,98 @@
         },
         "nl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Reisavonturenzoeker"
           }
         },
         "ar": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "مكتشف مغامرات السفر"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "旅行冒険探し"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "여행 모험 찾기"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "旅行探险发现者"
           }
         },
         "hi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "यात्रा साहसिक खोजक"
           }
         },
         "tr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Seyahat Macerası Bulucu"
           }
         },
         "pl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Wyszukiwarka Przygód Podróżniczych"
           }
         },
         "he": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "מאתר הרפתקאות נסיעה"
           }
         },
         "sv": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Reseäventyrsletare"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matkaseikkailujen Löytäjä"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejseeventyrfinder"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εξερευνητής Ταξιδιωτικών Περιπετειών"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Penjelajah Petualangan Perjalanan"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пошук пригод для подорожей"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旅遊冒險搜尋器"
           }
         }
       }
@@ -262,62 +334,98 @@
         },
         "nl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Trip Planner gebruikt je agenda zodat je voorlopige reisdatums kunt opslaan als Apple Calendar-evenementen."
           }
         },
         "ar": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "يستخدم مخطط الرحلات تقويمك حتى تتمكن من حفظ مواعيد الرحلات المؤقتة كأحداث في تقويم Apple."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "トリッププランナーはあなたのカレンダーを使用して、仮の旅行日程をAppleカレンダーのイベントとして保存できるようにします。"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "여행 계획 도구는 사용자의 캘린더를 사용하여 잠정적인 여행 날짜를 Apple 캘린더 이벤트로 저장할 수 있습니다."
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "行程规划器使用您的日历，这样您可以将暂定的旅行日期保存为 Apple 日历事件。"
           }
         },
         "hi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ट्रिप प्लानर आपके कैलेंडर का उपयोग करता है ताकि आप संभावित यात्रा की तिथियों को एप्पल कैलेंडर इवेंट के रूप में सहेज सकें।"
           }
         },
         "tr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Seyahat Planlayıcı, geçici seyahat tarihlerini Apple Takvim etkinlikleri olarak kaydedebilmeniz için takviminizi kullanır."
           }
         },
         "pl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Planer podróży używa Twojego kalendarza, dzięki czemu możesz zapisać wstępne terminy podróży jako wydarzenia w Apple Calendar."
           }
         },
         "he": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "מתכנן נסיעות משתמש בלוח השנה שלך כדי שתוכל לשמור תאריכי נסיעות זמניים כאירועים בלוח השנה של אפל."
           }
         },
         "sv": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Reseplaneraren använder din kalender så att du kan spara preliminära resdatum som Apple Calendar-händelser."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trip Planner käyttää kalenteriasi, jotta voit tallentaa alustavat matkapäivät Apple Calendar -tapahtumina."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejseplanlægger bruger din kalender, så du kan gemme foreløbige rejsedatoer som Apple Calendar-begivenheder."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ο Σχεδιαστής Ταξιδιών χρησιμοποιεί το ημερολόγιό σας ώστε να μπορείτε να αποθηκεύετε ενδεικτικές ημερομηνίες ταξιδιού ως εκδηλώσεις στο Apple Calendar."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perencana Perjalanan menggunakan kalender Anda sehingga Anda dapat menyimpan tanggal perjalanan sementara sebagai acara di Kalender Apple."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Планувальник подорожей використовує ваш календар, щоб ви могли зберігати попередні дати поїздок як події в Apple Calendar."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "行程規劃工具會使用你的行事曆，讓你可以將暫定的旅行日期儲存為 Apple 行事曆事件。"
           }
         }
       }

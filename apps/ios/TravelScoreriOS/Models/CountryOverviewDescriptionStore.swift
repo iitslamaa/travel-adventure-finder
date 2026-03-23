@@ -98,6 +98,9 @@ enum CountryOverviewDescriptionStore {
         if lower.hasPrefix("ko") {
             candidates.append("ko")
         }
+        if lower.contains("hant") || lower.hasPrefix("zh-tw") || lower.hasPrefix("zh-hk") || lower.hasPrefix("zh-mo") {
+            candidates.append("zh-Hant")
+        }
         if lower.hasPrefix("zh") {
             candidates.append("zh-Hans")
         }
@@ -118,6 +121,21 @@ enum CountryOverviewDescriptionStore {
         }
         if lower.hasPrefix("sv") {
             candidates.append("sv")
+        }
+        if lower.hasPrefix("fi") {
+            candidates.append("fi")
+        }
+        if lower.hasPrefix("da") {
+            candidates.append("da")
+        }
+        if lower.hasPrefix("el") {
+            candidates.append("el")
+        }
+        if lower.hasPrefix("id") {
+            candidates.append("id")
+        }
+        if lower.hasPrefix("uk") {
+            candidates.append("uk")
         }
         if lower.hasPrefix("en") {
             candidates.append("en")
@@ -198,6 +216,36 @@ enum CountryOverviewDescriptionStore {
                 return "\(country.localizedDisplayName) ar en del av \(label). I appens nuvarande datamaterial saknas fortfarande en fullstandig lokaliserad beskrivning for den har posten, men landsidan forblir tillganglig medan beskrivningslistan blir klar."
             }
             return "\(country.localizedDisplayName) ingar i appens landdataset. I appens nuvarande datamaterial saknas fortfarande en fullstandig lokaliserad beskrivning for den har posten, men landsidan forblir tillganglig medan beskrivningslistan blir klar."
+        case "fi":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) kuuluu alueeseen \(label). Talle merkinnalle ei ole viela taytta lokalisoitua kuvausta sovelluksen nykyisessa aineistossa, mutta maan sivu on kaytettavissa silla aikaa kun kuvauslista viimeistellaan."
+            }
+            return "\(country.localizedDisplayName) kuuluu sovelluksen maadataan. Talle merkinnalle ei ole viela taytta lokalisoitua kuvausta sovelluksen nykyisessa aineistossa, mutta maan sivu on kaytettavissa silla aikaa kun kuvauslista viimeistellaan."
+        case "da":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) er en del af \(label). Denne post mangler stadig sin fulde lokaliserede beskrivelse i appens nuvaerende datasat, men landesiden forbliver tilgaengelig, mens listen over beskrivelser faerdiggores."
+            }
+            return "\(country.localizedDisplayName) er med i appens landedatasat. Denne post mangler stadig sin fulde lokaliserede beskrivelse i appens nuvaerende datasat, men landesiden forbliver tilgaengelig, mens listen over beskrivelser faerdiggores."
+        case "el":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) ανήκει στην περιοχή \(label). Αυτή η καταχώριση δεν έχει ακόμη πλήρη τοπικοποιημένη περιγραφή στα τρέχοντα δεδομένα της εφαρμογής, αλλά η σελίδα της χώρας παραμένει διαθέσιμη όσο ολοκληρώνεται η λίστα περιγραφών."
+            }
+            return "\(country.localizedDisplayName) περιλαμβάνεται στο σύνολο δεδομένων χωρών της εφαρμογής. Αυτή η καταχώριση δεν έχει ακόμη πλήρη τοπικοποιημένη περιγραφή στα τρέχοντα δεδομένα της εφαρμογής, αλλά η σελίδα της χώρας παραμένει διαθέσιμη όσο ολοκληρώνεται η λίστα περιγραφών."
+        case "id":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) merupakan bagian dari \(label). Entri ini belum memiliki deskripsi lengkap yang dilokalkan dalam data aplikasi saat ini, tetapi halaman negara tetap tersedia sementara daftar deskripsi diselesaikan."
+            }
+            return "\(country.localizedDisplayName) termasuk dalam kumpulan data negara di aplikasi. Entri ini belum memiliki deskripsi lengkap yang dilokalkan dalam data aplikasi saat ini, tetapi halaman negara tetap tersedia sementara daftar deskripsi diselesaikan."
+        case "uk":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) входить до регіону \(label). Для цього запису в поточному наборі даних застосунку ще немає повного локалізованого опису, але сторінка країни залишається доступною, поки список описів завершується."
+            }
+            return "\(country.localizedDisplayName) входить до набору даних країн застосунку. Для цього запису в поточному наборі даних застосунку ще немає повного локалізованого опису, але сторінка країни залишається доступною, поки список описів завершується."
+        case "zh-Hant":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) 屬於\(label)。這筆資料在應用程式目前的資料集中還沒有完整的本地化描述，但國家頁面會在描述清單完成前保持可用。"
+            }
+            return "\(country.localizedDisplayName) 已包含在應用程式的國家資料集中。這筆資料在應用程式目前的資料集中還沒有完整的本地化描述，但國家頁面會在描述清單完成前保持可用。"
         default:
             if let label = country.localizedRegionLabel, !label.isEmpty {
                 return "\(country.localizedDisplayName) is part of \(label). This entry is missing its full custom description in the current app dataset, but the country detail view is still available while the description list is being completed."
@@ -224,12 +272,18 @@ enum CountryOverviewDescriptionStore {
             if candidate.hasPrefix("ar") { return "ar" }
             if candidate.hasPrefix("ja") { return "ja" }
             if candidate.hasPrefix("ko") { return "ko" }
+            if candidate.contains("hant") || candidate.hasPrefix("zh-tw") || candidate.hasPrefix("zh-hk") || candidate.hasPrefix("zh-mo") { return "zh-Hant" }
             if candidate.hasPrefix("zh") { return "zh" }
             if candidate.hasPrefix("hi") { return "hi" }
             if candidate.hasPrefix("tr") { return "tr" }
             if candidate.hasPrefix("pl") { return "pl" }
             if candidate.hasPrefix("he") || candidate.hasPrefix("iw") { return "he" }
             if candidate.hasPrefix("sv") { return "sv" }
+            if candidate.hasPrefix("fi") { return "fi" }
+            if candidate.hasPrefix("da") { return "da" }
+            if candidate.hasPrefix("el") { return "el" }
+            if candidate.hasPrefix("id") { return "id" }
+            if candidate.hasPrefix("uk") { return "uk" }
             if candidate.hasPrefix("en") { return "en" }
         }
 
