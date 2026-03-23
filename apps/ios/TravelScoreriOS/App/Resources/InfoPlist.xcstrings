@@ -75,6 +75,36 @@
             "state": "needs_review",
             "value": "旅行探险发现者"
           }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यात्रा साहसिक खोजक"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Seyahat Macerası Bulucu"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wyszukiwarka Przygód Podróżniczych"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "מאתר הרפתקאות נסיעה"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Reseäventyrsletare"
+          }
         }
       }
     },
@@ -152,6 +182,36 @@
             "state": "needs_review",
             "value": "旅行探险发现者"
           }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यात्रा साहसिक खोजक"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Seyahat Macerası Bulucu"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wyszukiwarka Przygód Podróżniczych"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "מאתר הרפתקאות נסיעה"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Reseäventyrsletare"
+          }
         }
       }
     },
@@ -228,6 +288,36 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "行程规划器使用您的日历，这样您可以将暂定的旅行日期保存为 Apple 日历事件。"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ट्रिप प्लानर आपके कैलेंडर का उपयोग करता है ताकि आप संभावित यात्रा की तिथियों को एप्पल कैलेंडर इवेंट के रूप में सहेज सकें।"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Seyahat Planlayıcı, geçici seyahat tarihlerini Apple Takvim etkinlikleri olarak kaydedebilmeniz için takviminizi kullanır."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Planer podróży używa Twojego kalendarza, dzięki czemu możesz zapisać wstępne terminy podróży jako wydarzenia w Apple Calendar."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "מתכנן נסיעות משתמש בלוח השנה שלך כדי שתוכל לשמור תאריכי נסיעות זמניים כאירועים בלוח השנה של אפל."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Reseplaneraren använder din kalender så att du kan spara preliminära resdatum som Apple Calendar-händelser."
           }
         }
       }

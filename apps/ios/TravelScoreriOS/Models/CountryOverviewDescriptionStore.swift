@@ -104,6 +104,21 @@ enum CountryOverviewDescriptionStore {
         if lower.hasPrefix("ru") {
             candidates.append("ru")
         }
+        if lower.hasPrefix("hi") {
+            candidates.append("hi")
+        }
+        if lower.hasPrefix("tr") {
+            candidates.append("tr")
+        }
+        if lower.hasPrefix("pl") {
+            candidates.append("pl")
+        }
+        if lower.hasPrefix("he") || lower.hasPrefix("iw") {
+            candidates.append("he")
+        }
+        if lower.hasPrefix("sv") {
+            candidates.append("sv")
+        }
         if lower.hasPrefix("en") {
             candidates.append("en")
         }
@@ -158,6 +173,31 @@ enum CountryOverviewDescriptionStore {
                 return "\(country.localizedDisplayName) forma parte de \(label). Esta entrada todavia no tiene su descripcion completa localizada en el conjunto actual de datos de la app, pero la vista del pais sigue disponible mientras se completa la lista."
             }
             return "\(country.localizedDisplayName) esta incluido en el conjunto de paises de la app. Esta entrada todavia no tiene su descripcion completa localizada en el conjunto actual de datos de la app, pero la vista del pais sigue disponible mientras se completa la lista."
+        case "hi":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) \(label) का हिस्सा है। ऐप के मौजूदा डेटा सेट में इस एंट्री का पूरा स्थानीयकृत विवरण अभी उपलब्ध नहीं है, लेकिन विवरणों की सूची पूरी होने तक देश का पेज उपलब्ध रहेगा।"
+            }
+            return "\(country.localizedDisplayName) ऐप के देश डेटा सेट में शामिल है। ऐप के मौजूदा डेटा सेट में इस एंट्री का पूरा स्थानीयकृत विवरण अभी उपलब्ध नहीं है, लेकिन विवरणों की सूची पूरी होने तक देश का पेज उपलब्ध रहेगा।"
+        case "tr":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName), \(label) bolgesinin bir parcasidir. Uygulamanin mevcut veri setinde bu kayit icin tam yerellestirilmis aciklama henuz yok, ancak aciklama listesi tamamlanirken ulke sayfasi kullanilabilir olmaya devam eder."
+            }
+            return "\(country.localizedDisplayName), uygulamanin ulke veri setine dahildir. Uygulamanin mevcut veri setinde bu kayit icin tam yerellestirilmis aciklama henuz yok, ancak aciklama listesi tamamlanirken ulke sayfasi kullanilabilir olmaya devam eder."
+        case "pl":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) nalezy do regionu \(label). W obecnym zestawie danych aplikacji ten wpis nie ma jeszcze pelnego zlokalizowanego opisu, ale strona kraju pozostaje dostepna, dopoki lista opisow jest uzupelniana."
+            }
+            return "\(country.localizedDisplayName) znajduje sie w zestawie danych panstw aplikacji. W obecnym zestawie danych aplikacji ten wpis nie ma jeszcze pelnego zlokalizowanego opisu, ale strona kraju pozostaje dostepna, dopoki lista opisow jest uzupelniana."
+        case "he":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) היא חלק מ-\(label). במערך הנתונים הנוכחי של האפליקציה עדיין אין לערך הזה תיאור מלא ומתורגם, אבל דף המדינה נשאר זמין בזמן שרשימת התיאורים מושלמת."
+            }
+            return "\(country.localizedDisplayName) כלולה במערך נתוני המדינות של האפליקציה. במערך הנתונים הנוכחי של האפליקציה עדיין אין לערך הזה תיאור מלא ומתורגם, אבל דף המדינה נשאר זמין בזמן שרשימת התיאורים מושלמת."
+        case "sv":
+            if let label = country.localizedRegionLabel, !label.isEmpty {
+                return "\(country.localizedDisplayName) ar en del av \(label). I appens nuvarande datamaterial saknas fortfarande en fullstandig lokaliserad beskrivning for den har posten, men landsidan forblir tillganglig medan beskrivningslistan blir klar."
+            }
+            return "\(country.localizedDisplayName) ingar i appens landdataset. I appens nuvarande datamaterial saknas fortfarande en fullstandig lokaliserad beskrivning for den har posten, men landsidan forblir tillganglig medan beskrivningslistan blir klar."
         default:
             if let label = country.localizedRegionLabel, !label.isEmpty {
                 return "\(country.localizedDisplayName) is part of \(label). This entry is missing its full custom description in the current app dataset, but the country detail view is still available while the description list is being completed."
@@ -185,6 +225,11 @@ enum CountryOverviewDescriptionStore {
             if candidate.hasPrefix("ja") { return "ja" }
             if candidate.hasPrefix("ko") { return "ko" }
             if candidate.hasPrefix("zh") { return "zh" }
+            if candidate.hasPrefix("hi") { return "hi" }
+            if candidate.hasPrefix("tr") { return "tr" }
+            if candidate.hasPrefix("pl") { return "pl" }
+            if candidate.hasPrefix("he") || candidate.hasPrefix("iw") { return "he" }
+            if candidate.hasPrefix("sv") { return "sv" }
             if candidate.hasPrefix("en") { return "en" }
         }
 

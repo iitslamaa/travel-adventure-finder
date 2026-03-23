@@ -11,6 +11,11 @@ export const requiredLocales = [
   "ja",
   "ko",
   "zh-Hans",
+  "hi",
+  "tr",
+  "pl",
+  "he",
+  "sv",
 ];
 
 export const machineTranslationLocales = [
@@ -19,6 +24,11 @@ export const machineTranslationLocales = [
   "ja",
   "ko",
   "zh-Hans",
+  "hi",
+  "tr",
+  "pl",
+  "he",
+  "sv",
 ];
 
 const machineTranslationLocaleSet = new Set(machineTranslationLocales);
