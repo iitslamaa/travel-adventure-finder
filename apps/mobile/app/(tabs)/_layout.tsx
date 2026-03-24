@@ -41,6 +41,13 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="when-to-go"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
         name="friends"
         options={{
           title: 'Friends',

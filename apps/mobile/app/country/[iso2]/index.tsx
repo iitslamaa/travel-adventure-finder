@@ -3,14 +3,14 @@ import {
   useColorScheme,
   View,
   ActivityIndicator,
-  Text,
 } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import HeaderCard from './components/HeaderCard';
 import AdvisoryCard from './components/AdvisoryCard';
 import SeasonalityCard from './components/SeasonalityCard';
 import VisaCard from './components/VisaCard';
+import AffordabilityCard from './components/AffordabilityCard';
 import { lightColors, darkColors } from '../../../theme/colors';
 
 export default function CountryDetailScreen() {
@@ -128,6 +128,15 @@ export default function CountryDetailScreen() {
         sourceUrl={country.facts?.visaSource}
         normalizedLabel={`Normalized: ${country.facts?.visaEase ?? 0}`}
         weightOnlyLabel={'Weight: 5%'}
+      />
+
+      <AffordabilityCard
+        score={country.facts?.affordability ?? 0}
+        category={country.facts?.affordabilityCategory}
+        averageDailyCost={country.facts?.averageDailyCostUsd}
+        explanation={country.facts?.affordabilityExplanation}
+        normalizedLabel={`Normalized: ${country.facts?.affordability ?? 0}`}
+        weightOnlyLabel={'Weight: 15%'}
       />
     </ScrollView>
   );
