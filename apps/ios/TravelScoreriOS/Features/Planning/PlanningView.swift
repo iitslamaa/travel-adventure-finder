@@ -1767,7 +1767,7 @@ private struct TripPlannerComposerView: View {
         }
 
         if let firstCountry = selectedCountries.first {
-            return String(format: String(localized: "trip_planner.generated_title_format"), locale: Locale.current, firstCountry.name)
+            return String(format: String(localized: "trip_planner.generated_title_format"), locale: Locale.current, firstCountry.localizedDisplayName)
         }
 
         return String(localized: "trip_planner.new_trip")
@@ -1917,7 +1917,7 @@ private struct TripPlannerDetailView: View {
         resolvedCountries.isEmpty ? trip.countryIds.enumerated().map { index, id in
             Country(
                 iso2: id,
-                name: Locale.autoupdatingCurrent.localizedString(forRegionCode: id.uppercased()) ?? (trip.countryNames.indices.contains(index) ? trip.countryNames[index] : id),
+                name: CountrySelectionFormatter.localizedName(for: id),
                 score: nil
             )
         } : resolvedCountries
@@ -3062,16 +3062,17 @@ private struct TripPlannerCountriesEditorView: View {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         let filtered = countries.filter { country in
             guard !trimmed.isEmpty else { return true }
-            return country.name.localizedCaseInsensitiveContains(trimmed)
+            return country.localizedDisplayName.localizedCaseInsensitiveContains(trimmed)
+                || country.name.localizedCaseInsensitiveContains(trimmed)
                 || country.id.localizedCaseInsensitiveContains(trimmed)
         }
-        return filtered.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        return filtered.sorted { $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending }
     }
 
     private var sharedBucketCountries: [Country] {
         countries
             .filter { sharedBucketCountryIds.contains($0.id) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending }
     }
 
     var body: some View {
@@ -4240,8 +4241,8 @@ private struct TripPlannerExpenseRow: View {
 
 private extension TripPlannerTrip {
     var countryChipItems: [(id: String, title: String)] {
-        zip(countryIds, countryNames).map { id, name in
-            (id: id, title: "\(id.flagEmoji) \(name)")
+        countryIds.map { id in
+            (id: id, title: "\(id.flagEmoji) \(CountrySelectionFormatter.localizedName(for: id))")
         }
     }
 
@@ -4898,7 +4899,7 @@ private struct TripPlannerVisaCountryRow: View {
         } label: {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("\(summary.countryFlag) \(Locale.autoupdatingCurrent.localizedString(forRegionCode: summary.countryID.uppercased()) ?? summary.countryName)")
+                    Text("\(summary.countryFlag) \(CountrySelectionFormatter.localizedName(for: summary.countryID))")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.black)
 
