@@ -3060,10 +3060,12 @@ private struct TripPlannerCountriesEditorView: View {
 
     private var visibleCountries: [Country] {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedSearch = trimmed.normalizedSearchKey
         let filtered = countries.filter { country in
             guard !trimmed.isEmpty else { return true }
-            return country.localizedDisplayName.localizedCaseInsensitiveContains(trimmed)
-                || country.name.localizedCaseInsensitiveContains(trimmed)
+            return country.localizedSearchableNames.contains {
+                $0.normalizedSearchKey.contains(normalizedSearch)
+            }
                 || country.id.localizedCaseInsensitiveContains(trimmed)
         }
         return filtered.sorted { $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending }

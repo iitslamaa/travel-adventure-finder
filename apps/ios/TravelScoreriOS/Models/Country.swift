@@ -2308,7 +2308,7 @@ extension String {
         let remapped = lowered.map { specialCharacterMap[$0] ?? String($0) }.joined()
         let strippedDiacritics = remapped.folding(options: .diacriticInsensitive, locale: .current)
         return strippedDiacritics.replacingOccurrences(
-            of: "[^a-z0-9]",
+            of: "[^\\p{L}\\p{N}]",
             with: "",
             options: .regularExpression
         )
