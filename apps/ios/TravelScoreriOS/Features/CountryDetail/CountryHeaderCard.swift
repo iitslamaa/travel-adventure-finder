@@ -20,13 +20,16 @@ struct CountryHeaderCard: View {
                 Text(country.localizedDisplayName)
                     .font(.title2)
                     .bold()
+                    .fixedSize(horizontal: false, vertical: true)
 
                 if let regionLabel = country.localizedRegionLabel {
                     Text(regionLabel)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             Spacer()
 

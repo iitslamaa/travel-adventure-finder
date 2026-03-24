@@ -158,87 +158,89 @@ struct CountryDetailView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        
-                        VStack(spacing: 28) {
-                            
-                            // Header polaroid style
-                            CountryHeaderCard(country: displayedCountry)
-                                .padding()
-                                .background(
-                                    Theme.countryDetailCardBackground(corner: 20)
-                                )
-                                .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+                GeometryReader { geometry in
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(spacing: 28) {
 
-                            scrapbookSection {
-                                CountryOverviewCard(country: displayedCountry)
-                            }
+                                // Header polaroid style
+                                CountryHeaderCard(country: displayedCountry)
+                                    .padding()
+                                    .background(
+                                        Theme.countryDetailCardBackground(corner: 20)
+                                    )
+                                    .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
 
-                            if sessionManager.isAuthenticated {
                                 scrapbookSection {
-                                    CountryFriendEngagementPreviewCard(
+                                    CountryOverviewCard(country: displayedCountry)
+                                }
+
+                                if sessionManager.isAuthenticated {
+                                    scrapbookSection {
+                                        CountryFriendEngagementPreviewCard(
+                                            country: displayedCountry,
+                                            engagement: engagementVM.engagement,
+                                            isLoading: engagementVM.isLoading,
+                                            onOpen: {
+                                                activeSheet = .engagement
+                                            }
+                                        )
+                                    }
+                                }
+
+                                // Advisory card stack
+                                scrapbookSection {
+                                    CountryAdvisoryCard(
                                         country: displayedCountry,
-                                        engagement: engagementVM.engagement,
-                                        isLoading: engagementVM.isLoading,
-                                        onOpen: {
-                                            activeSheet = .engagement
-                                        }
+                                        weightPercentage: weightsStore.advisoryPercentage
                                     )
                                 }
-                            }
-                            
-                            // Advisory card stack
-                            scrapbookSection {
-                                CountryAdvisoryCard(
-                                    country: displayedCountry,
-                                    weightPercentage: weightsStore.advisoryPercentage
-                                )
-                            }
-                            
-                            // Seasonality card stack
-                            scrapbookSection {
-                                CountrySeasonalityCard(
-                                    country: displayedCountry,
-                                    weightPercentage: weightsStore.seasonalityPercentage
-                                )
-                            }
-                            
-                            // Visa card stack
-                            scrapbookSection {
-                                CountryVisaCard(
-                                    country: displayedCountry,
-                                    weightPercentage: weightsStore.visaPercentage,
-                                    passportLabel: visaPassportLabel,
-                                    recommendedPassportLabel: recommendedPassportLabel,
-                                    equalBestPassportLabels: equalBestPassportLabels,
-                                    showPassportRecommendation: shouldShowPassportRecommendation
-                                )
-                            }
-                            
-                            // Affordability card stack
-                            if displayedCountry.affordabilityScore != nil {
-                                scrapbookSection {
-                                    CountryAffordabilityCard(
-                                        country: displayedCountry,
-                                        weightPercentage: weightsStore.affordabilityPercentage
-                                    )
-                                }
-                            }
 
-                            if let languageCompatibility {
+                                // Seasonality card stack
                                 scrapbookSection {
-                                    CountryLanguageCompatibilityCard(
-                                        result: languageCompatibility,
-                                        weightPercentage: weightsStore.languagePercentage
+                                    CountrySeasonalityCard(
+                                        country: displayedCountry,
+                                        weightPercentage: weightsStore.seasonalityPercentage
                                     )
                                 }
+
+                                // Visa card stack
+                                scrapbookSection {
+                                    CountryVisaCard(
+                                        country: displayedCountry,
+                                        weightPercentage: weightsStore.visaPercentage,
+                                        passportLabel: visaPassportLabel,
+                                        recommendedPassportLabel: recommendedPassportLabel,
+                                        equalBestPassportLabels: equalBestPassportLabels,
+                                        showPassportRecommendation: shouldShowPassportRecommendation
+                                    )
+                                }
+
+                                // Affordability card stack
+                                if displayedCountry.affordabilityScore != nil {
+                                    scrapbookSection {
+                                        CountryAffordabilityCard(
+                                            country: displayedCountry,
+                                            weightPercentage: weightsStore.affordabilityPercentage
+                                        )
+                                    }
+                                }
+
+                                if let languageCompatibility {
+                                    scrapbookSection {
+                                        CountryLanguageCompatibilityCard(
+                                            result: languageCompatibility,
+                                            weightPercentage: weightsStore.languagePercentage
+                                        )
+                                    }
+                                }
                             }
+                            .id("countryDetailTop")
+                            .padding(.top, 24)
+                            .padding(.horizontal)
+                            .safeAreaPadding(.bottom)
+                            .frame(width: geometry.size.width, alignment: .top)
                         }
-                        .id("countryDetailTop")
-                        .padding(.top, 24)
-                        .padding(.horizontal)
-                        .safeAreaPadding(.bottom)
                     }
                 }
             }
