@@ -14,7 +14,7 @@ struct ProfileSettingsLanguagesSection: View {
     @Binding var showAddLanguage: Bool
 
     private func displayName(for entry: LanguageEntry) -> String {
-        LanguageRepository.shared.displayName(for: entry.canonicalCode)
+        LanguageRepository.shared.localizedDisplayName(for: entry.canonicalCode)
     }
 
     var body: some View {

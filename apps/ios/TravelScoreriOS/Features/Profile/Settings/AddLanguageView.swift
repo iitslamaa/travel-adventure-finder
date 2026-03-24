@@ -45,7 +45,7 @@ struct AddLanguageView: View {
                     )
                     dismiss()
                 } label: {
-                    Text(LanguageRepository.shared.preferredDisplayName(for: language))
+                    Text(LanguageRepository.shared.localizedDisplayName(for: language.travelLanguageCode))
                 }
             }
             .searchable(text: $searchText)

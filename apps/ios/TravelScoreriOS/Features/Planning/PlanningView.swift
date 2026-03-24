@@ -3389,16 +3389,9 @@ private struct TripPlannerDayPlanEditorRow: View {
     @Binding var plan: TripPlannerDayPlan
     let countryOptions: [(id: String, name: String)]
 
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = .current
-        formatter.dateStyle = .full
-        return formatter
-    }()
-
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(dateFormatter.string(from: plan.date))
+            Text(AppDateFormatting.dateString(from: plan.date, dateStyle: .full))
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(.black)
 
@@ -3470,17 +3463,10 @@ private struct TripPlannerDayPlanEditorRow: View {
 private struct TripPlannerDayPlanRow: View {
     let plan: TripPlannerDayPlan
 
-    private let formatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = .current
-        formatter.dateFormat = "EEE, MMM d"
-        return formatter
-    }()
-
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(formatter.string(from: plan.date))
+                Text(AppDateFormatting.dateString(from: plan.date, template: "EEE MMM d"))
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.black)
 
@@ -6429,18 +6415,21 @@ private enum TripPlannerAvailabilityCalculator {
 
     static func monthLabel(for month: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMM"
+        formatter.locale = AppDisplayLocale.current
+        formatter.setLocalizedDateFormatFromTemplate("MMM")
         return formatter.string(from: month)
     }
 
     static func monthTitle(for month: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
+        formatter.locale = AppDisplayLocale.current
+        formatter.setLocalizedDateFormatFromTemplate("MMMM yyyy")
         return formatter.string(from: month)
     }
 
     static func weekdaySymbols() -> [String] {
         let formatter = DateFormatter()
+        formatter.locale = AppDisplayLocale.current
         return formatter.shortStandaloneWeekdaySymbols
     }
 
@@ -6557,10 +6546,7 @@ private enum TripPlannerAvailabilityCalculator {
 private enum TripPlannerDateFormatter {
     static func rangeText(start: Date?, end: Date?) -> String? {
         guard let start, let end else { return nil }
-        let formatter = DateIntervalFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter.string(from: start, to: end)
+        return AppDateFormatting.dateRangeString(start: start, end: end)
     }
 }
 

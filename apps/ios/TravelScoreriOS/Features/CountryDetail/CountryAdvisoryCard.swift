@@ -80,7 +80,8 @@ struct CountryAdvisoryCard: View {
 
                 if let updated = country.advisoryUpdatedAt,
                    !updated.isEmpty {
-                    Text(String(format: String(localized: "country_detail.advisory.last_updated_format"), locale: Locale.current, updated))
+                    let localizedDate = AppDateFormatting.localizedDisplayDate(from: updated) ?? updated
+                    Text(String(format: String(localized: "country_detail.advisory.last_updated_format"), locale: Locale.current, localizedDate))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

@@ -176,7 +176,7 @@ struct Country: Identifiable, Hashable {
     var localizedDisplayName: String {
         let upper = iso2.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard !upper.isEmpty else { return name }
-        return Locale.autoupdatingCurrent.localizedString(forRegionCode: upper) ?? name
+        return AppDisplayLocale.current.localizedString(forRegionCode: upper) ?? name
     }
 
     var localizedSearchableNames: [String] {
