@@ -12,16 +12,13 @@ struct CountryVisaCard: View {
     let country: Country
     let weightPercentage: Int
     let passportLabel: String
+    let recommendedPassportLabel: String?
+    let equalBestPassportLabels: [String]
     let showPassportRecommendation: Bool
 
     private var equalBestPassportText: String? {
-        guard country.visaRecommendedPassportLabel == nil else { return nil }
-        guard let passportLabel = country.visaPassportLabel, passportLabel.contains(" / ") else { return nil }
-
-        let labels = passportLabel
-            .components(separatedBy: " / ")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+        guard recommendedPassportLabel == nil else { return nil }
+        let labels = equalBestPassportLabels
 
         guard labels.count >= 2 else { return nil }
 
@@ -100,7 +97,7 @@ struct CountryVisaCard: View {
                             .fontWeight(.semibold)
 
                         if showPassportRecommendation,
-                           let recommendedPassport = country.visaRecommendedPassportLabel,
+                           let recommendedPassport = recommendedPassportLabel,
                            !recommendedPassport.isEmpty {
                             Text(String(format: String(localized: "country_detail.visa.recommended_passport_format"), locale: AppDisplayLocale.current, recommendedPassport))
                                 .font(.footnote)
