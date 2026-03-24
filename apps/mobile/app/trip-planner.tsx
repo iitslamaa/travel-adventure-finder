@@ -30,8 +30,18 @@ type PlannedTrip = {
   endDate: string | null;
   countryIso2s: string[];
   friendIds: string[];
+  expenses: TripExpense[];
   createdAt: string;
   updatedAt: string;
+};
+
+type TripExpense = {
+  id: string;
+  title: string;
+  totalAmount: number;
+  paidById: string;
+  paidByName: string;
+  splitWithIds: string[];
 };
 
 type TripDraft = {
@@ -43,6 +53,7 @@ type TripDraft = {
   endDate: string;
   countryIso2s: string[];
   friendIds: string[];
+  expenses: TripExpense[];
 };
 
 const STORAGE_KEY = 'travelaf-trip-plans-v1';
@@ -57,6 +68,7 @@ function emptyDraft(): TripDraft {
     endDate: '',
     countryIso2s: [],
     friendIds: [],
+    expenses: [],
   };
 }
 
@@ -85,7 +97,7 @@ async function getDefaultCalendarSource() {
 export default function TripPlannerScreen() {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
-  const { bucketIsoCodes, visitedIsoCodes } = useAuth();
+  const { bucketIsoCodes, visitedIsoCodes, profile, session } = useAuth();
   const { selectedMonth } = useScorePreferences();
   const { countries } = useCountries();
   const { friends } = useFriends();
@@ -94,13 +106,22 @@ export default function TripPlannerScreen() {
   const [draft, setDraft] = useState<TripDraft>(emptyDraft);
   const [modalVisible, setModalVisible] = useState(false);
   const [countryQuery, setCountryQuery] = useState('');
+  const [expenseDraftTitle, setExpenseDraftTitle] = useState('');
+  const [expenseDraftAmount, setExpenseDraftAmount] = useState('');
+  const [expenseDraftPaidById, setExpenseDraftPaidById] = useState<string | null>(null);
+  const [expenseDraftSplitWithIds, setExpenseDraftSplitWithIds] = useState<string[]>([]);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then(value => {
         if (!value) return;
         const parsed = JSON.parse(value) as PlannedTrip[];
-        setTrips(parsed);
+        setTrips(
+          parsed.map(trip => ({
+            ...trip,
+            expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
+          }))
+        );
       })
       .catch(error => {
         console.error('Failed to load trips', error);
@@ -160,6 +181,10 @@ export default function TripPlannerScreen() {
   const openNewTrip = () => {
     setDraft(emptyDraft());
     setCountryQuery('');
+    setExpenseDraftTitle('');
+    setExpenseDraftAmount('');
+    setExpenseDraftPaidById(null);
+    setExpenseDraftSplitWithIds([]);
     setModalVisible(true);
   };
 
@@ -173,8 +198,13 @@ export default function TripPlannerScreen() {
       endDate: trip.endDate ? trip.endDate.slice(0, 10) : '',
       countryIso2s: trip.countryIso2s,
       friendIds: trip.friendIds,
+      expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
     });
     setCountryQuery('');
+    setExpenseDraftTitle('');
+    setExpenseDraftAmount('');
+    setExpenseDraftPaidById(null);
+    setExpenseDraftSplitWithIds([]);
     setModalVisible(true);
   };
 
@@ -217,6 +247,7 @@ export default function TripPlannerScreen() {
         : null,
       countryIso2s: draft.countryIso2s,
       friendIds: draft.friendIds,
+      expenses: draft.expenses,
       createdAt: draft.id
         ? trips.find(trip => trip.id === draft.id)?.createdAt ?? now
         : now,
@@ -241,6 +272,78 @@ export default function TripPlannerScreen() {
   const selectedFriendNames = draft.friendIds.map(
     friendId => friendNameById.get(friendId) ?? 'Friend'
   );
+
+  const currentTraveler = session?.user?.id
+    ? {
+        id: session.user.id,
+        name: profile?.full_name || profile?.username || 'You',
+      }
+    : null;
+
+  const draftTravelers = [
+    ...(currentTraveler ? [currentTraveler] : []),
+    ...friends
+      .filter(friend => draft.friendIds.includes(friend.id))
+      .map(friend => ({
+        id: friend.id,
+        name: friend.full_name || friend.username || 'Friend',
+      })),
+  ];
+
+  const expenseTotal = (trip: PlannedTrip | TripDraft) =>
+    trip.expenses.reduce((sum, expense) => sum + expense.totalAmount, 0);
+
+  const toggleExpenseSplit = (participantId: string) => {
+    setExpenseDraftSplitWithIds(current =>
+      current.includes(participantId)
+        ? current.filter(id => id !== participantId)
+        : [...current, participantId]
+    );
+  };
+
+  const addExpenseToDraft = () => {
+    const title = expenseDraftTitle.trim();
+    const totalAmount = Number(expenseDraftAmount);
+    if (
+      !title ||
+      !Number.isFinite(totalAmount) ||
+      totalAmount <= 0 ||
+      !expenseDraftPaidById
+    ) {
+      Alert.alert('Incomplete expense', 'Add a title, amount, and who paid.');
+      return;
+    }
+
+    const splitWithIds = expenseDraftSplitWithIds.length
+      ? expenseDraftSplitWithIds
+      : draftTravelers.map(participant => participant.id);
+
+    const payer = draftTravelers.find(participant => participant.id === expenseDraftPaidById);
+    if (!payer || splitWithIds.length === 0) {
+      Alert.alert('Incomplete expense', 'Choose at least one traveler for the split.');
+      return;
+    }
+
+    setDraft(current => ({
+      ...current,
+      expenses: [
+        ...current.expenses,
+        {
+          id: new Date().toISOString(),
+          title,
+          totalAmount,
+          paidById: payer.id,
+          paidByName: payer.name,
+          splitWithIds,
+        },
+      ],
+    }));
+
+    setExpenseDraftTitle('');
+    setExpenseDraftAmount('');
+    setExpenseDraftPaidById(null);
+    setExpenseDraftSplitWithIds([]);
+  };
 
   const tripSummary = (trip: PlannedTrip) => {
     const tripCountries = countries.filter(country =>
@@ -423,6 +526,7 @@ export default function TripPlannerScreen() {
                 .map(friendId => friendNameById.get(friendId) ?? 'Friend')
                 .join(', ');
               const summary = tripSummary(trip);
+              const totalExpenses = expenseTotal(trip);
 
               return (
                 <View
@@ -540,6 +644,25 @@ export default function TripPlannerScreen() {
                           {summary.seasonality}
                         </Text>
                       </View>
+                    </View>
+                  ) : null}
+
+                  {trip.expenses.length ? (
+                    <View style={styles.expenseCard}>
+                      <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                        Expenses
+                      </Text>
+                      <Text style={[styles.tripDetail, { color: colors.textPrimary }]}>
+                        Total tracked: ${totalExpenses.toFixed(2)}
+                      </Text>
+                      {trip.expenses.slice(0, 3).map(expense => (
+                        <Text
+                          key={expense.id}
+                          style={[styles.tripNotes, { color: colors.textSecondary }]}
+                        >
+                          {expense.title}: ${expense.totalAmount.toFixed(2)} paid by {expense.paidByName}
+                        </Text>
+                      ))}
                     </View>
                   ) : null}
 
@@ -870,6 +993,166 @@ export default function TripPlannerScreen() {
                 </>
               )}
             </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                Expenses
+              </Text>
+
+              <TextInput
+                value={expenseDraftTitle}
+                onChangeText={setExpenseDraftTitle}
+                placeholder="Expense title"
+                placeholderTextColor={colors.textMuted}
+                style={[
+                  styles.textInput,
+                  {
+                    color: colors.textPrimary,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              />
+
+              <TextInput
+                value={expenseDraftAmount}
+                onChangeText={setExpenseDraftAmount}
+                placeholder="Amount in USD"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="decimal-pad"
+                style={[
+                  styles.textInput,
+                  {
+                    color: colors.textPrimary,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    marginTop: 10,
+                  },
+                ]}
+              />
+
+              {draftTravelers.length ? (
+                <>
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Who paid?
+                  </Text>
+                  <View style={styles.chipWrap}>
+                    {draftTravelers.map(participant => {
+                      const selected = expenseDraftPaidById === participant.id;
+                      return (
+                        <Pressable
+                          key={participant.id}
+                          onPress={() => setExpenseDraftPaidById(participant.id)}
+                          style={[
+                            styles.chip,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.surface,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={{
+                              color: selected ? colors.primaryText : colors.textPrimary,
+                              fontWeight: '600',
+                            }}
+                          >
+                            {participant.name}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Split with
+                  </Text>
+                  <View style={styles.chipWrap}>
+                    {draftTravelers.map(participant => {
+                      const selected = expenseDraftSplitWithIds.includes(participant.id);
+                      return (
+                        <Pressable
+                          key={`split-${participant.id}`}
+                          onPress={() => toggleExpenseSplit(participant.id)}
+                          style={[
+                            styles.chip,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.surface,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={{
+                              color: selected ? colors.primaryText : colors.textPrimary,
+                              fontWeight: '600',
+                            }}
+                          >
+                            {participant.name}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </>
+              ) : (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Add yourself or friends to the trip before splitting expenses.
+                </Text>
+              )}
+
+              <Pressable
+                onPress={addExpenseToDraft}
+                style={[
+                  styles.addExpenseButton,
+                  { backgroundColor: colors.primary },
+                ]}
+              >
+                <Text style={[styles.submitText, { color: colors.primaryText }]}>
+                  Add Expense
+                </Text>
+              </Pressable>
+
+              {draft.expenses.length ? (
+                <View style={styles.expenseList}>
+                  {draft.expenses.map(expense => (
+                    <View
+                      key={expense.id}
+                      style={[
+                        styles.expenseItem,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      <View style={{ flex: 1, marginRight: 12 }}>
+                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                          {expense.title}
+                        </Text>
+                        <Text style={[styles.tripNotes, { color: colors.textSecondary }]}>
+                          ${expense.totalAmount.toFixed(2)} paid by {expense.paidByName}
+                        </Text>
+                      </View>
+                      <Pressable
+                        onPress={() =>
+                          setDraft(current => ({
+                            ...current,
+                            expenses: current.expenses.filter(item => item.id !== expense.id),
+                          }))
+                        }
+                      >
+                        <Text style={[styles.tripActionText, { color: '#DC2626' }]}>
+                          Remove
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </View>
           </ScrollView>
 
         </View>
@@ -965,6 +1248,14 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 10,
   },
+  expenseCard: {
+    marginTop: 12,
+  },
+  expenseTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
   statRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -994,6 +1285,10 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   saveText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  submitText: {
     fontSize: 15,
     fontWeight: '700',
   },
@@ -1078,5 +1373,23 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 10,
+  },
+  addExpenseButton: {
+    minHeight: 44,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+  },
+  expenseList: {
+    gap: 10,
+    marginTop: 14,
+  },
+  expenseItem: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
