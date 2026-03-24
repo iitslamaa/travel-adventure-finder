@@ -323,8 +323,8 @@ struct PlanningListActionButton: View {
         .buttonStyle(.plain)
         .accessibilityLabel(
             isActive
-            ? String(format: String(localized: "planning.country_toggle.remove_format"), locale: Locale.current, kind.shortTitle)
-            : String(format: String(localized: "planning.country_toggle.add_format"), locale: Locale.current, kind.shortTitle)
+            ? String(format: String(localized: "planning.country_toggle.remove_format"), locale: AppDisplayLocale.current, kind.shortTitle)
+            : String(format: String(localized: "planning.country_toggle.add_format"), locale: AppDisplayLocale.current, kind.shortTitle)
         )
     }
 }
@@ -760,7 +760,7 @@ private enum TripPlannerDayPlanBuilder {
                     date: date,
                     kind: .country,
                     countryId: firstCountry.id,
-                    countryName: Locale.autoupdatingCurrent.localizedString(forRegionCode: firstCountry.id.uppercased()) ?? firstCountry.name
+                    countryName: CountrySelectionFormatter.localizedName(for: firstCountry.id)
                 )
             }
 
@@ -1163,12 +1163,12 @@ struct TripPlannerView: View {
                 trip.notes.isEmpty ? nil : trip.notes,
                 trip.countryNames.isEmpty ? nil : String(
                     format: String(localized: "trip_planner.calendar_notes_countries"),
-                    locale: Locale.current,
+                    locale: AppDisplayLocale.current,
                     trip.countryNames.joined(separator: ", ")
                 ),
                 trip.friendNames.isEmpty ? nil : String(
                     format: String(localized: "trip_planner.calendar_notes_friends"),
-                    locale: Locale.current,
+                    locale: AppDisplayLocale.current,
                     trip.friendNames.joined(separator: ", ")
                 )
             ].compactMap { $0 }
@@ -1332,7 +1332,7 @@ private struct TripPlannerComposerView: View {
                         TripPlannerCountryPickerSection(
                             title: String(
                                 format: String(localized: "trip_planner.country_picker.match_count_format"),
-                                locale: Locale.current,
+                                locale: AppDisplayLocale.current,
                                 matchCount,
                                 groupSize
                             ),
@@ -1767,7 +1767,7 @@ private struct TripPlannerComposerView: View {
         }
 
         if let firstCountry = selectedCountries.first {
-            return String(format: String(localized: "trip_planner.generated_title_format"), locale: Locale.current, firstCountry.localizedDisplayName)
+            return String(format: String(localized: "trip_planner.generated_title_format"), locale: AppDisplayLocale.current, firstCountry.localizedDisplayName)
         }
 
         return String(localized: "trip_planner.new_trip")
@@ -3267,7 +3267,7 @@ private struct TripPlannerItineraryPreview: View {
                     TripPlannerInfoCard(
                         text: String(
                             format: String(localized: "trip_planner.itinerary.more_days"),
-                            locale: Locale.current,
+                            locale: AppDisplayLocale.current,
                             normalizedPlans.count - 4
                         ),
                         systemImage: "ellipsis.circle.fill"
@@ -3537,7 +3537,7 @@ private struct TripPlannerExpensesSection: View {
                     value: currency(totalSpent),
                     detail: String(
                         format: String(localized: "trip_planner.expenses.stats.expense_count"),
-                        locale: Locale.current,
+                        locale: AppDisplayLocale.current,
                         expenses.count
                     )
                 )
@@ -3564,7 +3564,7 @@ private struct TripPlannerExpensesSection: View {
                         TripPlannerInfoCard(
                             text: String(
                                 format: String(localized: "trip_planner.expenses.stats.more_expenses"),
-                                locale: Locale.current,
+                                locale: AppDisplayLocale.current,
                                 expenses.count - 3
                             ),
                             systemImage: "ellipsis.circle.fill"
@@ -3579,7 +3579,8 @@ private struct TripPlannerExpensesSection: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "USD"
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(Int(amount))"
+        formatter.locale = AppDisplayLocale.current
+        return formatter.string(from: NSNumber(value: amount)) ?? "$\(AppNumberFormatting.integerString(Int(amount)))"
     }
 }
 
@@ -3845,7 +3846,8 @@ private struct TripPlannerExpenseBalanceCard: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "USD"
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(Int(amount))"
+        formatter.locale = AppDisplayLocale.current
+        return formatter.string(from: NSNumber(value: amount)) ?? "$\(AppNumberFormatting.integerString(Int(amount)))"
     }
 }
 
@@ -4092,7 +4094,7 @@ private struct TripPlannerExpenseRow: View {
                     Text(
                         String(
                             format: String(localized: "trip_planner.expenses.paid_by_format"),
-                            locale: Locale.current,
+                            locale: AppDisplayLocale.current,
                             currency(expense.totalAmount),
                             expense.paidByName
                         )
@@ -4128,7 +4130,7 @@ private struct TripPlannerExpenseRow: View {
                                 Text(
                                     String(
                                         format: String(localized: "trip_planner.expenses.owes_format"),
-                                        locale: Locale.current,
+                                        locale: AppDisplayLocale.current,
                                         share.participantName,
                                         currency(share.amountOwed)
                                     )
@@ -4237,7 +4239,8 @@ private struct TripPlannerExpenseRow: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "USD"
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(Int(amount))"
+        formatter.locale = AppDisplayLocale.current
+        return formatter.string(from: NSNumber(value: amount)) ?? "$\(AppNumberFormatting.integerString(Int(amount)))"
     }
 }
 
@@ -4503,7 +4506,7 @@ private struct TripPlannerStatsSection: View {
                     ) {
                         TripPlannerScoreHighlightCard(
                             title: String(localized: "trip_planner.stats.average_overall"),
-                            subtitle: String(format: String(localized: "trip_planner.stats.across_stops_format"), locale: Locale.current, countries.count),
+                            subtitle: String(format: String(localized: "trip_planner.stats.across_stops_format"), locale: AppDisplayLocale.current, countries.count),
                             score: averageOverallScore
                         )
 
@@ -4573,14 +4576,14 @@ private struct TripPlannerStatsSection: View {
         guard let tripLengthDays else {
             return String(localized: "trip_planner.stats.estimate_when_dates_set")
         }
-        return String(format: String(localized: "trip_planner.stats.trip_length_estimate_format"), locale: Locale.current, tripLengthDays)
+        return String(format: String(localized: "trip_planner.stats.trip_length_estimate_format"), locale: AppDisplayLocale.current, tripLengthDays)
     }
 
     private var dailySpendDetail: String {
         if !weightedCountryDays.isEmpty {
             let travelDayCount = normalizedDayPlans.filter { $0.kind == .travel }.count
             if travelDayCount > 0 {
-                return String(format: String(localized: "trip_planner.stats.weighted_excluding_travel_days_format"), locale: Locale.current, travelDayCount)
+                return String(format: String(localized: "trip_planner.stats.weighted_excluding_travel_days_format"), locale: AppDisplayLocale.current, travelDayCount)
             }
             return String(localized: "trip_planner.stats.weighted_by_itinerary")
         }
@@ -4602,7 +4605,7 @@ private struct TripPlannerStatsSection: View {
             return String(localized: "trip_planner.visa.plan_needed")
         }
         if isGroupTrip, affectedTravelerCount > 0 {
-            return String(format: String(localized: "trip_planner.visa.traveler_prep_format"), locale: Locale.current, affectedTravelerCount)
+            return String(format: String(localized: "trip_planner.visa.traveler_prep_format"), locale: AppDisplayLocale.current, affectedTravelerCount)
         }
         if allCountriesVisaFreeForTrip {
             return String(localized: "trip_planner.visa.none_required")
@@ -4610,21 +4613,21 @@ private struct TripPlannerStatsSection: View {
         if allCountriesNeedNoAdvanceVisa {
             return String(localized: "trip_planner.visa.no_advance_needed")
         }
-        return String(format: String(localized: "trip_planner.visa.stops_to_prep_format"), locale: Locale.current, visaPrepCountries.count)
+        return String(format: String(localized: "trip_planner.visa.stops_to_prep_format"), locale: AppDisplayLocale.current, visaPrepCountries.count)
     }
 
     private var monthSummaryText: String {
         let formatter = DateFormatter()
-        formatter.locale = .current
-        return String(format: String(localized: "trip_planner.stats.month_timing_format"), locale: Locale.current, formatter.monthSymbols[selectedMonth - 1])
+        formatter.locale = AppDisplayLocale.current
+        return String(format: String(localized: "trip_planner.stats.month_timing_format"), locale: AppDisplayLocale.current, formatter.monthSymbols[selectedMonth - 1])
     }
 
     private var snapshotSummary: String {
         if isGroupTrip {
-            return String(format: String(localized: "trip_planner.stats.group_snapshot_summary_format"), locale: Locale.current, travelerCount, countries.count)
+            return String(format: String(localized: "trip_planner.stats.group_snapshot_summary_format"), locale: AppDisplayLocale.current, travelerCount, countries.count)
         }
 
-        return String(format: String(localized: "trip_planner.stats.selected_countries_summary_format"), locale: Locale.current, countries.count)
+        return String(format: String(localized: "trip_planner.stats.selected_countries_summary_format"), locale: AppDisplayLocale.current, countries.count)
     }
 
     private func average(of values: [Int]) -> Int? {
@@ -4637,27 +4640,27 @@ private struct TripPlannerStatsSection: View {
         guard let tripLengthDays else {
             return String(localized: "trip_planner.visa.overstay_warning_generic")
         }
-        return String(format: String(localized: "trip_planner.visa.overstay_warning_format"), locale: Locale.current, countriesText, tripLengthDays)
+        return String(format: String(localized: "trip_planner.visa.overstay_warning_format"), locale: AppDisplayLocale.current, countriesText, tripLengthDays)
     }
 
     private var visaBadges: [String] {
         var badges: [String] = []
 
         if !countries.isEmpty {
-            badges.append(String(format: String(localized: "trip_planner.visa.stop_count_format"), locale: Locale.current, countries.count))
+            badges.append(String(format: String(localized: "trip_planner.visa.stop_count_format"), locale: AppDisplayLocale.current, countries.count))
         }
 
         if isGroupTrip {
-            badges.append(String(format: String(localized: "trip_planner.visa.traveler_count_format"), locale: Locale.current, travelerCount))
+            badges.append(String(format: String(localized: "trip_planner.visa.traveler_count_format"), locale: AppDisplayLocale.current, travelerCount))
             if !groupVisaNeeds.isEmpty {
-                badges.append(String(format: String(localized: "trip_planner.visa.flag_count_format"), locale: Locale.current, groupVisaNeeds.count))
+                badges.append(String(format: String(localized: "trip_planner.visa.flag_count_format"), locale: AppDisplayLocale.current, groupVisaNeeds.count))
             }
         } else if !visaPrepCountries.isEmpty {
-            badges.append(String(format: String(localized: "trip_planner.visa.stop_prep_count_format"), locale: Locale.current, visaPrepCountries.count))
+            badges.append(String(format: String(localized: "trip_planner.visa.stop_prep_count_format"), locale: AppDisplayLocale.current, visaPrepCountries.count))
         }
 
         if let tripLengthDays {
-            badges.append(String(format: String(localized: "trip_planner.visa.day_count_format"), locale: Locale.current, tripLengthDays))
+            badges.append(String(format: String(localized: "trip_planner.visa.day_count_format"), locale: AppDisplayLocale.current, tripLengthDays))
         }
 
         return badges
@@ -4694,10 +4697,10 @@ private struct TripPlannerTravelerVisaNeed: Identifiable, Hashable {
 
     func summaryText(tripLengthDays: Int?) -> String {
         if exceedsAllowedStay, let tripLengthDays, let allowedDays {
-            return String(format: String(localized: "trip_planner.visa.traveler_overstay_summary_format"), locale: Locale.current, travelerName, countryFlag, countryName, passportLabel, allowedDays, tripLengthDays)
+            return String(format: String(localized: "trip_planner.visa.traveler_overstay_summary_format"), locale: AppDisplayLocale.current, travelerName, countryFlag, countryName, passportLabel, allowedDays, tripLengthDays)
         }
 
-        return String(format: String(localized: "trip_planner.visa.traveler_prep_summary_format"), locale: Locale.current, travelerName, countryFlag, countryName, passportLabel)
+        return String(format: String(localized: "trip_planner.visa.traveler_prep_summary_format"), locale: AppDisplayLocale.current, travelerName, countryFlag, countryName, passportLabel)
     }
 }
 
@@ -4821,7 +4824,7 @@ private struct TripPlannerVisaSummaryCard: View {
 
                 if hiddenSummaryCount > 0 {
                     TripPlannerInfoCard(
-                        text: String(format: String(localized: "trip_planner.visa.hidden_summary_format"), locale: Locale.current, hiddenSummaryCount),
+                        text: String(format: String(localized: "trip_planner.visa.hidden_summary_format"), locale: AppDisplayLocale.current, hiddenSummaryCount),
                         systemImage: "ellipsis.circle.fill"
                     )
                 }
@@ -4868,16 +4871,16 @@ private struct TripPlannerVisaCountryRow: View {
     private var statusText: String {
         if summary.exceedsAllowedStay, let tripLengthDays, let allowedDays = summary.allowedDays {
             if isGroupTrip, summary.travelerCount > 0 {
-                return String(format: String(localized: "trip_planner.visa.group_overstay_status_format"), locale: Locale.current, travelerPreview, allowedDays, tripLengthDays)
+                return String(format: String(localized: "trip_planner.visa.group_overstay_status_format"), locale: AppDisplayLocale.current, travelerPreview, allowedDays, tripLengthDays)
             }
-            return String(format: String(localized: "trip_planner.visa.solo_overstay_status_format"), locale: Locale.current, allowedDays, tripLengthDays)
+            return String(format: String(localized: "trip_planner.visa.solo_overstay_status_format"), locale: AppDisplayLocale.current, allowedDays, tripLengthDays)
         }
 
         if isGroupTrip, summary.travelerCount > 0 {
             if summary.travelerCount == 1 {
-                return String(format: String(localized: "trip_planner.visa.one_traveler_needs_visa_format"), locale: Locale.current, travelerPreview)
+                return String(format: String(localized: "trip_planner.visa.one_traveler_needs_visa_format"), locale: AppDisplayLocale.current, travelerPreview)
             }
-            return String(format: String(localized: "trip_planner.visa.multiple_travelers_need_visa_format"), locale: Locale.current, travelerPreview)
+            return String(format: String(localized: "trip_planner.visa.multiple_travelers_need_visa_format"), locale: AppDisplayLocale.current, travelerPreview)
         }
 
         let label = summary.passportLabels.first ?? passportLabel
@@ -5172,13 +5175,13 @@ private struct TripPlannerAvailabilitySection: View {
                 HStack(spacing: 8) {
                     TripPlannerBadge(text: String(
                         format: String(localized: "trip_planner.availability.date_range_count"),
-                        locale: Locale.current,
+                        locale: AppDisplayLocale.current,
                         exactProposalCount
                     ))
                     if monthProposalCount > 0 {
                         TripPlannerBadge(text: String(
                             format: String(localized: "trip_planner.availability.flexible_month_count"),
-                            locale: Locale.current,
+                            locale: AppDisplayLocale.current,
                             monthProposalCount
                         ))
                     }
@@ -5488,7 +5491,7 @@ private struct TripPlannerOverlapCard: View {
                     ? String(localized: "trip_planner.availability.overlap_full_match")
                     : String(
                         format: String(localized: "trip_planner.availability.overlap_partial_match"),
-                        locale: Locale.current,
+                        locale: AppDisplayLocale.current,
                         overlap.exactParticipantCount,
                         overlap.totalParticipantCount
                     ))
@@ -5551,7 +5554,7 @@ private struct TripPlannerSavedTripCard: View {
             if !trip.friendNames.isEmpty {
                 Text(String(
                     format: String(localized: "trip_planner.saved_trip.with_format"),
-                    locale: Locale.current,
+                    locale: AppDisplayLocale.current,
                     trip.friendNames.joined(separator: ", ")
                 ))
                     .font(.system(size: 14, weight: .medium))
@@ -5807,7 +5810,7 @@ private struct TripPlannerFriendRow: View {
                     Spacer(minLength: 8)
 
                     if let mutualBucketCount {
-                        Text(String(format: String(localized: "trip_planner.friends.mutual_count_format"), locale: Locale.current, mutualBucketCount))
+                        Text(String(format: String(localized: "trip_planner.friends.mutual_count_format"), locale: AppDisplayLocale.current, mutualBucketCount))
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.black.opacity(0.62))
                             .padding(.horizontal, 8)
@@ -6410,9 +6413,9 @@ private enum TripPlannerAvailabilityCalculator {
     static func label(for proposal: TripPlannerAvailabilityProposal) -> String {
         switch proposal.kind {
         case .exactDates:
-            return String(format: String(localized: "trip_planner.availability.label_exact_format"), locale: Locale.current, TripPlannerDateFormatter.rangeText(start: proposal.startDate, end: proposal.endDate) ?? String(localized: "trip_planner.availability.label_dates"))
+            return String(format: String(localized: "trip_planner.availability.label_exact_format"), locale: AppDisplayLocale.current, TripPlannerDateFormatter.rangeText(start: proposal.startDate, end: proposal.endDate) ?? String(localized: "trip_planner.availability.label_dates"))
         case .flexibleMonth:
-            return String(format: String(localized: "trip_planner.availability.label_flexible_format"), locale: Locale.current, monthTitle(for: proposal.startDate))
+            return String(format: String(localized: "trip_planner.availability.label_flexible_format"), locale: AppDisplayLocale.current, monthTitle(for: proposal.startDate))
         }
     }
 

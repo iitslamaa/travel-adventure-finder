@@ -32,7 +32,7 @@ struct CountryAdvisoryCard: View {
                     Text("country_detail.advisory.title")
                         .font(.headline)
                     Spacer()
-                    Text(String(format: String(localized: "country_detail.advisory.source_weight_format"), locale: Locale.current, weightPercentage))
+                    Text(String(format: String(localized: "country_detail.advisory.source_weight_format"), locale: AppDisplayLocale.current, weightPercentage))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -81,7 +81,7 @@ struct CountryAdvisoryCard: View {
                 if let updated = country.advisoryUpdatedAt,
                    !updated.isEmpty {
                     let localizedDate = AppDateFormatting.localizedDisplayDate(from: updated) ?? updated
-                    Text(String(format: String(localized: "country_detail.advisory.last_updated_format"), locale: Locale.current, localizedDate))
+                    Text(String(format: String(localized: "country_detail.advisory.last_updated_format"), locale: AppDisplayLocale.current, localizedDate))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -92,8 +92,8 @@ struct CountryAdvisoryCard: View {
                 }
 
                 HStack(spacing: 12) {
-                    Text(String(format: String(localized: "country_detail.advisory.normalized_format"), locale: Locale.current, advisoryScore))
-                    Text(String(format: String(localized: "country_detail.advisory.weight_format"), locale: Locale.current, weightPercentage))
+                    Text(String(format: String(localized: "country_detail.advisory.normalized_format"), locale: AppDisplayLocale.current, advisoryScore))
+                    Text(String(format: String(localized: "country_detail.advisory.weight_format"), locale: AppDisplayLocale.current, weightPercentage))
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

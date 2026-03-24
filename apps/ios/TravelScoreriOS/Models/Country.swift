@@ -221,7 +221,7 @@ struct Country: Identifiable, Hashable {
 
     private var localizedAffordabilityContent: (headline: String?, body: String?) {
         let tier = affordabilityTier
-        let locale = Locale.autoupdatingCurrent
+        let locale = AppDisplayLocale.current
         let formattedDailySpend = formattedUSD(dailySpendTotalUsd, locale: locale)
 
         let headline: String

@@ -50,7 +50,7 @@ struct ScoreCountryDrawerView: View {
 
                     if let score = country.score {
                         HStack(spacing: 8) {
-                            Text("\(score)")
+                            Text(AppNumberFormatting.integerString(score))
                                 .font(.title2.weight(.bold))
                                 .fixedSize()
                                 .padding(.horizontal, 20)

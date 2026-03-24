@@ -539,7 +539,7 @@ private struct CountryFriendEngagementPreviewCard: View {
         .compactMap { $0 }
 
         if parts.isEmpty {
-            return String(format: String(localized: "country_detail.friends.no_signals_format"), locale: Locale.current, engagement.totalFriends)
+            return String(format: String(localized: "country_detail.friends.no_signals_format"), locale: AppDisplayLocale.current, engagement.totalFriends)
         }
 
         return parts.joined(separator: " • ")
@@ -613,7 +613,7 @@ private struct CountryFriendEngagementCard: View {
                     Spacer()
 
                     if engagement.totalFriends > 0 {
-                        Text(String(format: String(localized: "country_detail.friends.friend_count_format"), locale: Locale.current, engagement.totalFriends))
+                        Text(String(format: String(localized: "country_detail.friends.friend_count_format"), locale: AppDisplayLocale.current, engagement.totalFriends))
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -687,7 +687,7 @@ private struct CountryFriendEngagementCard: View {
 
                 Spacer()
 
-                Text("\(profiles.count)")
+                Text(AppNumberFormatting.integerString(profiles.count))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
@@ -1150,7 +1150,7 @@ private struct CountryLanguageCompatibilityCard: View {
 
                 Spacer()
 
-                Text(String(format: String(localized: "country_detail.language.your_languages_weight_format"), locale: Locale.current, weightPercentage))
+                Text(String(format: String(localized: "country_detail.language.your_languages_weight_format"), locale: AppDisplayLocale.current, weightPercentage))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

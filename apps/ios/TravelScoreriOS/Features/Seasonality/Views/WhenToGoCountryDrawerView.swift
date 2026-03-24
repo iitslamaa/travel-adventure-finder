@@ -82,7 +82,7 @@ struct WhenToGoCountryDrawerView: View {
 
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(String(format: String(localized: "country_detail.seasonality.title_format"), locale: Locale.current, selectedMonthName))
+                        Text(String(format: String(localized: "country_detail.seasonality.title_format"), locale: AppDisplayLocale.current, selectedMonthName))
                             .font(.headline)
 
                         Text("seasonality.drawer.monthly_conditions")
@@ -233,7 +233,7 @@ struct WhenToGoCountryDrawerView: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
 
-                Text(String(format: String(localized: "country_detail.seasonality.weight_format"), locale: Locale.current, weightPercentage))
+                Text(String(format: String(localized: "country_detail.seasonality.weight_format"), locale: AppDisplayLocale.current, weightPercentage))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

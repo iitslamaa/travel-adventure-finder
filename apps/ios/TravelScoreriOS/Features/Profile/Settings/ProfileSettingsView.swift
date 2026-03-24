@@ -743,7 +743,7 @@ private struct ProfileSettingsPassportSection: View {
             titleVisibility: .visible
         ) {
             if let code = pendingDeletionCode {
-                Button(String(format: String(localized: "profile.settings.passports.delete_format"), locale: Locale.current, CountrySelectionFormatter.localizedName(for: code)), role: .destructive) {
+                Button(String(format: String(localized: "profile.settings.passports.delete_format"), locale: AppDisplayLocale.current, CountrySelectionFormatter.localizedName(for: code)), role: .destructive) {
                     passportNationalities.remove(code)
                     pendingDeletionCode = nil
                 }
