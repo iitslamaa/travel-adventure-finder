@@ -41,14 +41,14 @@ enum CountrySeasonalityHelpers {
 
     static func shortMonthName(for month: Int) -> String {
         let formatter = DateFormatter()
-        formatter.locale = .autoupdatingCurrent
+        formatter.locale = AppDisplayLocale.current
         guard (1...12).contains(month) else { return String(localized: "common.month") }
         return formatter.shortMonthSymbols[month - 1]
     }
 
     static func fullMonthName(for month: Int) -> String {
         let formatter = DateFormatter()
-        formatter.locale = .autoupdatingCurrent
+        formatter.locale = AppDisplayLocale.current
         guard (1...12).contains(month) else { return String(localized: "common.this_month") }
         return formatter.monthSymbols[month - 1]
     }

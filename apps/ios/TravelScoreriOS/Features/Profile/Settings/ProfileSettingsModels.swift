@@ -116,11 +116,9 @@ struct PassportPreferences: Codable, Equatable {
 }
 
 enum CountrySelectionFormatter {
-    private static let locale = Locale.autoupdatingCurrent
-
     static func localizedName(for code: String) -> String {
         let upper = code.uppercased()
-        return locale.localizedString(forRegionCode: upper) ?? upper
+        return AppDisplayLocale.current.localizedString(forRegionCode: upper) ?? upper
     }
 
     static func label(for code: String) -> String {

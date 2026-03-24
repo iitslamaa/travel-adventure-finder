@@ -106,7 +106,7 @@ struct FriendsView: View {
                                         .foregroundStyle(.black)
 
                                     if friendsVM.incomingRequestCount > 0 {
-                                        Text("\(min(friendsVM.incomingRequestCount, 9))")
+                                        Text(AppNumberFormatting.integerString(min(friendsVM.incomingRequestCount, 9)))
                                             .font(TAFTypography.caption(.bold))
                                             .foregroundStyle(.white)
                                             .frame(width: 18, height: 18)

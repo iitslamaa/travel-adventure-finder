@@ -19,7 +19,7 @@ struct StatCard: View {
                 .font(.title2)
                 .foregroundColor(.accentColor)
 
-            Text("\(value)")
+            Text(AppNumberFormatting.integerString(value))
                 .font(.title)
                 .bold()
 

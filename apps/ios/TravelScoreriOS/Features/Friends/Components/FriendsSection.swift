@@ -39,7 +39,7 @@ struct FriendsSection: View {
                     Label("friends.section.view_friends", systemImage: "person.2.fill")
                         .font(.headline)
                     Spacer()
-                    Text("\(friendCount)")
+                    Text(AppNumberFormatting.integerString(friendCount))
                         .foregroundStyle(.black.opacity(0.55))
                     Image(systemName: "chevron.right")
                         .foregroundStyle(.black.opacity(0.55))

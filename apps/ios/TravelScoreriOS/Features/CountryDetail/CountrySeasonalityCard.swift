@@ -21,10 +21,10 @@ struct CountrySeasonalityCard: View {
 
             // Title row
             HStack {
-                Text(String(format: String(localized: "country_detail.seasonality.title_format"), locale: Locale.current, selectedMonthName))
+                Text(String(format: String(localized: "country_detail.seasonality.title_format"), locale: AppDisplayLocale.current, selectedMonthName))
                     .font(.headline)
                 Spacer()
-                Text(String(format: String(localized: "country_detail.seasonality.month_weight_format"), locale: Locale.current, weightsStore.selectedMonthShortName, weightPercentage))
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.seasonality.month_weight_format"), locale: AppDisplayLocale.current, weightsStore.selectedMonthShortName, weightPercentage)))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -32,7 +32,7 @@ struct CountrySeasonalityCard: View {
             // Score pill + description
             HStack(spacing: 12) {
                 if let seasonalityScore = displayedSeasonalityScore {
-                    Text("\(seasonalityScore)")
+                    Text(AppNumberFormatting.integerString(seasonalityScore))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
@@ -93,9 +93,9 @@ struct CountrySeasonalityCard: View {
 
             HStack(spacing: 12) {
                 if let seasonalityScore = displayedSeasonalityScore {
-                    Text(String(format: String(localized: "country_detail.seasonality.normalized_format"), locale: Locale.current, seasonalityScore))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.seasonality.normalized_format"), locale: AppDisplayLocale.current, seasonalityScore)))
                 }
-                Text(String(format: String(localized: "country_detail.seasonality.weight_format"), locale: Locale.current, weightPercentage))
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.seasonality.weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
             }
             .font(.caption)
             .foregroundStyle(.secondary)

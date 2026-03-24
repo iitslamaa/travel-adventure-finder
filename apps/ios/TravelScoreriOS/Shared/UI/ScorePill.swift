@@ -57,7 +57,7 @@ struct ScorePill: View {
     }
 
     private var formattedScore: String {
-        String(format: "%.0f", score)
+        AppNumberFormatting.integerString(score)
     }
 
     /// Unified color resolver:

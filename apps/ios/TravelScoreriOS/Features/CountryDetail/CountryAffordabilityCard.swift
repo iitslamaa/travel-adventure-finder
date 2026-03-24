@@ -20,7 +20,7 @@ struct CountryAffordabilityCard: View {
                 Text("country_detail.affordability.title")
                     .font(.headline)
                 Spacer()
-                Text(String(format: String(localized: "country_detail.affordability.estimated_daily_cost_format"), locale: Locale.current, weightPercentage))
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.estimated_daily_cost_format"), locale: AppDisplayLocale.current, weightPercentage)))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -28,7 +28,7 @@ struct CountryAffordabilityCard: View {
             // Score pill + description
             HStack(spacing: 12) {
                 if let affordabilityScore = country.affordabilityScore {
-                    Text("\(affordabilityScore)")
+                    Text(AppNumberFormatting.integerString(affordabilityScore))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
@@ -77,19 +77,19 @@ struct CountryAffordabilityCard: View {
             // Optional daily spend breakdown (if available)
             VStack(alignment: .leading, spacing: 4) {
                 if let total = country.dailySpendTotalUsd {
-                    Text(String(format: String(localized: "country_detail.affordability.daily_total_format"), locale: Locale.current, total))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.daily_total_format"), locale: AppDisplayLocale.current, total)))
                 }
 
                 if let hotel = country.dailySpendHotelUsd {
-                    Text(String(format: String(localized: "country_detail.affordability.hotel_per_night_format"), locale: Locale.current, hotel))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.hotel_per_night_format"), locale: AppDisplayLocale.current, hotel)))
                 }
 
                 if let food = country.dailySpendFoodUsd {
-                    Text(String(format: String(localized: "country_detail.affordability.food_per_day_format"), locale: Locale.current, food))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.food_per_day_format"), locale: AppDisplayLocale.current, food)))
                 }
 
                 if let activities = country.dailySpendActivitiesUsd {
-                    Text(String(format: String(localized: "country_detail.affordability.activities_per_day_format"), locale: Locale.current, activities))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.activities_per_day_format"), locale: AppDisplayLocale.current, activities)))
                 }
             }
             .font(.footnote)
@@ -98,9 +98,9 @@ struct CountryAffordabilityCard: View {
             // Footer
             HStack(spacing: 12) {
                 if let affordabilityScore = country.affordabilityScore {
-                    Text(String(format: String(localized: "country_detail.affordability.normalized_format"), locale: Locale.current, affordabilityScore))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.normalized_format"), locale: AppDisplayLocale.current, affordabilityScore)))
                 }
-                Text(String(format: String(localized: "country_detail.affordability.weight_format"), locale: Locale.current, weightPercentage))
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
             }
             .font(.caption)
             .foregroundStyle(.secondary)

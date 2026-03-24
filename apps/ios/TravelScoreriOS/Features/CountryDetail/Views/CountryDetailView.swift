@@ -56,30 +56,75 @@ struct CountryDetailView: View {
         traveledStore.ids.contains(country.id)
     }
 
+    private var localizedVisaPassportLabels: [String] {
+        if let passportCode = country.visaPassportCode?.nilIfBlank {
+            return [CountrySelectionFormatter.localizedName(for: passportCode)]
+        }
+
+        if
+            let rawLabel = country.visaPassportLabel?.nilIfBlank,
+            rawLabel.contains(" / ")
+        {
+            let passportCodes = profileVM.passportNationalities
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+                .filter { !$0.isEmpty }
+
+            if !passportCodes.isEmpty {
+                return passportCodes.map(CountrySelectionFormatter.localizedName(for:))
+            }
+
+            return rawLabel
+                .components(separatedBy: " / ")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+        }
+
+        if let rawLabel = country.visaPassportLabel?.nilIfBlank {
+            return [rawLabel]
+        }
+
+        if let effectivePassportCode = profileVM.effectivePassportCountryCode?.nilIfBlank {
+            return [CountrySelectionFormatter.localizedName(for: effectivePassportCode)]
+        }
+
+        if let activePassportLabel = visaStore.activePassportLabel?.nilIfBlank {
+            return [activePassportLabel]
+        }
+
+        return []
+    }
+
     private var visaPassportLabel: String {
-        if let label = country.visaPassportLabel, !label.isEmpty {
-            return label
+        if !localizedVisaPassportLabels.isEmpty {
+            return localizedVisaPassportLabels.joined(separator: " / ")
         }
 
         if profileVM.passportNationalities.count > 1 {
             return String(localized: "trip_planner.visa.best_saved_passport")
         }
 
-        if let code = profileVM.effectivePassportCountryCode {
-            return CountrySelectionFormatter.localizedName(for: code)
+        return visaStore.activePassportLabel ?? String(localized: "trip_planner.visa.default_passport_label")
+    }
+
+    private var recommendedPassportLabel: String? {
+        guard profileVM.passportNationalities.count > 1 else { return nil }
+
+        if let passportCode = country.visaPassportCode?.nilIfBlank {
+            return CountrySelectionFormatter.localizedName(for: passportCode)
         }
 
-        return visaStore.activePassportLabel ?? String(localized: "trip_planner.visa.default_passport_label")
+        return country.visaRecommendedPassportLabel?.nilIfBlank
+    }
+
+    private var equalBestPassportLabels: [String] {
+        guard profileVM.passportNationalities.count > 1 else { return [] }
+        guard recommendedPassportLabel == nil else { return [] }
+        return localizedVisaPassportLabels.count > 1 ? localizedVisaPassportLabels : []
     }
 
     private var shouldShowPassportRecommendation: Bool {
         guard profileVM.passportNationalities.count > 1 else { return false }
-        if let recommendedPassport = country.visaRecommendedPassportLabel, !recommendedPassport.isEmpty {
-            return true
-        }
-
-        guard let passportLabel = country.visaPassportLabel, !passportLabel.isEmpty else { return false }
-        return passportLabel.contains(" / ")
+        return recommendedPassportLabel != nil || equalBestPassportLabels.count > 1
     }
 
     @MainActor
@@ -165,6 +210,8 @@ struct CountryDetailView: View {
                                     country: displayedCountry,
                                     weightPercentage: weightsStore.visaPercentage,
                                     passportLabel: visaPassportLabel,
+                                    recommendedPassportLabel: recommendedPassportLabel,
+                                    equalBestPassportLabels: equalBestPassportLabels,
                                     showPassportRecommendation: shouldShowPassportRecommendation
                                 )
                             }
@@ -316,6 +363,13 @@ struct CountryDetailView: View {
         } else {
             traveledStore.toggle(country.id)
         }
+    }
+}
+
+private extension String {
+    var nilIfBlank: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
 
@@ -539,7 +593,7 @@ private struct CountryFriendEngagementPreviewCard: View {
         .compactMap { $0 }
 
         if parts.isEmpty {
-            return String(format: String(localized: "country_detail.friends.no_signals_format"), locale: Locale.current, engagement.totalFriends)
+            return String(format: String(localized: "country_detail.friends.no_signals_format"), locale: AppDisplayLocale.current, engagement.totalFriends)
         }
 
         return parts.joined(separator: " • ")
@@ -613,7 +667,7 @@ private struct CountryFriendEngagementCard: View {
                     Spacer()
 
                     if engagement.totalFriends > 0 {
-                        Text(String(format: String(localized: "country_detail.friends.friend_count_format"), locale: Locale.current, engagement.totalFriends))
+                        Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.friends.friend_count_format"), locale: AppDisplayLocale.current, engagement.totalFriends)))
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -687,7 +741,7 @@ private struct CountryFriendEngagementCard: View {
 
                 Spacer()
 
-                Text("\(profiles.count)")
+                Text(AppNumberFormatting.integerString(profiles.count))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
@@ -1150,13 +1204,13 @@ private struct CountryLanguageCompatibilityCard: View {
 
                 Spacer()
 
-                Text(String(format: String(localized: "country_detail.language.your_languages_weight_format"), locale: Locale.current, weightPercentage))
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.language.your_languages_weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
 
             HStack(spacing: 12) {
-                Text("\(result.score)")
+                Text(AppNumberFormatting.integerString(result.score))
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)

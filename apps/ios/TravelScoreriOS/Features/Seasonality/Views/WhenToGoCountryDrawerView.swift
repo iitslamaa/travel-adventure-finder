@@ -22,7 +22,7 @@ struct WhenToGoCountryDrawerView: View {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
-                            Text(country.country.name)
+                            Text(country.country.localizedDisplayName)
                                 .font(.system(size: 20, weight: .bold, design: .rounded))
                                 .lineLimit(2)
                                 .multilineTextAlignment(.leading)
@@ -33,7 +33,7 @@ struct WhenToGoCountryDrawerView: View {
                                 .fixedSize()
                         }
 
-                        if let region = country.country.regionLabel {
+                        if let region = country.country.localizedRegionLabel {
                             Text(region.uppercased())
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
@@ -82,7 +82,7 @@ struct WhenToGoCountryDrawerView: View {
 
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(String(format: String(localized: "country_detail.seasonality.title_format"), locale: Locale.current, selectedMonthName))
+                        Text(String(format: String(localized: "country_detail.seasonality.title_format"), locale: AppDisplayLocale.current, selectedMonthName))
                             .font(.headline)
 
                         Text("seasonality.drawer.monthly_conditions")
@@ -93,7 +93,7 @@ struct WhenToGoCountryDrawerView: View {
                     Spacer()
 
                     if let seasonalityScore = country.country.resolvedSeasonalityScore(for: weightsStore.selectedMonth) {
-                        Text("\(seasonalityScore)")
+                        Text(AppNumberFormatting.integerString(seasonalityScore))
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
@@ -233,7 +233,7 @@ struct WhenToGoCountryDrawerView: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
 
-                Text(String(format: String(localized: "country_detail.seasonality.weight_format"), locale: Locale.current, weightPercentage))
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.seasonality.weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

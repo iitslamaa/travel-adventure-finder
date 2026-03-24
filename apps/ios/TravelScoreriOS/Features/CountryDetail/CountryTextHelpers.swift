@@ -9,41 +9,43 @@ import Foundation
 
 enum CountryTextHelpers {
     static var currentLanguageCode: String {
-        let preferred = Locale.preferredLanguages.first?.lowercased() ?? "en"
-        if preferred.hasPrefix("pt") { return "pt" }
-        if preferred.hasPrefix("fr") { return "fr" }
-        if preferred.hasPrefix("es") { return "es" }
-        if preferred.hasPrefix("de") { return "de" }
-        if preferred.hasPrefix("it") { return "it" }
-        if preferred.hasPrefix("ru") { return "ru" }
-        if preferred.hasPrefix("nl") { return "nl" }
-        if preferred.hasPrefix("ar") { return "ar" }
-        if preferred.hasPrefix("ja") { return "ja" }
-        if preferred.hasPrefix("ko") { return "ko" }
+        let preferred = AppDisplayLocale.current.identifier.lowercased()
+        let languageCode = AppDisplayLocale.languageCode
+
+        if languageCode.hasPrefix("pt") { return "pt" }
+        if languageCode.hasPrefix("fr") { return "fr" }
+        if languageCode.hasPrefix("es") { return "es" }
+        if languageCode.hasPrefix("de") { return "de" }
+        if languageCode.hasPrefix("it") { return "it" }
+        if languageCode.hasPrefix("ru") { return "ru" }
+        if languageCode.hasPrefix("nl") { return "nl" }
+        if languageCode.hasPrefix("ar") { return "ar" }
+        if languageCode.hasPrefix("ja") { return "ja" }
+        if languageCode.hasPrefix("ko") { return "ko" }
         if preferred.contains("hant") || preferred.hasPrefix("zh-tw") || preferred.hasPrefix("zh-hk") || preferred.hasPrefix("zh-mo") {
             return "zh-Hant"
         }
-        if preferred.hasPrefix("zh") { return "zh" }
-        if preferred.hasPrefix("hi") { return "hi" }
-        if preferred.hasPrefix("tr") { return "tr" }
-        if preferred.hasPrefix("pl") { return "pl" }
-        if preferred.hasPrefix("he") || preferred.hasPrefix("iw") { return "he" }
-        if preferred.hasPrefix("sv") { return "sv" }
-        if preferred.hasPrefix("fi") { return "fi" }
-        if preferred.hasPrefix("da") { return "da" }
-        if preferred.hasPrefix("el") { return "el" }
-        if preferred.hasPrefix("id") { return "id" }
-        if preferred.hasPrefix("uk") { return "uk" }
-        if preferred.hasPrefix("ms") { return "ms" }
-        if preferred.hasPrefix("ro") { return "ro" }
-        if preferred.hasPrefix("th") { return "th" }
-        if preferred.hasPrefix("vi") { return "vi" }
-        if preferred.hasPrefix("cs") { return "cs" }
-        if preferred.hasPrefix("hu") { return "hu" }
-        if preferred.hasPrefix("nb") || preferred.hasPrefix("no") { return "nb" }
-        if preferred.hasPrefix("ca") { return "ca" }
-        if preferred.hasPrefix("hr") { return "hr" }
-        if preferred.hasPrefix("sk") { return "sk" }
+        if languageCode.hasPrefix("zh") { return "zh" }
+        if languageCode.hasPrefix("hi") { return "hi" }
+        if languageCode.hasPrefix("tr") { return "tr" }
+        if languageCode.hasPrefix("pl") { return "pl" }
+        if languageCode.hasPrefix("he") || languageCode.hasPrefix("iw") { return "he" }
+        if languageCode.hasPrefix("sv") { return "sv" }
+        if languageCode.hasPrefix("fi") { return "fi" }
+        if languageCode.hasPrefix("da") { return "da" }
+        if languageCode.hasPrefix("el") { return "el" }
+        if languageCode.hasPrefix("id") { return "id" }
+        if languageCode.hasPrefix("uk") { return "uk" }
+        if languageCode.hasPrefix("ms") { return "ms" }
+        if languageCode.hasPrefix("ro") { return "ro" }
+        if languageCode.hasPrefix("th") { return "th" }
+        if languageCode.hasPrefix("vi") { return "vi" }
+        if languageCode.hasPrefix("cs") { return "cs" }
+        if languageCode.hasPrefix("hu") { return "hu" }
+        if languageCode.hasPrefix("nb") || languageCode.hasPrefix("no") { return "nb" }
+        if languageCode.hasPrefix("ca") { return "ca" }
+        if languageCode.hasPrefix("hr") { return "hr" }
+        if languageCode.hasPrefix("sk") { return "sk" }
         return "en"
     }
 

@@ -16,7 +16,7 @@ struct MonthMeta: Identifiable {
 
 let allMonthsMeta: [MonthMeta] = {
     let formatter = DateFormatter()
-    formatter.locale = .autoupdatingCurrent
+    formatter.locale = AppDisplayLocale.current
 
     return zip(formatter.monthSymbols, formatter.shortMonthSymbols)
         .enumerated()

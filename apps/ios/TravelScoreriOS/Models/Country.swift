@@ -176,7 +176,7 @@ struct Country: Identifiable, Hashable {
     var localizedDisplayName: String {
         let upper = iso2.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard !upper.isEmpty else { return name }
-        return Locale.autoupdatingCurrent.localizedString(forRegionCode: upper) ?? name
+        return AppDisplayLocale.current.localizedString(forRegionCode: upper) ?? name
     }
 
     var localizedSearchableNames: [String] {
@@ -221,7 +221,7 @@ struct Country: Identifiable, Hashable {
 
     private var localizedAffordabilityContent: (headline: String?, body: String?) {
         let tier = affordabilityTier
-        let locale = Locale.autoupdatingCurrent
+        let locale = AppDisplayLocale.current
         let formattedDailySpend = formattedUSD(dailySpendTotalUsd, locale: locale)
 
         let headline: String
@@ -1570,6 +1570,36 @@ struct Country: Identifiable, Hashable {
             "Western Europe": "מערב אירופה",
             "Latin America & Caribbean": "אמריקה הלטינית והקריביים"
         ],
+        "ar": [
+            "Africa": "أفريقيا",
+            "Americas": "الأمريكيتان",
+            "Antarctic": "القارة القطبية الجنوبية",
+            "Asia": "آسيا",
+            "Europe": "أوروبا",
+            "Oceania": "أوقيانوسيا",
+            "Caribbean": "الكاريبي",
+            "Central America": "أمريكا الوسطى",
+            "Central Asia": "آسيا الوسطى",
+            "Eastern Africa": "شرق أفريقيا",
+            "Eastern Asia": "شرق آسيا",
+            "Eastern Europe": "أوروبا الشرقية",
+            "Melanesia": "ميلانيزيا",
+            "Micronesia": "ميكرونيزيا",
+            "Middle Africa": "وسط أفريقيا",
+            "North America": "أمريكا الشمالية",
+            "Northern Africa": "شمال أفريقيا",
+            "Northern Europe": "شمال أوروبا",
+            "Polynesia": "بولينيزيا",
+            "South America": "أمريكا الجنوبية",
+            "Southeast Asia": "جنوب شرق آسيا",
+            "Southern Africa": "جنوب أفريقيا",
+            "Southern Asia": "جنوب آسيا",
+            "Southern Europe": "جنوب أوروبا",
+            "Western Africa": "غرب أفريقيا",
+            "Western Asia": "غرب آسيا",
+            "Western Europe": "غرب أوروبا",
+            "Latin America & Caribbean": "أمريكا اللاتينية والكاريبي"
+        ],
         "sv": [
             "Africa": "Afrika",
             "Americas": "Amerika",
@@ -2278,7 +2308,7 @@ extension String {
         let remapped = lowered.map { specialCharacterMap[$0] ?? String($0) }.joined()
         let strippedDiacritics = remapped.folding(options: .diacriticInsensitive, locale: .current)
         return strippedDiacritics.replacingOccurrences(
-            of: "[^a-z0-9]",
+            of: "[^\\p{L}\\p{N}]",
             with: "",
             options: .regularExpression
         )

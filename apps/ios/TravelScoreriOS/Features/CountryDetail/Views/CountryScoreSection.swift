@@ -28,7 +28,7 @@ struct CountryScoreSection: View {
 
                 Spacer()
 
-                Text("\(weight)%")
+                Text("\(AppNumberFormatting.integerString(weight))%")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -37,7 +37,7 @@ struct CountryScoreSection: View {
             HStack(alignment: .top, spacing: 12) {
 
                 // CountryDetail-specific pill styling (independent from ScorePill)
-                Text("\(score)")
+                Text(AppNumberFormatting.integerString(score))
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)
