@@ -25,7 +25,7 @@ extension ProfileViewModel {
         _ = try? await supabase.client.auth.session
 
         guard let currentUserId = supabase.currentUserId else {
-            errorMessage = "Not authenticated. Please log in again."
+            errorMessage = String(localized: "profile.errors.not_authenticated")
             print("❌ refreshRelationshipState abort — currentUserId nil")
             return
         }
@@ -48,13 +48,13 @@ extension ProfileViewModel {
         _ = try? await supabase.client.auth.session
 
         guard let currentUserId = supabase.currentUserId else {
-            errorMessage = "Not authenticated. Please log in again."
+            errorMessage = String(localized: "profile.errors.not_authenticated")
             print("❌ toggleFriend abort — currentUserId nil")
             return
         }
 
         guard let profileId = profile?.id else {
-            errorMessage = "Profile not loaded yet. Please try again."
+            errorMessage = String(localized: "profile.errors.not_loaded")
             print("❌ toggleFriend abort — profileId nil")
             return
         }

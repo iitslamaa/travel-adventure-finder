@@ -12,7 +12,7 @@ struct ProfileLoadingView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Profile")
+                Theme.titleBanner(String(localized: "profile.title"))
 
                 ProfileSkeletonView()
                     .padding(.top, 6)

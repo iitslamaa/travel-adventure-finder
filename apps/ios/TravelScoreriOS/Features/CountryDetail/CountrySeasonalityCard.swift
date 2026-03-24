@@ -21,10 +21,10 @@ struct CountrySeasonalityCard: View {
 
             // Title row
             HStack {
-                Text("Seasonality in \(selectedMonthName)")
+                Text(String(format: String(localized: "country_detail.seasonality.title_format"), locale: AppDisplayLocale.current, selectedMonthName))
                     .font(.headline)
                 Spacer()
-                Text("\(weightsStore.selectedMonthShortName) · \(weightPercentage)%")
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.seasonality.month_weight_format"), locale: AppDisplayLocale.current, weightsStore.selectedMonthShortName, weightPercentage)))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -32,7 +32,7 @@ struct CountrySeasonalityCard: View {
             // Score pill + description
             HStack(spacing: 12) {
                 if let seasonalityScore = displayedSeasonalityScore {
-                    Text("\(seasonalityScore)")
+                    Text(AppNumberFormatting.integerString(seasonalityScore))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
@@ -45,7 +45,7 @@ struct CountrySeasonalityCard: View {
                                 .stroke(CountryScoreStyling.borderColor(for: seasonalityScore), lineWidth: 1)
                         )
                 } else {
-                    Text("—")
+                    Text("common.em_dash")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
@@ -74,7 +74,7 @@ struct CountrySeasonalityCard: View {
             // Best months chips
             if let months = country.seasonalityBestMonths, !months.isEmpty {
                 HStack(spacing: 6) {
-                    Text("Best months:")
+                    Text("country_detail.seasonality.best_months")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
@@ -93,14 +93,14 @@ struct CountrySeasonalityCard: View {
 
             HStack(spacing: 12) {
                 if let seasonalityScore = displayedSeasonalityScore {
-                    Text("Normalized: \(seasonalityScore)")
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.seasonality.normalized_format"), locale: AppDisplayLocale.current, seasonalityScore)))
                 }
-                Text("Weight: \(weightPercentage)%")
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.seasonality.weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
             }
             .font(.caption)
             .foregroundStyle(.secondary)
 
-            Text("Seasonality insights are based on historical climate averages and typical travel patterns. Timing may vary year to year.")
+            Text("country_detail.seasonality.footer")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }

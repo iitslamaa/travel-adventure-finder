@@ -88,7 +88,8 @@ extension ScoreWeightsStore {
         weights.advisory +
         weights.visa +
         weights.affordability +
-        weights.seasonality
+        weights.seasonality +
+        weights.language
     }
 
     func percentage(for keyPath: KeyPath<ScoreWeights, Double>) -> Int {
@@ -112,6 +113,10 @@ extension ScoreWeightsStore {
 
     var seasonalityPercentage: Int {
         percentage(for: \.seasonality)
+    }
+
+    var languagePercentage: Int {
+        percentage(for: \.language)
     }
 
     var selectedMonthShortName: String {

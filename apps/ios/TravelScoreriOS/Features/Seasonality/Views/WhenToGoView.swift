@@ -95,14 +95,14 @@ struct WhenToGoView: View {
             VStack(spacing: 16) {
                 VStack(spacing: 12) {
                     countryListSection(
-                        title: "Peak season",
-                        note: "Best weather and overall conditions — usually the busiest and priciest.",
+                        title: String(localized: "seasonality.view.peak_season"),
+                        note: String(localized: "seasonality.view.peak_season_note"),
                         countries: viewModel.peakCountries.sorted { ($0.country.score ?? Int.min) > ($1.country.score ?? Int.min) }
                     )
                     
                     countryListSection(
-                        title: "Shoulder season",
-                        note: "Still good conditions, often fewer crowds and better value.",
+                        title: String(localized: "seasonality.view.shoulder_season"),
+                        note: String(localized: "seasonality.view.shoulder_season_note"),
                         countries: viewModel.shoulderCountries.sorted { ($0.country.score ?? Int.min) > ($1.country.score ?? Int.min) }
                     )
                 }
@@ -134,9 +134,13 @@ struct WhenToGoView: View {
             Text(title)
                 .font(.subheadline.bold())
                 .foregroundStyle(.black)
+
+            Text(note)
+                .font(.caption)
+                .foregroundColor(.secondary)
             
             if countries.isEmpty {
-                Text("No destinations in this category for the selected month.")
+                Text("seasonality.view.empty_category")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {

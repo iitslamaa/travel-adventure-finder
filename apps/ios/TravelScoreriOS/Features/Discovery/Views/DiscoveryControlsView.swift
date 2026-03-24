@@ -17,9 +17,9 @@ struct DiscoveryControlsView: View {
         HStack(spacing: 12) {
 
             // Primary segmented control
-            Picker("Sort", selection: $sort) {
+            Picker("discovery.controls.sort", selection: $sort) {
                 ForEach(CountrySort.allCases, id: \.self) { s in
-                    Text(s.rawValue).tag(s)
+                    Text(s.localizedTitle).tag(s)
                 }
             }
             .pickerStyle(.segmented)

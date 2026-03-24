@@ -17,11 +17,11 @@ struct CountryHeaderCard: View {
                 .font(.system(size: 60))
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(country.name)
+                Text(country.localizedDisplayName)
                     .font(.title2)
                     .bold()
 
-                if let regionLabel = country.regionLabel {
+                if let regionLabel = country.localizedRegionLabel {
                     Text(regionLabel)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -31,7 +31,7 @@ struct CountryHeaderCard: View {
             Spacer()
 
             if let score = country.score {
-                Text("\(score)")
+                Text(AppNumberFormatting.integerString(score))
                     .font(.title2.bold())
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)

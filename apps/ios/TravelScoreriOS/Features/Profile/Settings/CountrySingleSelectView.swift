@@ -10,9 +10,23 @@ import SwiftUI
 struct CountrySingleSelectView: View {
     let title: String
     @Binding var selection: String?
+    let allowedCodes: Set<String>?
+    let excludedCodes: Set<String>
 
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
+
+    init(
+        title: String,
+        selection: Binding<String?>,
+        allowedCodes: Set<String>? = nil,
+        excludedCodes: Set<String> = []
+    ) {
+        self.title = title
+        self._selection = selection
+        self.allowedCodes = allowedCodes
+        self.excludedCodes = Set(excludedCodes.map { $0.uppercased() })
+    }
 
     private let countries: [(code: String, name: String)] =
         Locale.isoRegionCodes
@@ -46,9 +60,16 @@ struct CountrySingleSelectView: View {
     }
 
     private var filteredCountries: [(code: String, name: String)] {
-        guard !searchText.isEmpty else { return countries }
+        let baseCountries: [(code: String, name: String)] = {
+            let visibleCountries = countries.filter { !excludedCodes.contains($0.code.uppercased()) }
+
+            guard let allowedCodes, !allowedCodes.isEmpty else { return visibleCountries }
+            return visibleCountries.filter { allowedCodes.contains($0.code.uppercased()) }
+        }()
+
+        guard !searchText.isEmpty else { return baseCountries }
         let normalizedSearch = searchText.normalizedSearchKey
-        return countries.filter {
+        return baseCountries.filter {
             $0.name.normalizedSearchKey.contains(normalizedSearch)
         }
     }

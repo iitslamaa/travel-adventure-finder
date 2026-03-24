@@ -38,10 +38,10 @@ struct ScoreCountryDrawerView: View {
                         .font(.system(size: 30))
 
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(country.name)
+                        Text(country.localizedDisplayName)
                             .font(.title3.weight(.semibold))
 
-                        Text("Overall Score")
+                        Text("discovery.score_drawer.overall_score")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
@@ -50,7 +50,7 @@ struct ScoreCountryDrawerView: View {
 
                     if let score = country.score {
                         HStack(spacing: 8) {
-                            Text("\(score)")
+                            Text(AppNumberFormatting.integerString(score))
                                 .font(.title2.weight(.bold))
                                 .fixedSize()
                                 .padding(.horizontal, 20)

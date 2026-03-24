@@ -64,7 +64,6 @@ final class DiscoveryMapCoordinator: NSObject, MKMapViewDelegate {
 
     func updateCountries(_ countries: [Country]) {
         let nextLookup = Self.buildCountryLookup(from: countries)
-        guard nextLookup != countryLookup else { return }
         countryLookup = nextLookup
         rebuildOverlays()
     }

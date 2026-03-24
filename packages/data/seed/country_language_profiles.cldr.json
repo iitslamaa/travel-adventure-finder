@@ -1,0 +1,4366 @@
+[
+  {
+    "country_iso2": "AD",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ca",
+        "type": "official",
+        "coverage": 0.51
+      }
+    ]
+  },
+  {
+    "country_iso2": "AE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.78
+      }
+    ]
+  },
+  {
+    "country_iso2": "AF",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fa",
+        "type": "official",
+        "coverage": 0.5
+      },
+      {
+        "code": "ps",
+        "type": "official",
+        "coverage": 0.43
+      },
+      {
+        "code": "tk",
+        "type": "minor",
+        "coverage": 0.017
+      }
+    ]
+  },
+  {
+    "country_iso2": "AG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.86
+      }
+    ]
+  },
+  {
+    "country_iso2": "AI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.95
+      }
+    ]
+  },
+  {
+    "country_iso2": "AL",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sq",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "AM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "hy",
+        "type": "official",
+        "coverage": 0.99
+      }
+    ]
+  },
+  {
+    "country_iso2": "AO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 0.67
+      }
+    ]
+  },
+  {
+    "country_iso2": "AR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "AS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sm",
+        "type": "official",
+        "coverage": 0.99
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.97
+      }
+    ]
+  },
+  {
+    "country_iso2": "AT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "de",
+        "type": "official",
+        "coverage": 0.97
+      },
+      {
+        "code": "hr",
+        "type": "minor",
+        "coverage": 0.012
+      },
+      {
+        "code": "sl",
+        "type": "minor",
+        "coverage": 0.004
+      },
+      {
+        "code": "hu",
+        "type": "minor",
+        "coverage": 0.003
+      }
+    ]
+  },
+  {
+    "country_iso2": "AU",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.96
+      }
+    ]
+  },
+  {
+    "country_iso2": "AW",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "nl",
+        "type": "official",
+        "coverage": 0.97
+      },
+      {
+        "code": "pap",
+        "type": "official",
+        "coverage": 0.61
+      }
+    ]
+  },
+  {
+    "country_iso2": "AX",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sv",
+        "type": "official",
+        "coverage": 0.99
+      }
+    ]
+  },
+  {
+    "country_iso2": "AZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "az",
+        "type": "official",
+        "coverage": 0.89
+      }
+    ]
+  },
+  {
+    "country_iso2": "BA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "bs",
+        "type": "official",
+        "coverage": 0.99
+      },
+      {
+        "code": "hr",
+        "type": "official",
+        "coverage": 0.12
+      },
+      {
+        "code": "sr",
+        "type": "official",
+        "coverage": 0.1
+      }
+    ]
+  },
+  {
+    "country_iso2": "BB",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "BD",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "bn",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "BE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "nl",
+        "type": "official",
+        "coverage": 0.55
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.38
+      },
+      {
+        "code": "de",
+        "type": "official",
+        "coverage": 0.22
+      }
+    ]
+  },
+  {
+    "country_iso2": "BF",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.25
+      }
+    ]
+  },
+  {
+    "country_iso2": "BG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "bg",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "BH",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.87
+      }
+    ]
+  },
+  {
+    "country_iso2": "BI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "rn",
+        "type": "official",
+        "coverage": 0.63
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.59
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "BJ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.34
+      }
+    ]
+  },
+  {
+    "country_iso2": "BL",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.85
+      }
+    ]
+  },
+  {
+    "country_iso2": "BM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.92
+      }
+    ]
+  },
+  {
+    "country_iso2": "BN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ms",
+        "type": "official",
+        "coverage": 0.93
+      }
+    ]
+  },
+  {
+    "country_iso2": "BO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.61
+      },
+      {
+        "code": "qu",
+        "type": "official",
+        "coverage": 0.32
+      },
+      {
+        "code": "ay",
+        "type": "official",
+        "coverage": 0.2
+      }
+    ]
+  },
+  {
+    "country_iso2": "BQ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "nl",
+        "type": "official",
+        "coverage": 0.08
+      }
+    ]
+  },
+  {
+    "country_iso2": "BR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 0.91
+      },
+      {
+        "code": "vec",
+        "type": "minor",
+        "coverage": 0.002
+      }
+    ]
+  },
+  {
+    "country_iso2": "BS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "BT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "dz",
+        "type": "official",
+        "coverage": 0.47
+      }
+    ]
+  },
+  {
+    "country_iso2": "BW",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.81
+      },
+      {
+        "code": "tn",
+        "type": "official",
+        "coverage": 0.62
+      }
+    ]
+  },
+  {
+    "country_iso2": "BY",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ru",
+        "type": "official",
+        "coverage": 0.71
+      },
+      {
+        "code": "be",
+        "type": "official",
+        "coverage": 0.26
+      }
+    ]
+  },
+  {
+    "country_iso2": "BZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.77
+      }
+    ]
+  },
+  {
+    "country_iso2": "CA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.87
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.29
+      },
+      {
+        "code": "iu",
+        "type": "minor",
+        "coverage": 0.001
+      },
+      {
+        "code": "chp",
+        "type": "minor",
+        "coverage": 0
+      },
+      {
+        "code": "crk",
+        "type": "minor",
+        "coverage": 0
+      },
+      {
+        "code": "den",
+        "type": "minor",
+        "coverage": 0
+      },
+      {
+        "code": "dgr",
+        "type": "minor",
+        "coverage": 0
+      },
+      {
+        "code": "gwi",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "CC",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.17
+      }
+    ]
+  },
+  {
+    "country_iso2": "CD",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.51
+      },
+      {
+        "code": "sw",
+        "type": "minor",
+        "coverage": 0.5
+      },
+      {
+        "code": "lua",
+        "type": "minor",
+        "coverage": 0.096
+      },
+      {
+        "code": "ln",
+        "type": "minor",
+        "coverage": 0.031
+      },
+      {
+        "code": "kg",
+        "type": "minor",
+        "coverage": 0.015
+      }
+    ]
+  },
+  {
+    "country_iso2": "CF",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sg",
+        "type": "official",
+        "coverage": 0.49
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.29
+      }
+    ]
+  },
+  {
+    "country_iso2": "CG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.61
+      }
+    ]
+  },
+  {
+    "country_iso2": "CH",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "de",
+        "type": "official",
+        "coverage": 0.76
+      },
+      {
+        "code": "gsw",
+        "type": "official",
+        "coverage": 0.66
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.39
+      },
+      {
+        "code": "it",
+        "type": "official",
+        "coverage": 0.15
+      },
+      {
+        "code": "rm",
+        "type": "minor",
+        "coverage": 0.005
+      }
+    ]
+  },
+  {
+    "country_iso2": "CI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.34
+      }
+    ]
+  },
+  {
+    "country_iso2": "CK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "CL",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "CM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.68
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.38
+      }
+    ]
+  },
+  {
+    "country_iso2": "CN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "zh",
+        "type": "official",
+        "coverage": 0.9
+      },
+      {
+        "code": "ug",
+        "type": "minor",
+        "coverage": 0.006
+      },
+      {
+        "code": "za",
+        "type": "minor",
+        "coverage": 0.003
+      },
+      {
+        "code": "bo",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "ko",
+        "type": "minor",
+        "coverage": 0.002
+      }
+    ]
+  },
+  {
+    "country_iso2": "CO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.93
+      }
+    ]
+  },
+  {
+    "country_iso2": "CQ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "CR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.95
+      }
+    ]
+  },
+  {
+    "country_iso2": "CU",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "CV",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 0.76
+      }
+    ]
+  },
+  {
+    "country_iso2": "CW",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pap",
+        "type": "official",
+        "coverage": 0.81
+      },
+      {
+        "code": "nl",
+        "type": "official",
+        "coverage": 0.08
+      }
+    ]
+  },
+  {
+    "country_iso2": "CX",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.83
+      }
+    ]
+  },
+  {
+    "country_iso2": "CY",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "el",
+        "type": "official",
+        "coverage": 0.95
+      },
+      {
+        "code": "tr",
+        "type": "official",
+        "coverage": 0.23
+      }
+    ]
+  },
+  {
+    "country_iso2": "CZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "cs",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "DE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "de",
+        "type": "official",
+        "coverage": 0.91
+      },
+      {
+        "code": "frr",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "DG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.99
+      }
+    ]
+  },
+  {
+    "country_iso2": "DJ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.5
+      },
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.073
+      }
+    ]
+  },
+  {
+    "country_iso2": "DK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "da",
+        "type": "official",
+        "coverage": 0.93
+      },
+      {
+        "code": "de",
+        "type": "minor",
+        "coverage": 0.47
+      },
+      {
+        "code": "kl",
+        "type": "minor",
+        "coverage": 0.001
+      }
+    ]
+  },
+  {
+    "country_iso2": "DM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.94
+      }
+    ]
+  },
+  {
+    "country_iso2": "DO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.78
+      }
+    ]
+  },
+  {
+    "country_iso2": "DZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.74
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.33
+      }
+    ]
+  },
+  {
+    "country_iso2": "EA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "EC",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.96
+      },
+      {
+        "code": "qu",
+        "type": "official",
+        "coverage": 0.17
+      }
+    ]
+  },
+  {
+    "country_iso2": "EE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "et",
+        "type": "official",
+        "coverage": 0.71
+      }
+    ]
+  },
+  {
+    "country_iso2": "EG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.94
+      }
+    ]
+  },
+  {
+    "country_iso2": "EH",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "ER",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ti",
+        "type": "official",
+        "coverage": 0.6
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.59
+      },
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.049
+      }
+    ]
+  },
+  {
+    "country_iso2": "ES",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.99
+      },
+      {
+        "code": "ca",
+        "type": "minor",
+        "coverage": 0.17
+      },
+      {
+        "code": "gl",
+        "type": "minor",
+        "coverage": 0.07
+      },
+      {
+        "code": "eu",
+        "type": "minor",
+        "coverage": 0.02
+      },
+      {
+        "code": "ast",
+        "type": "minor",
+        "coverage": 0.013
+      },
+      {
+        "code": "oc",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "ET",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "am",
+        "type": "official",
+        "coverage": 0.33
+      }
+    ]
+  },
+  {
+    "country_iso2": "FI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fi",
+        "type": "official",
+        "coverage": 0.94
+      },
+      {
+        "code": "sv",
+        "type": "official",
+        "coverage": 0.44
+      },
+      {
+        "code": "sms",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "FJ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.94
+      },
+      {
+        "code": "hif",
+        "type": "official",
+        "coverage": 0.41
+      },
+      {
+        "code": "fj",
+        "type": "official",
+        "coverage": 0.39
+      }
+    ]
+  },
+  {
+    "country_iso2": "FK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.77
+      }
+    ]
+  },
+  {
+    "country_iso2": "FM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.57
+      }
+    ]
+  },
+  {
+    "country_iso2": "FO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fo",
+        "type": "official",
+        "coverage": 0.95
+      }
+    ]
+  },
+  {
+    "country_iso2": "FR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.97
+      }
+    ]
+  },
+  {
+    "country_iso2": "GA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.63
+      }
+    ]
+  },
+  {
+    "country_iso2": "GB",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.98
+      },
+      {
+        "code": "cy",
+        "type": "minor",
+        "coverage": 0.013
+      },
+      {
+        "code": "ga",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "gd",
+        "type": "minor",
+        "coverage": 0.001
+      }
+    ]
+  },
+  {
+    "country_iso2": "GD",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.96
+      }
+    ]
+  },
+  {
+    "country_iso2": "GE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ka",
+        "type": "official",
+        "coverage": 0.86
+      },
+      {
+        "code": "ab",
+        "type": "minor",
+        "coverage": 0.022
+      },
+      {
+        "code": "os",
+        "type": "minor",
+        "coverage": 0.022
+      }
+    ]
+  },
+  {
+    "country_iso2": "GF",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.62
+      }
+    ]
+  },
+  {
+    "country_iso2": "GG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "GH",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ak",
+        "type": "minor",
+        "coverage": 0.39
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.21
+      },
+      {
+        "code": "ee",
+        "type": "minor",
+        "coverage": 0.11
+      },
+      {
+        "code": "gaa",
+        "type": "minor",
+        "coverage": 0.028
+      }
+    ]
+  },
+  {
+    "country_iso2": "GI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.8
+      }
+    ]
+  },
+  {
+    "country_iso2": "GL",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "kl",
+        "type": "official",
+        "coverage": 0.84
+      }
+    ]
+  },
+  {
+    "country_iso2": "GM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.4
+      }
+    ]
+  },
+  {
+    "country_iso2": "GN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.27
+      }
+    ]
+  },
+  {
+    "country_iso2": "GP",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.84
+      }
+    ]
+  },
+  {
+    "country_iso2": "GQ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.87
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.29
+      },
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "GR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "el",
+        "type": "official",
+        "coverage": 0.99
+      }
+    ]
+  },
+  {
+    "country_iso2": "GS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "GT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.88
+      },
+      {
+        "code": "cak",
+        "type": "minor",
+        "coverage": 0.088
+      },
+      {
+        "code": "quc",
+        "type": "minor",
+        "coverage": 0.086
+      },
+      {
+        "code": "ixl",
+        "type": "minor",
+        "coverage": 0.009
+      },
+      {
+        "code": "caa",
+        "type": "minor",
+        "coverage": 0.001
+      },
+      {
+        "code": "quv",
+        "type": "minor",
+        "coverage": 0.001
+      },
+      {
+        "code": "usp",
+        "type": "minor",
+        "coverage": 0
+      },
+      {
+        "code": "xin",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "GU",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.91
+      },
+      {
+        "code": "ch",
+        "type": "official",
+        "coverage": 0.22
+      }
+    ]
+  },
+  {
+    "country_iso2": "GW",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "GY",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "HK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.51
+      }
+    ]
+  },
+  {
+    "country_iso2": "HN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.91
+      }
+    ]
+  },
+  {
+    "country_iso2": "HR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "hr",
+        "type": "official",
+        "coverage": 0.99
+      },
+      {
+        "code": "it",
+        "type": "minor",
+        "coverage": 0.016
+      },
+      {
+        "code": "vec",
+        "type": "minor",
+        "coverage": 0.007
+      }
+    ]
+  },
+  {
+    "country_iso2": "HT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ht",
+        "type": "official",
+        "coverage": 0.81
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.42
+      }
+    ]
+  },
+  {
+    "country_iso2": "HU",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "hu",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "IC",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "ID",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "id",
+        "type": "official",
+        "coverage": 0.64
+      }
+    ]
+  },
+  {
+    "country_iso2": "IE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.98
+      },
+      {
+        "code": "ga",
+        "type": "official",
+        "coverage": 0.22
+      }
+    ]
+  },
+  {
+    "country_iso2": "IL",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "he",
+        "type": "official",
+        "coverage": 1
+      },
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.2
+      }
+    ]
+  },
+  {
+    "country_iso2": "IM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      },
+      {
+        "code": "gv",
+        "type": "official",
+        "coverage": 0.018
+      }
+    ]
+  },
+  {
+    "country_iso2": "IN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "hi",
+        "type": "official",
+        "coverage": 0.41
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.19
+      },
+      {
+        "code": "bn",
+        "type": "minor",
+        "coverage": 0.081
+      },
+      {
+        "code": "te",
+        "type": "minor",
+        "coverage": 0.072
+      },
+      {
+        "code": "mr",
+        "type": "minor",
+        "coverage": 0.07
+      },
+      {
+        "code": "ta",
+        "type": "minor",
+        "coverage": 0.059
+      },
+      {
+        "code": "ur",
+        "type": "minor",
+        "coverage": 0.05
+      },
+      {
+        "code": "gu",
+        "type": "minor",
+        "coverage": 0.045
+      },
+      {
+        "code": "kn",
+        "type": "minor",
+        "coverage": 0.037
+      },
+      {
+        "code": "ml",
+        "type": "minor",
+        "coverage": 0.032
+      },
+      {
+        "code": "or",
+        "type": "minor",
+        "coverage": 0.032
+      },
+      {
+        "code": "pa",
+        "type": "minor",
+        "coverage": 0.028
+      },
+      {
+        "code": "as",
+        "type": "minor",
+        "coverage": 0.013
+      },
+      {
+        "code": "mai",
+        "type": "minor",
+        "coverage": 0.012
+      },
+      {
+        "code": "ne",
+        "type": "minor",
+        "coverage": 0.006
+      },
+      {
+        "code": "sat",
+        "type": "minor",
+        "coverage": 0.006
+      },
+      {
+        "code": "ks",
+        "type": "minor",
+        "coverage": 0.004
+      },
+      {
+        "code": "kok",
+        "type": "minor",
+        "coverage": 0.003
+      },
+      {
+        "code": "sd",
+        "type": "minor",
+        "coverage": 0.003
+      },
+      {
+        "code": "kha",
+        "type": "minor",
+        "coverage": 0.001
+      },
+      {
+        "code": "sa",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "IO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "IQ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.68
+      },
+      {
+        "code": "ckb",
+        "type": "minor",
+        "coverage": 0.12
+      }
+    ]
+  },
+  {
+    "country_iso2": "IR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fa",
+        "type": "official",
+        "coverage": 0.75
+      }
+    ]
+  },
+  {
+    "country_iso2": "IS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "is",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "IT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "it",
+        "type": "official",
+        "coverage": 0.95
+      },
+      {
+        "code": "fr",
+        "type": "minor",
+        "coverage": 0.2
+      },
+      {
+        "code": "vec",
+        "type": "minor",
+        "coverage": 0.013
+      }
+    ]
+  },
+  {
+    "country_iso2": "JE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.95
+      }
+    ]
+  },
+  {
+    "country_iso2": "JM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "JO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "JP",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ja",
+        "type": "official",
+        "coverage": 0.95
+      }
+    ]
+  },
+  {
+    "country_iso2": "KE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sw",
+        "type": "official",
+        "coverage": 0.66
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.19
+      }
+    ]
+  },
+  {
+    "country_iso2": "KG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ky",
+        "type": "official",
+        "coverage": 0.48
+      },
+      {
+        "code": "ru",
+        "type": "official",
+        "coverage": 0.36
+      }
+    ]
+  },
+  {
+    "country_iso2": "KH",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "km",
+        "type": "official",
+        "coverage": 0.89
+      }
+    ]
+  },
+  {
+    "country_iso2": "KI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      },
+      {
+        "code": "gil",
+        "type": "official",
+        "coverage": 0.6
+      }
+    ]
+  },
+  {
+    "country_iso2": "KM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.66
+      },
+      {
+        "code": "zdj",
+        "type": "official",
+        "coverage": 0.37
+      },
+      {
+        "code": "wni",
+        "type": "official",
+        "coverage": 0.34
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.26
+      }
+    ]
+  },
+  {
+    "country_iso2": "KN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "KP",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ko",
+        "type": "official",
+        "coverage": 0.88
+      }
+    ]
+  },
+  {
+    "country_iso2": "KR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ko",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "KW",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "KY",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "KZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ru",
+        "type": "official",
+        "coverage": 0.72
+      },
+      {
+        "code": "kk",
+        "type": "official",
+        "coverage": 0.64
+      }
+    ]
+  },
+  {
+    "country_iso2": "LA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "lo",
+        "type": "official",
+        "coverage": 0.69
+      }
+    ]
+  },
+  {
+    "country_iso2": "LB",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.86
+      }
+    ]
+  },
+  {
+    "country_iso2": "LC",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.9
+      }
+    ]
+  },
+  {
+    "country_iso2": "LI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "de",
+        "type": "official",
+        "coverage": 1
+      },
+      {
+        "code": "gsw",
+        "type": "official",
+        "coverage": 0.85
+      }
+    ]
+  },
+  {
+    "country_iso2": "LK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "si",
+        "type": "official",
+        "coverage": 0.68
+      },
+      {
+        "code": "ta",
+        "type": "official",
+        "coverage": 0.15
+      }
+    ]
+  },
+  {
+    "country_iso2": "LR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.83
+      }
+    ]
+  },
+  {
+    "country_iso2": "LS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "st",
+        "type": "official",
+        "coverage": 0.98
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.27
+      }
+    ]
+  },
+  {
+    "country_iso2": "LT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "lt",
+        "type": "official",
+        "coverage": 0.86
+      }
+    ]
+  },
+  {
+    "country_iso2": "LU",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.92
+      },
+      {
+        "code": "lb",
+        "type": "official",
+        "coverage": 0.67
+      },
+      {
+        "code": "de",
+        "type": "official",
+        "coverage": 0.63
+      }
+    ]
+  },
+  {
+    "country_iso2": "LV",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "lv",
+        "type": "official",
+        "coverage": 0.61
+      }
+    ]
+  },
+  {
+    "country_iso2": "LY",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.74
+      }
+    ]
+  },
+  {
+    "country_iso2": "MA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.62
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.36
+      },
+      {
+        "code": "tzm",
+        "type": "official",
+        "coverage": 0.098
+      }
+    ]
+  },
+  {
+    "country_iso2": "MC",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.97
+      }
+    ]
+  },
+  {
+    "country_iso2": "MD",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ro",
+        "type": "official",
+        "coverage": 0.63
+      }
+    ]
+  },
+  {
+    "country_iso2": "MF",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.84
+      }
+    ]
+  },
+  {
+    "country_iso2": "MG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "mg",
+        "type": "official",
+        "coverage": 0.9
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.27
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.18
+      }
+    ]
+  },
+  {
+    "country_iso2": "MH",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.93
+      },
+      {
+        "code": "mh",
+        "type": "official",
+        "coverage": 0.73
+      }
+    ]
+  },
+  {
+    "country_iso2": "MK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "mk",
+        "type": "official",
+        "coverage": 0.67
+      },
+      {
+        "code": "sq",
+        "type": "minor",
+        "coverage": 0.25
+      }
+    ]
+  },
+  {
+    "country_iso2": "ML",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.17
+      }
+    ]
+  },
+  {
+    "country_iso2": "MM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "my",
+        "type": "official",
+        "coverage": 0.64
+      }
+    ]
+  },
+  {
+    "country_iso2": "MN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "mn",
+        "type": "official",
+        "coverage": 0.93
+      }
+    ]
+  },
+  {
+    "country_iso2": "MO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "yue",
+        "type": "official",
+        "coverage": 0.86
+      },
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 0.023
+      }
+    ]
+  },
+  {
+    "country_iso2": "MP",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.97
+      }
+    ]
+  },
+  {
+    "country_iso2": "MQ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.81
+      }
+    ]
+  },
+  {
+    "country_iso2": "MR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.85
+      }
+    ]
+  },
+  {
+    "country_iso2": "MS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.64
+      }
+    ]
+  },
+  {
+    "country_iso2": "MT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "mt",
+        "type": "official",
+        "coverage": 1
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.88
+      }
+    ]
+  },
+  {
+    "country_iso2": "MU",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.73
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.72
+      }
+    ]
+  },
+  {
+    "country_iso2": "MV",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "dv",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "MW",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.63
+      },
+      {
+        "code": "ny",
+        "type": "official",
+        "coverage": 0.63
+      }
+    ]
+  },
+  {
+    "country_iso2": "MX",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.83
+      }
+    ]
+  },
+  {
+    "country_iso2": "MY",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ms",
+        "type": "official",
+        "coverage": 0.75
+      }
+    ]
+  },
+  {
+    "country_iso2": "MZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 0.27
+      }
+    ]
+  },
+  {
+    "country_iso2": "NA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.07
+      }
+    ]
+  },
+  {
+    "country_iso2": "NC",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.99
+      }
+    ]
+  },
+  {
+    "country_iso2": "NE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.13
+      }
+    ]
+  },
+  {
+    "country_iso2": "NF",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.96
+      }
+    ]
+  },
+  {
+    "country_iso2": "NG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.53
+      },
+      {
+        "code": "yo",
+        "type": "official",
+        "coverage": 0.13
+      }
+    ]
+  },
+  {
+    "country_iso2": "NI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.78
+      }
+    ]
+  },
+  {
+    "country_iso2": "NL",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "nl",
+        "type": "official",
+        "coverage": 1
+      },
+      {
+        "code": "fy",
+        "type": "minor",
+        "coverage": 0.043
+      }
+    ]
+  },
+  {
+    "country_iso2": "NO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "nb",
+        "type": "official",
+        "coverage": 1
+      },
+      {
+        "code": "no",
+        "type": "official",
+        "coverage": 1
+      },
+      {
+        "code": "nn",
+        "type": "official",
+        "coverage": 0.25
+      },
+      {
+        "code": "se",
+        "type": "minor",
+        "coverage": 0.003
+      }
+    ]
+  },
+  {
+    "country_iso2": "NP",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ne",
+        "type": "official",
+        "coverage": 0.44
+      }
+    ]
+  },
+  {
+    "country_iso2": "NR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.95
+      },
+      {
+        "code": "na",
+        "type": "official",
+        "coverage": 0.7
+      }
+    ]
+  },
+  {
+    "country_iso2": "NU",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.56
+      },
+      {
+        "code": "niu",
+        "type": "official",
+        "coverage": 0.56
+      }
+    ]
+  },
+  {
+    "country_iso2": "NZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.98
+      },
+      {
+        "code": "mi",
+        "type": "official",
+        "coverage": 0.028
+      }
+    ]
+  },
+  {
+    "country_iso2": "OM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.81
+      }
+    ]
+  },
+  {
+    "country_iso2": "PA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.69
+      }
+    ]
+  },
+  {
+    "country_iso2": "PE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.73
+      },
+      {
+        "code": "qu",
+        "type": "official",
+        "coverage": 0.15
+      }
+    ]
+  },
+  {
+    "country_iso2": "PF",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.98
+      },
+      {
+        "code": "ty",
+        "type": "official",
+        "coverage": 0.31
+      }
+    ]
+  },
+  {
+    "country_iso2": "PG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "tpi",
+        "type": "official",
+        "coverage": 0.71
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.5
+      },
+      {
+        "code": "ho",
+        "type": "official",
+        "coverage": 0.021
+      }
+    ]
+  },
+  {
+    "country_iso2": "PH",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.64
+      },
+      {
+        "code": "fil",
+        "type": "official",
+        "coverage": 0.6
+      },
+      {
+        "code": "ceb",
+        "type": "minor",
+        "coverage": 0.24
+      },
+      {
+        "code": "ilo",
+        "type": "minor",
+        "coverage": 0.096
+      },
+      {
+        "code": "hil",
+        "type": "minor",
+        "coverage": 0.084
+      },
+      {
+        "code": "war",
+        "type": "minor",
+        "coverage": 0.029
+      },
+      {
+        "code": "pag",
+        "type": "minor",
+        "coverage": 0.014
+      },
+      {
+        "code": "mdh",
+        "type": "minor",
+        "coverage": 0.012
+      },
+      {
+        "code": "tsg",
+        "type": "minor",
+        "coverage": 0.011
+      }
+    ]
+  },
+  {
+    "country_iso2": "PK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ur",
+        "type": "official",
+        "coverage": 0.95
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.5
+      }
+    ]
+  },
+  {
+    "country_iso2": "PL",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pl",
+        "type": "official",
+        "coverage": 0.96
+      },
+      {
+        "code": "de",
+        "type": "minor",
+        "coverage": 0.19
+      },
+      {
+        "code": "csb",
+        "type": "minor",
+        "coverage": 0.001
+      },
+      {
+        "code": "lt",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "PM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "PN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.92
+      }
+    ]
+  },
+  {
+    "country_iso2": "PR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.87
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.49
+      }
+    ]
+  },
+  {
+    "country_iso2": "PS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "PT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 0.96
+      }
+    ]
+  },
+  {
+    "country_iso2": "PW",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pau",
+        "type": "official",
+        "coverage": 0.74
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.086
+      }
+    ]
+  },
+  {
+    "country_iso2": "PY",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "gn",
+        "type": "official",
+        "coverage": 0.8
+      },
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.032
+      }
+    ]
+  },
+  {
+    "country_iso2": "QA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.89
+      }
+    ]
+  },
+  {
+    "country_iso2": "RE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.89
+      }
+    ]
+  },
+  {
+    "country_iso2": "RO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ro",
+        "type": "official",
+        "coverage": 0.9
+      }
+    ]
+  },
+  {
+    "country_iso2": "RS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sr",
+        "type": "official",
+        "coverage": 0.99
+      },
+      {
+        "code": "hu",
+        "type": "minor",
+        "coverage": 0.048
+      },
+      {
+        "code": "ro",
+        "type": "minor",
+        "coverage": 0.021
+      },
+      {
+        "code": "hr",
+        "type": "minor",
+        "coverage": 0.009
+      },
+      {
+        "code": "sk",
+        "type": "minor",
+        "coverage": 0.009
+      },
+      {
+        "code": "uk",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "RU",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ru",
+        "type": "official",
+        "coverage": 0.94
+      },
+      {
+        "code": "tt",
+        "type": "minor",
+        "coverage": 0.014
+      },
+      {
+        "code": "ba",
+        "type": "minor",
+        "coverage": 0.013
+      },
+      {
+        "code": "ce",
+        "type": "minor",
+        "coverage": 0.007
+      },
+      {
+        "code": "av",
+        "type": "minor",
+        "coverage": 0.004
+      },
+      {
+        "code": "udm",
+        "type": "minor",
+        "coverage": 0.004
+      },
+      {
+        "code": "kbd",
+        "type": "minor",
+        "coverage": 0.003
+      },
+      {
+        "code": "myv",
+        "type": "minor",
+        "coverage": 0.003
+      },
+      {
+        "code": "sah",
+        "type": "minor",
+        "coverage": 0.003
+      },
+      {
+        "code": "bua",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "inh",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "krc",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "kum",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "kv",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "lez",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "mdf",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "ady",
+        "type": "minor",
+        "coverage": 0.001
+      },
+      {
+        "code": "lbe",
+        "type": "minor",
+        "coverage": 0.001
+      },
+      {
+        "code": "tyv",
+        "type": "minor",
+        "coverage": 0.001
+      },
+      {
+        "code": "koi",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "RW",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "rw",
+        "type": "official",
+        "coverage": 0.77
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.15
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.058
+      }
+    ]
+  },
+  {
+    "country_iso2": "SA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "SB",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "SC",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.53
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.38
+      }
+    ]
+  },
+  {
+    "country_iso2": "SD",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.61
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.61
+      }
+    ]
+  },
+  {
+    "country_iso2": "SE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sv",
+        "type": "official",
+        "coverage": 0.95
+      },
+      {
+        "code": "fi",
+        "type": "minor",
+        "coverage": 0.022
+      }
+    ]
+  },
+  {
+    "country_iso2": "SG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.93
+      },
+      {
+        "code": "zh",
+        "type": "official",
+        "coverage": 0.77
+      },
+      {
+        "code": "ms",
+        "type": "official",
+        "coverage": 0.14
+      },
+      {
+        "code": "ta",
+        "type": "official",
+        "coverage": 0.021
+      }
+    ]
+  },
+  {
+    "country_iso2": "SH",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.68
+      }
+    ]
+  },
+  {
+    "country_iso2": "SI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sl",
+        "type": "official",
+        "coverage": 0.87
+      },
+      {
+        "code": "vec",
+        "type": "minor",
+        "coverage": 0.014
+      }
+    ]
+  },
+  {
+    "country_iso2": "SJ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "nb",
+        "type": "official",
+        "coverage": 0.51
+      }
+    ]
+  },
+  {
+    "country_iso2": "SK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sk",
+        "type": "official",
+        "coverage": 0.9
+      }
+    ]
+  },
+  {
+    "country_iso2": "SL",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.35
+      }
+    ]
+  },
+  {
+    "country_iso2": "SM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "it",
+        "type": "official",
+        "coverage": 0.89
+      }
+    ]
+  },
+  {
+    "country_iso2": "SN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "wo",
+        "type": "official",
+        "coverage": 0.7
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.26
+      },
+      {
+        "code": "ff",
+        "type": "minor",
+        "coverage": 0.21
+      },
+      {
+        "code": "srr",
+        "type": "minor",
+        "coverage": 0.11
+      },
+      {
+        "code": "dyo",
+        "type": "minor",
+        "coverage": 0.026
+      },
+      {
+        "code": "sav",
+        "type": "minor",
+        "coverage": 0.015
+      },
+      {
+        "code": "mfv",
+        "type": "minor",
+        "coverage": 0.008
+      },
+      {
+        "code": "bjt",
+        "type": "minor",
+        "coverage": 0.006
+      },
+      {
+        "code": "knf",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "snf",
+        "type": "minor",
+        "coverage": 0.002
+      },
+      {
+        "code": "bsc",
+        "type": "minor",
+        "coverage": 0.001
+      },
+      {
+        "code": "tnr",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "SO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "so",
+        "type": "official",
+        "coverage": 0.78
+      },
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.34
+      }
+    ]
+  },
+  {
+    "country_iso2": "SR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "nl",
+        "type": "official",
+        "coverage": 0.9
+      }
+    ]
+  },
+  {
+    "country_iso2": "SS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.27
+      }
+    ]
+  },
+  {
+    "country_iso2": "ST",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 0.85
+      }
+    ]
+  },
+  {
+    "country_iso2": "SV",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.89
+      }
+    ]
+  },
+  {
+    "country_iso2": "SX",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.68
+      },
+      {
+        "code": "nl",
+        "type": "official",
+        "coverage": 0.034
+      }
+    ]
+  },
+  {
+    "country_iso2": "SY",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.8
+      }
+    ]
+  },
+  {
+    "country_iso2": "SZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.8
+      },
+      {
+        "code": "ss",
+        "type": "official",
+        "coverage": 0.58
+      }
+    ]
+  },
+  {
+    "country_iso2": "TC",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "TD",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.17
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.13
+      }
+    ]
+  },
+  {
+    "country_iso2": "TG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.41
+      }
+    ]
+  },
+  {
+    "country_iso2": "TH",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "th",
+        "type": "official",
+        "coverage": 0.8
+      }
+    ]
+  },
+  {
+    "country_iso2": "TJ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "tg",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "TK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "tkl",
+        "type": "official",
+        "coverage": 0.69
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.38
+      }
+    ]
+  },
+  {
+    "country_iso2": "TL",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "pt",
+        "type": "official",
+        "coverage": 0.59
+      },
+      {
+        "code": "tet",
+        "type": "official",
+        "coverage": 0.59
+      }
+    ]
+  },
+  {
+    "country_iso2": "TM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "tk",
+        "type": "official",
+        "coverage": 0.7
+      }
+    ]
+  },
+  {
+    "country_iso2": "TN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.9
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.53
+      }
+    ]
+  },
+  {
+    "country_iso2": "TO",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "to",
+        "type": "official",
+        "coverage": 0.95
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.28
+      }
+    ]
+  },
+  {
+    "country_iso2": "TR",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "tr",
+        "type": "official",
+        "coverage": 0.93
+      }
+    ]
+  },
+  {
+    "country_iso2": "TT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.88
+      }
+    ]
+  },
+  {
+    "country_iso2": "TV",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "tvl",
+        "type": "official",
+        "coverage": 0.85
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.091
+      }
+    ]
+  },
+  {
+    "country_iso2": "TZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sw",
+        "type": "official",
+        "coverage": 0.9
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.69
+      }
+    ]
+  },
+  {
+    "country_iso2": "UA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "uk",
+        "type": "official",
+        "coverage": 0.65
+      },
+      {
+        "code": "ru",
+        "type": "official",
+        "coverage": 0.46
+      }
+    ]
+  },
+  {
+    "country_iso2": "UG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sw",
+        "type": "official",
+        "coverage": 0.75
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.039
+      }
+    ]
+  },
+  {
+    "country_iso2": "UM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 1
+      }
+    ]
+  },
+  {
+    "country_iso2": "US",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.96
+      },
+      {
+        "code": "es",
+        "type": "minor",
+        "coverage": 0.096
+      },
+      {
+        "code": "haw",
+        "type": "minor",
+        "coverage": 0
+      }
+    ]
+  },
+  {
+    "country_iso2": "UY",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.88
+      }
+    ]
+  },
+  {
+    "country_iso2": "UZ",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "uz",
+        "type": "official",
+        "coverage": 0.85
+      }
+    ]
+  },
+  {
+    "country_iso2": "VA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "it",
+        "type": "official",
+        "coverage": 0.82
+      }
+    ]
+  },
+  {
+    "country_iso2": "VC",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.96
+      }
+    ]
+  },
+  {
+    "country_iso2": "VE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "es",
+        "type": "official",
+        "coverage": 0.82
+      }
+    ]
+  },
+  {
+    "country_iso2": "VG",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.98
+      }
+    ]
+  },
+  {
+    "country_iso2": "VI",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.75
+      }
+    ]
+  },
+  {
+    "country_iso2": "VN",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "vi",
+        "type": "official",
+        "coverage": 0.86
+      }
+    ]
+  },
+  {
+    "country_iso2": "VU",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "bi",
+        "type": "official",
+        "coverage": 0.9
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.83
+      },
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.31
+      }
+    ]
+  },
+  {
+    "country_iso2": "WF",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.83
+      }
+    ]
+  },
+  {
+    "country_iso2": "WS",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sm",
+        "type": "official",
+        "coverage": 1
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.021
+      }
+    ]
+  },
+  {
+    "country_iso2": "XK",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sq",
+        "type": "official",
+        "coverage": 0.92
+      },
+      {
+        "code": "sr",
+        "type": "official",
+        "coverage": 0.05
+      }
+    ]
+  },
+  {
+    "country_iso2": "YE",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "ar",
+        "type": "official",
+        "coverage": 0.74
+      }
+    ]
+  },
+  {
+    "country_iso2": "YT",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "fr",
+        "type": "official",
+        "coverage": 0.63
+      }
+    ]
+  },
+  {
+    "country_iso2": "ZA",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.31
+      },
+      {
+        "code": "zu",
+        "type": "minor",
+        "coverage": 0.24
+      },
+      {
+        "code": "xh",
+        "type": "minor",
+        "coverage": 0.18
+      },
+      {
+        "code": "af",
+        "type": "minor",
+        "coverage": 0.13
+      },
+      {
+        "code": "nso",
+        "type": "minor",
+        "coverage": 0.094
+      },
+      {
+        "code": "tn",
+        "type": "minor",
+        "coverage": 0.082
+      },
+      {
+        "code": "st",
+        "type": "minor",
+        "coverage": 0.079
+      },
+      {
+        "code": "ts",
+        "type": "minor",
+        "coverage": 0.044
+      },
+      {
+        "code": "ss",
+        "type": "minor",
+        "coverage": 0.027
+      },
+      {
+        "code": "ve",
+        "type": "minor",
+        "coverage": 0.023
+      },
+      {
+        "code": "nr",
+        "type": "minor",
+        "coverage": 0.016
+      }
+    ]
+  },
+  {
+    "country_iso2": "ZM",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.16
+      }
+    ]
+  },
+  {
+    "country_iso2": "ZW",
+    "source": "cldr_territory_language_info",
+    "source_version": "48.1",
+    "notes": "Imported from CLDR territoryInfo. This is official-language baseline data only, not traveler usability.",
+    "languages": [
+      {
+        "code": "sn",
+        "type": "official",
+        "coverage": 0.81
+      },
+      {
+        "code": "en",
+        "type": "official",
+        "coverage": 0.42
+      },
+      {
+        "code": "nd",
+        "type": "official",
+        "coverage": 0.12
+      }
+    ]
+  }
+]

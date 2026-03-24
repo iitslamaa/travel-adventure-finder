@@ -1,0 +1,82 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AT",
+    "override_reason": "official_german_with_high_tourism_english_override",
+    "notes": "Austria should score German as the official language while giving strong English credit because the national tourism board says English is widely understood and spoken fluently by most people working in tourism.",
+    "languages": [
+      { "code": "de", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Austria Tourism: A-Z of Austria",
+        "url": "https://b2b.austria.info/uk/about-austria/a-z-of-austria/",
+        "note": "Austria's national tourism board says German is spoken by most of the population and that English is widely understood and spoken fluently by most people working within the tourism industry."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Austria Tourism: The Basics",
+        "url": "https://b2b.austria.info/us/about-austria/fast-facts/the-basics/",
+        "note": "Austria's tourism board identifies Austrian German as the language spoken in Austria."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CH",
+    "override_reason": "multiofficial_language_override",
+    "notes": "Switzerland should give full credit to German, French, and Italian as major national languages, plus partial credit to Romansh in the regions where it is used. This is country-level, so city and canton differences will matter later.",
+    "languages": [
+      { "code": "de", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "it", "type": "official", "coverage": 1.0 },
+      { "code": "rm", "type": "official", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Switzerland Tourism: Language distribution",
+        "url": "https://www.myswitzerland.com/en-au/planning/about-switzerland/general-facts/facts-about-switzerland/language-distribution/",
+        "note": "Switzerland Tourism explains the country's four languages and gives national distribution figures for German, French, Italian, and Romansh."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Switzerland Tourism: private group tours at ETH Zurich",
+        "url": "https://www.myswitzerland.com/en-us/experiences/private-group-tours-at-eth-zurich/",
+        "note": "Official tourism listings regularly show multilingual visitor services, including German, French, Italian, and English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "DK",
+    "override_reason": "official_danish_with_very_high_english_override",
+    "notes": "Denmark should score Danish as the national language while giving very high English credit because VisitDenmark explicitly says it is easy to get around in English and that over 90% of Danes speak it fluently.",
+    "languages": [
+      { "code": "da", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.9 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "VisitDenmark: Language",
+        "url": "https://www.visitdenmark.com/faq/language",
+        "note": "VisitDenmark says the national language is Danish."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "VisitDenmark: Speaking English in Denmark",
+        "url": "https://www.visitdenmark.com/faq/speaking-english-in-denmark",
+        "note": "VisitDenmark says Danes have a very good level of English and that it is easy to get around the country even if you do not speak Danish."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "VisitDenmark: Denmark basics for event planners",
+        "url": "https://www.visitdenmark.com/business-events/contacts/denmark-basics",
+        "note": "VisitDenmark says over 90% of Danes speak English fluently."
+      }
+    ]
+  }
+]

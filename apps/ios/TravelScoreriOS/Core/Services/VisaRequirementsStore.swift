@@ -3,9 +3,20 @@ import Combine
 
 private struct VisaSyncRunRow: Decodable {
     let version: Int
+    let passportFromRaw: String?
+    let passportFromISO2: String?
+
+    enum CodingKeys: String, CodingKey {
+        case version
+        case passportFromRaw = "passport_from_raw"
+        case passportFromISO2 = "passport_from_iso2"
+    }
 }
 
 private struct VisaRequirementRow: Codable {
+    let passportFromRaw: String
+    let passportFromNorm: String
+    let passportFromISO2: String
     let visitorToRaw: String
     let visitorToNorm: String
     let parentNorm: String?
@@ -16,9 +27,13 @@ private struct VisaRequirementRow: Codable {
     let notes: String?
     let version: Int
     let source: String?
+    let sourceURL: String?
     let lastVerifiedAt: String?
 
     enum CodingKeys: String, CodingKey {
+        case passportFromRaw = "passport_from_raw"
+        case passportFromNorm = "passport_from_norm"
+        case passportFromISO2 = "passport_from_iso2"
         case visitorToRaw = "visitor_to_raw"
         case visitorToNorm = "visitor_to_norm"
         case parentNorm = "parent_norm"
@@ -29,17 +44,21 @@ private struct VisaRequirementRow: Codable {
         case notes
         case version
         case source
+        case sourceURL = "source_url"
         case lastVerifiedAt = "last_verified_at"
     }
 }
 
 private struct CachedVisaDataset: Codable {
+    let passportCountryCode: String
     let version: Int
     let rows: [VisaRequirementRow]
     let savedAt: Date
 }
 
 private struct VisaSnapshot {
+    let passportCountryCode: String
+    let passportLabel: String
     let visaType: String?
     let visaEaseScore: Int?
     let visaAllowedDays: Int?
@@ -48,8 +67,15 @@ private struct VisaSnapshot {
     let visaSourceUrl: URL?
 }
 
+private struct HydratedVisaResult {
+    let snapshot: VisaSnapshot
+    let passportCode: String?
+    let passportLabel: String?
+    let recommendedPassportLabel: String?
+}
+
 private enum VisaRowMatcher {
-    static let sourceURL = URL(string: "https://en.wikipedia.org/wiki/Visa_requirements_for_United_States_citizens")
+    private static var countryLabelLocale: Locale { AppDisplayLocale.current }
 
     static func normalize(_ text: String) -> String {
         let normalized = text
@@ -118,6 +144,7 @@ private enum VisaRowMatcher {
     static func score(for visaType: String?) -> Int? {
         switch visaType {
         case "freedom_of_movement": return 100
+        case "own_passport": return 100
         case "visa_free": return 100
         case "voa": return 90
         case "evisa": return 50
@@ -195,12 +222,33 @@ private enum VisaRowMatcher {
             }
 
         return VisaSnapshot(
+            passportCountryCode: row.passportFromISO2,
+            passportLabel: row.passportFromRaw,
             visaType: visaType(from: row.requirement),
             visaEaseScore: score(for: visaType(from: row.requirement)),
             visaAllowedDays: parseDays(row.allowedStay) ?? parseDays(row.requirement),
             visaFeeUsd: nil,
             visaNotes: pieces.isEmpty ? nil : pieces.joined(separator: pieces.count > 1 ? ". " : ""),
-            visaSourceUrl: sourceURL
+            visaSourceUrl: row.sourceURL.flatMap(URL.init(string:))
+        )
+    }
+
+    static func homePassportSnapshot(for country: Country, passportCountryCode: String) -> VisaSnapshot? {
+        guard passportCountryCode.uppercased() == country.iso2.uppercased() else { return nil }
+
+        let passportLabel = countryLabelLocale.localizedString(
+            forRegionCode: passportCountryCode.uppercased()
+        ) ?? passportCountryCode.uppercased()
+
+        return VisaSnapshot(
+            passportCountryCode: passportCountryCode.uppercased(),
+            passportLabel: passportLabel,
+            visaType: "own_passport",
+            visaEaseScore: 100,
+            visaAllowedDays: nil,
+            visaFeeUsd: nil,
+            visaNotes: nil,
+            visaSourceUrl: nil
         )
     }
 }
@@ -223,11 +271,12 @@ private struct SupabaseRESTVisaService {
         self.anonKey = anonKey
     }
 
-    func fetchLatestVersion() async throws -> Int? {
+    func fetchLatestVersion(passportCountryCode: String) async throws -> VisaSyncRunRow? {
         let url = baseURL
             .appendingPathComponent("rest/v1/visa_sync_runs")
             .appending(queryItems: [
-                URLQueryItem(name: "select", value: "version"),
+                URLQueryItem(name: "select", value: "version,passport_from_raw,passport_from_iso2"),
+                URLQueryItem(name: "passport_from_iso2", value: "eq.\(passportCountryCode)"),
                 URLQueryItem(name: "order", value: "version.desc"),
                 URLQueryItem(name: "limit", value: "1")
             ])
@@ -241,14 +290,15 @@ private struct SupabaseRESTVisaService {
         try validate(response: response, data: data)
 
         let rows = try decoder.decode([VisaSyncRunRow].self, from: data)
-        return rows.first?.version
+        return rows.first
     }
 
-    func fetchRequirements(version: Int) async throws -> [VisaRequirementRow] {
+    func fetchRequirements(passportCountryCode: String, version: Int) async throws -> [VisaRequirementRow] {
         let url = baseURL
             .appendingPathComponent("rest/v1/visa_requirements")
             .appending(queryItems: [
-                URLQueryItem(name: "select", value: "visitor_to_raw,visitor_to_norm,parent_norm,is_special_subregion,aliases_norm,requirement,allowed_stay,notes,version,source,last_verified_at"),
+                URLQueryItem(name: "select", value: "passport_from_raw,passport_from_norm,passport_from_iso2,visitor_to_raw,visitor_to_norm,parent_norm,is_special_subregion,aliases_norm,requirement,allowed_stay,notes,version,source,source_url,last_verified_at"),
+                URLQueryItem(name: "passport_from_iso2", value: "eq.\(passportCountryCode)"),
                 URLQueryItem(name: "version", value: "eq.\(version)")
             ])
 
@@ -281,105 +331,177 @@ final class VisaRequirementsStore: ObservableObject {
 
     @Published private(set) var latestVersion: Int?
     @Published private(set) var isRefreshing = false
+    @Published private(set) var activePassportCountryCode: String?
+    @Published private(set) var activePassportLabel: String?
 
     private let service = SupabaseRESTVisaService()
-    private let cacheKey = "visa_requirements_cache_v1"
     private let versionCheckInterval: TimeInterval = 15 * 60
 
-    private var rows: [VisaRequirementRow] = []
-    private var hydratedByISO: [String: VisaSnapshot] = [:]
-    private var lastVersionCheckAt: Date?
+    private var rowsByPassport: [String: [VisaRequirementRow]] = [:]
+    private var hydratedByKey: [String: HydratedVisaResult] = [:]
+    private var lastVersionCheckAtByPassport: [String: Date] = [:]
+    private var latestVersionByPassport: [String: Int] = [:]
 
     private init() {
-        loadCachedDataset()
+        loadCachedDataset(for: "US")
     }
 
-    func hydrate(country: Country) async -> Country {
-        let cached = applySnapshot(to: country)
+    func hydrate(
+        country: Country,
+        passportCountryCodes: [String]? = nil,
+        fallbackPassportCountryCode: String? = nil
+    ) async -> Country {
+        let resolvedPassportCountryCodes = resolvedPassportCountryCodes(
+            passportCountryCodes,
+            fallbackPassportCountryCode: fallbackPassportCountryCode
+        )
+        let cached = applySnapshot(to: country, passportCountryCodes: resolvedPassportCountryCodes)
 
         do {
-            try await refreshIfNeeded(force: rows.isEmpty)
+            try await refreshIfNeeded(
+                passportCountryCodes: resolvedPassportCountryCodes,
+                force: resolvedPassportCountryCodes.contains { rowsByPassport[$0]?.isEmpty ?? true }
+            )
         } catch {
             #if DEBUG
             print("⚠️ [VisaRequirementsStore] Refresh failed:", error)
             #endif
         }
 
-        return applySnapshot(to: cached)
+        return applySnapshot(to: cached, passportCountryCodes: resolvedPassportCountryCodes)
     }
 
-    func hydrate(countries: [Country]) async -> [Country] {
-        let cached = countries.map(applySnapshot(to:))
+    func hydrate(
+        countries: [Country],
+        passportCountryCodes: [String]? = nil,
+        fallbackPassportCountryCode: String? = nil
+    ) async -> [Country] {
+        let resolvedPassportCountryCodes = resolvedPassportCountryCodes(
+            passportCountryCodes,
+            fallbackPassportCountryCode: fallbackPassportCountryCode
+        )
+        let cached = countries.map { applySnapshot(to: $0, passportCountryCodes: resolvedPassportCountryCodes) }
 
         do {
-            try await refreshIfNeeded(force: rows.isEmpty)
+            try await refreshIfNeeded(
+                passportCountryCodes: resolvedPassportCountryCodes,
+                force: resolvedPassportCountryCodes.contains { rowsByPassport[$0]?.isEmpty ?? true }
+            )
         } catch {
             #if DEBUG
             print("⚠️ [VisaRequirementsStore] Bulk refresh failed:", error)
             #endif
         }
 
-        return cached.map(applySnapshot(to:))
+        return cached.map { applySnapshot(to: $0, passportCountryCodes: resolvedPassportCountryCodes) }
     }
 
-    private func refreshIfNeeded(force: Bool) async throws {
+    private func refreshIfNeeded(passportCountryCodes: [String], force: Bool) async throws {
         guard let service else { return }
         if isRefreshing { return }
-        if !force, let lastVersionCheckAt, Date().timeIntervalSince(lastVersionCheckAt) < versionCheckInterval {
-            return
-        }
 
         isRefreshing = true
         defer { isRefreshing = false }
 
-        lastVersionCheckAt = Date()
+        for passportCountryCode in passportCountryCodes {
+            var shouldForce = force
 
-        guard let remoteVersion = try await service.fetchLatestVersion() else { return }
-        if remoteVersion == latestVersion, !rows.isEmpty { return }
+            if rowsByPassport[passportCountryCode] == nil {
+                loadCachedDataset(for: passportCountryCode)
+                shouldForce = true
+            }
 
-        let freshRows = try await service.fetchRequirements(version: remoteVersion)
-        latestVersion = remoteVersion
-        rows = freshRows
-        hydratedByISO = [:]
-        saveCachedDataset(version: remoteVersion, rows: freshRows)
+            if !shouldForce,
+               let lastVersionCheckAt = lastVersionCheckAtByPassport[passportCountryCode],
+               Date().timeIntervalSince(lastVersionCheckAt) < versionCheckInterval {
+                continue
+            }
+
+            lastVersionCheckAtByPassport[passportCountryCode] = Date()
+
+            guard let latestRun = try await service.fetchLatestVersion(passportCountryCode: passportCountryCode) else { continue }
+            let remoteVersion = latestRun.version
+            let currentVersion = latestVersionByPassport[passportCountryCode]
+            let currentRows = rowsByPassport[passportCountryCode] ?? []
+            if remoteVersion == currentVersion, !currentRows.isEmpty { continue }
+
+            let freshRows = try await service.fetchRequirements(
+                passportCountryCode: passportCountryCode,
+                version: remoteVersion
+            )
+
+            latestVersionByPassport[passportCountryCode] = remoteVersion
+            rowsByPassport[passportCountryCode] = freshRows
+            hydratedByKey = [:]
+            activePassportCountryCode = passportCountryCode
+            activePassportLabel = latestRun.passportFromRaw ?? freshRows.first?.passportFromRaw
+            latestVersion = remoteVersion
+            saveCachedDataset(
+                passportCountryCode: passportCountryCode,
+                version: remoteVersion,
+                rows: freshRows
+            )
+        }
     }
 
-    private func applySnapshot(to country: Country) -> Country {
+    private func applySnapshot(to country: Country, passportCountryCodes: [String]) -> Country {
         let iso2 = country.iso2.uppercased()
+        let cacheKey = "\(passportCountryCodes.sorted().joined(separator: ","))::\(iso2)"
 
-        if let cached = hydratedByISO[iso2] {
+        if let cached = hydratedByKey[cacheKey] {
             return country.applyingVisa(
-                visaEaseScore: cached.visaEaseScore,
-                visaType: cached.visaType,
-                visaAllowedDays: cached.visaAllowedDays,
-                visaFeeUsd: cached.visaFeeUsd,
-                visaNotes: cached.visaNotes,
-                visaSourceUrl: cached.visaSourceUrl
+                visaEaseScore: cached.snapshot.visaEaseScore,
+                visaType: cached.snapshot.visaType,
+                visaAllowedDays: cached.snapshot.visaAllowedDays,
+                visaFeeUsd: cached.snapshot.visaFeeUsd,
+                visaNotes: cached.snapshot.visaNotes,
+                visaSourceUrl: cached.snapshot.visaSourceUrl,
+                visaPassportCode: cached.passportCode,
+                visaPassportLabel: cached.passportLabel,
+                visaRecommendedPassportLabel: cached.recommendedPassportLabel
             )
         }
 
-        guard let snapshot = VisaRowMatcher.snapshot(for: country, rows: rows) else {
+        let snapshots = passportCountryCodes.compactMap { passportCountryCode -> VisaSnapshot? in
+            if let homePassportSnapshot = VisaRowMatcher.homePassportSnapshot(
+                for: country,
+                passportCountryCode: passportCountryCode
+            ) {
+                return homePassportSnapshot
+            }
+
+            guard let rows = rowsByPassport[passportCountryCode], !rows.isEmpty else { return nil }
+            return VisaRowMatcher.snapshot(for: country, rows: rows)
+        }
+
+        guard let hydratedResult = hydratedResult(from: snapshots) else {
             return country
         }
 
-        hydratedByISO[iso2] = snapshot
+        hydratedByKey[cacheKey] = hydratedResult
         return country.applyingVisa(
-            visaEaseScore: snapshot.visaEaseScore,
-            visaType: snapshot.visaType,
-            visaAllowedDays: snapshot.visaAllowedDays,
-            visaFeeUsd: snapshot.visaFeeUsd,
-            visaNotes: snapshot.visaNotes,
-            visaSourceUrl: snapshot.visaSourceUrl
+            visaEaseScore: hydratedResult.snapshot.visaEaseScore,
+            visaType: hydratedResult.snapshot.visaType,
+            visaAllowedDays: hydratedResult.snapshot.visaAllowedDays,
+            visaFeeUsd: hydratedResult.snapshot.visaFeeUsd,
+            visaNotes: hydratedResult.snapshot.visaNotes,
+            visaSourceUrl: hydratedResult.snapshot.visaSourceUrl,
+            visaPassportCode: hydratedResult.passportCode,
+            visaPassportLabel: hydratedResult.passportLabel,
+            visaRecommendedPassportLabel: hydratedResult.recommendedPassportLabel
         )
     }
 
-    private func loadCachedDataset() {
-        guard let data = UserDefaults.standard.data(forKey: cacheKey) else { return }
+    private func loadCachedDataset(for passportCountryCode: String) {
+        guard let data = UserDefaults.standard.data(forKey: cacheKey(for: passportCountryCode)) else { return }
 
         do {
             let dataset = try JSONDecoder().decode(CachedVisaDataset.self, from: data)
+            latestVersionByPassport[passportCountryCode] = dataset.version
+            rowsByPassport[passportCountryCode] = dataset.rows
+            activePassportCountryCode = dataset.passportCountryCode
+            activePassportLabel = dataset.rows.first?.passportFromRaw
             latestVersion = dataset.version
-            rows = dataset.rows
         } catch {
             #if DEBUG
             print("⚠️ [VisaRequirementsStore] Cache decode failed:", error)
@@ -387,15 +509,87 @@ final class VisaRequirementsStore: ObservableObject {
         }
     }
 
-    private func saveCachedDataset(version: Int, rows: [VisaRequirementRow]) {
+    private func saveCachedDataset(passportCountryCode: String, version: Int, rows: [VisaRequirementRow]) {
         do {
-            let data = try JSONEncoder().encode(CachedVisaDataset(version: version, rows: rows, savedAt: Date()))
-            UserDefaults.standard.set(data, forKey: cacheKey)
+            let data = try JSONEncoder().encode(
+                CachedVisaDataset(
+                    passportCountryCode: passportCountryCode,
+                    version: version,
+                    rows: rows,
+                    savedAt: Date()
+                )
+            )
+            UserDefaults.standard.set(data, forKey: cacheKey(for: passportCountryCode))
         } catch {
             #if DEBUG
             print("⚠️ [VisaRequirementsStore] Cache encode failed:", error)
             #endif
         }
+    }
+
+    private func resolvedPassportCountryCodes(
+        _ passportCountryCodes: [String]?,
+        fallbackPassportCountryCode: String?
+    ) -> [String] {
+        let normalizedSavedPassports = (passportCountryCodes ?? [])
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            .filter { !$0.isEmpty }
+
+        let normalizedFallback = fallbackPassportCountryCode?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+
+        let merged = normalizedSavedPassports + [normalizedFallback].compactMap { $0 }
+        let unique = Array(NSOrderedSet(array: merged)) as? [String] ?? []
+        return unique.isEmpty ? ["US"] : unique
+    }
+
+    private func hydratedResult(from snapshots: [VisaSnapshot]) -> HydratedVisaResult? {
+        guard let bestSnapshot = snapshots.max(by: { lhs, rhs in
+            compare(lhs, rhs) == .orderedAscending
+        }) else {
+            return nil
+        }
+
+        let bestSnapshots = snapshots.filter { compare($0, bestSnapshot) == .orderedSame }
+        let sortedBestSnapshots = bestSnapshots.sorted {
+            $0.passportLabel.localizedCaseInsensitiveCompare($1.passportLabel) == .orderedAscending
+        }
+        let bestLabels = Array(NSOrderedSet(array: sortedBestSnapshots.map(\.passportLabel))) as? [String] ?? []
+        let isTie = bestLabels.count > 1
+
+        return HydratedVisaResult(
+            snapshot: sortedBestSnapshots.first ?? bestSnapshot,
+            passportCode: isTie ? nil : sortedBestSnapshots.first?.passportCountryCode,
+            passportLabel: bestLabels.isEmpty ? bestSnapshot.passportLabel : bestLabels.joined(separator: " / "),
+            recommendedPassportLabel: isTie ? nil : bestLabels.first
+        )
+    }
+
+    private func compare(_ lhs: VisaSnapshot, _ rhs: VisaSnapshot) -> ComparisonResult {
+        let lhsScore = lhs.visaEaseScore ?? -1
+        let rhsScore = rhs.visaEaseScore ?? -1
+        if lhsScore != rhsScore {
+            return lhsScore < rhsScore ? .orderedAscending : .orderedDescending
+        }
+
+        let lhsDays = lhs.visaAllowedDays ?? -1
+        let rhsDays = rhs.visaAllowedDays ?? -1
+        if lhsDays != rhsDays {
+            return lhsDays < rhsDays ? .orderedAscending : .orderedDescending
+        }
+
+        let lhsFee = lhs.visaFeeUsd ?? .greatestFiniteMagnitude
+        let rhsFee = rhs.visaFeeUsd ?? .greatestFiniteMagnitude
+        if lhsFee != rhsFee {
+            return lhsFee > rhsFee ? .orderedAscending : .orderedDescending
+        }
+
+        return lhs.passportCountryCode.localizedCaseInsensitiveCompare(rhs.passportCountryCode)
+    }
+
+    private func cacheKey(for passportCountryCode: String) -> String {
+        "visa_requirements_cache_v2_\(passportCountryCode)"
     }
 }
 

@@ -1,0 +1,148 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "PR",
+    "override_reason": "official_bilingual_with_spanish_dominance_override",
+    "notes": "Puerto Rico should score Spanish as the main everyday language while still giving English meaningful travel credit because it shares official status and remains common in tourism, transport, and many urban services.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Discover Puerto Rico: Essential Information",
+        "url": "https://www.discoverpuertorico.com/info/essential-information",
+        "note": "Official tourism guidance says Spanish and English are official languages and notes that Spanish is the predominant language spoken on the island."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Puerto Rico",
+        "url": "https://www.britannica.com/place/Puerto-Rico",
+        "note": "Britannica describes Spanish and English as official while emphasizing Spanish as the primary language of daily life."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "VI",
+    "override_reason": "english_primary_with_spanish_traveler_support_override",
+    "notes": "The U.S. Virgin Islands should score English as the practical default for travelers while still giving Spanish partial credit because it is common in day-to-day life and visitor services. Virgin Islands Creole English should also count as a minor exact local match because it exists in the picker catalog.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "es", "type": "widely_spoken", "coverage": 0.45 },
+      { "code": "vic", "type": "minor", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit USVI: Travel Information",
+        "url": "https://www.visitusvi.com/travel-info",
+        "note": "Official tourism guidance presents English as the working visitor language for transport, attractions, and practical island information."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: United States Virgin Islands",
+        "url": "https://www.britannica.com/place/United-States-Virgin-Islands",
+        "note": "Britannica notes English as the principal language and recognizes Spanish usage within the islands."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "VG",
+    "override_reason": "english_primary_with_secondary_spanish_override",
+    "notes": "The British Virgin Islands should score English as fully usable for travelers while giving Spanish limited credit because it is present in the population and some service interactions, but not as the main visitor language.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "es", "type": "minor", "coverage": 0.3 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "BVI Tourist Board: Welcome to the British Virgin Islands",
+        "url": "https://www.bvitourism.com/",
+        "note": "Official tourism materials are published for visitors in English and present English as the default practical language for travel."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: British Virgin Islands",
+        "url": "https://www.britannica.com/place/British-Virgin-Islands",
+        "note": "Britannica identifies English as the official language and notes Spanish-speaking population presence."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "GU",
+    "override_reason": "english_dominant_with_chamorro_visibility_override",
+    "notes": "Guam should score English as the dominant traveler language while still giving Chamorro meaningful credit because it remains culturally important, visible in signage, and supported by official language institutions.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "ch", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Guam Visitors Bureau: New Beach and Water Safety Signs Installed in Tumon",
+        "url": "https://www.guamvisitorsbureau.com/news/news-releases/new-beach-and-water-safety-signs-installed-in-tumon.html",
+        "note": "Official tourism guidance shows English as the default visitor language while also publishing safety information in Chamorro for residents and visitors."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Department of Chamorro Affairs",
+        "url": "https://dca.guam.gov/",
+        "note": "The official Government of Guam Department of Chamorro Affairs documents formal public support for the Chamorro language and culture."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MP",
+    "override_reason": "official_multilingual_with_english_traveler_default_override",
+    "notes": "The Northern Mariana Islands should score English as the easiest traveler language while recognizing Chamorro and Carolinian as official and locally meaningful throughout the commonwealth.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "ch", "type": "official", "coverage": 0.65 },
+      { "code": "cal", "type": "official", "coverage": 0.65 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "CNMI Constitution",
+        "url": "https://www.cnmilaw.org/cons.php",
+        "note": "The CNMI Constitution states that Chamorro, Carolinian, and English are the official languages of the commonwealth."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "The Marianas Visitors Authority",
+        "url": "https://www.mymarianas.com/",
+        "note": "Official visitor information is delivered in English while tourism branding also reflects indigenous Chamorro and Carolinian identity."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "AS",
+    "override_reason": "bilingual_everyday_language_override",
+    "notes": "American Samoa should give strong credit to both English and Samoan because travelers will encounter both in government, everyday commerce, and community life across the territory.",
+    "languages": [
+      { "code": "en", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "sm", "type": "widely_spoken", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "American Samoa Government Portal",
+        "url": "https://www.americansamoa.gov/",
+        "note": "The territory's official government portal publishes practical public information in English while serving a predominantly Samoan-speaking community."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: American Samoa",
+        "url": "https://www.britannica.com/place/American-Samoa",
+        "note": "Britannica describes Samoan and English as the principal languages used in American Samoa."
+      }
+    ]
+  }
+]

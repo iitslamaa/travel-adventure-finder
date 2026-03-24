@@ -9,6 +9,7 @@ struct CountryMultiSelectView: View {
     let title: String
     let subtitle: String?
     @Binding var selection: Set<String>
+    let excludedCodes: Set<String>
 
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
@@ -19,12 +20,14 @@ struct CountryMultiSelectView: View {
     init(
         title: String,
         subtitle: String? = nil,
-        selection: Binding<Set<String>>
+        selection: Binding<Set<String>>,
+        excludedCodes: Set<String> = []
     ) {
         self.title = title
         self.subtitle = subtitle
         self._selection = selection
         self.initialSelection = selection.wrappedValue
+        self.excludedCodes = Set(excludedCodes.map { $0.uppercased() })
     }
 
     private let countries: [(code: String, name: String)] =
@@ -52,7 +55,7 @@ struct CountryMultiSelectView: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(.secondary)
 
-                    TextField("Search", text: $searchText)
+                    TextField("profile.settings.search_countries", text: $searchText)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
@@ -89,7 +92,7 @@ struct CountryMultiSelectView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("common.save") {
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -98,7 +101,7 @@ struct CountryMultiSelectView: View {
                 }
 
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("common.cancel") {
                         selection = initialSelection
                         dismiss()
                     }
@@ -108,9 +111,11 @@ struct CountryMultiSelectView: View {
     }
 
     private var filteredCountries: [(code: String, name: String)] {
-        guard !searchText.isEmpty else { return countries }
+        let visibleCountries = countries.filter { !excludedCodes.contains($0.code.uppercased()) }
+
+        guard !searchText.isEmpty else { return visibleCountries }
         let normalizedSearch = searchText.normalizedSearchKey
-        return countries.filter {
+        return visibleCountries.filter {
             $0.name.normalizedSearchKey.contains(normalizedSearch)
         }
     }

@@ -1,0 +1,83 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "RW",
+    "override_reason": "official_kinyarwanda_with_english_and_french_override",
+    "notes": "Rwanda should recognize Kinyarwanda as the everyday national language while also giving strong credit to English and some credit to French because official tourism guidance highlights all three as visitor-relevant languages.",
+    "languages": [
+      { "code": "rw", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "official", "coverage": 0.75 },
+      { "code": "fr", "type": "official", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Rwanda: Useful Information",
+        "url": "https://www.visitrwanda.com/planning/useful-information/",
+        "note": "Official tourism guidance says Kinyarwanda, English, French, and Kiswahili are spoken in Rwanda."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Rwanda Basic Education Board",
+        "url": "https://www.reb.rw/home/language-policy",
+        "note": "Government education guidance treats Kinyarwanda, English, French, and Kiswahili as Rwanda's official languages, while Kinyarwanda remains the unifying national language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TZ",
+    "override_reason": "official_swahili_with_tourism_english_override",
+    "notes": "Tanzania should score Swahili as the national language while giving moderate English credit because English remains important in tourism, safaris, and official visitor-facing services even though daily life is overwhelmingly Swahili.",
+    "languages": [
+      { "code": "sw", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Tanzania Tourism: Destination overview",
+        "url": "https://www.tanzaniatourism.go.tz/en/destination/tanzania-unforgettable",
+        "note": "Official tourism guidance is structured entirely for international English-speaking visitors, supporting meaningful English usability in the tourism sector."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Tanzania",
+        "url": "https://www.britannica.com/place/Tanzania",
+        "note": "Britannica identifies Swahili and English as the official languages of Tanzania, with Swahili as the national language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "ZA",
+    "override_reason": "multiofficial_language_with_english_default_override",
+    "notes": "South Africa should recognize its multiple official languages while giving English very strong practical credit because official tourism and travel systems operate heavily in English and it functions as the default cross-group language for many travelers.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "zu", "type": "official", "coverage": 0.7 },
+      { "code": "xh", "type": "official", "coverage": 0.6 },
+      { "code": "af", "type": "official", "coverage": 0.6 },
+      { "code": "st", "type": "official", "coverage": 0.4 },
+      { "code": "tn", "type": "official", "coverage": 0.4 },
+      { "code": "ts", "type": "official", "coverage": 0.3 },
+      { "code": "ve", "type": "official", "coverage": 0.2 },
+      { "code": "nr", "type": "official", "coverage": 0.2 },
+      { "code": "ss", "type": "official", "coverage": 0.2 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "South African Tourism: FAQ",
+        "url": "https://www.southafrica.net/gl/en/travel/article/frequently-asked-questions",
+        "note": "Official tourism guidance says South Africa has 11 official languages and that English is widely spoken, especially in tourism and cities."
+      },
+      {
+        "kind": "government_reference",
+        "title": "South African Government: Official languages",
+        "url": "https://www.gov.za/about-sa/south-africas-people",
+        "note": "Government guidance lists South Africa's official languages and supports English as one of the main intergroup public languages."
+      }
+    ]
+  }
+]

@@ -1,0 +1,246 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "AF",
+    "override_reason": "coofficial_dari_and_pashto_override",
+    "notes": "Afghanistan should score both Dari and Pashto as fully compatible because Britannica identifies Persian (Dari) and Pashto as the country's official languages, with Dari also serving as a common bridge language.",
+    "languages": [
+      { "code": "prs", "type": "official", "coverage": 1.0 },
+      { "code": "ps", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Languages of Afghanistan",
+        "url": "https://www.britannica.com/place/Afghanistan/Languages",
+        "note": "Britannica says Pashto and Persian (Dari) are the official languages of Afghanistan."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Dari language",
+        "url": "https://www.britannica.com/topic/Dari-language",
+        "note": "Britannica says Dari is one of the two official languages of Afghanistan and functions as a means of communication between speakers of different languages."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "AO",
+    "override_reason": "official_portuguese_with_major_angolan_languages_override",
+    "notes": "Angola should score Portuguese as fully compatible while also recognizing Umbundu and Kimbundu as major everyday languages identified by Britannica.",
+    "languages": [
+      { "code": "pt", "type": "official", "coverage": 1.0 },
+      { "code": "umb", "type": "widely_spoken", "coverage": 0.65 },
+      { "code": "kmb", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Angola",
+        "url": "https://www.britannica.com/place/Angola",
+        "note": "Britannica identifies Portuguese as the official language of Angola."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: People of Angola",
+        "url": "https://www.britannica.com/place/Angola/People",
+        "note": "Britannica says Umbundu and Kimbundu are among the most widely spoken African languages in Angola."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BD",
+    "override_reason": "official_bengali_with_urban_english_override",
+    "notes": "Bangladesh should score Bengali as fully compatible and give meaningful English credit because Britannica says English is spoken in urban centers and among educated groups, while the national tourism board explicitly supports an English interface for travelers.",
+    "languages": [
+      { "code": "bn", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Languages of Bangladesh",
+        "url": "https://www.britannica.com/place/Bangladesh/Languages",
+        "note": "Britannica says Bengali is the national language and that English is spoken in urban centers and among educated groups."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Bangladesh Tourism Board sitemap",
+        "url": "https://tourismboard.gov.bd/site/view/sitemap",
+        "note": "The official tourism board site exposes an English-language option for international visitors, supporting practical traveler usability in English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BJ",
+    "override_reason": "official_french_with_fon_everyday_use_override",
+    "notes": "Benin should score French as fully compatible and give Fon meaningful everyday credit because Britannica identifies French as official and Fon as one of the most common vernaculars.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "fon", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Benin summary",
+        "url": "https://www.britannica.com/summary/Benin",
+        "note": "Britannica identifies French as the official language of Benin and Fon as one of the main languages."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Agence Bénin Tourisme",
+        "url": "https://benintourisme.bj/",
+        "note": "Benin's official tourism agency operates in French, which supports French as the primary traveler-facing language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BN",
+    "override_reason": "official_malay_with_high_english_override",
+    "notes": "Brunei should score Malay as fully compatible and English as highly compatible because Brunei Tourism says Malay is official and English is widely spoken at all levels.",
+    "languages": [
+      { "code": "ms", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.9 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Brunei Tourism: About",
+        "url": "https://www.bruneitourism.com/about",
+        "note": "Brunei Tourism says Malay is the official language and English is the language of business and widely spoken at all levels."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Brunei",
+        "url": "https://www.britannica.com/place/Brunei",
+        "note": "Britannica says Malay is the official language and English is a major second language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BT",
+    "override_reason": "official_dzongkha_with_high_english_override",
+    "notes": "Bhutan should score Dzongkha as fully compatible and English as highly usable because official visitor FAQs say English is used throughout the education system and is widely used and understood.",
+    "languages": [
+      { "code": "dz", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Bhutan Travel FAQs",
+        "url": "https://bhutan.travel/faqs",
+        "note": "Official tourism FAQs say Dzongkha is the national language and that English is widely used and understood."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Bhutan summary",
+        "url": "https://www.britannica.com/summary/Bhutan",
+        "note": "Britannica identifies Dzongkha as the official language of Bhutan."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "BY",
+    "override_reason": "coofficial_belarusian_and_russian_override",
+    "notes": "Belarus should score both Belarusian and Russian because both are official, while Russian gets very high practical coverage because Britannica notes it is more widely used in education and public life.",
+    "languages": [
+      { "code": "be", "type": "official", "coverage": 0.75 },
+      { "code": "ru", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Belarus",
+        "url": "https://www.britannica.com/place/Belarus",
+        "note": "Britannica identifies Belarusian and Russian as the official languages of Belarus."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Belarusian language",
+        "url": "https://www.britannica.com/topic/Belarusian-language",
+        "note": "Britannica says Russian is more widely used in education and public life than Belarusian."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CC",
+    "override_reason": "official_english_with_cocos_malay_override",
+    "notes": "The Cocos (Keeling) Islands should score English as the official traveler-facing language while also giving strong credit to Cocos Islands Malay because Britannica says most Cocos Malays speak a dialect of Malay.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "coa", "type": "widely_spoken", "coverage": 0.85 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Cocos Islands",
+        "url": "https://www.britannica.com/place/Cocos-Islands",
+        "note": "Britannica says most Cocos Malays speak a dialect of Malay in the Cocos Islands."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Cocos Islander",
+        "url": "https://www.britannica.com/topic/Cocos-Islander",
+        "note": "Britannica identifies the local community as Cocos Malays, supporting Cocos Malay as an important everyday language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CD",
+    "override_reason": "official_french_with_major_national_languages_override",
+    "notes": "The Democratic Republic of the Congo should score French as fully compatible while also giving strong credit to Lingala, Swahili, and Kongo because Britannica identifies them as national languages used for regional commerce and everyday communication.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "ln", "type": "widely_spoken", "coverage": 0.75 },
+      { "code": "sw", "type": "widely_spoken", "coverage": 0.75 },
+      { "code": "kg", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: Democratic Republic of the Congo",
+        "url": "https://www.britannica.com/place/Democratic-Republic-of-the-Congo",
+        "note": "Britannica says French is the official language and identifies Swahili, Tshiluba, Lingala, and Kongo as national languages."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Ministère du Tourisme de la RDC",
+        "url": "https://tourisme.gouv.cd/nous-contacter",
+        "note": "The official DRC tourism ministry operates in French, supporting French as the primary traveler-facing language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "CG",
+    "override_reason": "official_french_with_lingala_and_kituba_override",
+    "notes": "The Republic of the Congo should score French as fully compatible while also giving strong credit to Lingala and Kituba because Britannica identifies them as the country's main trade languages.",
+    "languages": [
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "ln", "type": "widely_spoken", "coverage": 0.65 },
+      { "code": "mkw", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "reference",
+        "title": "Britannica: People of the Republic of the Congo",
+        "url": "https://www.britannica.com/place/Republic-of-the-Congo/People",
+        "note": "Britannica says French is the official language and that Lingala and Kituba function as the country's main trade languages."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Republic of the Congo",
+        "url": "https://www.britannica.com/place/Republic-of-the-Congo",
+        "note": "Britannica identifies Lingala and Monokutuba as the country's functional national languages."
+      }
+    ]
+  }
+]

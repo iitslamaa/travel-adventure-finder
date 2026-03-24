@@ -37,6 +37,9 @@ function loadEnvFile() {
 }
 
 const COUNTRY_SEEDS = require("../apps/web/data/seeds/countries.json");
+const PASSPORT_VISA_SOURCES = require("./data/passport_visa_sources.json");
+const fs = require("fs");
+const path = require("path");
 
 console.log("Starting visa sync script...");
 
@@ -47,9 +50,6 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
   process.exit(1);
 }
-
-const WIKI_URL =
-  "https://en.wikipedia.org/wiki/Visa_requirements_for_United_States_citizens";
 
 function normalize(text) {
   const normalized = String(text || "")
@@ -146,6 +146,182 @@ const aliasToSeed = (() => {
 
   return map;
 })();
+
+const argv = process.argv.slice(2);
+const hasFlag = (flag) => argv.includes(flag);
+const getArgValue = (name) => {
+  const directPrefix = `--${name}=`;
+  const direct = argv.find((arg) => arg.startsWith(directPrefix));
+  if (direct) return direct.slice(directPrefix.length);
+
+  const index = argv.indexOf(`--${name}`);
+  if (index !== -1 && argv[index + 1] && !argv[index + 1].startsWith("--")) {
+    return argv[index + 1];
+  }
+
+  return null;
+};
+
+const DEFAULT_UNRESOLVED_REPORT_PATH = path.join(
+  __dirname,
+  "data",
+  "passport_visa_unresolved.json"
+);
+const DEFAULT_MANIFEST_OUTPUT_PATH = path.join(
+  __dirname,
+  "data",
+  "passport_visa_sources.generated.json"
+);
+const WIKIPEDIA_HEADERS = {
+  "User-Agent": "travel-af-codex/1.0 (passport visa sync)",
+  "Accept": "application/json,text/html;q=0.9,*/*;q=0.8",
+};
+const PASSPORT_SELECTION_EXCLUDED_ISO2 = new Set(["AQ", "BV", "HM"]);
+
+function seedForPassportIso2(iso2) {
+  return COUNTRY_SEEDS.find(
+    (seed) => String(seed.iso2 || "").toUpperCase() === String(iso2 || "").toUpperCase()
+  ) || null;
+}
+
+function passportLabelsForSeed(seed) {
+  if (!seed) return [];
+
+  return [
+    seed.name,
+    seed.officialName,
+    ...(Array.isArray(seed.aliases) ? seed.aliases : []),
+  ]
+    .filter(Boolean)
+    .filter((value) => value !== "undefined")
+    .map((value) => cleanDisplayName(value))
+    .filter(Boolean)
+    .filter((value, index, array) => array.indexOf(value) === index);
+}
+
+function stripHtml(value) {
+  return cleanDisplayName(
+    String(value || "")
+      .replace(/<sup[\s\S]*?<\/sup>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+  );
+}
+
+async function fetchPageLeadText(pageUrl) {
+  const response = await fetch(pageUrl, { headers: WIKIPEDIA_HEADERS });
+  if (!response.ok) {
+    return "";
+  }
+
+  const html = await response.text();
+  const leadSection = html.match(/<div class="mw-content-ltr[\s\S]*?<\/table>/i)
+    ? html
+    : html;
+
+  const paragraphs = [...leadSection.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
+    .slice(0, 4)
+    .map((match) => stripHtml(match[1]))
+    .filter(Boolean);
+
+  return normalize(paragraphs.join(" "));
+}
+
+function searchTextMatchesSeed(text, seed) {
+  const normalizedText = normalize(text || "");
+  if (!normalizedText) return false;
+
+  const labels = new Set(
+    passportLabelsForSeed(seed)
+      .map((label) => normalize(label))
+      .filter(Boolean)
+  );
+
+  return [...labels].some((label) => {
+    if (label.length < 4) return false;
+    return normalizedText.includes(label);
+  });
+}
+
+async function candidateMatchesSeed(candidateTitle, seed) {
+  if (searchTextMatchesSeed(candidateTitle, seed)) {
+    return true;
+  }
+
+  const pageUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(candidateTitle.replace(/\s+/g, "_"))}`;
+  const leadText = await fetchPageLeadText(pageUrl);
+  return searchTextMatchesSeed(leadText, seed);
+}
+
+async function resolveWikipediaSource(seed, explicitUrl) {
+  if (explicitUrl) {
+    return {
+      url: explicitUrl,
+      title: explicitUrl.split("/wiki/")[1] || explicitUrl,
+    };
+  }
+
+  const iso2 = String(seed?.iso2 || "").toUpperCase();
+  const manifestSource = PASSPORT_VISA_SOURCES[iso2];
+  if (manifestSource?.url) {
+    const url = manifestSource.url;
+    return {
+      url,
+      title: manifestSource.title || url.split("/wiki/")[1] || url,
+    };
+  }
+
+  const labels = passportLabelsForSeed(seed);
+  for (const label of labels) {
+    const searchQueries = [
+      `Visa requirements for ${label} citizens`,
+      `Visa requirements for citizens of ${label}`,
+      `Visa requirements for ${label} nationals`,
+      `${label} passport visa requirements`,
+    ];
+
+    for (const searchQuery of searchQueries) {
+      const searchUrl = new URL("https://en.wikipedia.org/w/api.php");
+      searchUrl.searchParams.set("action", "query");
+      searchUrl.searchParams.set("list", "search");
+      searchUrl.searchParams.set("format", "json");
+      searchUrl.searchParams.set("utf8", "1");
+      searchUrl.searchParams.set("srsearch", searchQuery);
+      searchUrl.searchParams.set("srlimit", "10");
+
+      const response = await fetch(searchUrl, { headers: WIKIPEDIA_HEADERS });
+      if (!response.ok) continue;
+
+      const payload = await response.json();
+      const candidates = Array.isArray(payload?.query?.search)
+        ? payload.query.search
+        : [];
+
+      for (const candidate of candidates) {
+        const title = String(candidate?.title || "");
+        if (
+          !/^Visa requirements for /i.test(title) ||
+          !/(citizens|nationals|passport holders?)/i.test(title)
+        ) {
+          continue;
+        }
+
+        if (!(await candidateMatchesSeed(title, seed))) {
+          continue;
+        }
+
+        return {
+          title,
+          url: `https://en.wikipedia.org/wiki/${encodeURIComponent(title.replace(/\s+/g, "_"))}`,
+        };
+      }
+    }
+  }
+
+  throw new Error(
+    `Could not resolve Wikipedia visa page for ${seed?.name || iso2 || "unknown passport"}`
+  );
+}
 
 function findSeedForVisitor(visitorToRaw) {
   const raw = cleanDisplayName(visitorToRaw);
@@ -277,8 +453,8 @@ function buildRowPayload({
   };
 }
 
-async function fetchWikiTable() {
-  const res = await fetch(WIKI_URL);
+async function fetchWikiTable(wikiUrl) {
+  const res = await fetch(wikiUrl, { headers: WIKIPEDIA_HEADERS });
   const html = await res.text();
   const rows = [];
   const seen = new Set();
@@ -395,17 +571,15 @@ async function fetchWikiTable() {
   return rows;
 }
 
-async function run() {
-  console.log("Inside run()");
-  console.log("Fetching Wikipedia...");
-
-  const rows = await fetchWikiTable();
-
-  console.log(`Parsed ${rows.length} rows`);
+async function syncPassport({ seed, wikiUrl, wikiTitle }) {
+  console.log(`Fetching Wikipedia for ${seed.name} (${seed.iso2})...`);
+  const rows = await fetchWikiTable(wikiUrl);
+  console.log(`Parsed ${rows.length} rows for ${seed.iso2}`);
 
   const latestRuns = await supabaseRest("visa_sync_runs", {
     searchParams: {
       select: "version",
+      passport_from_iso2: `eq.${seed.iso2.toUpperCase()}`,
       order: "version.desc",
       limit: "1",
     },
@@ -418,12 +592,19 @@ async function run() {
   await supabaseRest("visa_sync_runs", {
     method: "POST",
     body: {
+      passport_from_raw: seed.name,
+      passport_from_norm: normalize(seed.name),
+      passport_from_iso2: seed.iso2.toUpperCase(),
+      source_url: wikiUrl,
       version: newVersion,
       row_count: rows.length,
     },
   });
 
   const inserts = rows.map((row) => ({
+    passport_from_raw: seed.name,
+    passport_from_norm: normalize(seed.name),
+    passport_from_iso2: seed.iso2.toUpperCase(),
     visitor_to_raw: row.visitorToRaw,
     visitor_to_norm: row.visitorToNorm,
     requirement: row.requirement,
@@ -434,6 +615,7 @@ async function run() {
     is_special_subregion: row.isSpecialSubregion,
     version: newVersion,
     source: "wikipedia",
+    source_url: wikiUrl,
   }));
 
   await supabaseRest("visa_requirements", {
@@ -441,22 +623,144 @@ async function run() {
     body: inserts,
   });
 
-  console.log("Sync complete. Version:", newVersion);
+  console.log(
+    `Sync complete for ${seed.iso2} using ${wikiTitle || wikiUrl}. Version: ${newVersion}`
+  );
 }
 
+function writeUnresolvedReport(unresolved, reportPath = DEFAULT_UNRESOLVED_REPORT_PATH) {
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    count: unresolved.length,
+    unresolved,
+  };
+
+  fs.writeFileSync(reportPath, JSON.stringify(payload, null, 2) + "\n", "utf8");
+  console.log(`Wrote unresolved passport visa report to ${reportPath}`);
+}
+
+function writeResolvedManifest(resolvedSources, outputPath = DEFAULT_MANIFEST_OUTPUT_PATH) {
+  const sorted = Object.fromEntries(
+    Object.entries(resolvedSources).sort(([left], [right]) =>
+      left.localeCompare(right)
+    )
+  );
+
+  fs.writeFileSync(outputPath, JSON.stringify(sorted, null, 2) + "\n", "utf8");
+  console.log(`Wrote resolved passport visa manifest to ${outputPath}`);
+}
+
+async function run() {
+  console.log("Inside run()");
+
+  const explicitPassportIso2 = (getArgValue("passport-iso2") || getArgValue("iso2") || "US").toUpperCase();
+  const explicitWikiUrl = getArgValue("wiki-url");
+  const syncAll = hasFlag("--all");
+  const sovereignOnly = hasFlag("--sovereign-only");
+  const skipMissing = hasFlag("--skip-missing");
+  const writeUnresolved = hasFlag("--write-unresolved");
+  const resolveOnly = hasFlag("--resolve-only");
+  const writeManifest = hasFlag("--write-manifest");
+  const unresolvedReportPath = getArgValue("unresolved-report") || DEFAULT_UNRESOLVED_REPORT_PATH;
+  const manifestOutputPath = getArgValue("manifest-output") || DEFAULT_MANIFEST_OUTPUT_PATH;
+  const limitValue = Number(getArgValue("limit") || 0);
+  const passportSeeds = syncAll
+    ? COUNTRY_SEEDS
+        .filter((seed) => !sovereignOnly || seed?.territory !== true)
+        .filter((seed) => !PASSPORT_SELECTION_EXCLUDED_ISO2.has(String(seed?.iso2 || "").toUpperCase()))
+        .filter((seed) => seed?.iso2 && seed?.name)
+        .slice(0, limitValue > 0 ? limitValue : COUNTRY_SEEDS.length)
+    : [seedForPassportIso2(explicitPassportIso2)].filter(Boolean);
+
+  if (!passportSeeds.length) {
+    throw new Error(`Unknown passport iso2: ${explicitPassportIso2}`);
+  }
+
+  const unresolved = [];
+  const resolvedSources = {};
+
+  for (const seed of passportSeeds) {
+    let source;
+    try {
+      source = await resolveWikipediaSource(seed, explicitWikiUrl);
+    } catch (error) {
+      const failure = {
+        iso2: seed.iso2,
+        name: seed.name,
+        error: error instanceof Error ? error.message : String(error),
+      };
+
+      unresolved.push(failure);
+      console.warn(`Skipping ${seed.iso2}: ${failure.error}`);
+
+      if (!skipMissing) {
+        throw error;
+      }
+
+      continue;
+    }
+
+    resolvedSources[seed.iso2.toUpperCase()] = {
+      title: source.title,
+      url: source.url,
+    };
+
+    if (resolveOnly) {
+      console.log(`Resolved ${seed.iso2}: ${source.url}`);
+      continue;
+    }
+
+    await syncPassport({
+      seed,
+      wikiUrl: source.url,
+      wikiTitle: source.title,
+    });
+  }
+
+  if (writeUnresolved || unresolved.length > 0) {
+    writeUnresolvedReport(unresolved, unresolvedReportPath);
+  }
+
+  if (writeManifest || resolveOnly) {
+    writeResolvedManifest(resolvedSources, manifestOutputPath);
+  }
+
+  if (unresolved.length > 0 && !skipMissing) {
+    throw new Error(
+      `Unresolved ${unresolved.length} passport source(s). Re-run with --skip-missing to continue and emit a report.`
+    );
+  }
+}
+
+/**
+ * @param {string} table
+ * @param {{
+ *   method?: string,
+ *   searchParams?: Record<string, string | number | null | undefined> | null,
+ *   body?: unknown
+ * }} [options]
+ */
 async function supabaseRest(table, options = {}) {
-  const {
-    method = "GET",
-    searchParams = null,
-    body = undefined,
-  } = options;
+  /** @type {string} */
+  const method =
+    options && typeof options === "object" && "method" in options && options.method
+      ? String(options.method)
+      : "GET";
+  const searchParams =
+    options && typeof options === "object" && "searchParams" in options
+      ? options.searchParams
+      : null;
+  const body =
+    options && typeof options === "object" && "body" in options
+      ? options.body
+      : undefined;
 
   const url = new URL(`/rest/v1/${table}`, SUPABASE_URL);
 
   if (searchParams) {
     for (const [key, value] of Object.entries(searchParams)) {
       if (value != null) {
-        url.searchParams.set(key, value);
+        url.searchParams.set(key, String(value));
       }
     }
   }

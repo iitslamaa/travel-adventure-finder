@@ -1,0 +1,74 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "CO",
+    "override_reason": "official_spanish_with_tourism_english_override",
+    "notes": "Colombia should score Spanish as the official language while giving moderate English credit because the national tourism platform serves a broad international audience in English and other languages and visitor-facing guide materials are produced in English.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Colombia Travel English portal",
+        "url": "https://colombia.travel/en",
+        "note": "Colombia's official tourism platform serves country information, travel guidance, and destination content in English and several other world languages."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Illustrated Handbook for Nature Tourism Guides in Colombia",
+        "url": "https://guianaturaleza.colombia.travel/en/",
+        "note": "Official tourism guide materials are published in English for international visitors and guides."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "PE",
+    "override_reason": "official_spanish_with_tourism_english_override",
+    "notes": "Peru should score Spanish as the dominant national language while giving moderate English credit because the national tourism system provides official tourist information and assistance in English and many packaged visitor services are explicitly offered in English.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "iPerú tourist information and assistance",
+        "url": "https://www.peru.travel/lafinalenlima/iperu.html",
+        "note": "Peru's official tourism system offers dedicated tourist information and assistance for visitors, including foreign-language support."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Peru Travel package example",
+        "url": "https://www.peru.travel/lima2019/complemento/paquetes/paquete32_en.pdf",
+        "note": "Official Peru tourism packages explicitly list English-language guide support for international travelers."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "UY",
+    "override_reason": "official_spanish_with_tourism_english_override",
+    "notes": "Uruguay should score Spanish as the official language while giving moderate English credit because the national tourism ministry maintains an English visitor platform and presents destinations directly to international travelers in English.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Uruguay Natural English portal",
+        "url": "https://uruguaynatural.com/en/",
+        "note": "Uruguay's Ministry of Tourism operates an English-language portal for international visitors."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Uruguay Natural destination content",
+        "url": "https://uruguaynatural.com/en/places/colonia/",
+        "note": "The national tourism ministry publishes destination information directly in English for foreign travelers."
+      }
+    ]
+  }
+]

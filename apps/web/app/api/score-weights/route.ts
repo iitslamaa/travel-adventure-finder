@@ -41,10 +41,11 @@ export async function POST(req: Request) {
     .upsert(
       {
         user_id: user.id,
-        travelGov: normalized.travelGov,
+        advisory: normalized.travelGov,
         seasonality: normalized.seasonality,
         visa: normalized.visa,
         affordability: normalized.affordability,
+        language: normalized.language,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'user_id' }

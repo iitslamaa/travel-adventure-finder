@@ -1,0 +1,101 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "FI",
+    "override_reason": "coofficial_finnish_and_swedish_with_high_english_override",
+    "notes": "Finland should give full credit to Finnish and Swedish as official languages while also giving strong English credit because government guidance says English is widely spoken and tourism guidance says travelers can get around in English almost everywhere.",
+    "languages": [
+      { "code": "fi", "type": "official", "coverage": 1.0 },
+      { "code": "sv", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.8 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "This is FINLAND: A guide to Finnish customs and manners",
+        "url": "https://finland.fi/life-society/a-guide-to-finnish-customs-and-manners/",
+        "note": "Government-backed Finland guidance says English is widely spoken in Finland and explains the co-official roles of Finnish and Swedish."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Finland: Discover Helsinki",
+        "url": "https://www.visitfinland.com/en/places-to-go/helsinki-region/helsinki-city/",
+        "note": "Official tourism guidance says Finnish and Swedish are Finland's official languages and that travelers can get around speaking English almost everywhere."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "IE",
+    "override_reason": "coofficial_english_and_irish_override",
+    "notes": "Ireland should give full credit to English and Irish because both are official, while English remains the primary language travelers will use almost everywhere and Irish stays especially strong in Gaeltacht regions.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "ga", "type": "official", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Ireland.com: Languages of Ireland",
+        "url": "https://www.ireland.com/en/a-sites/help-and-advice/practical-information/languages-of-ireland/",
+        "note": "Official tourism guidance says English and Irish are the official languages in the Republic of Ireland, that everyone speaks English, and that Irish is widely spoken in Gaeltacht areas."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Ireland.com language facts",
+        "url": "https://www.ireland.com/en-se/help-and-advice/practical-information/languages-of-ireland/",
+        "note": "A second official tourism variant repeats that English is primary while Irish remains a living local language in designated regions."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "IS",
+    "override_reason": "official_icelandic_with_very_high_english_override",
+    "notes": "Iceland should score Icelandic as the official language while giving very high English credit because government guidance says it is hard to find an Icelander who does not speak English and that English is spoken fluently and widely.",
+    "languages": [
+      { "code": "is", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.9 }
+    ],
+    "evidence": [
+      {
+        "kind": "government_reference",
+        "title": "Work in Iceland: Icelandic society",
+        "url": "https://work.iceland.is/living/icelandic-society/",
+        "note": "Government relocation guidance says Icelandic is the official language and that it would be hard to find an Icelander who does not speak English."
+      },
+      {
+        "kind": "government_reference",
+        "title": "Study in Iceland: Learning Icelandic",
+        "url": "https://study.iceland.is/practical-guide/learning-icelandic",
+        "note": "Government-backed study guidance says English is spoken fluently and widely in Iceland."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "LU",
+    "override_reason": "multiofficial_language_with_high_english_override",
+    "notes": "Luxembourg should recognize Luxembourgish, French, and German while also giving strong English credit because official tourism guidance says English is among the other languages widely spoken across the country.",
+    "languages": [
+      { "code": "lb", "type": "official", "coverage": 1.0 },
+      { "code": "fr", "type": "official", "coverage": 1.0 },
+      { "code": "de", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.7 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Luxembourg: Practical information",
+        "url": "https://www.visitluxembourg.com/plan-your-stay/practical-information",
+        "note": "Official tourism guidance says Luxembourgish is the national language, French and German are official languages, and English is among the other languages widely spoken."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Luxembourg: Wiltz",
+        "url": "https://www.visitluxembourg.com/wiltz",
+        "note": "Official visitor information says tourists are welcomed in German, French, Luxembourgish, English, and Dutch."
+      }
+    ]
+  }
+]

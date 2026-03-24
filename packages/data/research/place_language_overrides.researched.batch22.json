@@ -1,0 +1,50 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "LT",
+    "override_reason": "official_lithuanian_with_moderate_english_override",
+    "notes": "Lithuania should score Lithuanian as the official language while giving moderate English credit because the national tourism platform serves international visitors in English and core visitor infrastructure is built with foreign travelers in mind, even if English comfort is not as strong as in Scandinavia.",
+    "languages": [
+      { "code": "lt", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Lithuania Travel English portal",
+        "url": "https://lithuania.travel/en-gb/",
+        "note": "Lithuania's official tourism platform serves destination content and planning information in English for international visitors."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Lithuania",
+        "url": "https://www.britannica.com/place/Lithuania",
+        "note": "Britannica identifies Lithuanian as the official language of Lithuania."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "LV",
+    "override_reason": "official_latvian_with_moderate_english_override",
+    "notes": "Latvia should score Latvian as the official language while giving moderate English credit because national tourism and culture platforms are structured for international travelers in English, even though everyday language use remains primarily Latvian and Russian.",
+    "languages": [
+      { "code": "lv", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Latvia Travel English portal",
+        "url": "https://www.latvia.travel/en",
+        "note": "Latvia's official tourism platform serves broad destination planning content in English for international travelers."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Latvia",
+        "url": "https://www.britannica.com/place/Latvia",
+        "note": "Britannica identifies Latvian as the official language of Latvia."
+      }
+    ]
+  }
+]

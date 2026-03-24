@@ -9,57 +9,57 @@ import Foundation
 
 enum CountryVisaHelpers {
 
-    static func headline(for country: Country) -> String {
+    static func headline(for country: Country, passportLabel: String) -> String {
         guard let type = country.visaType else {
-            return "Visa information is limited"
+            return String(localized: "country_detail.visa.headline.limited")
         }
 
         switch type {
+        case "own_passport":
+            return String(localized: "country_detail.visa.headline.own_passport")
         case "freedom_of_movement":
-            return "Freedom of movement with US passport ✅"
+            return String(format: String(localized: "country_detail.visa.headline.freedom_of_movement"), passportLabel)
         case "visa_free":
-            return "Visa-free for US passport ✅"
+            return String(format: String(localized: "country_detail.visa.headline.visa_free"), passportLabel)
         case "voa":
-            return "Visa on arrival available"
+            return String(localized: "country_detail.visa.headline.voa")
         case "evisa":
-            return "eVisa available online"
+            return String(localized: "country_detail.visa.headline.evisa")
         case "entry_permit":
-            return "Entry permit required"
+            return String(localized: "country_detail.visa.headline.entry_permit")
         case "visa_required":
-            return "Visa required before travel"
+            return String(localized: "country_detail.visa.headline.visa_required")
         case "ban":
-            return "Entry heavily restricted"
+            return String(localized: "country_detail.visa.headline.ban")
         default:
-            return "Visa rules vary"
+            return String(localized: "country_detail.visa.headline.varies")
         }
     }
 
-    static func body(for country: Country) -> String {
-        if let notes = country.visaNotes, !notes.isEmpty {
-            return notes
-        }
-
+    static func body(for country: Country, passportLabel: String) -> String {
         guard let type = country.visaType else {
-            return "Check official sources for the latest entry requirements."
+            return String(localized: "country_detail.visa.body.limited")
         }
 
         switch type {
+        case "own_passport":
+            return String(localized: "country_detail.visa.body.own_passport")
         case "freedom_of_movement":
-            return "This destination is part of a territory arrangement where US passport holders can move freely without visa limits."
+            return String(format: String(localized: "country_detail.visa.body.freedom_of_movement"), passportLabel)
         case "visa_free":
-            return "You can typically enter without arranging a visa in advance, subject to time limits."
+            return String(localized: "country_detail.visa.body.visa_free")
         case "voa":
-            return "Visa is issued on arrival; expect to handle paperwork and possible fees at the border."
+            return String(localized: "country_detail.visa.body.voa")
         case "evisa":
-            return "You’ll usually need to apply and pay online before travel."
+            return String(localized: "country_detail.visa.body.evisa")
         case "entry_permit":
-            return "You may need advance authorization or a permit before entry is approved."
+            return String(localized: "country_detail.visa.body.entry_permit")
         case "visa_required":
-            return "You must secure a visa in advance through a consulate or official channel."
+            return String(localized: "country_detail.visa.body.visa_required")
         case "ban":
-            return "Current rules may severely limit or ban entry; check official guidance before planning."
+            return String(localized: "country_detail.visa.body.ban")
         default:
-            return "Entry rules may depend on your trip details; confirm with official government sources."
+            return String(localized: "country_detail.visa.body.varies")
         }
     }
 }

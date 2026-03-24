@@ -11,17 +11,37 @@ import SwiftUI
 struct CountryVisaCard: View {
     let country: Country
     let weightPercentage: Int
+    let passportLabel: String
+    let recommendedPassportLabel: String?
+    let equalBestPassportLabels: [String]
+    let showPassportRecommendation: Bool
+
+    private var equalBestPassportText: String? {
+        guard recommendedPassportLabel == nil else { return nil }
+        let labels = equalBestPassportLabels
+
+        guard labels.count >= 2 else { return nil }
+
+        if labels.count == 2 {
+            return String(format: String(localized: "country_detail.visa.either_passport_format"), locale: AppDisplayLocale.current, labels[0], labels[1])
+        }
+
+        let allButLast = labels.dropLast().joined(separator: ", ")
+        return String(format: String(localized: "country_detail.visa.any_passport_format"), locale: AppDisplayLocale.current, allButLast, labels.last ?? "")
+    }
 
     private func formattedVisaType(_ type: String) -> String {
         switch type {
+        case "own_passport":
+            return String(localized: "country_detail.visa.type.own_passport")
         case "freedom_of_movement":
-            return "Freedom of movement"
+            return String(localized: "country_detail.visa.type.freedom_of_movement")
         case "visa_free":
-            return "Visa free"
+            return String(localized: "country_detail.visa.type.visa_free")
         case "visa_required":
-            return "Visa required"
+            return String(localized: "country_detail.visa.type.visa_required")
         case "entry_permit":
-            return "Entry permit"
+            return String(localized: "country_detail.visa.type.entry_permit")
         default:
             return type.replacingOccurrences(of: "_", with: " ").capitalized
         }
@@ -33,10 +53,10 @@ struct CountryVisaCard: View {
 
                 // Title row
                 HStack {
-                    Text("Visa")
+                    Text("country_detail.visa.title")
                         .font(.headline)
                     Spacer()
-                    Text("US passport · \(weightPercentage)%")
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.passport_weight_format"), locale: AppDisplayLocale.current, passportLabel, weightPercentage)))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -44,7 +64,7 @@ struct CountryVisaCard: View {
                 // Score pill + description
                 HStack(spacing: 12) {
                     if let ease = country.visaEaseScore {
-                        Text("\(ease)")
+                        Text(AppNumberFormatting.integerString(ease))
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 6)
@@ -57,7 +77,7 @@ struct CountryVisaCard: View {
                                     .stroke(CountryScoreStyling.borderColor(for: country.visaEaseScore), lineWidth: 1)
                             )
                     } else {
-                        Text("—")
+                        Text("common.em_dash")
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 6)
@@ -72,11 +92,26 @@ struct CountryVisaCard: View {
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(CountryVisaHelpers.headline(for: country))
+                        Text(CountryVisaHelpers.headline(for: country, passportLabel: passportLabel))
                             .font(.subheadline)
                             .fontWeight(.semibold)
 
-                        Text(CountryVisaHelpers.body(for: country))
+                        if showPassportRecommendation,
+                           let recommendedPassport = recommendedPassportLabel,
+                           !recommendedPassport.isEmpty {
+                            Text(String(format: String(localized: "country_detail.visa.recommended_passport_format"), locale: AppDisplayLocale.current, recommendedPassport))
+                                .font(.footnote)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.primary)
+                        } else if showPassportRecommendation,
+                                  let equalBestPassportText {
+                            Text(equalBestPassportText)
+                                .font(.footnote)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.primary)
+                        }
+
+                        Text(CountryVisaHelpers.body(for: country, passportLabel: passportLabel))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -86,15 +121,15 @@ struct CountryVisaCard: View {
                 // Details rows
                 VStack(alignment: .leading, spacing: 4) {
                     if let type = country.visaType {
-                        Text("Type: \(formattedVisaType(type))")
+                        Text(String(format: String(localized: "country_detail.visa.type_format"), locale: AppDisplayLocale.current, formattedVisaType(type)))
                     }
 
                     if let days = country.visaAllowedDays {
-                        Text("Allowed stay: up to \(days) days")
+                        Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.allowed_stay_format"), locale: AppDisplayLocale.current, days)))
                     }
 
                     if let fee = country.visaFeeUsd {
-                        Text(String(format: "Approx. fee: $%.0f USD", fee))
+                        Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.approx_fee_format"), locale: AppDisplayLocale.current, fee)))
                     }
                 }
                 .font(.footnote)
@@ -102,15 +137,15 @@ struct CountryVisaCard: View {
 
 
                 if let url = country.visaSourceUrl {
-                    Link("View official visa source", destination: url)
+                    Link(String(localized: "country_detail.visa.view_official_source"), destination: url)
                         .font(.footnote)
                 }
 
                 HStack(spacing: 12) {
                     if let ease = country.visaEaseScore {
-                        Text("Normalized: \(ease)")
+                        Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.normalized_format"), locale: AppDisplayLocale.current, ease)))
                     }
-                    Text("Weight: \(weightPercentage)%")
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

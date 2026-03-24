@@ -118,7 +118,7 @@ final class SupabaseManager {
             throw NSError(
                 domain: "DeleteAccount",
                 code: 401,
-                userInfo: [NSLocalizedDescriptionKey: "No active session. Please log in again."]
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.no_active_session")]
             )
         }
 

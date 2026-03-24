@@ -1,0 +1,104 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "ID",
+    "override_reason": "official_indonesian_with_tourism_english_override",
+    "notes": "Indonesia should score Indonesian as the national language while giving moderate English credit because official tourism guidance says English is not widely spoken nationwide but is understood in major cities, tourist destinations, and by many hotel and airline staff.",
+    "languages": [
+      { "code": "id", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.35 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Indonesia Travel: Language",
+        "url": "https://www.indonesia.travel/us/en/general-information/bahasa/",
+        "note": "Official tourism guidance says Bahasa Indonesia is the national and official language and that English is understood in major cities and tourist destinations, especially by hotel and airline staff."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Indonesia",
+        "url": "https://www.britannica.com/place/Indonesia",
+        "note": "Britannica identifies Indonesian as the national language of Indonesia."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MY",
+    "override_reason": "official_malay_with_high_english_override",
+    "notes": "Malaysia should score Malay as the national language while giving strong English credit because official tourism guidance says English is widely spoken and most Malaysians are multilingual.",
+    "languages": [
+      { "code": "ms", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.75 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Malaysia Truly Asia: About Malaysia",
+        "url": "https://www.malaysia.travel/explore/about-malaysia",
+        "note": "Official tourism guidance says the national language is Bahasa Melayu and that English is widely spoken across Malaysia."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Tourism Malaysia Kuala Lumpur guide: Useful Information",
+        "url": "https://ebrochures.malaysia.travel/en/kuala-lumpur/56-67-useful-information/",
+        "note": "Tourism Malaysia destination guides teach Malay phrases alongside English and assume broad English usability for international visitors."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "TH",
+    "override_reason": "official_thai_with_tourism_english_override",
+    "notes": "Thailand should score Thai as the official language while giving meaningful English credit because the Tourism Authority of Thailand explicitly describes English as Thailand's unofficial second language in major visitor hubs and provides direct tourist support in English.",
+    "languages": [
+      { "code": "th", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.55 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Tourism Authority of Thailand: Language & Culture",
+        "url": "https://www.tourismthailand.org/Articles/plan-your-trip-language-and-culture",
+        "note": "Official tourism guidance says Thai is the official language and that English has become Thailand's unofficial second language in population centers that host many foreigners."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Tourism Authority of Thailand: TAT Contact Center",
+        "url": "https://www.tourismthailand.org/Articles/linetatcontactcenter",
+        "note": "The Tourism Authority of Thailand says its traveler contact center provides information in both Thai and English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "VN",
+    "override_reason": "official_vietnamese_with_tourism_english_override",
+    "notes": "Vietnam should score Vietnamese as the national language while giving moderate English credit because the official tourism board serves international visitors in English and has operated dedicated English-language tourism support for travelers.",
+    "languages": [
+      { "code": "vi", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Vietnam official tourism website",
+        "url": "https://vietnam.travel/",
+        "note": "Vietnam's official tourism board maintains a full English-language visitor portal for international travelers."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Vietnam Tourism: Stay At Home with Vietnam Kit",
+        "url": "https://vietnam.travel/vietnam-stay-at-home-kit",
+        "note": "Official tourism guidance says Vietnam set up an English-language tourism helpline for travelers remaining in the country."
+      },
+      {
+        "kind": "reference",
+        "title": "Britannica: Vietnam",
+        "url": "https://www.britannica.com/place/Vietnam",
+        "note": "Britannica identifies Vietnamese as the national language of Vietnam."
+      }
+    ]
+  }
+]

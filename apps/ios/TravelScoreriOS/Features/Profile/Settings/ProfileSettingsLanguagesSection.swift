@@ -14,19 +14,16 @@ struct ProfileSettingsLanguagesSection: View {
     @Binding var showAddLanguage: Bool
 
     private func displayName(for entry: LanguageEntry) -> String {
-        LanguageRepository.shared.allLanguages
-            .first(where: { $0.code == entry.name })?
-            .displayName
-            ?? entry.name
+        LanguageRepository.shared.localizedDisplayName(for: entry.canonicalCode)
     }
 
     var body: some View {
-        SectionCard(title: "Languages spoken") {
+        SectionCard(title: String(localized: "profile.settings.languages.title")) {
 
             VStack(spacing: 0) {
 
                 if languages.isEmpty {
-                    Text("Add languages you speak or are learning")
+                    Text("profile.settings.languages.empty")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 12)
@@ -50,15 +47,15 @@ struct ProfileSettingsLanguagesSection: View {
                             }
 
                             Picker(
-                                "Proficiency",
+                                String(localized: "profile.settings.languages.proficiency"),
                                 selection: Binding(
                                     get: { languages[index].proficiency },
                                     set: { languages[index].proficiency = $0 }
                                 )
                             ) {
-                                Text("Beginner").tag("Beginner")
-                                Text("Conversational").tag("Conversational")
-                                Text("Fluent").tag("Fluent")
+                                ForEach(LanguageProficiency.allCases) { proficiency in
+                                    Text(proficiency.label).tag(proficiency.storageValue)
+                                }
                             }
                             .pickerStyle(.segmented)
                         }
@@ -75,7 +72,7 @@ struct ProfileSettingsLanguagesSection: View {
                 Button {
                     showAddLanguage = true
                 } label: {
-                    Label("Add language", systemImage: "plus")
+                    Label("profile.settings.languages.add", systemImage: "plus")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }

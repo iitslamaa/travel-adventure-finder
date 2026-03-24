@@ -134,7 +134,7 @@ struct EmailAuthView: View {
                                         .scaledToFit()
                                         .frame(width: 20, height: 20)
 
-                                    Text("Continue with Google")
+                                    Text("auth.continue_with_google")
                                         .font(.system(size: 17, weight: .semibold))
                                         .foregroundColor(.black.opacity(0.85))
                                 }
@@ -149,7 +149,7 @@ struct EmailAuthView: View {
                                     step = .enterEmail
                                 }
                             } label: {
-                                Text("✉️ Continue with Email")
+                                Text("auth.continue_with_email")
                                     .font(.system(size: 17, weight: .semibold))
                                     .foregroundColor(.black.opacity(0.85))
                             }
@@ -170,11 +170,11 @@ struct EmailAuthView: View {
                                 Spacer()
                             }
 
-                            Text("Enter your email address")
+                            Text("auth.enter_email_title")
                                 .font(.headline)
                                 .foregroundStyle(authPrimaryFill)
 
-                            TextField("Email address", text: $vm.email)
+                            TextField("auth.email_address_placeholder", text: $vm.email)
                                 .textInputAutocapitalization(.never)
                                 .keyboardType(.emailAddress)
                                 .textContentType(.emailAddress)
@@ -216,7 +216,13 @@ struct EmailAuthView: View {
                                 }
                             } label: {
                                 authActionLabel(
-                                    title: cooldownSeconds > 0 ? "Resend in \(cooldownSeconds)s" : "Send code",
+                                    title: cooldownSeconds > 0
+                                        ? String(
+                                            format: String(localized: "auth.resend_in_format"),
+                                            locale: Locale.current,
+                                            cooldownSeconds
+                                        )
+                                        : String(localized: "auth.send_code"),
                                     isLoading: isSending,
                                     isEnabled: !vm.email.isEmpty && cooldownSeconds == 0
                                 )
@@ -233,7 +239,7 @@ struct EmailAuthView: View {
                                     focusedField = .code
                                 }
                             } label: {
-                                Text("Use Bypass Code")
+                                Text("auth.use_bypass_code")
                                     .font(.footnote)
                                     .foregroundColor(authMutedText)
                             }
@@ -255,11 +261,11 @@ struct EmailAuthView: View {
                                 Spacer()
                             }
 
-                            Text("Enter the 6-digit code sent to your email, or enter your password")
+                            Text("auth.enter_code_title")
                                 .font(.subheadline)
                                 .foregroundColor(authMutedText)
 
-                            TextField("6-digit code or password", text: $vm.otp)
+                            TextField("auth.code_placeholder", text: $vm.otp)
                                 .keyboardType(.asciiCapable)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled(true)
@@ -285,7 +291,7 @@ struct EmailAuthView: View {
                                 }
                             } label: {
                                 authActionLabel(
-                                    title: "Verify",
+                                    title: String(localized: "auth.verify"),
                                     isLoading: vm.isLoading,
                                     isEnabled: !vm.otp.isEmpty
                                 )
@@ -331,7 +337,7 @@ struct EmailAuthView: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "chevron.left")
-                Text("Back")
+                Text("common.back")
             }
             .font(.headline)
             .foregroundColor(authMutedText)

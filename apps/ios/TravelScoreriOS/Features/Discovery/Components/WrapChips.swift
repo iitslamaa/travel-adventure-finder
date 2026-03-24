@@ -26,11 +26,12 @@ struct WrapChips: View {
             onSelect(country)
         } label: {
             VStack(alignment: .leading, spacing: 6) {
-                Text(country.country.name)
-                    .font(.caption.weight(.semibold))
+                Text(country.country.localizedDisplayName)
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
-                    .lineLimit(2)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 14)

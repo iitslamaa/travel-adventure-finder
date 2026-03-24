@@ -20,7 +20,7 @@ struct MyTravelsView: View {
     private var visitedCountries: [Country] {
         countries
             .filter { traveledCountryIds.contains($0.id) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending }
     }
 
     var body: some View {
@@ -31,7 +31,7 @@ struct MyTravelsView: View {
             if isLoading {
                 VStack(spacing: 12) {
                     ProgressView()
-                    Text("Loading...")
+                    Text("common.loading")
                         .font(.subheadline)
                         .foregroundColor(.black)
                 }
@@ -55,7 +55,7 @@ struct MyTravelsView: View {
                                         .font(.largeTitle)
 
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(country.name)
+                                        Text(country.localizedDisplayName)
                                             .font(.headline)
                                             .foregroundColor(Theme.textPrimary)
                                     }
@@ -101,13 +101,13 @@ struct MyTravelsView: View {
                 .scrollIndicators(.hidden)
             }
         }
-        .navigationTitle("🎒 My Travels")
+        .navigationTitle("planning.visited_list.title")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showingAddCountries = true
                 } label: {
-                    Image(systemName: "plus")
+                    Text("common.edit")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.black)
                 }
@@ -120,9 +120,9 @@ struct MyTravelsView: View {
                     countries: countries,
                     selectedIds: traveledCountryIds,
                     otherSelectedIds: bucketListStore.ids,
-                    onSelect: { country in
+                    onSave: { updatedIds in
                         Task {
-                            await addVisitedCountry(country.id)
+                            await saveVisitedCountries(updatedIds)
                         }
                     }
                 )
@@ -175,8 +175,8 @@ struct MyTravelsView: View {
     }
 
     @MainActor
-    private func addVisitedCountry(_ countryId: String) async {
-        guard !traveledCountryIds.contains(countryId) else { return }
+    private func saveVisitedCountries(_ updatedIds: Set<String>) async {
+        let previousIds = traveledCountryIds
 
         if sessionManager.isAuthenticated {
             if profileVM.viewedTraveledCountries != traveledCountryIds {
@@ -184,14 +184,23 @@ struct MyTravelsView: View {
                 profileVM.computeOrderedLists()
             }
 
-            await profileVM.toggleTraveled(countryId)
-            let updated = profileVM.viewedTraveledCountries
-            traveledCountryIds = updated
-            traveledStore.replace(with: updated)
+            let removals = previousIds.subtracting(updatedIds).sorted()
+            let additions = updatedIds.subtracting(previousIds).sorted()
+
+            for countryId in removals {
+                await profileVM.toggleTraveled(countryId)
+            }
+
+            for countryId in additions {
+                await profileVM.toggleTraveled(countryId)
+            }
+
+            let latestIds = profileVM.viewedTraveledCountries
+            traveledCountryIds = latestIds
+            traveledStore.replace(with: latestIds)
         } else {
-            let updated = traveledCountryIds.union([countryId])
-            traveledCountryIds = updated
-            traveledStore.replace(with: updated)
+            traveledCountryIds = updatedIds
+            traveledStore.replace(with: updatedIds)
         }
     }
 }

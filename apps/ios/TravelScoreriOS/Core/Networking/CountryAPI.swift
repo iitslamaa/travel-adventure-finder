@@ -72,7 +72,7 @@ enum CountryAPI {
                 region: dto.region,
                 subregion: dto.subregion,
                 advisoryScore: dto.advisoryScore,
-                advisorySummary: dto.advisorySummary,
+                advisorySummary: nil,
                 advisoryUpdatedAt: dto.advisoryUpdatedAt,
                 advisoryUrl: dto.advisoryUrl,
                 seasonalityScore: dto.seasonalityScore,
@@ -81,12 +81,12 @@ enum CountryAPI {
                 seasonalityShoulderMonths: dto.seasonalityShoulderMonths,
                 seasonalityGoodMonths: dto.seasonalityGoodMonths,
                 seasonalityAvoidMonths: dto.seasonalityAvoidMonths,
-                seasonalityNotes: dto.seasonalityNotes,
+                seasonalityNotes: nil,
                 visaEaseScore: dto.visaEaseScore,
                 visaType: dto.visaType,
                 visaAllowedDays: dto.visaAllowedDays,
                 visaFeeUsd: dto.visaFeeUsd,
-                visaNotes: dto.visaNotes,
+                visaNotes: nil,
                 visaSourceUrl: dto.visaSourceUrl,
                 dailySpendTotalUsd: dto.dailySpendTotalUsd,
                 dailySpendHotelUsd: dto.dailySpendHotelUsd,
@@ -95,10 +95,12 @@ enum CountryAPI {
                 affordabilityCategory: dto.affordabilityCategory,
                 affordabilityScore: dto.affordabilityScore,
                 affordabilityBand: dto.affordabilityBand,
-                affordabilityExplanation: dto.affordabilityExplanation
+                affordabilityExplanation: nil,
+                languageCompatibilityScore: dto.languageCompatibilityScore
             )
         }
 
+        assertOverviewDescriptionCoverage(for: countries)
 
         return countries
     }
@@ -123,7 +125,7 @@ extension CountryAPI {
                     region: dto.region,
                     subregion: dto.subregion,
                     advisoryScore: dto.advisoryScore,
-                    advisorySummary: dto.advisorySummary,
+                    advisorySummary: nil,
                     advisoryUpdatedAt: dto.advisoryUpdatedAt,
                     advisoryUrl: dto.advisoryUrl,
                     seasonalityScore: dto.seasonalityScore,
@@ -132,12 +134,12 @@ extension CountryAPI {
                     seasonalityShoulderMonths: dto.seasonalityShoulderMonths,
                     seasonalityGoodMonths: dto.seasonalityGoodMonths,
                     seasonalityAvoidMonths: dto.seasonalityAvoidMonths,
-                    seasonalityNotes: dto.seasonalityNotes,
+                    seasonalityNotes: nil,
                     visaEaseScore: dto.visaEaseScore,
                     visaType: dto.visaType,
                     visaAllowedDays: dto.visaAllowedDays,
                     visaFeeUsd: dto.visaFeeUsd,
-                    visaNotes: dto.visaNotes,
+                    visaNotes: nil,
                     visaSourceUrl: dto.visaSourceUrl,
                     dailySpendTotalUsd: dto.dailySpendTotalUsd,
                     dailySpendHotelUsd: dto.dailySpendHotelUsd,
@@ -146,9 +148,11 @@ extension CountryAPI {
                     affordabilityCategory: dto.affordabilityCategory,
                     affordabilityScore: dto.affordabilityScore,
                     affordabilityBand: dto.affordabilityBand,
-                    affordabilityExplanation: dto.affordabilityExplanation
+                    affordabilityExplanation: nil,
+                    languageCompatibilityScore: dto.languageCompatibilityScore
                 )
             }
+            .validatedOverviewCoverage()
         } catch {
             return nil
         }
@@ -200,7 +204,7 @@ extension CountryAPI {
                     region: dto.region,
                     subregion: dto.subregion,
                     advisoryScore: dto.advisoryScore,
-                    advisorySummary: dto.advisorySummary,
+                    advisorySummary: nil,
                     advisoryUpdatedAt: dto.advisoryUpdatedAt,
                     advisoryUrl: dto.advisoryUrl,
                     seasonalityScore: dto.seasonalityScore,
@@ -209,12 +213,12 @@ extension CountryAPI {
                     seasonalityShoulderMonths: dto.seasonalityShoulderMonths,
                     seasonalityGoodMonths: dto.seasonalityGoodMonths,
                     seasonalityAvoidMonths: dto.seasonalityAvoidMonths,
-                    seasonalityNotes: dto.seasonalityNotes,
+                    seasonalityNotes: nil,
                     visaEaseScore: dto.visaEaseScore,
                     visaType: dto.visaType,
                     visaAllowedDays: dto.visaAllowedDays,
                     visaFeeUsd: dto.visaFeeUsd,
-                    visaNotes: dto.visaNotes,
+                    visaNotes: nil,
                     visaSourceUrl: dto.visaSourceUrl,
                     dailySpendTotalUsd: dto.dailySpendTotalUsd,
                     dailySpendHotelUsd: dto.dailySpendHotelUsd,
@@ -223,10 +227,12 @@ extension CountryAPI {
                     affordabilityCategory: dto.affordabilityCategory,
                     affordabilityScore: dto.affordabilityScore,
                     affordabilityBand: dto.affordabilityBand,
-                    affordabilityExplanation: dto.affordabilityExplanation
+                    affordabilityExplanation: nil,
+                    languageCompatibilityScore: dto.languageCompatibilityScore
                 )
             }
 
+            assertOverviewDescriptionCoverage(for: countries)
             return countries
         } catch {
             return nil
@@ -283,5 +289,22 @@ extension CountryAPI {
         static func loadData() -> Data? {
             try? Data(contentsOf: cacheURL)
         }
+    }
+
+    private static func assertOverviewDescriptionCoverage(for countries: [Country]) {
+        #if DEBUG
+        let missing = CountryOverviewDescriptionStore.missingDescriptionCodes(in: countries)
+        assert(missing.isEmpty, "Missing country overview descriptions for codes: \(missing.joined(separator: ", "))")
+        #endif
+    }
+}
+
+private extension Array where Element == Country {
+    func validatedOverviewCoverage() -> [Country] {
+        #if DEBUG
+        let missing = CountryOverviewDescriptionStore.missingDescriptionCodes(in: self)
+        assert(missing.isEmpty, "Missing country overview descriptions for codes: \(missing.joined(separator: ", "))")
+        #endif
+        return self
     }
 }

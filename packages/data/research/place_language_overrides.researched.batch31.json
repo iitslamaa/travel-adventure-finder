@@ -1,0 +1,50 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "BG",
+    "override_reason": "official_bulgarian_with_tourism_english_override",
+    "notes": "Bulgaria should score Bulgarian as the official language while giving moderate English credit because official tourism guidance consistently shows visitor centers, museums, and guides serving travelers in English.",
+    "languages": [
+      { "code": "bg", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Bulgaria Travel: Ruse tourist information center",
+        "url": "https://visitbulgaria.com/city-of-ruse/",
+        "note": "Official tourism guidance says tourists in the Ruse Tourist Information Center are attended by guides in Bulgarian and English."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Bulgaria Travel: Rila Monastery visitor services",
+        "url": "https://visitbulgaria.com/natural-park-rila-monastery/",
+        "note": "Official tourism guidance says guided tours in key visitor sites are offered in Bulgarian and English."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "SK",
+    "override_reason": "official_slovak_with_moderate_english_override",
+    "notes": "Slovakia should score Slovak as the official language while giving moderate English credit because official tourism guidance says English is the most widespread foreign language and many tourism tools are provided in English.",
+    "languages": [
+      { "code": "sk", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Slovakia.travel: Practical information",
+        "url": "https://slovakia.travel/en/about-slovakia/practical-information/",
+        "note": "Official tourism guidance says English and German are the most widespread foreign languages in Slovakia."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Slovakia.travel: Bratislava Region app",
+        "url": "https://slovakia.travel/en/bratislava-region-app-a-modern-city-guide",
+        "note": "Official tourism guidance says the Bratislava Region tourist app is available in Slovak and English."
+      }
+    ]
+  }
+]

@@ -89,6 +89,8 @@
 		170C217D2F4790E00090BA78 /* auth_loop.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 170C20F32F4790E00090BA78 /* auth_loop.mp4 */; };
 		170C217E2F4790E00090BA78 /* countries.geojson in Resources */ = {isa = PBXBuildFile; fileRef = 170C20FB2F4790E00090BA78 /* countries.geojson */; };
 		170C21812F4790E00090BA78 /* intro.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 170C21102F4790E00090BA78 /* intro.mp4 */; };
+		170C21822F7100010090BA78 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 170C21832F7100010090BA78 /* InfoPlist.xcstrings */; };
+		170C21842F7100010090BA78 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 170C21852F7100010090BA78 /* Localizable.xcstrings */; };
 		170C227F2F47A9880090BA78 /* ScorePill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C227E2F47A9880090BA78 /* ScorePill.swift */; };
 		170F3EC02F218C6C0083E900 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170F3EBF2F218C6C0083E900 /* APIConfig.swift */; };
 		17104CD72F49697500864630 /* WhenToGoCountryDrawerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17104CD62F49697500864630 /* WhenToGoCountryDrawerView.swift */; };
@@ -149,6 +151,7 @@
 		17F063882F32747D00F1F4F3 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 17F063872F32747D00F1F4F3 /* Supabase */; };
 		17F2E1602F4C3C27009A7E6D /* CountryScoreSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F2E15F2F4C3C27009A7E6D /* CountryScoreSection.swift */; };
 		17F9A0012F60000100AA0001 /* VisaRequirementsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */; };
+		17F9A0012F70000100000001 /* CountryOverviewDescriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -236,6 +239,8 @@
 		170C21232F4790E00090BA78 /* WorldGeoJSONLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldGeoJSONLoader.swift; sourceTree = "<group>"; };
 		170C21242F4790E00090BA78 /* WorldMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldMapView.swift; sourceTree = "<group>"; };
 		170C21252F4790E00090BA78 /* WrapChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrapChips.swift; sourceTree = "<group>"; };
+		170C21832F7100010090BA78 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		170C21852F7100010090BA78 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		170C227E2F47A9880090BA78 /* ScorePill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorePill.swift; sourceTree = "<group>"; };
 		170F3EBF2F218C6C0083E900 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
 		17104CD62F49697500864630 /* WhenToGoCountryDrawerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhenToGoCountryDrawerView.swift; sourceTree = "<group>"; };
@@ -293,6 +298,7 @@
 		17F063842F32734800F1F4F3 /* EmailAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailAuthView.swift; sourceTree = "<group>"; };
 		17F2E15F2F4C3C27009A7E6D /* CountryScoreSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryScoreSection.swift; sourceTree = "<group>"; };
 		17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisaRequirementsStore.swift; sourceTree = "<group>"; };
+		17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryOverviewDescriptionStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -368,6 +374,7 @@
 				170C21202F4790E00090BA78 /* WhenToGoModels.swift */,
 				170C21192F4790E00090BA78 /* SeasonalityModels.swift */,
 				170C20CE2F4790E00090BA78 /* Profile.swift */,
+				17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */,
 				17EC41E72F4BB8B7004B80DA /* ScoreWeights.swift */,
 				1776C9642F50FD6F00AFC488 /* AppLanguage.swift */,
 			);
@@ -831,6 +838,8 @@
 		170C227D2F47A77B0090BA78 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				170C21832F7100010090BA78 /* InfoPlist.xcstrings */,
+				170C21852F7100010090BA78 /* Localizable.xcstrings */,
 				1732C3C72F633D970096ABC1 /* intro-video.mp4 */,
 				1776C9622F50FCE300AFC488 /* global_languages.json */,
 				170C21102F4790E00090BA78 /* intro.mp4 */,
@@ -1039,6 +1048,11 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				es,
+				fr,
+				de,
+				it,
+				"pt-BR",
 				Base,
 			);
 			mainGroup = 17AFEC812EC2C3D800B9585B;
@@ -1063,6 +1077,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				170C217C2F4790E00090BA78 /* Assets.xcassets in Resources */,
+				170C21822F7100010090BA78 /* InfoPlist.xcstrings in Resources */,
+				170C21842F7100010090BA78 /* Localizable.xcstrings in Resources */,
 				1732C3C82F633D970096ABC1 /* intro-video.mp4 in Resources */,
 				1776C9632F50FCE800AFC488 /* global_languages.json in Resources */,
 				170C217D2F4790E00090BA78 /* auth_loop.mp4 in Resources */,
@@ -1152,6 +1168,7 @@
 				17B478C22F55FF2E002B1865 /* PreReviewModalView.swift in Sources */,
 				17B478C32F55FF2E002B1865 /* LowRatingFeedbackSheet.swift in Sources */,
 				170C21532F4790E00090BA78 /* BucketListView.swift in Sources */,
+				17F9A0012F70000100000001 /* CountryOverviewDescriptionStore.swift in Sources */,
 				170C21542F4790E00090BA78 /* BucketToggleButton.swift in Sources */,
 				170C21562F4790E00090BA78 /* Country.swift in Sources */,
 				170C21572F4790E00090BA78 /* CountryAPI.swift in Sources */,
@@ -1342,7 +1359,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TravelScorerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = SVZL633CJV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1358,7 +1375,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1378,7 +1395,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TravelScorerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = SVZL633CJV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1394,7 +1411,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

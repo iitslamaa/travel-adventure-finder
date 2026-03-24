@@ -19,7 +19,7 @@ struct ProfileSettingsAccountSection: View {
                 "",
                 text: $firstName,
                 prompt:
-                    (Text("Name")
+                    (Text("profile.settings.full_name")
                         .foregroundStyle(.secondary)
                      +
                      Text(" *")
@@ -40,7 +40,7 @@ struct ProfileSettingsAccountSection: View {
                     "",
                     text: $username,
                     prompt:
-                        (Text("username")
+                        (Text("profile.settings.username")
                             .foregroundStyle(.secondary)
                          +
                          Text(" *")

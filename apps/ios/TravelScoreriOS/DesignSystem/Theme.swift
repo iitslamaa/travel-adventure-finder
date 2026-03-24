@@ -443,16 +443,22 @@ enum Theme {
     // MARK: - Title Banner (Page Headers)
 
     static func titleBanner(_ title: String) -> some View {
-        ZStack {
-            Image("title_background")
-                .resizable()
-                .scaledToFit()
+        GeometryReader { geo in
+            ZStack {
+                Image("title_background")
+                    .resizable()
+                    .scaledToFit()
 
-            Text(title)
-                .font(TAFTypography.largeTitle())
-                .foregroundColor(.black)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
+                Text(title)
+                    .font(TAFTypography.largeTitle())
+                    .foregroundColor(.black)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.55)
+                    .frame(maxWidth: geo.size.width * 0.72)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 110, alignment: .top)

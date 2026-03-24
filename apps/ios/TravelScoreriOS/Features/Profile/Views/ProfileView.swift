@@ -18,7 +18,7 @@ struct LockedProfileView: View {
                 .font(.system(size: 28))
                 .foregroundColor(.white)
 
-            Text("Learn more about this user by adding them as a friend!")
+            Text("profile.locked.message")
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.white)
@@ -68,11 +68,14 @@ struct ProfileView: View {
         guard let entries = profileVM.profile?.languages else { return [] }
 
         return entries.map { entry in
-            let displayName = LanguageRepository.shared.allLanguages
-                .first(where: { $0.code == entry.code })?
-                .displayName ?? entry.code
-
-            return "\(displayName) — \(entry.proficiency)"
+            let displayName = LanguageRepository.shared.localizedDisplayName(for: entry.code)
+            let proficiency = LanguageProficiency(storageValue: entry.proficiency).label
+            return "\(displayName) — \(proficiency)"
+        }
+    }
+    private var mutualLanguageLabels: [String] {
+        profileVM.mutualLanguages.map { code in
+            LanguageRepository.shared.localizedDisplayName(for: code)
         }
     }
     private var friendCount: Int {
@@ -108,7 +111,7 @@ struct ProfileView: View {
     }
 
     private var navigationTitle: String {
-        "Profile"
+        String(localized: "profile.title")
     }
 
     private func resolveCountry(for isoCode: String) -> Country {
@@ -118,7 +121,7 @@ struct ProfileView: View {
             return cached
         }
 
-        let locale = Locale(identifier: "en_US")
+        let locale = Locale.autoupdatingCurrent
         let countryName = locale.localizedString(forRegionCode: normalizedISO) ?? normalizedISO
 
         return Country(
@@ -203,7 +206,7 @@ struct ProfileView: View {
                                                 orderedBucketListCountries: profileVM.orderedBucketListCountries,
                                                 mutualTraveledCountries: profileVM.mutualTraveledCountries,
                                                 mutualBucketCountries: profileVM.mutualBucketCountries,
-                                                mutualLanguages: profileVM.mutualLanguages,
+                                                mutualLanguages: mutualLanguageLabels,
                                                 languages: languages,
                                                 travelMode: travelModeLabel,
                                                 travelStyle: travelStyleLabel,

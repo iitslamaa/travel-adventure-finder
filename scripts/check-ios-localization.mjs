@@ -1,0 +1,195 @@
+import fs from "node:fs";
+import path from "node:path";
+import { machineTranslationLocales, requiredLocales } from "./ios-localization-config.mjs";
+
+const repoRoot = process.cwd();
+const iosRoot = path.join(repoRoot, "apps/ios/TravelScoreriOS");
+const sourceRoots = [
+  path.join(iosRoot, "App"),
+  path.join(iosRoot, "Core"),
+  path.join(iosRoot, "Features"),
+  path.join(iosRoot, "Shared"),
+];
+const localizablePath = path.join(iosRoot, "App/Resources/Localizable.xcstrings");
+const infoPlistPath = path.join(iosRoot, "App/Resources/InfoPlist.xcstrings");
+const requireReviewed = process.argv.includes("--require-reviewed");
+
+const keyPatterns = [
+  /String\(localized:\s*"([^"]+)"/g,
+  /\bText\("([a-z0-9_.-]+)"\)/g,
+  /\bButton\("([a-z0-9_.-]+)"\)/g,
+  /\bLabel\("([a-z0-9_.-]+)"/g,
+  /\bToggle\("([a-z0-9_.-]+)"/g,
+  /\bTextField\("([a-z0-9_.-]+)"/g,
+  /\bPicker\("([a-z0-9_.-]+)"/g,
+];
+const dottedKeyPattern = /^[a-z0-9_-]+(\.[a-z0-9_-]+)+$/i;
+
+function walk(dir) {
+  const results = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name.includes("Preview")) continue;
+      results.push(...walk(fullPath));
+      continue;
+    }
+    if (entry.isFile() && fullPath.endsWith(".swift")) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
+function loadCatalog(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8")).strings ?? {};
+}
+
+function extractCountryDescriptionCodes(filePath) {
+  const text = fs.readFileSync(filePath, "utf8");
+  const blockMatch = text.match(/private static let descriptionCodes: Set<String> = \[(.*?)\n    \]/s);
+  if (!blockMatch) return [];
+
+  return [...blockMatch[1].matchAll(/"([A-Z]{2})"/g)].map((match) => match[1]);
+}
+
+function getUsedKeys(filePath) {
+  const text = fs.readFileSync(filePath, "utf8");
+  const keys = new Set();
+
+  for (const pattern of keyPatterns) {
+    pattern.lastIndex = 0;
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      keys.add(match[1]);
+    }
+  }
+
+  return [...keys];
+}
+
+const localizable = loadCatalog(localizablePath);
+const infoPlist = loadCatalog(infoPlistPath);
+const countryDescriptionCodes = extractCountryDescriptionCodes(
+  path.join(iosRoot, "Models/CountryOverviewDescriptionStore.swift")
+);
+
+const keyUsages = new Map();
+for (const root of sourceRoots) {
+  for (const filePath of walk(root)) {
+    for (const key of getUsedKeys(filePath)) {
+      const relativePath = path.relative(repoRoot, filePath);
+      const usages = keyUsages.get(key) ?? [];
+      usages.push(relativePath);
+      keyUsages.set(key, usages);
+    }
+  }
+}
+
+const missingKeys = [];
+for (const [key, usages] of [...keyUsages.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+  if (!localizable[key]) {
+    missingKeys.push({ key, usages });
+  }
+}
+
+const missingLocalizations = [];
+const reviewMarkers = [];
+for (const [catalogName, catalog] of [
+  ["Localizable.xcstrings", localizable],
+  ["InfoPlist.xcstrings", infoPlist],
+]) {
+  for (const [key, entry] of Object.entries(catalog)) {
+    const localizations = entry.localizations ?? {};
+    const shouldCheckKey =
+      catalogName === "InfoPlist.xcstrings" ||
+      keyUsages.has(key) ||
+      dottedKeyPattern.test(key);
+    if (!shouldCheckKey) {
+      continue;
+    }
+    const localesToCheck = requiredLocales;
+    for (const locale of localesToCheck) {
+      const stringUnit = localizations[locale]?.stringUnit;
+      const value = stringUnit?.value;
+      if (!value) {
+        missingLocalizations.push({ catalogName, key, locale });
+        continue;
+      }
+      if (machineTranslationLocales.includes(locale) && stringUnit?.state === "needs_review") {
+        reviewMarkers.push({ catalogName, key, locale });
+      }
+    }
+  }
+}
+
+for (const code of countryDescriptionCodes) {
+  const key = `country.description.${code.toLowerCase()}`;
+  const entry = localizable[key];
+  if (!entry) {
+    missingKeys.push({ key, usages: ["apps/ios/TravelScoreriOS/Models/CountryOverviewDescriptionStore.swift"] });
+    continue;
+  }
+
+  const englishValue = entry.localizations?.en?.stringUnit?.value;
+  if (!englishValue) {
+    missingLocalizations.push({
+      catalogName: "Localizable.xcstrings",
+      key,
+      locale: "en",
+    });
+  }
+}
+
+if (missingKeys.length === 0 && missingLocalizations.length === 0 && (reviewMarkers.length === 0 || !requireReviewed)) {
+  if (reviewMarkers.length > 0) {
+    console.log("iOS localization check passed with machine-translation review markers:");
+    const counts = new Map();
+    for (const { catalogName, locale } of reviewMarkers) {
+      const key = `${catalogName} :: ${locale}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    for (const [key, count] of [...counts.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+      console.log(`- ${key} :: ${count} needs_review`);
+    }
+  } else {
+    console.log("iOS localization check passed.");
+  }
+  process.exit(0);
+}
+
+if (missingKeys.length === 0 && missingLocalizations.length === 0 && reviewMarkers.length === 0) {
+  console.log("iOS localization check passed.");
+  process.exit(0);
+}
+
+if (missingKeys.length > 0) {
+  console.log("Missing Localizable.xcstrings keys:");
+  for (const { key, usages } of missingKeys) {
+    console.log(`- ${key}`);
+    for (const usage of usages) {
+      console.log(`  ${usage}`);
+    }
+  }
+}
+
+if (missingLocalizations.length > 0) {
+  console.log("Missing catalog localizations:");
+  for (const { catalogName, key, locale } of missingLocalizations) {
+    console.log(`- ${catalogName} :: ${key} :: ${locale}`);
+  }
+}
+
+if (reviewMarkers.length > 0) {
+  console.log(requireReviewed ? "Machine-translation review markers block release:" : "Machine-translation review markers:");
+  const counts = new Map();
+  for (const { catalogName, locale } of reviewMarkers) {
+    const key = `${catalogName} :: ${locale}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  for (const [key, count] of [...counts.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    console.log(`- ${key} :: ${count} needs_review`);
+  }
+}
+
+process.exit(missingKeys.length > 0 || missingLocalizations.length > 0 || (requireReviewed && reviewMarkers.length > 0) ? 1 : 0);

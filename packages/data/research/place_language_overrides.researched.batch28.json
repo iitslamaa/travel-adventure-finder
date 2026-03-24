@@ -1,0 +1,49 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "KE",
+    "override_reason": "coofficial_english_and_swahili_override",
+    "notes": "Kenya should give full credit to both English and Swahili because they are the country's two official languages and both are highly relevant for traveler communication across the country.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 },
+      { "code": "sw", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Magical Kenya: Plan your trip",
+        "url": "https://magicalkenya.com/plan-your-trip/",
+        "note": "Official tourism guidance says the two official languages in Kenya are English and Swahili."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Magical Kenya Mombasa brochure",
+        "url": "https://magicalkenya.com/wp-content/uploads/2024/10/48-hours-in-Mombasa-brochure.pdf",
+        "note": "Official tourism materials explicitly teach visitors basic Swahili phrases, supporting Swahili as a live traveler-relevant language."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "ZM",
+    "override_reason": "official_english_with_major_local_language_note_override",
+    "notes": "Zambia should score English as the official traveler-facing language while recognizing that large local languages such as Bemba and Nyanja matter strongly in everyday life. Those local-language exact-code assignments can be expanded later in the reconciliation pass.",
+    "languages": [
+      { "code": "en", "type": "official", "coverage": 1.0 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Zambia Tourism: Facts about Zambia",
+        "url": "https://www.zambiatourism.com/travel-info/facts/",
+        "note": "Official tourism guidance lists English as Zambia's official language and Bemba as the most spoken local language."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Zambia Tourism: Tourist Guide general info",
+        "url": "https://www.zambiatourism.com/travel-info/general-info/",
+        "note": "Official tourism guidance says English is the official language, that business and media are conducted in English, and that most hospitality workers speak it fairly well."
+      }
+    ]
+  }
+]

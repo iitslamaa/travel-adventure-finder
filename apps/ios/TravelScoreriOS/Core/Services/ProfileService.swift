@@ -56,6 +56,18 @@ struct ProfileCreate: Encodable {
     let full_name: String
 }
 
+private struct PassportPreferencesRow: Codable {
+    let userId: UUID
+    let nationalityCountryCodes: [String]
+    let passportCountryCode: String?
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case nationalityCountryCodes = "nationality_country_codes"
+        case passportCountryCode = "passport_country_code"
+    }
+}
+
 private struct CountryRow: Decodable {
     let countryId: String
 
@@ -70,6 +82,7 @@ final class ProfileService {
     private static var profileCache: [UUID: Profile] = [:]
     private static var traveledCache: [UUID: Set<String>] = [:]
     private static var bucketCache: [UUID: Set<String>] = [:]
+    private static var passportPreferencesCache: [UUID: PassportPreferences] = [:]
 
     private let supabase: SupabaseManager
 
@@ -89,6 +102,10 @@ final class ProfileService {
         Self.bucketCache[userId]
     }
 
+    func cachedPassportPreferences(userId: UUID) -> PassportPreferences? {
+        Self.passportPreferencesCache[userId]
+    }
+
     // MARK: - Fetch
 
     func fetchMyProfile(userId: UUID) async throws -> Profile {
@@ -103,7 +120,7 @@ final class ProfileService {
             throw NSError(
                 domain: "ProfileService",
                 code: 404,
-                userInfo: [NSLocalizedDescriptionKey: "Profile not found"]
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.not_found")]
             )
         }
 
@@ -135,7 +152,7 @@ final class ProfileService {
             throw NSError(
                 domain: "ProfileService",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "No auth user found"]
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.no_auth_user")]
             )
         }
 
@@ -200,7 +217,7 @@ final class ProfileService {
         throw lastError ?? NSError(
             domain: "ProfileService",
             code: 1,
-            userInfo: [NSLocalizedDescriptionKey: "Failed to create profile after retries"]
+            userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.create_after_retries_failed")]
         )
     }
 
@@ -232,6 +249,52 @@ final class ProfileService {
             .update(payload)
             .eq("id", value: userId)
             .execute()
+    }
+
+    func fetchPassportPreferences(userId: UUID) async throws -> PassportPreferences {
+        let response: PostgrestResponse<[PassportPreferencesRow]> = try await supabase.client
+            .from("user_passport_preferences")
+            .select("user_id,nationality_country_codes,passport_country_code")
+            .eq("user_id", value: userId.uuidString)
+            .limit(1)
+            .execute()
+
+        let preferences = PassportPreferences(
+            nationalityCountryCodes: response.value.first?.nationalityCountryCodes ?? [],
+            passportCountryCode: response.value.first?.passportCountryCode
+        )
+
+        Self.passportPreferencesCache[userId] = preferences
+        return preferences
+    }
+
+    func upsertPassportPreferences(
+        userId: UUID,
+        nationalityCountryCodes: [String],
+        passportCountryCode: String?
+    ) async throws {
+        let normalizedNationalityCountryCodes = nationalityCountryCodes
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            .filter { !$0.isEmpty }
+        let normalizedPassportCountryCode = passportCountryCode?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+
+        let payload = PassportPreferencesRow(
+            userId: userId,
+            nationalityCountryCodes: normalizedNationalityCountryCodes,
+            passportCountryCode: normalizedPassportCountryCode
+        )
+
+        try await supabase.client
+            .from("user_passport_preferences")
+            .upsert(payload)
+            .execute()
+
+        Self.passportPreferencesCache[userId] = PassportPreferences(
+            nationalityCountryCodes: normalizedNationalityCountryCodes,
+            passportCountryCode: normalizedPassportCountryCode
+        )
     }
 
     // MARK: - Avatar Storage

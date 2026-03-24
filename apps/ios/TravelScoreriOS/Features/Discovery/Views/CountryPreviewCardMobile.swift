@@ -13,12 +13,12 @@ struct CountryPreviewCardMobile: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Selected destination")
+                    Text("discovery.preview.selected_destination")
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
                     
-                    Text(country.name ?? country.isoCode)
+                    Text(AppDisplayLocale.current.localizedString(forRegionCode: country.isoCode.uppercased()) ?? country.name ?? country.isoCode)
                         .font(.headline)
                     
                     if let region = country.region {
@@ -32,7 +32,7 @@ struct CountryPreviewCardMobile: View {
                 if let score = country.score {
                     let bg = scoreBackground(score)
                     let fg = scoreTone(score)
-                    Text(String(Int(score.rounded())))
+                    Text(AppNumberFormatting.integerString(score))
                         .font(.subheadline.bold())
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
@@ -45,11 +45,11 @@ struct CountryPreviewCardMobile: View {
             // “Tags” row
             HStack(spacing: 8) {
                 if let advisoryScore = country.scores?.advisory {
-                    Text("Safety score: \(Int(advisoryScore.rounded()))")
+                    Text(String(format: String(localized: "discovery.preview.safety_score_format"), locale: AppDisplayLocale.current, Int(advisoryScore.rounded())))
                         .tagStyle()
                 }
                 if let region = country.region {
-                    Text("Region: \(region)")
+                    Text(String(format: String(localized: "discovery.preview.region_format"), locale: AppDisplayLocale.current, region))
                         .tagStyle()
                 }
             }
@@ -57,27 +57,27 @@ struct CountryPreviewCardMobile: View {
             // Score snapshot
             if let scores = country.scores {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Score snapshot")
+                    Text("discovery.preview.score_snapshot")
                         .font(.caption.bold())
                         .foregroundColor(.secondary)
                     
-                    scoreRow(label: "Seasonality", value: scores.seasonality)
-                    scoreRow(label: "Affordability", value: scores.affordability)
-                    scoreRow(label: "Visa ease", value: scores.visaEase)
+                    scoreRow(label: String(localized: "discovery.preview.seasonality"), value: scores.seasonality)
+                    scoreRow(label: String(localized: "discovery.preview.affordability"), value: scores.affordability)
+                    scoreRow(label: String(localized: "discovery.preview.visa_ease"), value: scores.visaEase)
                 }
             }
             
-            Text("This month is one of the best times to visit based on weather, crowds, and overall conditions. Open the full country page to compare safety, affordability, and visa details.")
+            Text("discovery.preview.best_time_summary")
                 .font(.caption)
                 .foregroundColor(.secondary)
             
             // TODO: wire this into your existing CountryDetailView navigation
             NavigationLink {
                 // Replace with your real detail view constructor
-                Text("TODO: Country detail for \(country.name ?? country.isoCode)")
+                Text(String(format: String(localized: "discovery.preview.todo_country_detail_format"), locale: AppDisplayLocale.current, AppDisplayLocale.current.localizedString(forRegionCode: country.isoCode.uppercased()) ?? country.name ?? country.isoCode))
             } label: {
                 HStack(spacing: 4) {
-                    Text("Open full country page")
+                    Text("discovery.preview.open_full_country")
                     Image(systemName: "chevron.right")
                         .font(.caption2)
                 }
@@ -99,7 +99,7 @@ struct CountryPreviewCardMobile: View {
                 .font(.caption)
             Spacer()
             if let value {
-                Text(String(Int(value.rounded())))
+                Text(AppNumberFormatting.integerString(value))
                     .font(.caption.bold())
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
@@ -107,7 +107,7 @@ struct CountryPreviewCardMobile: View {
                     .foregroundColor(fg)
                     .clipShape(Capsule())
             } else {
-                Text("—")
+                Text("common.em_dash")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

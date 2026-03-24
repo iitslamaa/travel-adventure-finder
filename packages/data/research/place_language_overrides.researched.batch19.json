@@ -1,0 +1,98 @@
+[
+  {
+    "place_type": "country",
+    "place_code": "CN-TW",
+    "override_reason": "mandarin_primary_with_tourism_english_override",
+    "notes": "Taiwan should score Mandarin Chinese as the primary traveler language while giving meaningful English credit because the national tourism administration serves visitors extensively in English and many core transport and tourism touchpoints are designed for international access.",
+    "languages": [
+      { "code": "zh", "type": "widely_spoken", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Taiwan Tourism Administration English site",
+        "url": "https://eng.taiwan.net.tw/",
+        "note": "Taiwan's official tourism administration maintains a full English-language planning site for international travelers."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Taiwan Tourism Administration transport portal",
+        "url": "https://eng.taiwan.net.tw/m1.aspx?sNo=0029022",
+        "note": "Official tourism guidance provides transport, accommodation, and destination assistance in English, showing meaningful English usability for travelers."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "JP",
+    "override_reason": "official_japanese_with_tourism_english_override",
+    "notes": "Japan should score Japanese as the official language while giving meaningful English credit because official tourism guidance says English is generally understood in airports, hotels, major transport systems, and tourist areas, though not uniformly everywhere.",
+    "languages": [
+      { "code": "ja", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.4 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Travel Japan FAQ",
+        "url": "https://www.japan.travel/en/faq/",
+        "note": "Japan National Tourism Organization says Japanese is the official language and that English is generally understood in tourist areas, airports, hotels, and major transportation systems."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Japan Visitor Hotline",
+        "url": "https://www.japan.travel/en/plan/hotline/",
+        "note": "JNTO operates a 24/7 visitor hotline in English and other languages, supporting meaningful tourism-focused English accessibility."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "KR",
+    "override_reason": "official_korean_with_tourism_english_override",
+    "notes": "South Korea should score Korean as the primary language while giving meaningful English credit because the national tourism organization provides broad English visitor support, helplines, and travel planning services.",
+    "languages": [
+      { "code": "ko", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.45 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "VISITKOREA English portal",
+        "url": "https://english.visitkorea.or.kr/",
+        "note": "The Korea Tourism Organization maintains a full English-language travel planning and visitor support portal."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "K-Shopping Tour language services",
+        "url": "https://english.visitkorea.or.kr/public/internal/ShoppingSpecial/files/kshoppingtour_ebook_english.pdf",
+        "note": "Official tourism materials describe multilingual travel help lines and extensive English-language visitor support."
+      }
+    ]
+  },
+  {
+    "place_type": "country",
+    "place_code": "MX",
+    "override_reason": "official_spanish_with_tourism_english_override",
+    "notes": "Mexico should score Spanish as the official language while giving moderate English credit because the official tourism system serves international travelers in English and major tourism corridors commonly support English-language services.",
+    "languages": [
+      { "code": "es", "type": "official", "coverage": 1.0 },
+      { "code": "en", "type": "widely_spoken", "coverage": 0.5 }
+    ],
+    "evidence": [
+      {
+        "kind": "official_tourism",
+        "title": "Visit Mexico English portal",
+        "url": "https://visitmexico.com/en/",
+        "note": "Mexico's official tourism platform serves destination planning directly in English for international travelers."
+      },
+      {
+        "kind": "official_tourism",
+        "title": "Visit Mexico: X-Can",
+        "url": "https://visitmexico.com/en/destino/18031/x-can",
+        "note": "Official tourism content for destinations in Mexico distinguishes between local indigenous language use and Spanish as the broadly understood default, supporting Spanish-first traveler coverage."
+      }
+    ]
+  }
+]

@@ -35,8 +35,8 @@ struct BucketToggleButton: View {
                 .opacity(isBucketed ? 1.0 : 0.35)
                 .accessibilityLabel(
                     isBucketed
-                    ? "Remove from Bucket List"
-                    : "Add to Bucket List"
+                    ? String(localized: "planning.bucket_list.remove_accessibility")
+                    : String(localized: "planning.bucket_list.add_accessibility")
                 )
         }
         .buttonStyle(.plain)
