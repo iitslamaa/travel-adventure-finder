@@ -22,17 +22,15 @@ import { useFriends } from '../hooks/useFriends';
 import { useTheme } from '../hooks/useTheme';
 import { seasonalityScoreForMonth } from '../utils/scoring';
 
-type PlannedTrip = {
+type AvailabilityKind = 'exact_dates' | 'flexible_month';
+
+type TripAvailabilityProposal = {
   id: string;
-  title: string;
-  notes: string;
-  startDate: string | null;
-  endDate: string | null;
-  countryIso2s: string[];
-  friendIds: string[];
-  expenses: TripExpense[];
-  createdAt: string;
-  updatedAt: string;
+  participantId: string;
+  participantName: string;
+  kind: AvailabilityKind;
+  startDate: string;
+  endDate: string;
 };
 
 type TripExpense = {
@@ -44,6 +42,20 @@ type TripExpense = {
   splitWithIds: string[];
 };
 
+type PlannedTrip = {
+  id: string;
+  title: string;
+  notes: string;
+  startDate: string | null;
+  endDate: string | null;
+  countryIso2s: string[];
+  friendIds: string[];
+  availability: TripAvailabilityProposal[];
+  expenses: TripExpense[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 type TripDraft = {
   id: string | null;
   title: string;
@@ -53,7 +65,28 @@ type TripDraft = {
   endDate: string;
   countryIso2s: string[];
   friendIds: string[];
+  availability: TripAvailabilityProposal[];
   expenses: TripExpense[];
+};
+
+type Traveler = {
+  id: string;
+  name: string;
+};
+
+type AvailabilityOverlap = {
+  startDate: string;
+  endDate: string;
+  exactParticipantCount: number;
+  totalParticipantCount: number;
+};
+
+type AvailabilityDraft = {
+  participantId: string | null;
+  kind: AvailabilityKind;
+  startDate: string;
+  endDate: string;
+  flexibleMonth: string;
 };
 
 const STORAGE_KEY = 'travelaf-trip-plans-v1';
@@ -68,7 +101,18 @@ function emptyDraft(): TripDraft {
     endDate: '',
     countryIso2s: [],
     friendIds: [],
+    availability: [],
     expenses: [],
+  };
+}
+
+function emptyAvailabilityDraft(): AvailabilityDraft {
+  return {
+    participantId: null,
+    kind: 'exact_dates',
+    startDate: '',
+    endDate: '',
+    flexibleMonth: '',
   };
 }
 
@@ -81,6 +125,179 @@ function formatDate(dateValue: string | null) {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+function formatMonthLabel(value: string) {
+  if (!value) return 'Pick month';
+  const date = new Date(`${value}-01T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+}
+
+function toDateInput(dateValue: string | null) {
+  return dateValue ? dateValue.slice(0, 10) : '';
+}
+
+function parseDayStart(value: string) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function parseDayEnd(value: string) {
+  const date = new Date(`${value}T23:59:59.999Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function monthRange(value: string) {
+  const start = parseDayStart(`${value}-01`);
+  if (!start) return null;
+  const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+  return { start, end };
+}
+
+function proposalInterval(proposal: TripAvailabilityProposal) {
+  const start = parseDayStart(proposal.startDate);
+  const end = parseDayEnd(proposal.endDate);
+  if (!start || !end || end < start) return null;
+  return { start, end };
+}
+
+function mergeIntervals(intervals: { start: Date; end: Date }[]) {
+  const sorted = [...intervals].sort((a, b) => a.start.getTime() - b.start.getTime());
+  const merged: { start: Date; end: Date }[] = [];
+
+  sorted.forEach(interval => {
+    const last = merged[merged.length - 1];
+    if (!last) {
+      merged.push(interval);
+      return;
+    }
+
+    if (interval.start.getTime() <= last.end.getTime()) {
+      last.end = new Date(Math.max(last.end.getTime(), interval.end.getTime()));
+      return;
+    }
+
+    merged.push(interval);
+  });
+
+  return merged;
+}
+
+function intersectIntervals(
+  left: { start: Date; end: Date }[],
+  right: { start: Date; end: Date }[]
+) {
+  const intersections: { start: Date; end: Date }[] = [];
+
+  left.forEach(lhs => {
+    right.forEach(rhs => {
+      const start = new Date(Math.max(lhs.start.getTime(), rhs.start.getTime()));
+      const end = new Date(Math.min(lhs.end.getTime(), rhs.end.getTime()));
+      if (start.getTime() <= end.getTime()) {
+        intersections.push({ start, end });
+      }
+    });
+  });
+
+  return mergeIntervals(intersections);
+}
+
+function computeAvailabilityOverlaps(
+  availability: TripAvailabilityProposal[],
+  travelers: Traveler[]
+): AvailabilityOverlap[] {
+  if (travelers.length < 2) return [];
+
+  const grouped = travelers.map(traveler =>
+    mergeIntervals(
+      availability
+        .filter(proposal => proposal.participantId === traveler.id)
+        .map(proposalInterval)
+        .filter((interval): interval is { start: Date; end: Date } => interval !== null)
+    )
+  );
+
+  if (grouped.some(group => group.length === 0)) return [];
+
+  let current = grouped[0];
+  grouped.slice(1).forEach(group => {
+    current = intersectIntervals(current, group);
+  });
+
+  const exactCounts = new Map(
+    travelers.map(traveler => [
+      traveler.id,
+      availability.filter(
+        proposal =>
+          proposal.participantId === traveler.id && proposal.kind === 'exact_dates'
+      ).length,
+    ])
+  );
+
+  const overlaps = current.map(interval => {
+    let exactParticipantCount = 0;
+    travelers.forEach(traveler => {
+      const matchesExact = availability.some(proposal => {
+        if (proposal.participantId !== traveler.id || proposal.kind !== 'exact_dates') {
+          return false;
+        }
+
+        const proposalMatch = proposalInterval(proposal);
+        if (!proposalMatch) return false;
+
+        return (
+          proposalMatch.start.getTime() <= interval.end.getTime() &&
+          proposalMatch.end.getTime() >= interval.start.getTime()
+        );
+      });
+
+      if (matchesExact || (exactCounts.get(traveler.id) ?? 0) === 0) {
+        exactParticipantCount += 1;
+      }
+    });
+
+    return {
+      startDate: interval.start.toISOString().slice(0, 10),
+      endDate: interval.end.toISOString().slice(0, 10),
+      exactParticipantCount,
+      totalParticipantCount: travelers.length,
+    };
+  });
+
+  return overlaps
+    .filter(
+      (overlap, index, array) =>
+        array.findIndex(
+          candidate =>
+            candidate.startDate === overlap.startDate &&
+            candidate.endDate === overlap.endDate &&
+            candidate.exactParticipantCount === overlap.exactParticipantCount
+        ) === index
+    )
+    .sort((a, b) => {
+      if (a.exactParticipantCount === b.exactParticipantCount) {
+        return a.startDate.localeCompare(b.startDate);
+      }
+      return b.exactParticipantCount - a.exactParticipantCount;
+    });
+}
+
+function availabilityBadge(
+  overlaps: AvailabilityOverlap[],
+  proposals: TripAvailabilityProposal[],
+  travelerCount: number
+) {
+  if (travelerCount < 2) return null;
+  if (proposals.length === 0) return 'No group availability added yet';
+  if (overlaps.length === 0) return 'No shared window yet';
+
+  const best = overlaps[0];
+  const range = `${formatDate(best.startDate)} - ${formatDate(best.endDate)}`;
+  if (best.exactParticipantCount === best.totalParticipantCount) {
+    return `Best shared window: ${range}`;
+  }
+  return `Best overlap: ${range} (${best.exactParticipantCount}/${best.totalParticipantCount} exact)`;
 }
 
 async function getDefaultCalendarSource() {
@@ -110,6 +327,9 @@ export default function TripPlannerScreen() {
   const [expenseDraftAmount, setExpenseDraftAmount] = useState('');
   const [expenseDraftPaidById, setExpenseDraftPaidById] = useState<string | null>(null);
   const [expenseDraftSplitWithIds, setExpenseDraftSplitWithIds] = useState<string[]>([]);
+  const [availabilityDraft, setAvailabilityDraft] = useState<AvailabilityDraft>(
+    emptyAvailabilityDraft
+  );
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
@@ -119,6 +339,7 @@ export default function TripPlannerScreen() {
         setTrips(
           parsed.map(trip => ({
             ...trip,
+            availability: Array.isArray(trip.availability) ? trip.availability : [],
             expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
           }))
         );
@@ -129,10 +350,7 @@ export default function TripPlannerScreen() {
   }, []);
 
   const countryNameByIso2 = useMemo(
-    () =>
-      new Map(
-        countries.map(country => [country.iso2, country.name] as const)
-      ),
+    () => new Map(countries.map(country => [country.iso2, country.name] as const)),
     [countries]
   );
 
@@ -173,18 +391,60 @@ export default function TripPlannerScreen() {
     return source.slice(0, 16);
   }, [countryQuery, plannerCountries]);
 
+  const currentTraveler = useMemo(
+    () =>
+      session?.user?.id
+        ? {
+            id: session.user.id,
+            name: profile?.full_name || profile?.username || 'You',
+          }
+        : null,
+    [profile?.full_name, profile?.username, session?.user?.id]
+  );
+
+  const draftTravelers = useMemo(
+    () => [
+      ...(currentTraveler ? [currentTraveler] : []),
+      ...friends
+        .filter(friend => draft.friendIds.includes(friend.id))
+        .map(friend => ({
+          id: friend.id,
+          name: friend.full_name || friend.username || 'Friend',
+        })),
+    ],
+    [currentTraveler, draft.friendIds, friends]
+  );
+
+  const draftOverlaps = useMemo(
+    () => computeAvailabilityOverlaps(draft.availability, draftTravelers),
+    [draft.availability, draftTravelers]
+  );
+
+  const monthOptions = useMemo(() => {
+    const base = new Date();
+    return Array.from({ length: 8 }, (_, index) => {
+      const date = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + index, 1));
+      return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+    });
+  }, []);
+
   const persistTrips = async (nextTrips: PlannedTrip[]) => {
     setTrips(nextTrips);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextTrips));
   };
 
-  const openNewTrip = () => {
-    setDraft(emptyDraft());
+  const resetDraftHelpers = () => {
     setCountryQuery('');
     setExpenseDraftTitle('');
     setExpenseDraftAmount('');
     setExpenseDraftPaidById(null);
     setExpenseDraftSplitWithIds([]);
+    setAvailabilityDraft(emptyAvailabilityDraft());
+  };
+
+  const openNewTrip = () => {
+    setDraft(emptyDraft());
+    resetDraftHelpers();
     setModalVisible(true);
   };
 
@@ -194,17 +454,14 @@ export default function TripPlannerScreen() {
       title: trip.title,
       notes: trip.notes,
       includeDates: !!trip.startDate || !!trip.endDate,
-      startDate: trip.startDate ? trip.startDate.slice(0, 10) : '',
-      endDate: trip.endDate ? trip.endDate.slice(0, 10) : '',
+      startDate: toDateInput(trip.startDate),
+      endDate: toDateInput(trip.endDate),
       countryIso2s: trip.countryIso2s,
       friendIds: trip.friendIds,
+      availability: Array.isArray(trip.availability) ? trip.availability : [],
       expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
     });
-    setCountryQuery('');
-    setExpenseDraftTitle('');
-    setExpenseDraftAmount('');
-    setExpenseDraftPaidById(null);
-    setExpenseDraftSplitWithIds([]);
+    resetDraftHelpers();
     setModalVisible(true);
   };
 
@@ -222,12 +479,24 @@ export default function TripPlannerScreen() {
   };
 
   const toggleFriend = (friendId: string) => {
-    setDraft(current => ({
-      ...current,
-      friendIds: current.friendIds.includes(friendId)
+    setDraft(current => {
+      const nextFriendIds = current.friendIds.includes(friendId)
         ? current.friendIds.filter(id => id !== friendId)
-        : [...current.friendIds, friendId],
-    }));
+        : [...current.friendIds, friendId];
+
+      const allowedParticipantIds = new Set([
+        ...(currentTraveler ? [currentTraveler.id] : []),
+        ...nextFriendIds,
+      ]);
+
+      return {
+        ...current,
+        friendIds: nextFriendIds,
+        availability: current.availability.filter(proposal =>
+          allowedParticipantIds.has(proposal.participantId)
+        ),
+      };
+    });
   };
 
   const saveTrip = async () => {
@@ -239,18 +508,19 @@ export default function TripPlannerScreen() {
       id: draft.id ?? now,
       title,
       notes: draft.notes.trim(),
-      startDate: draft.includeDates && draft.startDate.trim()
-        ? new Date(`${draft.startDate}T00:00:00.000Z`).toISOString()
-        : null,
-      endDate: draft.includeDates && draft.endDate.trim()
-        ? new Date(`${draft.endDate}T00:00:00.000Z`).toISOString()
-        : null,
+      startDate:
+        draft.includeDates && draft.startDate.trim()
+          ? new Date(`${draft.startDate}T00:00:00.000Z`).toISOString()
+          : null,
+      endDate:
+        draft.includeDates && draft.endDate.trim()
+          ? new Date(`${draft.endDate}T00:00:00.000Z`).toISOString()
+          : null,
       countryIso2s: draft.countryIso2s,
       friendIds: draft.friendIds,
+      availability: draft.availability,
       expenses: draft.expenses,
-      createdAt: draft.id
-        ? trips.find(trip => trip.id === draft.id)?.createdAt ?? now
-        : now,
+      createdAt: draft.id ? trips.find(trip => trip.id === draft.id)?.createdAt ?? now : now,
       updatedAt: now,
     };
 
@@ -272,23 +542,6 @@ export default function TripPlannerScreen() {
   const selectedFriendNames = draft.friendIds.map(
     friendId => friendNameById.get(friendId) ?? 'Friend'
   );
-
-  const currentTraveler = session?.user?.id
-    ? {
-        id: session.user.id,
-        name: profile?.full_name || profile?.username || 'You',
-      }
-    : null;
-
-  const draftTravelers = [
-    ...(currentTraveler ? [currentTraveler] : []),
-    ...friends
-      .filter(friend => draft.friendIds.includes(friend.id))
-      .map(friend => ({
-        id: friend.id,
-        name: friend.full_name || friend.username || 'Friend',
-      })),
-  ];
 
   const expenseTotal = (trip: PlannedTrip | TripDraft) =>
     trip.expenses.reduce((sum, expense) => sum + expense.totalAmount, 0);
@@ -345,10 +598,63 @@ export default function TripPlannerScreen() {
     setExpenseDraftSplitWithIds([]);
   };
 
-  const tripSummary = (trip: PlannedTrip) => {
-    const tripCountries = countries.filter(country =>
-      trip.countryIso2s.includes(country.iso2)
+  const addAvailabilityToDraft = () => {
+    if (!availabilityDraft.participantId) {
+      Alert.alert('Choose traveler', 'Pick who this availability belongs to first.');
+      return;
+    }
+
+    const participant = draftTravelers.find(
+      traveler => traveler.id === availabilityDraft.participantId
     );
+    if (!participant) {
+      Alert.alert('Traveler missing', 'Add the traveler to this trip first.');
+      return;
+    }
+
+    let startDate = availabilityDraft.startDate.trim();
+    let endDate = availabilityDraft.endDate.trim();
+
+    if (availabilityDraft.kind === 'flexible_month') {
+      const range = monthRange(availabilityDraft.flexibleMonth);
+      if (!range) {
+        Alert.alert('Choose month', 'Pick a flexible month before saving this window.');
+        return;
+      }
+      startDate = range.start.toISOString().slice(0, 10);
+      endDate = range.end.toISOString().slice(0, 10);
+    }
+
+    const start = parseDayStart(startDate);
+    const end = parseDayEnd(endDate);
+    if (!start || !end || end.getTime() < start.getTime()) {
+      Alert.alert('Invalid dates', 'Availability needs a valid start and end date.');
+      return;
+    }
+
+    setDraft(current => ({
+      ...current,
+      availability: [
+        ...current.availability,
+        {
+          id: new Date().toISOString(),
+          participantId: participant.id,
+          participantName: participant.name,
+          kind: availabilityDraft.kind,
+          startDate,
+          endDate,
+        },
+      ],
+    }));
+
+    setAvailabilityDraft(current => ({
+      ...emptyAvailabilityDraft(),
+      participantId: current.participantId,
+    }));
+  };
+
+  const tripSummary = (trip: PlannedTrip) => {
+    const tripCountries = countries.filter(country => trip.countryIso2s.includes(country.iso2));
 
     if (!tripCountries.length) {
       return null;
@@ -370,6 +676,18 @@ export default function TripPlannerScreen() {
     );
 
     return { overall, affordability, seasonality };
+  };
+
+  const travelersForTrip = (trip: PlannedTrip) => {
+    const currentName = currentTraveler?.name ?? profile?.full_name ?? profile?.username ?? 'You';
+
+    return [
+      ...(session?.user?.id ? [{ id: session.user.id, name: currentName }] : []),
+      ...trip.friendIds.map(friendId => ({
+        id: friendId,
+        name: friendNameById.get(friendId) ?? 'Friend',
+      })),
+    ];
   };
 
   const addTripToCalendar = async (trip: PlannedTrip) => {
@@ -433,11 +751,19 @@ export default function TripPlannerScreen() {
       const friendSummary = trip.friendIds
         .map(friendId => friendNameById.get(friendId) ?? 'Friend')
         .join(', ');
+      const tripTravelers = travelersForTrip(trip);
+      const overlaps = computeAvailabilityOverlaps(trip.availability, tripTravelers);
+      const availabilitySummary = availabilityBadge(
+        overlaps,
+        trip.availability,
+        tripTravelers.length
+      );
 
       const notes = [
         trip.notes || null,
         countrySummary ? `Countries: ${countrySummary}` : null,
         friendSummary ? `Friends: ${friendSummary}` : null,
+        availabilitySummary ? `Availability: ${availabilitySummary}` : null,
       ]
         .filter(Boolean)
         .join('\n');
@@ -468,28 +794,21 @@ export default function TripPlannerScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={[styles.backText, { color: colors.textPrimary }]}>
-            Back
-          </Text>
+          <Text style={[styles.backText, { color: colors.textPrimary }]}>Back</Text>
         </Pressable>
 
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>
-              Trip Planner
-            </Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Trip Planner</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Save trip ideas with destinations, dates, and people you want to
-              travel with.
+              Save trip ideas with destinations, dates, travelers, and the best
+              shared windows you can actually make work.
             </Text>
           </View>
 
           <Pressable
             onPress={openNewTrip}
-            style={[
-              styles.addButton,
-              { backgroundColor: colors.primary },
-            ]}
+            style={[styles.addButton, { backgroundColor: colors.primary }]}
           >
             <Ionicons name="add" size={18} color={colors.primaryText} />
           </Pressable>
@@ -503,17 +822,13 @@ export default function TripPlannerScreen() {
               { backgroundColor: colors.card, borderColor: colors.border },
             ]}
           >
-            <Ionicons
-              name="airplane-outline"
-              size={28}
-              color={colors.textPrimary}
-            />
+            <Ionicons name="airplane-outline" size={28} color={colors.textPrimary} />
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
               Start your first trip plan
             </Text>
             <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-              Add a title, save a few countries, and sketch the trip before you
-              book anything.
+              Add dates, destinations, shared availability, and expense splits before
+              anything gets booked.
             </Text>
           </Pressable>
         ) : (
@@ -527,6 +842,13 @@ export default function TripPlannerScreen() {
                 .join(', ');
               const summary = tripSummary(trip);
               const totalExpenses = expenseTotal(trip);
+              const tripTravelers = travelersForTrip(trip);
+              const overlaps = computeAvailabilityOverlaps(trip.availability, tripTravelers);
+              const availabilitySummary = availabilityBadge(
+                overlaps,
+                trip.availability,
+                tripTravelers.length
+              );
 
               return (
                 <View
@@ -538,17 +860,10 @@ export default function TripPlannerScreen() {
                 >
                   <View style={styles.tripCardHeader}>
                     <View style={{ flex: 1, marginRight: 12 }}>
-                      <Text
-                        style={[styles.tripTitle, { color: colors.textPrimary }]}
-                      >
+                      <Text style={[styles.tripTitle, { color: colors.textPrimary }]}>
                         {trip.title}
                       </Text>
-                      <Text
-                        style={[
-                          styles.tripMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
+                      <Text style={[styles.tripMeta, { color: colors.textSecondary }]}>
                         {trip.startDate
                           ? `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`
                           : 'Dates not set'}
@@ -575,9 +890,7 @@ export default function TripPlannerScreen() {
                         </Text>
                       </Pressable>
                       <Pressable onPress={() => openEditTrip(trip)}>
-                        <Text
-                          style={[styles.tripActionText, { color: colors.primary }]}
-                        >
+                        <Text style={[styles.tripActionText, { color: colors.primary }]}>
                           Edit
                         </Text>
                       </Pressable>
@@ -599,6 +912,24 @@ export default function TripPlannerScreen() {
                     <Text style={[styles.tripDetail, { color: colors.textPrimary }]}>
                       Friends: {friendSummary}
                     </Text>
+                  ) : null}
+
+                  {availabilitySummary ? (
+                    <View
+                      style={[
+                        styles.infoPanel,
+                        { backgroundColor: colors.greenBg, borderColor: colors.greenBorder },
+                      ]}
+                    >
+                      <Text style={[styles.infoText, { color: colors.greenText }]}>
+                        {availabilitySummary}
+                      </Text>
+                      {overlaps.slice(0, 2).map(overlap => (
+                        <Text key={`${overlap.startDate}-${overlap.endDate}`} style={[styles.infoSubtext, { color: colors.greenText }]}>
+                          {formatDate(overlap.startDate)} - {formatDate(overlap.endDate)}
+                        </Text>
+                      ))}
+                    </View>
                   ) : null}
 
                   {summary ? (
@@ -660,7 +991,8 @@ export default function TripPlannerScreen() {
                           key={expense.id}
                           style={[styles.tripNotes, { color: colors.textSecondary }]}
                         >
-                          {expense.title}: ${expense.totalAmount.toFixed(2)} paid by {expense.paidByName}
+                          {expense.title}: ${expense.totalAmount.toFixed(2)} paid by{' '}
+                          {expense.paidByName}
                         </Text>
                       ))}
                     </View>
@@ -678,11 +1010,7 @@ export default function TripPlannerScreen() {
         )}
       </ScrollView>
 
-      <Modal
-        animationType="slide"
-        visible={modalVisible}
-        onRequestClose={closeModal}
-      >
+      <Modal animationType="slide" visible={modalVisible} onRequestClose={closeModal}>
         <View style={{ flex: 1, backgroundColor: colors.background }}>
           <ScrollView
             contentContainerStyle={{
@@ -694,21 +1022,14 @@ export default function TripPlannerScreen() {
           >
             <View style={styles.modalHeader}>
               <Pressable onPress={closeModal}>
-                <Text style={[styles.backText, { color: colors.textPrimary }]}>
-                  Cancel
-                </Text>
+                <Text style={[styles.backText, { color: colors.textPrimary }]}>Cancel</Text>
               </Pressable>
-              <Pressable
-                onPress={saveTrip}
-                disabled={!draft.title.trim()}
-              >
+              <Pressable onPress={saveTrip} disabled={!draft.title.trim()}>
                 <Text
                   style={[
                     styles.saveText,
                     {
-                      color: draft.title.trim()
-                        ? colors.primary
-                        : colors.textMuted,
+                      color: draft.title.trim() ? colors.primary : colors.textMuted,
                     },
                   ]}
                 >
@@ -727,14 +1048,10 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                Title
-              </Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Title</Text>
               <TextInput
                 value={draft.title}
-                onChangeText={value =>
-                  setDraft(current => ({ ...current, title: value }))
-                }
+                onChangeText={value => setDraft(current => ({ ...current, title: value }))}
                 placeholder="Summer in Portugal"
                 placeholderTextColor={colors.textMuted}
                 style={[
@@ -747,15 +1064,15 @@ export default function TripPlannerScreen() {
                 ]}
               />
 
-              <Text style={[styles.sectionTitle, styles.sectionTopGap, { color: colors.textPrimary }]}>
+              <Text
+                style={[styles.sectionTitle, styles.sectionTopGap, { color: colors.textPrimary }]}
+              >
                 Notes
               </Text>
               <TextInput
                 multiline
                 value={draft.notes}
-                onChangeText={value =>
-                  setDraft(current => ({ ...current, notes: value }))
-                }
+                onChangeText={value => setDraft(current => ({ ...current, notes: value }))}
                 placeholder="Flights, timing, neighborhood ideas..."
                 placeholderTextColor={colors.textMuted}
                 style={[
@@ -798,10 +1115,7 @@ export default function TripPlannerScreen() {
                   <View
                     style={[
                       styles.dateButton,
-                      {
-                        backgroundColor: colors.surface,
-                        borderColor: colors.border,
-                      },
+                      { backgroundColor: colors.surface, borderColor: colors.border },
                     ]}
                   >
                     <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>
@@ -809,9 +1123,7 @@ export default function TripPlannerScreen() {
                     </Text>
                     <TextInput
                       value={draft.startDate}
-                      onChangeText={value =>
-                        setDraft(current => ({ ...current, startDate: value }))
-                      }
+                      onChangeText={value => setDraft(current => ({ ...current, startDate: value }))}
                       placeholder="YYYY-MM-DD"
                       placeholderTextColor={colors.textMuted}
                       style={[styles.dateInput, { color: colors.textPrimary }]}
@@ -821,10 +1133,7 @@ export default function TripPlannerScreen() {
                   <View
                     style={[
                       styles.dateButton,
-                      {
-                        backgroundColor: colors.surface,
-                        borderColor: colors.border,
-                      },
+                      { backgroundColor: colors.surface, borderColor: colors.border },
                     ]}
                   >
                     <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>
@@ -832,9 +1141,7 @@ export default function TripPlannerScreen() {
                     </Text>
                     <TextInput
                       value={draft.endDate}
-                      onChangeText={value =>
-                        setDraft(current => ({ ...current, endDate: value }))
-                      }
+                      onChangeText={value => setDraft(current => ({ ...current, endDate: value }))}
                       placeholder="YYYY-MM-DD"
                       placeholderTextColor={colors.textMuted}
                       style={[styles.dateInput, { color: colors.textPrimary }]}
@@ -850,9 +1157,7 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                Countries
-              </Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Countries</Text>
               <TextInput
                 value={countryQuery}
                 onChangeText={setCountryQuery}
@@ -909,9 +1214,7 @@ export default function TripPlannerScreen() {
                       style={[
                         styles.chip,
                         {
-                          backgroundColor: selected
-                            ? colors.primary
-                            : colors.surface,
+                          backgroundColor: selected ? colors.primary : colors.surface,
                           borderColor: selected ? colors.primary : colors.border,
                         },
                       ]}
@@ -937,9 +1240,7 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
-              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                Friends
-              </Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Friends</Text>
 
               {friends.length === 0 ? (
                 <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
@@ -948,12 +1249,7 @@ export default function TripPlannerScreen() {
               ) : (
                 <>
                   {selectedFriendNames.length ? (
-                    <Text
-                      style={[
-                        styles.selectionSummary,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
+                    <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
                       Selected: {selectedFriendNames.join(', ')}
                     </Text>
                   ) : null}
@@ -969,18 +1265,14 @@ export default function TripPlannerScreen() {
                           style={[
                             styles.chip,
                             {
-                              backgroundColor: selected
-                                ? colors.primary
-                                : colors.surface,
+                              backgroundColor: selected ? colors.primary : colors.surface,
                               borderColor: selected ? colors.primary : colors.border,
                             },
                           ]}
                         >
                           <Text
                             style={{
-                              color: selected
-                                ? colors.primaryText
-                                : colors.textPrimary,
+                              color: selected ? colors.primaryText : colors.textPrimary,
                               fontWeight: '600',
                             }}
                           >
@@ -1001,8 +1293,273 @@ export default function TripPlannerScreen() {
               ]}
             >
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                Expenses
+                Availability
               </Text>
+              <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                Add exact dates or flexible months for each traveler to spot real overlap.
+              </Text>
+
+              {draftTravelers.length === 0 ? (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Add yourself or friends to the trip before tracking shared availability.
+                </Text>
+              ) : (
+                <>
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Traveler
+                  </Text>
+                  <View style={styles.chipWrap}>
+                    {draftTravelers.map(traveler => {
+                      const selected = availabilityDraft.participantId === traveler.id;
+                      return (
+                        <Pressable
+                          key={traveler.id}
+                          onPress={() =>
+                            setAvailabilityDraft(current => ({
+                              ...current,
+                              participantId: traveler.id,
+                            }))
+                          }
+                          style={[
+                            styles.chip,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.surface,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={{
+                              color: selected ? colors.primaryText : colors.textPrimary,
+                              fontWeight: '600',
+                            }}
+                          >
+                            {traveler.name}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Availability type
+                  </Text>
+                  <View style={styles.inlineRow}>
+                    {[
+                      { label: 'Exact dates', value: 'exact_dates' as const },
+                      { label: 'Flexible month', value: 'flexible_month' as const },
+                    ].map(option => {
+                      const selected = availabilityDraft.kind === option.value;
+                      return (
+                        <Pressable
+                          key={option.value}
+                          onPress={() =>
+                            setAvailabilityDraft(current => ({ ...current, kind: option.value }))
+                          }
+                          style={[
+                            styles.segmentButton,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.surface,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={{
+                              color: selected ? colors.primaryText : colors.textPrimary,
+                              fontWeight: '700',
+                            }}
+                          >
+                            {option.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  {availabilityDraft.kind === 'exact_dates' ? (
+                    <View style={styles.dateRow}>
+                      <View
+                        style={[
+                          styles.dateButton,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>
+                          Start
+                        </Text>
+                        <TextInput
+                          value={availabilityDraft.startDate}
+                          onChangeText={value =>
+                            setAvailabilityDraft(current => ({ ...current, startDate: value }))
+                          }
+                          placeholder="YYYY-MM-DD"
+                          placeholderTextColor={colors.textMuted}
+                          style={[styles.dateInput, { color: colors.textPrimary }]}
+                        />
+                      </View>
+
+                      <View
+                        style={[
+                          styles.dateButton,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>
+                          End
+                        </Text>
+                        <TextInput
+                          value={availabilityDraft.endDate}
+                          onChangeText={value =>
+                            setAvailabilityDraft(current => ({ ...current, endDate: value }))
+                          }
+                          placeholder="YYYY-MM-DD"
+                          placeholderTextColor={colors.textMuted}
+                          style={[styles.dateInput, { color: colors.textPrimary }]}
+                        />
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.chipWrap}>
+                      {monthOptions.map(option => {
+                        const selected = availabilityDraft.flexibleMonth === option;
+                        return (
+                          <Pressable
+                            key={option}
+                            onPress={() =>
+                              setAvailabilityDraft(current => ({
+                                ...current,
+                                flexibleMonth: option,
+                              }))
+                            }
+                            style={[
+                              styles.chip,
+                              {
+                                backgroundColor: selected ? colors.primary : colors.surface,
+                                borderColor: selected ? colors.primary : colors.border,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={{
+                                color: selected ? colors.primaryText : colors.textPrimary,
+                                fontWeight: '600',
+                              }}
+                            >
+                              {formatMonthLabel(option)}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  )}
+
+                  <Pressable
+                    onPress={addAvailabilityToDraft}
+                    style={[styles.addExpenseButton, { backgroundColor: colors.primary }]}
+                  >
+                    <Text style={[styles.submitText, { color: colors.primaryText }]}>
+                      Add Availability
+                    </Text>
+                  </Pressable>
+
+                  {draftOverlaps.length ? (
+                    <View
+                      style={[
+                        styles.infoPanel,
+                        { backgroundColor: colors.greenBg, borderColor: colors.greenBorder },
+                      ]}
+                    >
+                      <Text style={[styles.infoText, { color: colors.greenText }]}>
+                        {availabilityBadge(
+                          draftOverlaps,
+                          draft.availability,
+                          draftTravelers.length
+                        )}
+                      </Text>
+                      {draftOverlaps.slice(0, 3).map(overlap => (
+                        <Text
+                          key={`${overlap.startDate}-${overlap.endDate}`}
+                          style={[styles.infoSubtext, { color: colors.greenText }]}
+                        >
+                          {formatDate(overlap.startDate)} - {formatDate(overlap.endDate)}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+
+                  {draft.availability.length ? (
+                    <View style={styles.availabilityList}>
+                      {draftTravelers.map(traveler => {
+                        const travelerProposals = draft.availability.filter(
+                          proposal => proposal.participantId === traveler.id
+                        );
+                        if (travelerProposals.length === 0) return null;
+
+                        return (
+                          <View
+                            key={traveler.id}
+                            style={[
+                              styles.availabilityGroup,
+                              {
+                                backgroundColor: colors.surface,
+                                borderColor: colors.border,
+                              },
+                            ]}
+                          >
+                            <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                              {traveler.name}
+                            </Text>
+                            {travelerProposals.map(proposal => (
+                              <View key={proposal.id} style={styles.availabilityRow}>
+                                <View style={{ flex: 1, marginRight: 12 }}>
+                                  <Text
+                                    style={[styles.tripDetail, { color: colors.textPrimary }]}
+                                  >
+                                    {proposal.kind === 'exact_dates'
+                                      ? `${formatDate(proposal.startDate)} - ${formatDate(proposal.endDate)}`
+                                      : `Flexible ${formatMonthLabel(proposal.startDate.slice(0, 7))}`}
+                                  </Text>
+                                  <Text
+                                    style={[styles.infoSubtext, { color: colors.textSecondary }]}
+                                  >
+                                    {proposal.kind === 'exact_dates'
+                                      ? 'Exact dates'
+                                      : 'Flexible month'}
+                                  </Text>
+                                </View>
+                                <Pressable
+                                  onPress={() =>
+                                    setDraft(current => ({
+                                      ...current,
+                                      availability: current.availability.filter(
+                                        item => item.id !== proposal.id
+                                      ),
+                                    }))
+                                  }
+                                >
+                                  <Text style={[styles.tripActionText, { color: '#DC2626' }]}>
+                                    Remove
+                                  </Text>
+                                </Pressable>
+                              </View>
+                            ))}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : null}
+                </>
+              )}
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Expenses</Text>
 
               <TextInput
                 value={expenseDraftTitle}
@@ -1108,10 +1665,7 @@ export default function TripPlannerScreen() {
 
               <Pressable
                 onPress={addExpenseToDraft}
-                style={[
-                  styles.addExpenseButton,
-                  { backgroundColor: colors.primary },
-                ]}
+                style={[styles.addExpenseButton, { backgroundColor: colors.primary }]}
               >
                 <Text style={[styles.submitText, { color: colors.primaryText }]}>
                   Add Expense
@@ -1154,7 +1708,6 @@ export default function TripPlannerScreen() {
               ) : null}
             </View>
           </ScrollView>
-
         </View>
       </Modal>
     </View>
@@ -1348,10 +1901,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 4,
   },
-  dateValue: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
   dateInput: {
     fontSize: 15,
     fontWeight: '600',
@@ -1374,6 +1923,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
+  inlineRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12,
+  },
+  segmentButton: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
   addExpenseButton: {
     minHeight: 44,
     borderRadius: 16,
@@ -1391,5 +1952,35 @@ const styles = StyleSheet.create({
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  infoPanel: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+    marginTop: 12,
+  },
+  infoText: {
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  infoSubtext: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  availabilityList: {
+    gap: 10,
+    marginTop: 14,
+  },
+  availabilityGroup: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 12,
+  },
+  availabilityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
   },
 });
