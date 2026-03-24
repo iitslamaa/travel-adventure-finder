@@ -42,6 +42,16 @@ type TripExpense = {
   splitWithIds: string[];
 };
 
+type DayPlanKind = 'country' | 'travel';
+
+type TripDayPlan = {
+  id: string;
+  date: string;
+  kind: DayPlanKind;
+  countryIso2: string | null;
+  countryName: string | null;
+};
+
 type PlannedTrip = {
   id: string;
   title: string;
@@ -51,6 +61,7 @@ type PlannedTrip = {
   countryIso2s: string[];
   friendIds: string[];
   availability: TripAvailabilityProposal[];
+  dayPlans: TripDayPlan[];
   expenses: TripExpense[];
   createdAt: string;
   updatedAt: string;
@@ -66,6 +77,7 @@ type TripDraft = {
   countryIso2s: string[];
   friendIds: string[];
   availability: TripAvailabilityProposal[];
+  dayPlans: TripDayPlan[];
   expenses: TripExpense[];
 };
 
@@ -102,6 +114,7 @@ function emptyDraft(): TripDraft {
     countryIso2s: [],
     friendIds: [],
     availability: [],
+    dayPlans: [],
     expenses: [],
   };
 }
@@ -153,6 +166,21 @@ function monthRange(value: string) {
   if (!start) return null;
   const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0, 23, 59, 59, 999));
   return { start, end };
+}
+
+function dateRange(startDate: string, endDate: string) {
+  const start = parseDayStart(startDate);
+  const end = parseDayStart(endDate);
+  if (!start || !end || start.getTime() > end.getTime()) return [];
+
+  const dates: string[] = [];
+  const current = new Date(start);
+  while (current.getTime() <= end.getTime()) {
+    dates.push(current.toISOString().slice(0, 10));
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+
+  return dates;
 }
 
 function proposalInterval(proposal: TripAvailabilityProposal) {
@@ -300,6 +328,76 @@ function availabilityBadge(
   return `Best overlap: ${range} (${best.exactParticipantCount}/${best.totalParticipantCount} exact)`;
 }
 
+function syncDayPlans(
+  existingPlans: TripDayPlan[],
+  startDate: string,
+  endDate: string,
+  countriesForTrip: { iso2: string; name: string }[]
+) {
+  const dates = dateRange(startDate, endDate);
+  if (!dates.length) return [];
+
+  const existingByDate = new Map(existingPlans.map(plan => [plan.date, plan] as const));
+  const validCountryIso2s = new Set(countriesForTrip.map(country => country.iso2));
+  const firstCountry = countriesForTrip[0] ?? null;
+
+  return dates.map(date => {
+    const existing = existingByDate.get(date);
+    if (existing?.kind === 'travel') {
+      return {
+        id: existing.id,
+        date,
+        kind: 'travel' as const,
+        countryIso2: null,
+        countryName: null,
+      };
+    }
+
+    if (
+      existing?.kind === 'country' &&
+      existing.countryIso2 &&
+      validCountryIso2s.has(existing.countryIso2)
+    ) {
+      const matchedCountry =
+        countriesForTrip.find(country => country.iso2 === existing.countryIso2) ?? null;
+      return {
+        id: existing.id,
+        date,
+        kind: 'country' as const,
+        countryIso2: existing.countryIso2,
+        countryName: matchedCountry?.name ?? existing.countryName,
+      };
+    }
+
+    if (firstCountry) {
+      return {
+        id: `${date}-${firstCountry.iso2}`,
+        date,
+        kind: 'country' as const,
+        countryIso2: firstCountry.iso2,
+        countryName: firstCountry.name,
+      };
+    }
+
+    return {
+      id: `${date}-travel`,
+      date,
+      kind: 'travel' as const,
+      countryIso2: null,
+      countryName: null,
+    };
+  });
+}
+
+function itineraryPreview(dayPlans: TripDayPlan[]) {
+  if (!dayPlans.length) return [];
+  return dayPlans.slice(0, 4).map(plan =>
+    plan.kind === 'travel'
+      ? `${formatDate(plan.date)}: Travel day`
+      : `${formatDate(plan.date)}: ${plan.countryName ?? plan.countryIso2 ?? 'Country day'}`
+  );
+}
+
 async function getDefaultCalendarSource() {
   const defaultCalendar = await Calendar.getDefaultCalendarAsync();
   if (defaultCalendar?.source) {
@@ -340,6 +438,7 @@ export default function TripPlannerScreen() {
           parsed.map(trip => ({
             ...trip,
             availability: Array.isArray(trip.availability) ? trip.availability : [],
+            dayPlans: Array.isArray(trip.dayPlans) ? trip.dayPlans : [],
             expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
           }))
         );
@@ -459,6 +558,7 @@ export default function TripPlannerScreen() {
       countryIso2s: trip.countryIso2s,
       friendIds: trip.friendIds,
       availability: Array.isArray(trip.availability) ? trip.availability : [],
+      dayPlans: Array.isArray(trip.dayPlans) ? trip.dayPlans : [],
       expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
     });
     resetDraftHelpers();
@@ -470,12 +570,31 @@ export default function TripPlannerScreen() {
   };
 
   const toggleCountry = (iso2: string) => {
-    setDraft(current => ({
-      ...current,
-      countryIso2s: current.countryIso2s.includes(iso2)
+    setDraft(current => {
+      const nextCountryIso2s = current.countryIso2s.includes(iso2)
         ? current.countryIso2s.filter(code => code !== iso2)
-        : [...current.countryIso2s, iso2],
-    }));
+        : [...current.countryIso2s, iso2];
+
+      const shouldSync =
+        current.includeDates && current.startDate.trim() && current.endDate.trim();
+      const nextDayPlans = shouldSync
+        ? syncDayPlans(
+            current.dayPlans,
+            current.startDate.trim(),
+            current.endDate.trim(),
+            nextCountryIso2s.map(code => ({
+              iso2: code,
+              name: countryNameByIso2.get(code) ?? code,
+            }))
+          )
+        : [];
+
+      return {
+        ...current,
+        countryIso2s: nextCountryIso2s,
+        dayPlans: nextDayPlans,
+      };
+    });
   };
 
   const toggleFriend = (friendId: string) => {
@@ -519,6 +638,7 @@ export default function TripPlannerScreen() {
       countryIso2s: draft.countryIso2s,
       friendIds: draft.friendIds,
       availability: draft.availability,
+      dayPlans: draft.dayPlans,
       expenses: draft.expenses,
       createdAt: draft.id ? trips.find(trip => trip.id === draft.id)?.createdAt ?? now : now,
       updatedAt: now,
@@ -534,6 +654,62 @@ export default function TripPlannerScreen() {
 
   const deleteTrip = async (tripId: string) => {
     await persistTrips(trips.filter(trip => trip.id !== tripId));
+  };
+
+  const updateTripDateField = (field: 'startDate' | 'endDate', value: string) => {
+    setDraft(current => {
+      const nextDraft = { ...current, [field]: value };
+      if (
+        !nextDraft.includeDates ||
+        !nextDraft.startDate.trim() ||
+        !nextDraft.endDate.trim()
+      ) {
+        return {
+          ...nextDraft,
+          dayPlans: [],
+        };
+      }
+
+      return {
+        ...nextDraft,
+        dayPlans: syncDayPlans(
+          current.dayPlans,
+          nextDraft.startDate.trim(),
+          nextDraft.endDate.trim(),
+          nextDraft.countryIso2s.map(iso2 => ({
+            iso2,
+            name: countryNameByIso2.get(iso2) ?? iso2,
+          }))
+        ),
+      };
+    });
+  };
+
+  const toggleIncludeDates = () => {
+    setDraft(current => {
+      const nextIncludeDates = !current.includeDates;
+      if (!nextIncludeDates || !current.startDate.trim() || !current.endDate.trim()) {
+        return {
+          ...current,
+          includeDates: nextIncludeDates,
+          dayPlans: [],
+        };
+      }
+
+      return {
+        ...current,
+        includeDates: nextIncludeDates,
+        dayPlans: syncDayPlans(
+          current.dayPlans,
+          current.startDate.trim(),
+          current.endDate.trim(),
+          current.countryIso2s.map(iso2 => ({
+            iso2,
+            name: countryNameByIso2.get(iso2) ?? iso2,
+          }))
+        ),
+      };
+    });
   };
 
   const selectedCountryNames = draft.countryIso2s.map(
@@ -678,6 +854,36 @@ export default function TripPlannerScreen() {
     return { overall, affordability, seasonality };
   };
 
+  const updateDayPlan = (
+    dayPlanId: string,
+    patch: Partial<Pick<TripDayPlan, 'kind' | 'countryIso2' | 'countryName'>>
+  ) => {
+    setDraft(current => ({
+      ...current,
+      dayPlans: current.dayPlans.map(plan => {
+        if (plan.id !== dayPlanId) return plan;
+
+        if (patch.kind === 'travel') {
+          return {
+            ...plan,
+            kind: 'travel',
+            countryIso2: null,
+            countryName: null,
+          };
+        }
+
+        const nextCountryIso2 = patch.countryIso2 ?? plan.countryIso2;
+        return {
+          ...plan,
+          kind: patch.kind ?? plan.kind,
+          countryIso2: nextCountryIso2,
+          countryName:
+            nextCountryIso2 ? countryNameByIso2.get(nextCountryIso2) ?? nextCountryIso2 : null,
+        };
+      }),
+    }));
+  };
+
   const travelersForTrip = (trip: PlannedTrip) => {
     const currentName = currentTraveler?.name ?? profile?.full_name ?? profile?.username ?? 'You';
 
@@ -758,12 +964,14 @@ export default function TripPlannerScreen() {
         trip.availability,
         tripTravelers.length
       );
+      const previewLines = itineraryPreview(trip.dayPlans);
 
       const notes = [
         trip.notes || null,
         countrySummary ? `Countries: ${countrySummary}` : null,
         friendSummary ? `Friends: ${friendSummary}` : null,
         availabilitySummary ? `Availability: ${availabilitySummary}` : null,
+        previewLines.length ? `Itinerary:\n${previewLines.join('\n')}` : null,
       ]
         .filter(Boolean)
         .join('\n');
@@ -844,6 +1052,7 @@ export default function TripPlannerScreen() {
               const totalExpenses = expenseTotal(trip);
               const tripTravelers = travelersForTrip(trip);
               const overlaps = computeAvailabilityOverlaps(trip.availability, tripTravelers);
+              const previewLines = itineraryPreview(trip.dayPlans);
               const availabilitySummary = availabilityBadge(
                 overlaps,
                 trip.availability,
@@ -978,6 +1187,19 @@ export default function TripPlannerScreen() {
                     </View>
                   ) : null}
 
+                  {previewLines.length ? (
+                    <View style={styles.expenseCard}>
+                      <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                        Itinerary
+                      </Text>
+                      {previewLines.map(line => (
+                        <Text key={line} style={[styles.tripNotes, { color: colors.textSecondary }]}>
+                          {line}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+
                   {trip.expenses.length ? (
                     <View style={styles.expenseCard}>
                       <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
@@ -1094,12 +1316,7 @@ export default function TripPlannerScreen() {
               ]}
             >
               <Pressable
-                onPress={() =>
-                  setDraft(current => ({
-                    ...current,
-                    includeDates: !current.includeDates,
-                  }))
-                }
+                onPress={toggleIncludeDates}
                 style={styles.switchRow}
               >
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
@@ -1123,7 +1340,7 @@ export default function TripPlannerScreen() {
                     </Text>
                     <TextInput
                       value={draft.startDate}
-                      onChangeText={value => setDraft(current => ({ ...current, startDate: value }))}
+                      onChangeText={value => updateTripDateField('startDate', value)}
                       placeholder="YYYY-MM-DD"
                       placeholderTextColor={colors.textMuted}
                       style={[styles.dateInput, { color: colors.textPrimary }]}
@@ -1141,7 +1358,7 @@ export default function TripPlannerScreen() {
                     </Text>
                     <TextInput
                       value={draft.endDate}
-                      onChangeText={value => setDraft(current => ({ ...current, endDate: value }))}
+                      onChangeText={value => updateTripDateField('endDate', value)}
                       placeholder="YYYY-MM-DD"
                       placeholderTextColor={colors.textMuted}
                       style={[styles.dateInput, { color: colors.textPrimary }]}
@@ -1232,6 +1449,114 @@ export default function TripPlannerScreen() {
                   );
                 })}
               </View>
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Itinerary</Text>
+              {draft.includeDates && draft.dayPlans.length ? (
+                <>
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Shape each day as a country stop or a travel day.
+                  </Text>
+
+                  <View style={styles.expenseList}>
+                    {draft.dayPlans.map(plan => (
+                      <View
+                        key={plan.id}
+                        style={[
+                          styles.itineraryCard,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                          {formatDate(plan.date)}
+                        </Text>
+
+                        <View style={styles.inlineRow}>
+                          {[
+                            { label: 'Country', value: 'country' as const },
+                            { label: 'Travel', value: 'travel' as const },
+                          ].map(option => {
+                            const selected = plan.kind === option.value;
+                            return (
+                              <Pressable
+                                key={`${plan.id}-${option.value}`}
+                                onPress={() => updateDayPlan(plan.id, { kind: option.value })}
+                                style={[
+                                  styles.segmentButton,
+                                  {
+                                    backgroundColor: selected ? colors.primary : colors.card,
+                                    borderColor: selected ? colors.primary : colors.border,
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={{
+                                    color: selected ? colors.primaryText : colors.textPrimary,
+                                    fontWeight: '700',
+                                  }}
+                                >
+                                  {option.label}
+                                </Text>
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+
+                        {plan.kind === 'country' ? (
+                          <View style={styles.chipWrap}>
+                            {draft.countryIso2s.map(iso2 => {
+                              const selected = plan.countryIso2 === iso2;
+                              const label = countryNameByIso2.get(iso2) ?? iso2;
+                              return (
+                                <Pressable
+                                  key={`${plan.id}-${iso2}`}
+                                  onPress={() =>
+                                    updateDayPlan(plan.id, {
+                                      kind: 'country',
+                                      countryIso2: iso2,
+                                      countryName: label,
+                                    })
+                                  }
+                                  style={[
+                                    styles.chip,
+                                    {
+                                      backgroundColor: selected ? colors.primary : colors.card,
+                                      borderColor: selected ? colors.primary : colors.border,
+                                    },
+                                  ]}
+                                >
+                                  <Text
+                                    style={{
+                                      color: selected ? colors.primaryText : colors.textPrimary,
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    {label}
+                                  </Text>
+                                </Pressable>
+                              );
+                            })}
+                          </View>
+                        ) : (
+                          <Text style={[styles.infoSubtext, { color: colors.textSecondary }]}>
+                            Travel day between stops
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                </>
+              ) : (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Add trip dates to generate a day-by-day itinerary.
+                </Text>
+              )}
             </View>
 
             <View
@@ -1952,6 +2277,11 @@ const styles = StyleSheet.create({
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  itineraryCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 12,
   },
   infoPanel: {
     borderWidth: 1,
