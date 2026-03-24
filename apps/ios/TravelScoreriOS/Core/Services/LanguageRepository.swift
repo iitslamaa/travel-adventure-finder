@@ -29,6 +29,17 @@ enum AppDisplayLocale {
             ?? current.identifier.split(separator: "-").first.map { String($0).lowercased() }
             ?? "en"
     }
+
+    static var numberFormattingLocale: Locale {
+        switch languageCode {
+        case "ar":
+            return Locale(identifier: "\(current.identifier)-u-nu-arab")
+        case "fa", "ur":
+            return Locale(identifier: "\(current.identifier)-u-nu-arabext")
+        default:
+            return current
+        }
+    }
 }
 
 enum AppDateFormatting {
@@ -122,7 +133,7 @@ enum AppDateFormatting {
 enum AppNumberFormatting {
     private static func localizedDigitMap() -> [Character: String] {
         let formatter = NumberFormatter()
-        formatter.locale = AppDisplayLocale.current
+        formatter.locale = AppDisplayLocale.numberFormattingLocale
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 0
         formatter.minimumFractionDigits = 0
@@ -135,7 +146,7 @@ enum AppNumberFormatting {
 
     static func integerString<T: BinaryInteger>(_ value: T) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = AppDisplayLocale.current
+        formatter.locale = AppDisplayLocale.numberFormattingLocale
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 0
         formatter.minimumFractionDigits = 0
@@ -144,7 +155,7 @@ enum AppNumberFormatting {
 
     static func integerString(_ value: Double) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = AppDisplayLocale.current
+        formatter.locale = AppDisplayLocale.numberFormattingLocale
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 0
         formatter.minimumFractionDigits = 0
