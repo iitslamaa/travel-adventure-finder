@@ -35,7 +35,7 @@ struct WrapChips: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, minHeight: 68, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
             .background(bg.opacity(0.9))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
