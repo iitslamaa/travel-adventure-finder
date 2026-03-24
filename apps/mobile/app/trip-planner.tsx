@@ -20,6 +20,7 @@ import { useScorePreferences } from '../context/ScorePreferencesContext';
 import { useCountries } from '../hooks/useCountries';
 import { useFriends } from '../hooks/useFriends';
 import { useTheme } from '../hooks/useTheme';
+import { supabase } from '../lib/supabase';
 import { seasonalityScoreForMonth } from '../utils/scoring';
 
 type AvailabilityKind = 'exact_dates' | 'flexible_month';
@@ -52,6 +53,11 @@ type TripDayPlan = {
   countryName: string | null;
 };
 
+type TravelerPassportSelection = {
+  travelerId: string;
+  passportCountryCode: string;
+};
+
 type PlannedTrip = {
   id: string;
   title: string;
@@ -62,6 +68,7 @@ type PlannedTrip = {
   friendIds: string[];
   availability: TripAvailabilityProposal[];
   dayPlans: TripDayPlan[];
+  travelerPassports: TravelerPassportSelection[];
   expenses: TripExpense[];
   createdAt: string;
   updatedAt: string;
@@ -78,6 +85,7 @@ type TripDraft = {
   friendIds: string[];
   availability: TripAvailabilityProposal[];
   dayPlans: TripDayPlan[];
+  travelerPassports: TravelerPassportSelection[];
   expenses: TripExpense[];
 };
 
@@ -94,6 +102,10 @@ type AvailabilityOverlap = {
 };
 
 type TripVisaSummary = {
+  travelerId: string;
+  travelerName: string;
+  passportCountryCode: string;
+  passportLabel: string;
   countryIso2: string;
   countryName: string;
   countryFlag: string;
@@ -102,6 +114,35 @@ type TripVisaSummary = {
   sourceUrl: string | null;
   notes: string | null;
   exceedsAllowedStay: boolean;
+};
+
+type PassportPreferences = {
+  nationalityCountryCodes: string[];
+  passportCountryCode: string | null;
+};
+
+type VisaSyncRunRow = {
+  version: number;
+  passport_from_raw: string | null;
+  passport_from_iso2: string | null;
+};
+
+type VisaRequirementRow = {
+  passport_from_raw: string;
+  passport_from_norm: string;
+  passport_from_iso2: string;
+  visitor_to_raw: string;
+  visitor_to_norm: string;
+  parent_norm: string | null;
+  is_special_subregion: boolean | null;
+  aliases_norm: string[] | null;
+  requirement: string | null;
+  allowed_stay: string | null;
+  notes: string | null;
+  version: number;
+  source: string | null;
+  source_url: string | null;
+  last_verified_at: string | null;
 };
 
 type AvailabilityDraft = {
@@ -126,6 +167,7 @@ function emptyDraft(): TripDraft {
     friendIds: [],
     availability: [],
     dayPlans: [],
+    travelerPassports: [],
     expenses: [],
   };
 }
@@ -409,6 +451,121 @@ function itineraryPreview(dayPlans: TripDayPlan[]) {
   );
 }
 
+function normalizeVisaText(text: string) {
+  const normalized = text
+    .replace(/\[\d+\]/g, ' ')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const tokens = normalized.split(' ').filter(Boolean);
+  const collapsed: string[] = [];
+
+  tokens.forEach(token => {
+    const last = collapsed[collapsed.length - 1];
+    if (token.length === 1 && last && last.length === 1) {
+      collapsed[collapsed.length - 1] = `${last}${token}`;
+      return;
+    }
+    collapsed.push(token);
+  });
+
+  return collapsed.join(' ');
+}
+
+function visaAliasesForISO2(iso2: string) {
+  switch (iso2.toUpperCase()) {
+    case 'AX': return ['aland islands', 'aland'];
+    case 'BL': return ['saint barthelemy', 'st barthelemy'];
+    case 'BS': return ['bahamas', 'the bahamas'];
+    case 'CI': return ['cote d ivoire', 'cote ivoire', 'ivory coast'];
+    case 'CW': return ['curacao', 'curaçao'];
+    case 'GM': return ['gambia', 'the gambia'];
+    case 'KR': return ['south korea', 'republic of korea', 'korea south'];
+    case 'LA': return ['laos', 'lao', 'lao peoples democratic republic'];
+    case 'MF': return ['saint martin', 'st martin', 'saint martin french part'];
+    case 'MM': return ['myanmar', 'burma'];
+    case 'PS': return ['palestine', 'palestinian territories', 'palestinian territory'];
+    case 'RE': return ['reunion', 'réunion'];
+    case 'SX': return ['sint maarten', 'saint maarten'];
+    case 'TC': return ['turks and caicos', 'turks and caicos islands'];
+    case 'TR': return ['turkey', 'turkiye', 'türkiye', 'republic of turkey', 'republic of türkiye'];
+    case 'TW': return ['taiwan', 'republic of china taiwan', 'taiwan province of china'];
+    case 'VA': return ['vatican', 'vatican city', 'holy see'];
+    case 'VI': return ['u s virgin islands', 'us virgin islands', 'virgin islands u s', 'virgin islands us'];
+    default: return [];
+  }
+}
+
+function visaTypeFromRequirement(requirement?: string | null) {
+  const value = (requirement ?? '').toLowerCase();
+  if (!value) return null;
+  if (/freedom of movement/.test(value)) return 'freedom_of_movement';
+  if (/visa[- ]?free|not required/.test(value)) return 'visa_free';
+  if (/visa on arrival|\bvoa\b/.test(value)) return 'voa';
+  if (/(^|\b)e-?visa\b|electronic travel authorization|\beta\b/.test(value)) return 'evisa';
+  if (/entry permit|required permit/.test(value)) return 'entry_permit';
+  if (/not allowed|prohibit|ban/.test(value)) return 'ban';
+  return 'visa_required';
+}
+
+function parseAllowedDays(text?: string | null) {
+  const value = (text ?? '').toLowerCase();
+  if (!value) return null;
+
+  const dayMatch = value.match(/(\d{1,4})\s*day/);
+  if (dayMatch) return Number(dayMatch[1]);
+  const weekMatch = value.match(/(\d{1,3})\s*week/);
+  if (weekMatch) return Number(weekMatch[1]) * 7;
+  const monthMatch = value.match(/(\d{1,2})\s*month/);
+  if (monthMatch) return Number(monthMatch[1]) * 30;
+  const yearMatch = value.match(/(\d{1,2})\s*year/);
+  if (yearMatch) return Number(yearMatch[1]) * 365;
+
+  return null;
+}
+
+function countryLabelForPassport(code: string) {
+  try {
+    return new Intl.DisplayNames(undefined, { type: 'region' }).of(code.toUpperCase()) ?? code.toUpperCase();
+  } catch {
+    return code.toUpperCase();
+  }
+}
+
+function matchVisaRow(
+  country: { iso2: string; name: string },
+  rows: VisaRequirementRow[]
+) {
+  const candidates = new Set(
+    [country.name, ...visaAliasesForISO2(country.iso2)].map(normalizeVisaText)
+  );
+  const containsCandidates = [...candidates].filter(
+    candidate => candidate.length >= 4 && !/^[a-z]{2,3}$/.test(candidate)
+  );
+
+  const exact = rows.find(row => candidates.has(row.visitor_to_norm));
+  if (exact) return exact;
+
+  const aliasMatch = rows.find(row =>
+    (row.aliases_norm ?? []).some(alias => candidates.has(alias))
+  );
+  if (aliasMatch) return aliasMatch;
+
+  return rows.find(row => {
+    if (row.is_special_subregion) return false;
+    if (row.parent_norm && candidates.has(row.parent_norm)) return false;
+    return containsCandidates.some(
+      candidate =>
+        row.visitor_to_norm.includes(candidate) || candidate.includes(row.visitor_to_norm)
+    );
+  });
+}
+
 function prettyVisaType(visaType?: string | null) {
   if (!visaType) return 'Visa details unavailable';
   const labelMap: Record<string, string> = {
@@ -440,30 +597,67 @@ function computeTripVisaSummaries(
     flagEmoji?: string;
     facts?: Record<string, any>;
   }[],
+  travelers: Traveler[],
+  travelerPassports: TravelerPassportSelection[],
+  visaRowsByPassport: Record<string, VisaRequirementRow[]>,
   totalDays: number | null
 ) {
-  return tripCountries
-    .map(country => {
-      const visaType = typeof country.facts?.visaType === 'string' ? country.facts.visaType : null;
-      const allowedDays =
-        typeof country.facts?.visaAllowedDays === 'number' ? country.facts.visaAllowedDays : null;
-      const exceedsAllowedStay =
-        typeof totalDays === 'number' &&
-        typeof allowedDays === 'number' &&
-        totalDays > allowedDays;
+  return travelers.flatMap(traveler => {
+    const passportCode =
+      travelerPassports.find(item => item.travelerId === traveler.id)?.passportCountryCode ?? 'US';
+    const rows = visaRowsByPassport[passportCode] ?? [];
 
-      return {
-        countryIso2: country.iso2,
-        countryName: country.name,
-        countryFlag: country.flagEmoji ?? '',
-        visaType,
-        allowedDays,
-        sourceUrl: typeof country.facts?.visaSource === 'string' ? country.facts.visaSource : null,
-        notes: typeof country.facts?.visaNotes === 'string' ? country.facts.visaNotes : null,
-        exceedsAllowedStay,
-      };
-    })
-    .filter(summary => summary.visaType && !['own_passport', 'freedom_of_movement', 'visa_free', 'voa'].includes(summary.visaType));
+    return tripCountries
+      .map(country => {
+        if (passportCode.toUpperCase() === country.iso2.toUpperCase()) {
+          return {
+            travelerId: traveler.id,
+            travelerName: traveler.name,
+            passportCountryCode: passportCode,
+            passportLabel: countryLabelForPassport(passportCode),
+            countryIso2: country.iso2,
+            countryName: country.name,
+            countryFlag: country.flagEmoji ?? '',
+            visaType: 'own_passport',
+            allowedDays: null,
+            sourceUrl: null,
+            notes: null,
+            exceedsAllowedStay: false,
+          };
+        }
+
+        const row = matchVisaRow(country, rows);
+        const visaType = visaTypeFromRequirement(row?.requirement ?? country.facts?.visaType);
+        const allowedDays =
+          parseAllowedDays(row?.allowed_stay) ??
+          parseAllowedDays(row?.requirement) ??
+          (typeof country.facts?.visaAllowedDays === 'number' ? country.facts.visaAllowedDays : null);
+        const exceedsAllowedStay =
+          typeof totalDays === 'number' &&
+          typeof allowedDays === 'number' &&
+          totalDays > allowedDays;
+
+        return {
+          travelerId: traveler.id,
+          travelerName: traveler.name,
+          passportCountryCode: passportCode,
+          passportLabel: row?.passport_from_raw ?? countryLabelForPassport(passportCode),
+          countryIso2: country.iso2,
+          countryName: country.name,
+          countryFlag: country.flagEmoji ?? '',
+          visaType,
+          allowedDays,
+          sourceUrl: row?.source_url ?? country.facts?.visaSource ?? null,
+          notes: row?.notes ?? country.facts?.visaNotes ?? null,
+          exceedsAllowedStay,
+        };
+      })
+      .filter(
+        summary =>
+          summary.visaType &&
+          !['own_passport', 'freedom_of_movement', 'visa_free', 'voa'].includes(summary.visaType)
+      );
+  });
 }
 
 function visaHeadline(
@@ -511,6 +705,36 @@ export default function TripPlannerScreen() {
   const [availabilityDraft, setAvailabilityDraft] = useState<AvailabilityDraft>(
     emptyAvailabilityDraft
   );
+  const [savedPassportPreferences, setSavedPassportPreferences] = useState<PassportPreferences>({
+    nationalityCountryCodes: [],
+    passportCountryCode: null,
+  });
+  const [visaRowsByPassport, setVisaRowsByPassport] = useState<Record<string, VisaRequirementRow[]>>(
+    {}
+  );
+
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    supabase
+      .from('user_passport_preferences')
+      .select('nationality_country_codes,passport_country_code')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Failed to load passport preferences', error);
+          return;
+        }
+
+        setSavedPassportPreferences({
+          nationalityCountryCodes: data?.nationality_country_codes ?? [],
+          passportCountryCode: data?.passport_country_code ?? null,
+        });
+      });
+  }, [session?.user?.id]);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
@@ -522,6 +746,7 @@ export default function TripPlannerScreen() {
             ...trip,
             availability: Array.isArray(trip.availability) ? trip.availability : [],
             dayPlans: Array.isArray(trip.dayPlans) ? trip.dayPlans : [],
+            travelerPassports: Array.isArray(trip.travelerPassports) ? trip.travelerPassports : [],
             expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
           }))
         );
@@ -584,6 +809,17 @@ export default function TripPlannerScreen() {
     [profile?.full_name, profile?.username, session?.user?.id]
   );
 
+  const defaultPassportCode = useMemo(
+    () =>
+      savedPassportPreferences.passportCountryCode ||
+      savedPassportPreferences.nationalityCountryCodes[0] ||
+      'US',
+    [
+      savedPassportPreferences.nationalityCountryCodes,
+      savedPassportPreferences.passportCountryCode,
+    ]
+  );
+
   const draftTravelers = useMemo(
     () => [
       ...(currentTraveler ? [currentTraveler] : []),
@@ -610,6 +846,96 @@ export default function TripPlannerScreen() {
     });
   }, []);
 
+  useEffect(() => {
+    setDraft(current => {
+      const validTravelerIds = new Set(draftTravelers.map(traveler => traveler.id));
+      const filtered = current.travelerPassports.filter(selection =>
+        validTravelerIds.has(selection.travelerId)
+      );
+      const additions = draftTravelers
+        .filter(traveler => !filtered.some(selection => selection.travelerId === traveler.id))
+        .map(traveler => ({
+          travelerId: traveler.id,
+          passportCountryCode:
+            traveler.id === currentTraveler?.id ? defaultPassportCode : 'US',
+        }));
+      const nextSelections = [...filtered, ...additions];
+
+      if (nextSelections.length === current.travelerPassports.length) {
+        const unchanged = nextSelections.every((selection, index) => {
+          const original = current.travelerPassports[index];
+          return (
+            original?.travelerId === selection.travelerId &&
+            original?.passportCountryCode === selection.passportCountryCode
+          );
+        });
+        if (unchanged) return current;
+      }
+
+      return {
+        ...current,
+        travelerPassports: nextSelections,
+      };
+    });
+  }, [currentTraveler?.id, defaultPassportCode, draftTravelers]);
+
+  const activePassportCodes = useMemo(() => {
+    const codes = [
+      defaultPassportCode,
+      ...draft.travelerPassports.map(item => item.passportCountryCode),
+      ...trips.flatMap(trip => trip.travelerPassports.map(item => item.passportCountryCode)),
+    ]
+      .map(code => code.trim().toUpperCase())
+      .filter(Boolean);
+
+    return Array.from(new Set(codes));
+  }, [defaultPassportCode, draft.travelerPassports, trips]);
+
+  useEffect(() => {
+    const missingCodes = activePassportCodes.filter(code => !visaRowsByPassport[code]);
+    if (!missingCodes.length) return;
+
+    missingCodes.forEach(code => {
+      supabase
+        .from('visa_sync_runs')
+        .select('version,passport_from_raw,passport_from_iso2')
+        .eq('passport_from_iso2', code)
+        .order('version', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(async ({ data: versionRow, error: versionError }) => {
+          if (versionError) {
+            console.error('Failed to load visa version', code, versionError);
+            return;
+          }
+
+          const typedVersionRow = versionRow as VisaSyncRunRow | null;
+          if (!typedVersionRow?.version) {
+            setVisaRowsByPassport(current => ({ ...current, [code]: [] }));
+            return;
+          }
+
+          const { data: requirementRows, error: requirementsError } = await supabase
+            .from('visa_requirements')
+            .select(
+              'passport_from_raw,passport_from_norm,passport_from_iso2,visitor_to_raw,visitor_to_norm,parent_norm,is_special_subregion,aliases_norm,requirement,allowed_stay,notes,version,source,source_url,last_verified_at'
+            )
+            .eq('passport_from_iso2', code)
+            .eq('version', typedVersionRow.version);
+
+          if (requirementsError) {
+            console.error('Failed to load visa requirements', code, requirementsError);
+            return;
+          }
+
+          setVisaRowsByPassport(current => ({
+            ...current,
+            [code]: (requirementRows as VisaRequirementRow[]) ?? [],
+          }));
+        });
+    });
+  }, [activePassportCodes, visaRowsByPassport]);
+
   const persistTrips = async (nextTrips: PlannedTrip[]) => {
     setTrips(nextTrips);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextTrips));
@@ -625,7 +951,12 @@ export default function TripPlannerScreen() {
   };
 
   const openNewTrip = () => {
-    setDraft(emptyDraft());
+    setDraft({
+      ...emptyDraft(),
+      travelerPassports: currentTraveler
+        ? [{ travelerId: currentTraveler.id, passportCountryCode: defaultPassportCode }]
+        : [],
+    });
     resetDraftHelpers();
     setModalVisible(true);
   };
@@ -642,6 +973,11 @@ export default function TripPlannerScreen() {
       friendIds: trip.friendIds,
       availability: Array.isArray(trip.availability) ? trip.availability : [],
       dayPlans: Array.isArray(trip.dayPlans) ? trip.dayPlans : [],
+      travelerPassports: Array.isArray(trip.travelerPassports)
+        ? trip.travelerPassports
+        : currentTraveler
+          ? [{ travelerId: currentTraveler.id, passportCountryCode: defaultPassportCode }]
+          : [],
       expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
     });
     resetDraftHelpers();
@@ -697,6 +1033,22 @@ export default function TripPlannerScreen() {
         availability: current.availability.filter(proposal =>
           allowedParticipantIds.has(proposal.participantId)
         ),
+        travelerPassports: [
+          ...current.travelerPassports.filter(selection =>
+            allowedParticipantIds.has(selection.travelerId)
+          ),
+          ...nextFriendIds
+            .filter(
+              id => !current.travelerPassports.some(selection => selection.travelerId === id)
+            )
+            .map(id => ({ travelerId: id, passportCountryCode: 'US' })),
+          ...(currentTraveler &&
+          !current.travelerPassports.some(
+            selection => selection.travelerId === currentTraveler.id
+          )
+            ? [{ travelerId: currentTraveler.id, passportCountryCode: defaultPassportCode }]
+            : []),
+        ],
       };
     });
   };
@@ -722,6 +1074,7 @@ export default function TripPlannerScreen() {
       friendIds: draft.friendIds,
       availability: draft.availability,
       dayPlans: draft.dayPlans,
+      travelerPassports: draft.travelerPassports,
       expenses: draft.expenses,
       createdAt: draft.id ? trips.find(trip => trip.id === draft.id)?.createdAt ?? now : now,
       updatedAt: now,
@@ -943,6 +1296,9 @@ export default function TripPlannerScreen() {
   );
   const draftVisaSummaries = computeTripVisaSummaries(
     countries.filter(country => draft.countryIso2s.includes(country.iso2)),
+    draftTravelers,
+    draft.travelerPassports,
+    visaRowsByPassport,
     draftTripDays
   );
 
@@ -973,6 +1329,21 @@ export default function TripPlannerScreen() {
             nextCountryIso2 ? countryNameByIso2.get(nextCountryIso2) ?? nextCountryIso2 : null,
         };
       }),
+    }));
+  };
+
+  const updateTravelerPassport = (travelerId: string, passportCountryCode: string) => {
+    setDraft(current => ({
+      ...current,
+      travelerPassports: current.travelerPassports.some(
+        selection => selection.travelerId === travelerId
+      )
+        ? current.travelerPassports.map(selection =>
+            selection.travelerId === travelerId
+              ? { ...selection, passportCountryCode }
+              : selection
+          )
+        : [...current.travelerPassports, { travelerId, passportCountryCode }],
     }));
   };
 
@@ -1060,6 +1431,9 @@ export default function TripPlannerScreen() {
       const totalDays = tripLengthDays(trip.startDate, trip.endDate);
       const visaSummaries = computeTripVisaSummaries(
         countries.filter(country => trip.countryIso2s.includes(country.iso2)),
+        tripTravelers,
+        trip.travelerPassports,
+        visaRowsByPassport,
         totalDays
       );
 
@@ -1074,7 +1448,7 @@ export default function TripPlannerScreen() {
               .slice(0, 3)
               .map(
                 summary =>
-                  `${summary.countryName}: ${prettyVisaType(summary.visaType)}${
+                  `${summary.travelerName} (${summary.passportLabel}) · ${summary.countryName}: ${prettyVisaType(summary.visaType)}${
                     summary.allowedDays ? ` (${summary.allowedDays} days)` : ''
                   }${summary.exceedsAllowedStay ? ' - trip may exceed allowed stay' : ''}`
               )
@@ -1164,6 +1538,9 @@ export default function TripPlannerScreen() {
               const totalDays = tripLengthDays(trip.startDate, trip.endDate);
               const visaSummaries = computeTripVisaSummaries(
                 countries.filter(country => trip.countryIso2s.includes(country.iso2)),
+                tripTravelers,
+                trip.travelerPassports,
+                visaRowsByPassport,
                 totalDays
               );
               const availabilitySummary = availabilityBadge(
@@ -1345,7 +1722,7 @@ export default function TripPlannerScreen() {
                     </Text>
                     {visaSummaries.slice(0, 3).map(summary => (
                       <Text
-                        key={summary.countryIso2}
+                        key={`${summary.travelerId}-${summary.countryIso2}`}
                         style={[
                           styles.infoSubtext,
                           {
@@ -1353,8 +1730,8 @@ export default function TripPlannerScreen() {
                           },
                         ]}
                       >
-                        {summary.countryFlag ? `${summary.countryFlag} ` : ''}
-                        {summary.countryName}: {prettyVisaType(summary.visaType)}
+                        {summary.travelerName} · {summary.passportLabel}: {summary.countryFlag ? `${summary.countryFlag} ` : ''}
+                        {summary.countryName} {prettyVisaType(summary.visaType)}
                         {summary.allowedDays ? ` · ${summary.allowedDays} days` : ''}
                         {summary.exceedsAllowedStay ? ' · trip may be too long' : ''}
                       </Text>
@@ -1610,6 +1987,90 @@ export default function TripPlannerScreen() {
                   );
                 })}
               </View>
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                Passports
+              </Text>
+              <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                Choose the passport to use for each traveler when calculating visa prep.
+              </Text>
+
+              {draftTravelers.length ? (
+                <View style={styles.expenseList}>
+                  {draftTravelers.map(traveler => {
+                    const selectedPassport =
+                      draft.travelerPassports.find(
+                        selection => selection.travelerId === traveler.id
+                      )?.passportCountryCode ??
+                      (traveler.id === currentTraveler?.id ? defaultPassportCode : 'US');
+
+                    return (
+                      <View
+                        key={`passport-${traveler.id}`}
+                        style={[
+                          styles.itineraryCard,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                          {traveler.name}
+                        </Text>
+                        <Text style={[styles.infoSubtext, { color: colors.textSecondary }]}>
+                          Passport used for visa checks
+                        </Text>
+                        <View style={styles.chipWrap}>
+                          {[
+                            selectedPassport,
+                            ...(traveler.id === currentTraveler?.id
+                              ? savedPassportPreferences.nationalityCountryCodes
+                              : []),
+                            ...plannerCountries.slice(0, 12).map(country => country.iso2),
+                          ]
+                            .map(code => code.toUpperCase())
+                            .filter((code, index, array) => array.indexOf(code) === index)
+                            .slice(0, 12)
+                            .map(code => {
+                              const selected = selectedPassport === code;
+                              return (
+                                <Pressable
+                                  key={`${traveler.id}-${code}`}
+                                  onPress={() => updateTravelerPassport(traveler.id, code)}
+                                  style={[
+                                    styles.chip,
+                                    {
+                                      backgroundColor: selected ? colors.primary : colors.card,
+                                      borderColor: selected ? colors.primary : colors.border,
+                                    },
+                                  ]}
+                                >
+                                  <Text
+                                    style={{
+                                      color: selected ? colors.primaryText : colors.textPrimary,
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    {countryLabelForPassport(code)}
+                                  </Text>
+                                </Pressable>
+                              );
+                            })}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Add travelers before setting passport context.
+                </Text>
+              )}
             </View>
 
             <View
@@ -2080,7 +2541,7 @@ export default function TripPlannerScreen() {
                 {draftVisaSummaries.length ? (
                   draftVisaSummaries.map(summary => (
                     <Text
-                      key={`draft-visa-${summary.countryIso2}`}
+                      key={`draft-visa-${summary.travelerId}-${summary.countryIso2}`}
                       style={[
                         styles.infoSubtext,
                         {
@@ -2088,8 +2549,8 @@ export default function TripPlannerScreen() {
                         },
                       ]}
                     >
-                      {summary.countryFlag ? `${summary.countryFlag} ` : ''}
-                      {summary.countryName}: {prettyVisaType(summary.visaType)}
+                      {summary.travelerName} · {summary.passportLabel}: {summary.countryFlag ? `${summary.countryFlag} ` : ''}
+                      {summary.countryName} {prettyVisaType(summary.visaType)}
                       {summary.allowedDays ? ` · ${summary.allowedDays} days` : ''}
                       {summary.exceedsAllowedStay ? ' · trip may be too long' : ''}
                     </Text>
