@@ -529,6 +529,15 @@ export const COUNTRY_SEASONALITY_DEFINITIONS: Record<
     notes: "Late spring and early fall are best for cities and countryside; winters can be very cold inland.",
   },
 
+  // Kosovo
+  XK: {
+    best: [5, 6, 9],
+    shoulder: [4, 7, 8, 10],
+    avoid: [1, 2],
+    notes:
+      "Late spring and early fall are usually the most comfortable for cities and mountain trips, with warm days and fewer weather extremes than midsummer or winter.",
+  },
+
   // Bulgaria
   BG: {
     best: [5, 6, 9],

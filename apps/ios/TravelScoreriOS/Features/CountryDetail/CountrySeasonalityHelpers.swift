@@ -30,22 +30,7 @@ enum CountrySeasonalityHelpers {
     }
 
     static func body(for country: Country, selectedMonth: Int? = nil) -> String {
-        if let notes = notes(for: country) {
-            return notes
-        }
-
-        switch country.resolvedSeasonalityLabel(for: selectedMonth) {
-        case "best":
-            return String(localized: "country_detail.seasonality.body.best")
-        case "good":
-            return String(localized: "country_detail.seasonality.body.good")
-        case "shoulder":
-            return String(localized: "country_detail.seasonality.body.shoulder")
-        case "poor":
-            return String(localized: "country_detail.seasonality.body.poor")
-        default:
-            return String(localized: "country_detail.seasonality.body.current")
-        }
+        notes(for: country) ?? ""
     }
 
     static func shortMonthName(for month: Int) -> String {
