@@ -1,9 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import * as Calendar from 'expo-calendar';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -66,6 +69,17 @@ function formatDate(dateValue: string | null) {
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+async function getDefaultCalendarSource() {
+  const defaultCalendar = await Calendar.getDefaultCalendarAsync();
+  if (defaultCalendar?.source) {
+    return defaultCalendar.source;
+  }
+
+  const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+  const editable = calendars.find(calendar => calendar.allowsModifications);
+  return editable?.source;
 }
 
 export default function TripPlannerScreen() {
@@ -255,6 +269,91 @@ export default function TripPlannerScreen() {
     return { overall, affordability, seasonality };
   };
 
+  const addTripToCalendar = async (trip: PlannedTrip) => {
+    if (!trip.startDate || !trip.endDate) {
+      Alert.alert('Missing dates', 'Add trip dates before sending this to your calendar.');
+      return;
+    }
+
+    try {
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Calendar access needed',
+          'Allow calendar access to create an event from this trip.'
+        );
+        return;
+      }
+
+      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+      let writableCalendar = calendars.find(calendar => calendar.allowsModifications);
+
+      if (!writableCalendar) {
+        const sourceMaybe =
+          Platform.OS === 'ios'
+            ? await getDefaultCalendarSource()
+            : {
+                isLocalAccount: true,
+                name: 'Travel AF',
+                type: Calendar.SourceType.LOCAL,
+              };
+
+        if (!sourceMaybe) {
+          Alert.alert('No calendar found', 'No writable calendar is available on this device.');
+          return;
+        }
+
+        const source: Calendar.Source = sourceMaybe;
+
+        const calendarId = await Calendar.createCalendarAsync({
+          title: 'Travel AF Trips',
+          color: '#065F46',
+          entityType: Calendar.EntityTypes.EVENT,
+          sourceId: source.id,
+          source,
+          name: 'Travel AF Trips',
+          ownerAccount: 'personal',
+          accessLevel: Calendar.CalendarAccessLevel.OWNER,
+        });
+
+        writableCalendar = { id: calendarId } as Calendar.Calendar;
+      }
+
+      if (!writableCalendar) {
+        Alert.alert('No calendar found', 'Unable to find a writable calendar.');
+        return;
+      }
+
+      const countrySummary = trip.countryIso2s
+        .map(iso2 => countryNameByIso2.get(iso2) ?? iso2)
+        .join(', ');
+      const friendSummary = trip.friendIds
+        .map(friendId => friendNameById.get(friendId) ?? 'Friend')
+        .join(', ');
+
+      const notes = [
+        trip.notes || null,
+        countrySummary ? `Countries: ${countrySummary}` : null,
+        friendSummary ? `Friends: ${friendSummary}` : null,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      await Calendar.createEventAsync(writableCalendar.id, {
+        title: trip.title,
+        startDate: new Date(trip.startDate),
+        endDate: new Date(trip.endDate),
+        allDay: true,
+        notes,
+      });
+
+      Alert.alert('Added to calendar', 'Your trip has been added to the device calendar.');
+    } catch (error) {
+      console.error('Calendar create error', error);
+      Alert.alert('Calendar error', 'Unable to create the calendar event right now.');
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
@@ -353,6 +452,24 @@ export default function TripPlannerScreen() {
                     </View>
 
                     <View style={styles.tripActions}>
+                      <Pressable
+                        onPress={() => addTripToCalendar(trip)}
+                        disabled={!trip.startDate || !trip.endDate}
+                      >
+                        <Text
+                          style={[
+                            styles.tripActionText,
+                            {
+                              color:
+                                trip.startDate && trip.endDate
+                                  ? colors.primary
+                                  : colors.textMuted,
+                            },
+                          ]}
+                        >
+                          Calendar
+                        </Text>
+                      </Pressable>
                       <Pressable onPress={() => openEditTrip(trip)}>
                         <Text
                           style={[styles.tripActionText, { color: colors.primary }]}
