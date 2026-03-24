@@ -11,6 +11,7 @@ import AdvisoryCard from './components/AdvisoryCard';
 import SeasonalityCard from './components/SeasonalityCard';
 import VisaCard from './components/VisaCard';
 import AffordabilityCard from './components/AffordabilityCard';
+import LanguageCompatibilityCard from './components/LanguageCompatibilityCard';
 import { lightColors, darkColors } from '../../../theme/colors';
 import { useScorePreferences } from '../../../context/ScorePreferencesContext';
 import { scoreCountry, seasonalityScoreForMonth } from '../../../utils/scoring';
@@ -146,6 +147,13 @@ export default function CountryDetailScreen() {
         normalizedLabel={`Normalized: ${country.facts?.affordability ?? 0}`}
         weightOnlyLabel={'Weight: 15%'}
       />
+
+      {typeof country.facts?.languageCompatibilityScore === 'number' ? (
+        <LanguageCompatibilityCard
+          score={country.facts.languageCompatibilityScore}
+          weightLabel={`Your languages · ${Math.round(weights.language * 100)}%`}
+        />
+      ) : null}
     </ScrollView>
   );
 }

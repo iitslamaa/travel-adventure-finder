@@ -13,9 +13,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { useScorePreferences } from '../context/ScorePreferencesContext';
 import { useCountries } from '../hooks/useCountries';
 import { useFriends } from '../hooks/useFriends';
 import { useTheme } from '../hooks/useTheme';
+import { seasonalityScoreForMonth } from '../utils/scoring';
 
 type PlannedTrip = {
   id: string;
@@ -70,6 +72,7 @@ export default function TripPlannerScreen() {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
   const { bucketIsoCodes, visitedIsoCodes } = useAuth();
+  const { selectedMonth } = useScorePreferences();
   const { countries } = useCountries();
   const { friends } = useFriends();
 
@@ -225,6 +228,33 @@ export default function TripPlannerScreen() {
     friendId => friendNameById.get(friendId) ?? 'Friend'
   );
 
+  const tripSummary = (trip: PlannedTrip) => {
+    const tripCountries = countries.filter(country =>
+      trip.countryIso2s.includes(country.iso2)
+    );
+
+    if (!tripCountries.length) {
+      return null;
+    }
+
+    const average = (values: number[]) =>
+      Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+
+    const overall = average(
+      tripCountries.map(country => country.scoreTotal ?? 0).filter(value => Number.isFinite(value))
+    );
+    const affordability = average(
+      tripCountries
+        .map(country => country.facts?.affordability)
+        .filter((value): value is number => typeof value === 'number')
+    );
+    const seasonality = average(
+      tripCountries.map(country => seasonalityScoreForMonth(country, selectedMonth))
+    );
+
+    return { overall, affordability, seasonality };
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
@@ -293,6 +323,7 @@ export default function TripPlannerScreen() {
               const friendSummary = trip.friendIds
                 .map(friendId => friendNameById.get(friendId) ?? 'Friend')
                 .join(', ');
+              const summary = tripSummary(trip);
 
               return (
                 <View
@@ -347,6 +378,52 @@ export default function TripPlannerScreen() {
                     <Text style={[styles.tripDetail, { color: colors.textPrimary }]}>
                       Friends: {friendSummary}
                     </Text>
+                  ) : null}
+
+                  {summary ? (
+                    <View style={styles.statRow}>
+                      <View
+                        style={[
+                          styles.statPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          Overall
+                        </Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                          {summary.overall}
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.statPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          Budget
+                        </Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                          {summary.affordability}
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.statPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          Season
+                        </Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                          {summary.seasonality}
+                        </Text>
+                      </View>
+                    </View>
                   ) : null}
 
                   {trip.notes ? (
@@ -557,6 +634,31 @@ export default function TripPlannerScreen() {
                 </Text>
               ) : null}
 
+              {draft.countryIso2s.length ? (
+                <View style={styles.statRow}>
+                  {countries
+                    .filter(country => draft.countryIso2s.includes(country.iso2))
+                    .slice(0, 3)
+                    .map(country => (
+                      <View
+                        key={country.iso2}
+                        style={[
+                          styles.statPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          {country.flagEmoji ? `${country.flagEmoji} ` : ''}
+                          {country.iso2}
+                        </Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                          {country.scoreTotal ?? 0}
+                        </Text>
+                      </View>
+                    ))}
+                </View>
+              ) : null}
+
               <View style={styles.chipWrap}>
                 {filteredCountries.map(country => {
                   const selected = draft.countryIso2s.includes(country.iso2);
@@ -745,6 +847,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: 10,
+  },
+  statRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12,
+  },
+  statPill: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minWidth: 84,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: '800',
   },
   modalHeader: {
     flexDirection: 'row',
