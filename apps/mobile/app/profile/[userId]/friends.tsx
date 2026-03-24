@@ -8,8 +8,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { supabase } from '../../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import AuthGate from '../../../components/AuthGate';
 import { lightColors, darkColors } from '../../../theme/colors';
@@ -22,14 +20,17 @@ export default function FriendsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { userId } = useLocalSearchParams();
-  if (typeof userId !== 'string') return null;
+  const targetUserId = typeof userId === 'string' ? userId : undefined;
 
   const scheme = useColorScheme();
   const colors = scheme === 'dark' ? darkColors : lightColors;
 
   const { isGuest } = useAuth();
+  const { friends, loading } = useFriends(targetUserId);
 
-  const { friends, loading } = useFriends(userId);
+  if (!targetUserId) {
+    return null;
+  }
 
   if (isGuest) {
     return (
@@ -131,7 +132,6 @@ export default function FriendsScreen() {
           </View>
         ) : (
           <>
-            {/* Header */}
             <View style={styles.headerRow}>
               <Pressable onPress={() => router.back()}>
                 <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
@@ -147,12 +147,11 @@ export default function FriendsScreen() {
               </Text>
             </View>
 
-            {/* Friends List Card */}
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               <FlatList
                 data={friends}
                 renderItem={renderItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={item => item.id}
                 contentContainerStyle={{ paddingBottom: 16 }}
                 ListEmptyComponent={
                   <Text

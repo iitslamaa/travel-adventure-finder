@@ -88,7 +88,7 @@ export default function PlanningScreen() {
           title="Trip Planner"
           subtitle="Save trip ideas with dates, countries, and travel buddies."
           icon="airplane-outline"
-          onPress={() => router.push('/trip-planner')}
+          onPress={() => router.push('/trip-planner' as any)}
         />
       </View>
     </ScrollView>

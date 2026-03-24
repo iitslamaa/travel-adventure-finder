@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { ScrollView, View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import MonthSelector from "../../components/whenToGo/MonthSelector";
@@ -6,11 +6,11 @@ import SummaryPills from "../../components/whenToGo/SummaryPills";
 import SeasonSection from "../../components/whenToGo/SeasonSection";
 import { useCountries } from "../../hooks/useCountries";
 import { getWhenToGoBuckets } from "../../utils/whenToGoLogic";
+import { useScorePreferences } from "../../context/ScorePreferencesContext";
 
 export default function WhenToGoScreen() {
-  const [selectedMonth, setSelectedMonth] = useState(1); // 0 = Jan
-
   const { countries, loading } = useCountries();
+  const { selectedMonth, setSelectedMonth } = useScorePreferences();
 
   const colors = useTheme();
 

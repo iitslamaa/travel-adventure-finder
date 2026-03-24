@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getResizedAvatarUrl } from '../utils/avatar';
 
@@ -22,10 +22,13 @@ export function useProfileById(userId?: string | string[]) {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!id) return;
+  const refresh = useCallback(async () => {
+    if (!id) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
 
-    async function run() {
       setLoading(true);
 
       const { data, error } = await supabase
@@ -60,10 +63,11 @@ export function useProfileById(userId?: string | string[]) {
       }
 
       setLoading(false);
-    }
-
-    run();
   }, [id]);
 
-  return { profile, loading };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { profile, loading, refresh };
 }

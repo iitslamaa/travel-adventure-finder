@@ -3,6 +3,7 @@ import { View, StyleSheet, useColorScheme } from 'react-native';
 import { Stack } from 'expo-router';
 import { Video, ResizeMode } from 'expo-av';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { ScorePreferencesProvider } from '../context/ScorePreferencesContext';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../hooks/useTheme';
@@ -67,7 +68,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <RootLayoutInner />
+        <ScorePreferencesProvider>
+          <RootLayoutInner />
+        </ScorePreferencesProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

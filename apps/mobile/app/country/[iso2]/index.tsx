@@ -12,10 +12,13 @@ import SeasonalityCard from './components/SeasonalityCard';
 import VisaCard from './components/VisaCard';
 import AffordabilityCard from './components/AffordabilityCard';
 import { lightColors, darkColors } from '../../../theme/colors';
+import { useScorePreferences } from '../../../context/ScorePreferencesContext';
+import { scoreCountry, seasonalityScoreForMonth } from '../../../utils/scoring';
 
 export default function CountryDetailScreen() {
   const { iso2, name } = useLocalSearchParams<{ iso2: string; name?: string }>();
   const navigation = useNavigation();
+  const { weights, selectedMonth } = useScorePreferences();
 
   const scheme = useColorScheme();
   const colors = scheme === 'dark' ? darkColors : lightColors;
@@ -76,7 +79,11 @@ export default function CountryDetailScreen() {
     );
   }
 
-  const score = country.scoreTotal ?? country.facts?.scoreTotal ?? 0;
+  const score =
+    scoreCountry(country, weights, selectedMonth) ??
+    country.scoreTotal ??
+    country.facts?.scoreTotal ??
+    0;
   const advisoryLevel = country.facts?.advisoryLevel ?? '—';
 
   const advisoryScore =
@@ -113,11 +120,12 @@ export default function CountryDetailScreen() {
       />
 
       <SeasonalityCard
-        score={country.facts?.seasonality ?? 50}
+        score={seasonalityScoreForMonth(country, selectedMonth)}
         bestMonths={country.facts?.fmSeasonalityBestMonths ?? []}
         description={country.facts?.fmSeasonalityNotes}
-        normalizedLabel={`Normalized: ${country.facts?.seasonality ?? 50}`}
+        normalizedLabel={`Normalized: ${seasonalityScoreForMonth(country, selectedMonth)}`}
         weightOnlyLabel={'Weight: 5%'}
+        weightLabel={`${new Date(2026, selectedMonth, 1).toLocaleString('en-US', { month: 'short' })} · 5%`}
       />
 
       <VisaCard

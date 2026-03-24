@@ -29,7 +29,7 @@ export default function MoreScreen() {
           styles.row,
           { borderBottomColor: colors.border, backgroundColor: colors.card },
         ]}
-        onPress={() => router.push('/feedback')}
+        onPress={() => router.push('/feedback' as any)}
       >
         <View style={styles.rowLeft}>
           <Ionicons

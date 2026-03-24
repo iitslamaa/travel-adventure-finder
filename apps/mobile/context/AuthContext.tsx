@@ -11,8 +11,8 @@ export type Profile = {
   onboarding_completed: boolean | null;
   avatar_url?: string | null;
   next_destination?: string | null;
-  travel_mode?: string | null;
-  travel_style?: string | null;
+  travel_mode?: string[] | null;
+  travel_style?: string[] | null;
   languages?: any[] | null;
   lived_countries?: string[] | null;
 };

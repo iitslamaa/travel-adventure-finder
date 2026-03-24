@@ -64,19 +64,40 @@ export default function DiscoveryScreen() {
         },
       ]}
     >
-      <Text style={[styles.title, { color: colors.textPrimary }]}>
-        Discovery
-      </Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        Explore countries, seasonality, and the score map from one place.
-      </Text>
+      <View style={styles.headerRow}>
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
+            Discovery
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Explore countries, seasonality, and the score map from one place.
+          </Text>
+        </View>
+
+        <Pressable
+          onPress={() => router.push('/weights' as any)}
+          style={[
+            styles.settingsButton,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Ionicons
+            name="options-outline"
+            size={20}
+            color={colors.textPrimary}
+          />
+        </Pressable>
+      </View>
 
       <View style={styles.stack}>
         <DiscoveryCard
           title="Countries"
           subtitle="Browse and rank every destination."
           icon="globe-outline"
-          onPress={() => router.push('/countries')}
+          onPress={() => router.push('/countries' as any)}
         />
 
         <DiscoveryCard
@@ -106,11 +127,24 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
   subtitle: {
     fontSize: 15,
     lineHeight: 22,
     marginTop: 8,
     marginBottom: 24,
+  },
+  settingsButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
   },
   stack: {
     gap: 14,

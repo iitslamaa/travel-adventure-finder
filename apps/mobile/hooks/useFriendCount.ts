@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function useFriendCount(userId?: string | string[]) {
@@ -7,10 +7,13 @@ export function useFriendCount(userId?: string | string[]) {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!id) return;
+  const refresh = useCallback(async () => {
+    if (!id) {
+      setCount(0);
+      setLoading(false);
+      return;
+    }
 
-    async function run() {
       setLoading(true);
 
       // fetch rows and count client-side (simple + reliable)
@@ -32,10 +35,11 @@ export function useFriendCount(userId?: string | string[]) {
       }
 
       setLoading(false);
-    }
-
-    run();
   }, [id]);
 
-  return { count, loading };
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return { count, loading, refresh };
 }

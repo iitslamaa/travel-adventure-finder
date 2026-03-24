@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useScorePreferences } from '../context/ScorePreferencesContext';
 import { Country } from '../types/Country';
+import { applyScoreToCountry } from '../utils/scoring';
 
 function iso2ToFlagEmoji(iso2?: string) {
   if (!iso2 || iso2.length !== 2) return undefined;
@@ -11,8 +13,9 @@ function iso2ToFlagEmoji(iso2?: string) {
 }
 
 export function useCountries() {
-  const [countries, setCountries] = useState<Country[]>([]);
+  const [rawCountries, setRawCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
+  const { weights, selectedMonth } = useScorePreferences();
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -27,7 +30,6 @@ export function useCountries() {
         );
 
         if (!res.ok) {
-          const errorText = await res.text();
           throw new Error(`API error: ${res.status}`);
         }
 
@@ -41,8 +43,8 @@ export function useCountries() {
             }))
           : [];
 
-        setCountries(mapped);
-      } catch (error) {
+        setRawCountries(mapped);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -50,6 +52,14 @@ export function useCountries() {
 
     fetchCountries();
   }, []);
+
+  const countries = useMemo(
+    () =>
+      rawCountries.map(country =>
+        applyScoreToCountry(country, weights, selectedMonth)
+      ),
+    [rawCountries, selectedMonth, weights]
+  );
 
   return { countries, loading };
 }
