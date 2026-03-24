@@ -67,7 +67,7 @@ struct CountryVisaCard: View {
                 // Score pill + description
                 HStack(spacing: 12) {
                     if let ease = country.visaEaseScore {
-                        Text("\(ease)")
+                        Text(AppNumberFormatting.integerString(ease))
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 6)

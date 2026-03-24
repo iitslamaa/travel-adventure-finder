@@ -119,6 +119,26 @@ enum AppDateFormatting {
     }
 }
 
+enum AppNumberFormatting {
+    static func integerString<T: BinaryInteger>(_ value: T) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = AppDisplayLocale.current
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        formatter.minimumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: Int64(value))) ?? String(value)
+    }
+
+    static func integerString(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = AppDisplayLocale.current
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        formatter.minimumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: value)) ?? String(format: "%.0f", value)
+    }
+}
+
 final class LanguageRepository {
 
     static let shared = LanguageRepository()

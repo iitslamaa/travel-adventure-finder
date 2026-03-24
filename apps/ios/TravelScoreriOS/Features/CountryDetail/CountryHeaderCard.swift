@@ -31,7 +31,7 @@ struct CountryHeaderCard: View {
             Spacer()
 
             if let score = country.score {
-                Text("\(score)")
+                Text(AppNumberFormatting.integerString(score))
                     .font(.title2.bold())
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)

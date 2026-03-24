@@ -1156,7 +1156,7 @@ private struct CountryLanguageCompatibilityCard: View {
             }
 
             HStack(spacing: 12) {
-                Text("\(result.score)")
+                Text(AppNumberFormatting.integerString(result.score))
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)

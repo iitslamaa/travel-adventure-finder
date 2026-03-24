@@ -40,7 +40,7 @@ struct CountryAdvisoryCard: View {
                 // Score pill + description
                 HStack(spacing: 12) {
 
-                    Text("\(advisoryScore)")
+                    Text(AppNumberFormatting.integerString(advisoryScore))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)

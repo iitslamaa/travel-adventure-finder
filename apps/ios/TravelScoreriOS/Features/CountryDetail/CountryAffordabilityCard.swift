@@ -28,7 +28,7 @@ struct CountryAffordabilityCard: View {
             // Score pill + description
             HStack(spacing: 12) {
                 if let affordabilityScore = country.affordabilityScore {
-                    Text("\(affordabilityScore)")
+                    Text(AppNumberFormatting.integerString(affordabilityScore))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)

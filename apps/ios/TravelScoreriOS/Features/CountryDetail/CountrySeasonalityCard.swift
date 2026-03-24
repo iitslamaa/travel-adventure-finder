@@ -32,7 +32,7 @@ struct CountrySeasonalityCard: View {
             // Score pill + description
             HStack(spacing: 12) {
                 if let seasonalityScore = displayedSeasonalityScore {
-                    Text("\(seasonalityScore)")
+                    Text(AppNumberFormatting.integerString(seasonalityScore))
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)

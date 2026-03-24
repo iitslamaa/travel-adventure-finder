@@ -93,7 +93,7 @@ struct WhenToGoCountryDrawerView: View {
                     Spacer()
 
                     if let seasonalityScore = country.country.resolvedSeasonalityScore(for: weightsStore.selectedMonth) {
-                        Text("\(seasonalityScore)")
+                        Text(AppNumberFormatting.integerString(seasonalityScore))
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
