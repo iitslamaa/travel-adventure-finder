@@ -4,7 +4,7 @@ import {
   View,
   ActivityIndicator,
 } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import HeaderCard from './components/HeaderCard';
 import AdvisoryCard from './components/AdvisoryCard';
@@ -12,9 +12,11 @@ import SeasonalityCard from './components/SeasonalityCard';
 import VisaCard from './components/VisaCard';
 import AffordabilityCard from './components/AffordabilityCard';
 import LanguageCompatibilityCard from './components/LanguageCompatibilityCard';
+import FriendEngagementCard from './components/FriendEngagementCard';
 import { lightColors, darkColors } from '../../../theme/colors';
 import { useScorePreferences } from '../../../context/ScorePreferencesContext';
 import { scoreCountry, seasonalityScoreForMonth } from '../../../utils/scoring';
+import { useCountryFriendEngagement } from '../../../hooks/useCountryFriendEngagement';
 
 export default function CountryDetailScreen() {
   const { iso2, name } = useLocalSearchParams<{ iso2: string; name?: string }>();
@@ -26,6 +28,9 @@ export default function CountryDetailScreen() {
 
   const [country, setCountry] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const { engagement, loading: engagementLoading } = useCountryFriendEngagement(
+    typeof iso2 === 'string' ? iso2 : undefined
+  );
 
   useEffect(() => {
     if (name) {
@@ -154,6 +159,15 @@ export default function CountryDetailScreen() {
           weightLabel={`Your languages · ${Math.round(weights.language * 100)}%`}
         />
       ) : null}
+
+      <FriendEngagementCard
+        totalFriends={engagement.totalFriends}
+        visited={engagement.visited}
+        bucketList={engagement.bucketList}
+        fromHere={engagement.fromHere}
+        loading={engagementLoading}
+        onSelectProfile={userId => router.push(`/profile/${userId}`)}
+      />
     </ScrollView>
   );
 }
