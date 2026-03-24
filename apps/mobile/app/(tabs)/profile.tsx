@@ -20,6 +20,7 @@ import DisclosureRow from '../../components/profile/DisclosureRow';
 import CollapsibleCountrySection from '../../components/profile/CollapsibleCountrySection';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
+import { formatLanguageList } from '../../utils/language';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -111,13 +112,7 @@ export default function ProfileScreen() {
     );
   }
 
-  const languages =
-    Array.isArray(profile?.languages) && profile.languages.length
-      ? profile.languages
-          .map((l: any) => (typeof l === 'string' ? l : l?.name))
-          .filter(Boolean)
-          .join(' · ')
-      : '—';
+  const languages = formatLanguageList(profile?.languages);
 
   const travelMode =
     Array.isArray(profile?.travel_mode) && profile.travel_mode.length
