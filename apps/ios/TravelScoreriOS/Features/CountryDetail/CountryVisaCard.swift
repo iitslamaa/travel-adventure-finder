@@ -56,7 +56,7 @@ struct CountryVisaCard: View {
                     Text("country_detail.visa.title")
                         .font(.headline)
                     Spacer()
-                    Text(String(format: String(localized: "country_detail.visa.passport_weight_format"), locale: AppDisplayLocale.current, passportLabel, weightPercentage))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.passport_weight_format"), locale: AppDisplayLocale.current, passportLabel, weightPercentage)))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -125,11 +125,11 @@ struct CountryVisaCard: View {
                     }
 
                     if let days = country.visaAllowedDays {
-                        Text(String(format: String(localized: "country_detail.visa.allowed_stay_format"), locale: AppDisplayLocale.current, days))
+                        Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.allowed_stay_format"), locale: AppDisplayLocale.current, days)))
                     }
 
                     if let fee = country.visaFeeUsd {
-                        Text(String(format: String(localized: "country_detail.visa.approx_fee_format"), locale: AppDisplayLocale.current, fee))
+                        Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.approx_fee_format"), locale: AppDisplayLocale.current, fee)))
                     }
                 }
                 .font(.footnote)
@@ -143,9 +143,9 @@ struct CountryVisaCard: View {
 
                 HStack(spacing: 12) {
                     if let ease = country.visaEaseScore {
-                        Text(String(format: String(localized: "country_detail.visa.normalized_format"), locale: AppDisplayLocale.current, ease))
+                        Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.normalized_format"), locale: AppDisplayLocale.current, ease)))
                     }
-                    Text(String(format: String(localized: "country_detail.visa.weight_format"), locale: AppDisplayLocale.current, weightPercentage))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

@@ -120,6 +120,19 @@ enum AppDateFormatting {
 }
 
 enum AppNumberFormatting {
+    private static func localizedDigitMap() -> [Character: String] {
+        let formatter = NumberFormatter()
+        formatter.locale = AppDisplayLocale.current
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        formatter.minimumFractionDigits = 0
+
+        return Dictionary(uniqueKeysWithValues: (0...9).map { digit in
+            let localized = formatter.string(from: NSNumber(value: digit)) ?? String(digit)
+            return (Character(String(digit)), localized)
+        })
+    }
+
     static func integerString<T: BinaryInteger>(_ value: T) -> String {
         let formatter = NumberFormatter()
         formatter.locale = AppDisplayLocale.current
@@ -136,6 +149,16 @@ enum AppNumberFormatting {
         formatter.maximumFractionDigits = 0
         formatter.minimumFractionDigits = 0
         return formatter.string(from: NSNumber(value: value)) ?? String(format: "%.0f", value)
+    }
+
+    static func localizedDigits(in text: String) -> String {
+        let digitMap = localizedDigitMap()
+        return String(text.flatMap { character in
+            if let localizedDigit = digitMap[character] {
+                return Array(localizedDigit)
+            }
+            return [character]
+        })
     }
 }
 

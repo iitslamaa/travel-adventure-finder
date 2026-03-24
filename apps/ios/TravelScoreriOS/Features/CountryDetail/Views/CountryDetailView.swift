@@ -667,7 +667,7 @@ private struct CountryFriendEngagementCard: View {
                     Spacer()
 
                     if engagement.totalFriends > 0 {
-                        Text(String(format: String(localized: "country_detail.friends.friend_count_format"), locale: AppDisplayLocale.current, engagement.totalFriends))
+                        Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.friends.friend_count_format"), locale: AppDisplayLocale.current, engagement.totalFriends)))
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -1204,7 +1204,7 @@ private struct CountryLanguageCompatibilityCard: View {
 
                 Spacer()
 
-                Text(String(format: String(localized: "country_detail.language.your_languages_weight_format"), locale: AppDisplayLocale.current, weightPercentage))
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.language.your_languages_weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

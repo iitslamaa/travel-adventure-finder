@@ -32,7 +32,7 @@ struct CountryAdvisoryCard: View {
                     Text("country_detail.advisory.title")
                         .font(.headline)
                     Spacer()
-                    Text(String(format: String(localized: "country_detail.advisory.source_weight_format"), locale: AppDisplayLocale.current, weightPercentage))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.advisory.source_weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -92,8 +92,8 @@ struct CountryAdvisoryCard: View {
                 }
 
                 HStack(spacing: 12) {
-                    Text(String(format: String(localized: "country_detail.advisory.normalized_format"), locale: AppDisplayLocale.current, advisoryScore))
-                    Text(String(format: String(localized: "country_detail.advisory.weight_format"), locale: AppDisplayLocale.current, weightPercentage))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.advisory.normalized_format"), locale: AppDisplayLocale.current, advisoryScore)))
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.advisory.weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

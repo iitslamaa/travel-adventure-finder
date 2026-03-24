@@ -233,7 +233,7 @@ struct WhenToGoCountryDrawerView: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
 
-                Text(String(format: String(localized: "country_detail.seasonality.weight_format"), locale: AppDisplayLocale.current, weightPercentage))
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.seasonality.weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
