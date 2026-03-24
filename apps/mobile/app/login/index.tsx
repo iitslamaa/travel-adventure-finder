@@ -21,11 +21,6 @@ import * as WebBrowser from 'expo-web-browser';
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LandingScreen() {
-  console.log('[LANDING] render', {
-    hasSession: !!session,
-    isGuest,
-    loading,
-  });
   const router = useRouter();
   const {
     session,
@@ -33,6 +28,12 @@ export default function LandingScreen() {
     loading,
     continueAsGuest,
   } = useAuth();
+
+  console.log('[LANDING] render', {
+    hasSession: !!session,
+    isGuest,
+    loading,
+  });
 
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const loginInProgressRef = useRef(false);

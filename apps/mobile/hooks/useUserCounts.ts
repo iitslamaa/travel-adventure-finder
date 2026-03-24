@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function useUserCounts(userId?: string | string[]) {
@@ -11,10 +11,16 @@ export function useUserCounts(userId?: string | string[]) {
   const [traveledIsoCodes, setTraveledIsoCodes] = useState<string[]>([]);
   const [bucketIsoCodes, setBucketIsoCodes] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (!id) return;
+  const refresh = useCallback(async () => {
+    if (!id) {
+      setTraveledCount(0);
+      setBucketCount(0);
+      setTraveledIsoCodes([]);
+      setBucketIsoCodes([]);
+      setLoading(false);
+      return;
+    }
 
-    async function run() {
       setLoading(true);
 
       const [
@@ -47,10 +53,11 @@ export function useUserCounts(userId?: string | string[]) {
       );
 
       setLoading(false);
-    }
-
-    run();
   }, [id]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   return {
     traveledCount,
@@ -58,5 +65,6 @@ export function useUserCounts(userId?: string | string[]) {
     traveledIsoCodes,
     bucketIsoCodes,
     loading,
+    refresh,
   };
 }

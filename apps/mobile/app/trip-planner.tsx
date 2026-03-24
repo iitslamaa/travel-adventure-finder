@@ -1,0 +1,3001 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+import * as Calendar from 'expo-calendar';
+import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../context/AuthContext';
+import { useScorePreferences } from '../context/ScorePreferencesContext';
+import { useCountries } from '../hooks/useCountries';
+import { useFriends } from '../hooks/useFriends';
+import { useTheme } from '../hooks/useTheme';
+import { supabase } from '../lib/supabase';
+import { seasonalityScoreForMonth } from '../utils/scoring';
+
+type AvailabilityKind = 'exact_dates' | 'flexible_month';
+
+type TripAvailabilityProposal = {
+  id: string;
+  participantId: string;
+  participantName: string;
+  kind: AvailabilityKind;
+  startDate: string;
+  endDate: string;
+};
+
+type TripExpense = {
+  id: string;
+  title: string;
+  totalAmount: number;
+  paidById: string;
+  paidByName: string;
+  splitWithIds: string[];
+};
+
+type DayPlanKind = 'country' | 'travel';
+
+type TripDayPlan = {
+  id: string;
+  date: string;
+  kind: DayPlanKind;
+  countryIso2: string | null;
+  countryName: string | null;
+};
+
+type TravelerPassportSelection = {
+  travelerId: string;
+  passportCountryCode: string;
+};
+
+type PlannedTrip = {
+  id: string;
+  title: string;
+  notes: string;
+  startDate: string | null;
+  endDate: string | null;
+  countryIso2s: string[];
+  friendIds: string[];
+  availability: TripAvailabilityProposal[];
+  dayPlans: TripDayPlan[];
+  travelerPassports: TravelerPassportSelection[];
+  expenses: TripExpense[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+type TripDraft = {
+  id: string | null;
+  title: string;
+  notes: string;
+  includeDates: boolean;
+  startDate: string;
+  endDate: string;
+  countryIso2s: string[];
+  friendIds: string[];
+  availability: TripAvailabilityProposal[];
+  dayPlans: TripDayPlan[];
+  travelerPassports: TravelerPassportSelection[];
+  expenses: TripExpense[];
+};
+
+type Traveler = {
+  id: string;
+  name: string;
+};
+
+type AvailabilityOverlap = {
+  startDate: string;
+  endDate: string;
+  exactParticipantCount: number;
+  totalParticipantCount: number;
+};
+
+type TripVisaSummary = {
+  travelerId: string;
+  travelerName: string;
+  passportCountryCode: string;
+  passportLabel: string;
+  countryIso2: string;
+  countryName: string;
+  countryFlag: string;
+  visaType: string | null;
+  allowedDays: number | null;
+  sourceUrl: string | null;
+  notes: string | null;
+  exceedsAllowedStay: boolean;
+};
+
+type PassportPreferences = {
+  nationalityCountryCodes: string[];
+  passportCountryCode: string | null;
+};
+
+type VisaSyncRunRow = {
+  version: number;
+  passport_from_raw: string | null;
+  passport_from_iso2: string | null;
+};
+
+type VisaRequirementRow = {
+  passport_from_raw: string;
+  passport_from_norm: string;
+  passport_from_iso2: string;
+  visitor_to_raw: string;
+  visitor_to_norm: string;
+  parent_norm: string | null;
+  is_special_subregion: boolean | null;
+  aliases_norm: string[] | null;
+  requirement: string | null;
+  allowed_stay: string | null;
+  notes: string | null;
+  version: number;
+  source: string | null;
+  source_url: string | null;
+  last_verified_at: string | null;
+};
+
+type AvailabilityDraft = {
+  participantId: string | null;
+  kind: AvailabilityKind;
+  startDate: string;
+  endDate: string;
+  flexibleMonth: string;
+};
+
+const STORAGE_KEY = 'travelaf-trip-plans-v1';
+
+function emptyDraft(): TripDraft {
+  return {
+    id: null,
+    title: '',
+    notes: '',
+    includeDates: false,
+    startDate: '',
+    endDate: '',
+    countryIso2s: [],
+    friendIds: [],
+    availability: [],
+    dayPlans: [],
+    travelerPassports: [],
+    expenses: [],
+  };
+}
+
+function emptyAvailabilityDraft(): AvailabilityDraft {
+  return {
+    participantId: null,
+    kind: 'exact_dates',
+    startDate: '',
+    endDate: '',
+    flexibleMonth: '',
+  };
+}
+
+function formatDate(dateValue: string | null) {
+  if (!dateValue) return 'No dates';
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return 'No dates';
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function formatMonthLabel(value: string) {
+  if (!value) return 'Pick month';
+  const date = new Date(`${value}-01T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+}
+
+function toDateInput(dateValue: string | null) {
+  return dateValue ? dateValue.slice(0, 10) : '';
+}
+
+function parseDayStart(value: string) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function parseDayEnd(value: string) {
+  const date = new Date(`${value}T23:59:59.999Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function monthRange(value: string) {
+  const start = parseDayStart(`${value}-01`);
+  if (!start) return null;
+  const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+  return { start, end };
+}
+
+function dateRange(startDate: string, endDate: string) {
+  const start = parseDayStart(startDate);
+  const end = parseDayStart(endDate);
+  if (!start || !end || start.getTime() > end.getTime()) return [];
+
+  const dates: string[] = [];
+  const current = new Date(start);
+  while (current.getTime() <= end.getTime()) {
+    dates.push(current.toISOString().slice(0, 10));
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+
+  return dates;
+}
+
+function proposalInterval(proposal: TripAvailabilityProposal) {
+  const start = parseDayStart(proposal.startDate);
+  const end = parseDayEnd(proposal.endDate);
+  if (!start || !end || end < start) return null;
+  return { start, end };
+}
+
+function mergeIntervals(intervals: { start: Date; end: Date }[]) {
+  const sorted = [...intervals].sort((a, b) => a.start.getTime() - b.start.getTime());
+  const merged: { start: Date; end: Date }[] = [];
+
+  sorted.forEach(interval => {
+    const last = merged[merged.length - 1];
+    if (!last) {
+      merged.push(interval);
+      return;
+    }
+
+    if (interval.start.getTime() <= last.end.getTime()) {
+      last.end = new Date(Math.max(last.end.getTime(), interval.end.getTime()));
+      return;
+    }
+
+    merged.push(interval);
+  });
+
+  return merged;
+}
+
+function intersectIntervals(
+  left: { start: Date; end: Date }[],
+  right: { start: Date; end: Date }[]
+) {
+  const intersections: { start: Date; end: Date }[] = [];
+
+  left.forEach(lhs => {
+    right.forEach(rhs => {
+      const start = new Date(Math.max(lhs.start.getTime(), rhs.start.getTime()));
+      const end = new Date(Math.min(lhs.end.getTime(), rhs.end.getTime()));
+      if (start.getTime() <= end.getTime()) {
+        intersections.push({ start, end });
+      }
+    });
+  });
+
+  return mergeIntervals(intersections);
+}
+
+function computeAvailabilityOverlaps(
+  availability: TripAvailabilityProposal[],
+  travelers: Traveler[]
+): AvailabilityOverlap[] {
+  if (travelers.length < 2) return [];
+
+  const grouped = travelers.map(traveler =>
+    mergeIntervals(
+      availability
+        .filter(proposal => proposal.participantId === traveler.id)
+        .map(proposalInterval)
+        .filter((interval): interval is { start: Date; end: Date } => interval !== null)
+    )
+  );
+
+  if (grouped.some(group => group.length === 0)) return [];
+
+  let current = grouped[0];
+  grouped.slice(1).forEach(group => {
+    current = intersectIntervals(current, group);
+  });
+
+  const exactCounts = new Map(
+    travelers.map(traveler => [
+      traveler.id,
+      availability.filter(
+        proposal =>
+          proposal.participantId === traveler.id && proposal.kind === 'exact_dates'
+      ).length,
+    ])
+  );
+
+  const overlaps = current.map(interval => {
+    let exactParticipantCount = 0;
+    travelers.forEach(traveler => {
+      const matchesExact = availability.some(proposal => {
+        if (proposal.participantId !== traveler.id || proposal.kind !== 'exact_dates') {
+          return false;
+        }
+
+        const proposalMatch = proposalInterval(proposal);
+        if (!proposalMatch) return false;
+
+        return (
+          proposalMatch.start.getTime() <= interval.end.getTime() &&
+          proposalMatch.end.getTime() >= interval.start.getTime()
+        );
+      });
+
+      if (matchesExact || (exactCounts.get(traveler.id) ?? 0) === 0) {
+        exactParticipantCount += 1;
+      }
+    });
+
+    return {
+      startDate: interval.start.toISOString().slice(0, 10),
+      endDate: interval.end.toISOString().slice(0, 10),
+      exactParticipantCount,
+      totalParticipantCount: travelers.length,
+    };
+  });
+
+  return overlaps
+    .filter(
+      (overlap, index, array) =>
+        array.findIndex(
+          candidate =>
+            candidate.startDate === overlap.startDate &&
+            candidate.endDate === overlap.endDate &&
+            candidate.exactParticipantCount === overlap.exactParticipantCount
+        ) === index
+    )
+    .sort((a, b) => {
+      if (a.exactParticipantCount === b.exactParticipantCount) {
+        return a.startDate.localeCompare(b.startDate);
+      }
+      return b.exactParticipantCount - a.exactParticipantCount;
+    });
+}
+
+function availabilityBadge(
+  overlaps: AvailabilityOverlap[],
+  proposals: TripAvailabilityProposal[],
+  travelerCount: number
+) {
+  if (travelerCount < 2) return null;
+  if (proposals.length === 0) return 'No group availability added yet';
+  if (overlaps.length === 0) return 'No shared window yet';
+
+  const best = overlaps[0];
+  const range = `${formatDate(best.startDate)} - ${formatDate(best.endDate)}`;
+  if (best.exactParticipantCount === best.totalParticipantCount) {
+    return `Best shared window: ${range}`;
+  }
+  return `Best overlap: ${range} (${best.exactParticipantCount}/${best.totalParticipantCount} exact)`;
+}
+
+function syncDayPlans(
+  existingPlans: TripDayPlan[],
+  startDate: string,
+  endDate: string,
+  countriesForTrip: { iso2: string; name: string }[]
+) {
+  const dates = dateRange(startDate, endDate);
+  if (!dates.length) return [];
+
+  const existingByDate = new Map(existingPlans.map(plan => [plan.date, plan] as const));
+  const validCountryIso2s = new Set(countriesForTrip.map(country => country.iso2));
+  const firstCountry = countriesForTrip[0] ?? null;
+
+  return dates.map(date => {
+    const existing = existingByDate.get(date);
+    if (existing?.kind === 'travel') {
+      return {
+        id: existing.id,
+        date,
+        kind: 'travel' as const,
+        countryIso2: null,
+        countryName: null,
+      };
+    }
+
+    if (
+      existing?.kind === 'country' &&
+      existing.countryIso2 &&
+      validCountryIso2s.has(existing.countryIso2)
+    ) {
+      const matchedCountry =
+        countriesForTrip.find(country => country.iso2 === existing.countryIso2) ?? null;
+      return {
+        id: existing.id,
+        date,
+        kind: 'country' as const,
+        countryIso2: existing.countryIso2,
+        countryName: matchedCountry?.name ?? existing.countryName,
+      };
+    }
+
+    if (firstCountry) {
+      return {
+        id: `${date}-${firstCountry.iso2}`,
+        date,
+        kind: 'country' as const,
+        countryIso2: firstCountry.iso2,
+        countryName: firstCountry.name,
+      };
+    }
+
+    return {
+      id: `${date}-travel`,
+      date,
+      kind: 'travel' as const,
+      countryIso2: null,
+      countryName: null,
+    };
+  });
+}
+
+function itineraryPreview(dayPlans: TripDayPlan[]) {
+  if (!dayPlans.length) return [];
+  return dayPlans.slice(0, 4).map(plan =>
+    plan.kind === 'travel'
+      ? `${formatDate(plan.date)}: Travel day`
+      : `${formatDate(plan.date)}: ${plan.countryName ?? plan.countryIso2 ?? 'Country day'}`
+  );
+}
+
+function normalizeVisaText(text: string) {
+  const normalized = text
+    .replace(/\[\d+\]/g, ' ')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const tokens = normalized.split(' ').filter(Boolean);
+  const collapsed: string[] = [];
+
+  tokens.forEach(token => {
+    const last = collapsed[collapsed.length - 1];
+    if (token.length === 1 && last && last.length === 1) {
+      collapsed[collapsed.length - 1] = `${last}${token}`;
+      return;
+    }
+    collapsed.push(token);
+  });
+
+  return collapsed.join(' ');
+}
+
+function visaAliasesForISO2(iso2: string) {
+  switch (iso2.toUpperCase()) {
+    case 'AX': return ['aland islands', 'aland'];
+    case 'BL': return ['saint barthelemy', 'st barthelemy'];
+    case 'BS': return ['bahamas', 'the bahamas'];
+    case 'CI': return ['cote d ivoire', 'cote ivoire', 'ivory coast'];
+    case 'CW': return ['curacao', 'curaçao'];
+    case 'GM': return ['gambia', 'the gambia'];
+    case 'KR': return ['south korea', 'republic of korea', 'korea south'];
+    case 'LA': return ['laos', 'lao', 'lao peoples democratic republic'];
+    case 'MF': return ['saint martin', 'st martin', 'saint martin french part'];
+    case 'MM': return ['myanmar', 'burma'];
+    case 'PS': return ['palestine', 'palestinian territories', 'palestinian territory'];
+    case 'RE': return ['reunion', 'réunion'];
+    case 'SX': return ['sint maarten', 'saint maarten'];
+    case 'TC': return ['turks and caicos', 'turks and caicos islands'];
+    case 'TR': return ['turkey', 'turkiye', 'türkiye', 'republic of turkey', 'republic of türkiye'];
+    case 'TW': return ['taiwan', 'republic of china taiwan', 'taiwan province of china'];
+    case 'VA': return ['vatican', 'vatican city', 'holy see'];
+    case 'VI': return ['u s virgin islands', 'us virgin islands', 'virgin islands u s', 'virgin islands us'];
+    default: return [];
+  }
+}
+
+function visaTypeFromRequirement(requirement?: string | null) {
+  const value = (requirement ?? '').toLowerCase();
+  if (!value) return null;
+  if (/freedom of movement/.test(value)) return 'freedom_of_movement';
+  if (/visa[- ]?free|not required/.test(value)) return 'visa_free';
+  if (/visa on arrival|\bvoa\b/.test(value)) return 'voa';
+  if (/(^|\b)e-?visa\b|electronic travel authorization|\beta\b/.test(value)) return 'evisa';
+  if (/entry permit|required permit/.test(value)) return 'entry_permit';
+  if (/not allowed|prohibit|ban/.test(value)) return 'ban';
+  return 'visa_required';
+}
+
+function parseAllowedDays(text?: string | null) {
+  const value = (text ?? '').toLowerCase();
+  if (!value) return null;
+
+  const dayMatch = value.match(/(\d{1,4})\s*day/);
+  if (dayMatch) return Number(dayMatch[1]);
+  const weekMatch = value.match(/(\d{1,3})\s*week/);
+  if (weekMatch) return Number(weekMatch[1]) * 7;
+  const monthMatch = value.match(/(\d{1,2})\s*month/);
+  if (monthMatch) return Number(monthMatch[1]) * 30;
+  const yearMatch = value.match(/(\d{1,2})\s*year/);
+  if (yearMatch) return Number(yearMatch[1]) * 365;
+
+  return null;
+}
+
+function countryLabelForPassport(code: string) {
+  try {
+    return new Intl.DisplayNames(undefined, { type: 'region' }).of(code.toUpperCase()) ?? code.toUpperCase();
+  } catch {
+    return code.toUpperCase();
+  }
+}
+
+function matchVisaRow(
+  country: { iso2: string; name: string },
+  rows: VisaRequirementRow[]
+) {
+  const candidates = new Set(
+    [country.name, ...visaAliasesForISO2(country.iso2)].map(normalizeVisaText)
+  );
+  const containsCandidates = [...candidates].filter(
+    candidate => candidate.length >= 4 && !/^[a-z]{2,3}$/.test(candidate)
+  );
+
+  const exact = rows.find(row => candidates.has(row.visitor_to_norm));
+  if (exact) return exact;
+
+  const aliasMatch = rows.find(row =>
+    (row.aliases_norm ?? []).some(alias => candidates.has(alias))
+  );
+  if (aliasMatch) return aliasMatch;
+
+  return rows.find(row => {
+    if (row.is_special_subregion) return false;
+    if (row.parent_norm && candidates.has(row.parent_norm)) return false;
+    return containsCandidates.some(
+      candidate =>
+        row.visitor_to_norm.includes(candidate) || candidate.includes(row.visitor_to_norm)
+    );
+  });
+}
+
+function prettyVisaType(visaType?: string | null) {
+  if (!visaType) return 'Visa details unavailable';
+  const labelMap: Record<string, string> = {
+    own_passport: 'Own passport',
+    freedom_of_movement: 'Freedom of movement',
+    visa_free: 'Visa-free',
+    voa: 'Visa on arrival',
+    eta: 'ETA required',
+    evisa: 'eVisa required',
+    visa_required: 'Visa required',
+    entry_permit: 'Entry permit required',
+    ban: 'Travel restricted',
+  };
+  return labelMap[visaType] ?? visaType.replace(/_/g, ' ');
+}
+
+function tripLengthDays(startDate: string | null, endDate: string | null) {
+  if (!startDate || !endDate) return null;
+  const start = parseDayStart(startDate.slice(0, 10));
+  const end = parseDayStart(endDate.slice(0, 10));
+  if (!start || !end || end.getTime() < start.getTime()) return null;
+  return Math.floor((end.getTime() - start.getTime()) / 86400000) + 1;
+}
+
+function computeTripVisaSummaries(
+  tripCountries: {
+    iso2: string;
+    name: string;
+    flagEmoji?: string;
+    facts?: Record<string, any>;
+  }[],
+  travelers: Traveler[],
+  travelerPassports: TravelerPassportSelection[],
+  visaRowsByPassport: Record<string, VisaRequirementRow[]>,
+  totalDays: number | null
+) {
+  return travelers.flatMap(traveler => {
+    const passportCode =
+      travelerPassports.find(item => item.travelerId === traveler.id)?.passportCountryCode ?? 'US';
+    const rows = visaRowsByPassport[passportCode] ?? [];
+
+    return tripCountries
+      .map(country => {
+        if (passportCode.toUpperCase() === country.iso2.toUpperCase()) {
+          return {
+            travelerId: traveler.id,
+            travelerName: traveler.name,
+            passportCountryCode: passportCode,
+            passportLabel: countryLabelForPassport(passportCode),
+            countryIso2: country.iso2,
+            countryName: country.name,
+            countryFlag: country.flagEmoji ?? '',
+            visaType: 'own_passport',
+            allowedDays: null,
+            sourceUrl: null,
+            notes: null,
+            exceedsAllowedStay: false,
+          };
+        }
+
+        const row = matchVisaRow(country, rows);
+        const visaType = visaTypeFromRequirement(row?.requirement ?? country.facts?.visaType);
+        const allowedDays =
+          parseAllowedDays(row?.allowed_stay) ??
+          parseAllowedDays(row?.requirement) ??
+          (typeof country.facts?.visaAllowedDays === 'number' ? country.facts.visaAllowedDays : null);
+        const exceedsAllowedStay =
+          typeof totalDays === 'number' &&
+          typeof allowedDays === 'number' &&
+          totalDays > allowedDays;
+
+        return {
+          travelerId: traveler.id,
+          travelerName: traveler.name,
+          passportCountryCode: passportCode,
+          passportLabel: row?.passport_from_raw ?? countryLabelForPassport(passportCode),
+          countryIso2: country.iso2,
+          countryName: country.name,
+          countryFlag: country.flagEmoji ?? '',
+          visaType,
+          allowedDays,
+          sourceUrl: row?.source_url ?? country.facts?.visaSource ?? null,
+          notes: row?.notes ?? country.facts?.visaNotes ?? null,
+          exceedsAllowedStay,
+        };
+      })
+      .filter(
+        summary =>
+          summary.visaType &&
+          !['own_passport', 'freedom_of_movement', 'visa_free', 'voa'].includes(summary.visaType)
+      );
+  });
+}
+
+function visaHeadline(
+  summaries: TripVisaSummary[],
+  travelerCount: number,
+  totalDays: number | null
+) {
+  const overstayCount = summaries.filter(summary => summary.exceedsAllowedStay).length;
+  if (overstayCount > 0) {
+    return `${overstayCount} stop${overstayCount === 1 ? '' : 's'} may exceed the allowed stay${typeof totalDays === 'number' ? ` for ${totalDays} days` : ''}`;
+  }
+  if (summaries.length === 0) {
+    return 'No advance visa prep flagged';
+  }
+  return `${summaries.length} stop${summaries.length === 1 ? '' : 's'} need visa prep for ${travelerCount} traveler${travelerCount === 1 ? '' : 's'}`;
+}
+
+async function getDefaultCalendarSource() {
+  const defaultCalendar = await Calendar.getDefaultCalendarAsync();
+  if (defaultCalendar?.source) {
+    return defaultCalendar.source;
+  }
+
+  const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+  const editable = calendars.find(calendar => calendar.allowsModifications);
+  return editable?.source;
+}
+
+export default function TripPlannerScreen() {
+  const colors = useTheme();
+  const insets = useSafeAreaInsets();
+  const { bucketIsoCodes, visitedIsoCodes, profile, session } = useAuth();
+  const { selectedMonth } = useScorePreferences();
+  const { countries } = useCountries();
+  const { friends } = useFriends();
+
+  const [trips, setTrips] = useState<PlannedTrip[]>([]);
+  const [draft, setDraft] = useState<TripDraft>(emptyDraft);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [countryQuery, setCountryQuery] = useState('');
+  const [expenseDraftTitle, setExpenseDraftTitle] = useState('');
+  const [expenseDraftAmount, setExpenseDraftAmount] = useState('');
+  const [expenseDraftPaidById, setExpenseDraftPaidById] = useState<string | null>(null);
+  const [expenseDraftSplitWithIds, setExpenseDraftSplitWithIds] = useState<string[]>([]);
+  const [availabilityDraft, setAvailabilityDraft] = useState<AvailabilityDraft>(
+    emptyAvailabilityDraft
+  );
+  const [savedPassportPreferences, setSavedPassportPreferences] = useState<PassportPreferences>({
+    nationalityCountryCodes: [],
+    passportCountryCode: null,
+  });
+  const [visaRowsByPassport, setVisaRowsByPassport] = useState<Record<string, VisaRequirementRow[]>>(
+    {}
+  );
+
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    supabase
+      .from('user_passport_preferences')
+      .select('nationality_country_codes,passport_country_code')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('Failed to load passport preferences', error);
+          return;
+        }
+
+        setSavedPassportPreferences({
+          nationalityCountryCodes: data?.nationality_country_codes ?? [],
+          passportCountryCode: data?.passport_country_code ?? null,
+        });
+      });
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEY)
+      .then(value => {
+        if (!value) return;
+        const parsed = JSON.parse(value) as PlannedTrip[];
+        setTrips(
+          parsed.map(trip => ({
+            ...trip,
+            availability: Array.isArray(trip.availability) ? trip.availability : [],
+            dayPlans: Array.isArray(trip.dayPlans) ? trip.dayPlans : [],
+            travelerPassports: Array.isArray(trip.travelerPassports) ? trip.travelerPassports : [],
+            expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
+          }))
+        );
+      })
+      .catch(error => {
+        console.error('Failed to load trips', error);
+      });
+  }, []);
+
+  const countryNameByIso2 = useMemo(
+    () => new Map(countries.map(country => [country.iso2, country.name] as const)),
+    [countries]
+  );
+
+  const friendNameById = useMemo(
+    () =>
+      new Map(
+        friends.map(friend => [
+          friend.id,
+          friend.full_name || friend.username || 'Friend',
+        ])
+      ),
+    [friends]
+  );
+
+  const plannerCountries = useMemo(() => {
+    const prioritized = countries.filter(
+      country =>
+        bucketIsoCodes.includes(country.iso2) || visitedIsoCodes.includes(country.iso2)
+    );
+    const fallback = countries.filter(
+      country =>
+        !bucketIsoCodes.includes(country.iso2) && !visitedIsoCodes.includes(country.iso2)
+    );
+
+    return [...prioritized, ...fallback];
+  }, [bucketIsoCodes, countries, visitedIsoCodes]);
+
+  const filteredCountries = useMemo(() => {
+    const query = countryQuery.trim().toLowerCase();
+    const source = plannerCountries.filter(country => {
+      if (!query) return true;
+      return (
+        country.name.toLowerCase().includes(query) ||
+        country.iso2.toLowerCase().includes(query)
+      );
+    });
+
+    return source.slice(0, 16);
+  }, [countryQuery, plannerCountries]);
+
+  const currentTraveler = useMemo(
+    () =>
+      session?.user?.id
+        ? {
+            id: session.user.id,
+            name: profile?.full_name || profile?.username || 'You',
+          }
+        : null,
+    [profile?.full_name, profile?.username, session?.user?.id]
+  );
+
+  const defaultPassportCode = useMemo(
+    () =>
+      savedPassportPreferences.passportCountryCode ||
+      savedPassportPreferences.nationalityCountryCodes[0] ||
+      'US',
+    [
+      savedPassportPreferences.nationalityCountryCodes,
+      savedPassportPreferences.passportCountryCode,
+    ]
+  );
+
+  const draftTravelers = useMemo(
+    () => [
+      ...(currentTraveler ? [currentTraveler] : []),
+      ...friends
+        .filter(friend => draft.friendIds.includes(friend.id))
+        .map(friend => ({
+          id: friend.id,
+          name: friend.full_name || friend.username || 'Friend',
+        })),
+    ],
+    [currentTraveler, draft.friendIds, friends]
+  );
+
+  const draftOverlaps = useMemo(
+    () => computeAvailabilityOverlaps(draft.availability, draftTravelers),
+    [draft.availability, draftTravelers]
+  );
+
+  const monthOptions = useMemo(() => {
+    const base = new Date();
+    return Array.from({ length: 8 }, (_, index) => {
+      const date = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + index, 1));
+      return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+    });
+  }, []);
+
+  useEffect(() => {
+    setDraft(current => {
+      const validTravelerIds = new Set(draftTravelers.map(traveler => traveler.id));
+      const filtered = current.travelerPassports.filter(selection =>
+        validTravelerIds.has(selection.travelerId)
+      );
+      const additions = draftTravelers
+        .filter(traveler => !filtered.some(selection => selection.travelerId === traveler.id))
+        .map(traveler => ({
+          travelerId: traveler.id,
+          passportCountryCode:
+            traveler.id === currentTraveler?.id ? defaultPassportCode : 'US',
+        }));
+      const nextSelections = [...filtered, ...additions];
+
+      if (nextSelections.length === current.travelerPassports.length) {
+        const unchanged = nextSelections.every((selection, index) => {
+          const original = current.travelerPassports[index];
+          return (
+            original?.travelerId === selection.travelerId &&
+            original?.passportCountryCode === selection.passportCountryCode
+          );
+        });
+        if (unchanged) return current;
+      }
+
+      return {
+        ...current,
+        travelerPassports: nextSelections,
+      };
+    });
+  }, [currentTraveler?.id, defaultPassportCode, draftTravelers]);
+
+  const activePassportCodes = useMemo(() => {
+    const codes = [
+      defaultPassportCode,
+      ...draft.travelerPassports.map(item => item.passportCountryCode),
+      ...trips.flatMap(trip => trip.travelerPassports.map(item => item.passportCountryCode)),
+    ]
+      .map(code => code.trim().toUpperCase())
+      .filter(Boolean);
+
+    return Array.from(new Set(codes));
+  }, [defaultPassportCode, draft.travelerPassports, trips]);
+
+  useEffect(() => {
+    const missingCodes = activePassportCodes.filter(code => !visaRowsByPassport[code]);
+    if (!missingCodes.length) return;
+
+    missingCodes.forEach(code => {
+      supabase
+        .from('visa_sync_runs')
+        .select('version,passport_from_raw,passport_from_iso2')
+        .eq('passport_from_iso2', code)
+        .order('version', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(async ({ data: versionRow, error: versionError }) => {
+          if (versionError) {
+            console.error('Failed to load visa version', code, versionError);
+            return;
+          }
+
+          const typedVersionRow = versionRow as VisaSyncRunRow | null;
+          if (!typedVersionRow?.version) {
+            setVisaRowsByPassport(current => ({ ...current, [code]: [] }));
+            return;
+          }
+
+          const { data: requirementRows, error: requirementsError } = await supabase
+            .from('visa_requirements')
+            .select(
+              'passport_from_raw,passport_from_norm,passport_from_iso2,visitor_to_raw,visitor_to_norm,parent_norm,is_special_subregion,aliases_norm,requirement,allowed_stay,notes,version,source,source_url,last_verified_at'
+            )
+            .eq('passport_from_iso2', code)
+            .eq('version', typedVersionRow.version);
+
+          if (requirementsError) {
+            console.error('Failed to load visa requirements', code, requirementsError);
+            return;
+          }
+
+          setVisaRowsByPassport(current => ({
+            ...current,
+            [code]: (requirementRows as VisaRequirementRow[]) ?? [],
+          }));
+        });
+    });
+  }, [activePassportCodes, visaRowsByPassport]);
+
+  const persistTrips = async (nextTrips: PlannedTrip[]) => {
+    setTrips(nextTrips);
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextTrips));
+  };
+
+  const resetDraftHelpers = () => {
+    setCountryQuery('');
+    setExpenseDraftTitle('');
+    setExpenseDraftAmount('');
+    setExpenseDraftPaidById(null);
+    setExpenseDraftSplitWithIds([]);
+    setAvailabilityDraft(emptyAvailabilityDraft());
+  };
+
+  const openNewTrip = () => {
+    setDraft({
+      ...emptyDraft(),
+      travelerPassports: currentTraveler
+        ? [{ travelerId: currentTraveler.id, passportCountryCode: defaultPassportCode }]
+        : [],
+    });
+    resetDraftHelpers();
+    setModalVisible(true);
+  };
+
+  const openEditTrip = (trip: PlannedTrip) => {
+    setDraft({
+      id: trip.id,
+      title: trip.title,
+      notes: trip.notes,
+      includeDates: !!trip.startDate || !!trip.endDate,
+      startDate: toDateInput(trip.startDate),
+      endDate: toDateInput(trip.endDate),
+      countryIso2s: trip.countryIso2s,
+      friendIds: trip.friendIds,
+      availability: Array.isArray(trip.availability) ? trip.availability : [],
+      dayPlans: Array.isArray(trip.dayPlans) ? trip.dayPlans : [],
+      travelerPassports: Array.isArray(trip.travelerPassports)
+        ? trip.travelerPassports
+        : currentTraveler
+          ? [{ travelerId: currentTraveler.id, passportCountryCode: defaultPassportCode }]
+          : [],
+      expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
+    });
+    resetDraftHelpers();
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
+
+  const toggleCountry = (iso2: string) => {
+    setDraft(current => {
+      const nextCountryIso2s = current.countryIso2s.includes(iso2)
+        ? current.countryIso2s.filter(code => code !== iso2)
+        : [...current.countryIso2s, iso2];
+
+      const shouldSync =
+        current.includeDates && current.startDate.trim() && current.endDate.trim();
+      const nextDayPlans = shouldSync
+        ? syncDayPlans(
+            current.dayPlans,
+            current.startDate.trim(),
+            current.endDate.trim(),
+            nextCountryIso2s.map(code => ({
+              iso2: code,
+              name: countryNameByIso2.get(code) ?? code,
+            }))
+          )
+        : [];
+
+      return {
+        ...current,
+        countryIso2s: nextCountryIso2s,
+        dayPlans: nextDayPlans,
+      };
+    });
+  };
+
+  const toggleFriend = (friendId: string) => {
+    setDraft(current => {
+      const nextFriendIds = current.friendIds.includes(friendId)
+        ? current.friendIds.filter(id => id !== friendId)
+        : [...current.friendIds, friendId];
+
+      const allowedParticipantIds = new Set([
+        ...(currentTraveler ? [currentTraveler.id] : []),
+        ...nextFriendIds,
+      ]);
+
+      return {
+        ...current,
+        friendIds: nextFriendIds,
+        availability: current.availability.filter(proposal =>
+          allowedParticipantIds.has(proposal.participantId)
+        ),
+        travelerPassports: [
+          ...current.travelerPassports.filter(selection =>
+            allowedParticipantIds.has(selection.travelerId)
+          ),
+          ...nextFriendIds
+            .filter(
+              id => !current.travelerPassports.some(selection => selection.travelerId === id)
+            )
+            .map(id => ({ travelerId: id, passportCountryCode: 'US' })),
+          ...(currentTraveler &&
+          !current.travelerPassports.some(
+            selection => selection.travelerId === currentTraveler.id
+          )
+            ? [{ travelerId: currentTraveler.id, passportCountryCode: defaultPassportCode }]
+            : []),
+        ],
+      };
+    });
+  };
+
+  const saveTrip = async () => {
+    const title = draft.title.trim();
+    if (!title) return;
+
+    const now = new Date().toISOString();
+    const nextTrip: PlannedTrip = {
+      id: draft.id ?? now,
+      title,
+      notes: draft.notes.trim(),
+      startDate:
+        draft.includeDates && draft.startDate.trim()
+          ? new Date(`${draft.startDate}T00:00:00.000Z`).toISOString()
+          : null,
+      endDate:
+        draft.includeDates && draft.endDate.trim()
+          ? new Date(`${draft.endDate}T00:00:00.000Z`).toISOString()
+          : null,
+      countryIso2s: draft.countryIso2s,
+      friendIds: draft.friendIds,
+      availability: draft.availability,
+      dayPlans: draft.dayPlans,
+      travelerPassports: draft.travelerPassports,
+      expenses: draft.expenses,
+      createdAt: draft.id ? trips.find(trip => trip.id === draft.id)?.createdAt ?? now : now,
+      updatedAt: now,
+    };
+
+    const nextTrips = draft.id
+      ? trips.map(trip => (trip.id === draft.id ? nextTrip : trip))
+      : [nextTrip, ...trips];
+
+    await persistTrips(nextTrips);
+    closeModal();
+  };
+
+  const deleteTrip = async (tripId: string) => {
+    await persistTrips(trips.filter(trip => trip.id !== tripId));
+  };
+
+  const updateTripDateField = (field: 'startDate' | 'endDate', value: string) => {
+    setDraft(current => {
+      const nextDraft = { ...current, [field]: value };
+      if (
+        !nextDraft.includeDates ||
+        !nextDraft.startDate.trim() ||
+        !nextDraft.endDate.trim()
+      ) {
+        return {
+          ...nextDraft,
+          dayPlans: [],
+        };
+      }
+
+      return {
+        ...nextDraft,
+        dayPlans: syncDayPlans(
+          current.dayPlans,
+          nextDraft.startDate.trim(),
+          nextDraft.endDate.trim(),
+          nextDraft.countryIso2s.map(iso2 => ({
+            iso2,
+            name: countryNameByIso2.get(iso2) ?? iso2,
+          }))
+        ),
+      };
+    });
+  };
+
+  const toggleIncludeDates = () => {
+    setDraft(current => {
+      const nextIncludeDates = !current.includeDates;
+      if (!nextIncludeDates || !current.startDate.trim() || !current.endDate.trim()) {
+        return {
+          ...current,
+          includeDates: nextIncludeDates,
+          dayPlans: [],
+        };
+      }
+
+      return {
+        ...current,
+        includeDates: nextIncludeDates,
+        dayPlans: syncDayPlans(
+          current.dayPlans,
+          current.startDate.trim(),
+          current.endDate.trim(),
+          current.countryIso2s.map(iso2 => ({
+            iso2,
+            name: countryNameByIso2.get(iso2) ?? iso2,
+          }))
+        ),
+      };
+    });
+  };
+
+  const selectedCountryNames = draft.countryIso2s.map(
+    iso2 => countryNameByIso2.get(iso2) ?? iso2
+  );
+  const selectedFriendNames = draft.friendIds.map(
+    friendId => friendNameById.get(friendId) ?? 'Friend'
+  );
+
+  const expenseTotal = (trip: PlannedTrip | TripDraft) =>
+    trip.expenses.reduce((sum, expense) => sum + expense.totalAmount, 0);
+
+  const toggleExpenseSplit = (participantId: string) => {
+    setExpenseDraftSplitWithIds(current =>
+      current.includes(participantId)
+        ? current.filter(id => id !== participantId)
+        : [...current, participantId]
+    );
+  };
+
+  const addExpenseToDraft = () => {
+    const title = expenseDraftTitle.trim();
+    const totalAmount = Number(expenseDraftAmount);
+    if (
+      !title ||
+      !Number.isFinite(totalAmount) ||
+      totalAmount <= 0 ||
+      !expenseDraftPaidById
+    ) {
+      Alert.alert('Incomplete expense', 'Add a title, amount, and who paid.');
+      return;
+    }
+
+    const splitWithIds = expenseDraftSplitWithIds.length
+      ? expenseDraftSplitWithIds
+      : draftTravelers.map(participant => participant.id);
+
+    const payer = draftTravelers.find(participant => participant.id === expenseDraftPaidById);
+    if (!payer || splitWithIds.length === 0) {
+      Alert.alert('Incomplete expense', 'Choose at least one traveler for the split.');
+      return;
+    }
+
+    setDraft(current => ({
+      ...current,
+      expenses: [
+        ...current.expenses,
+        {
+          id: new Date().toISOString(),
+          title,
+          totalAmount,
+          paidById: payer.id,
+          paidByName: payer.name,
+          splitWithIds,
+        },
+      ],
+    }));
+
+    setExpenseDraftTitle('');
+    setExpenseDraftAmount('');
+    setExpenseDraftPaidById(null);
+    setExpenseDraftSplitWithIds([]);
+  };
+
+  const addAvailabilityToDraft = () => {
+    if (!availabilityDraft.participantId) {
+      Alert.alert('Choose traveler', 'Pick who this availability belongs to first.');
+      return;
+    }
+
+    const participant = draftTravelers.find(
+      traveler => traveler.id === availabilityDraft.participantId
+    );
+    if (!participant) {
+      Alert.alert('Traveler missing', 'Add the traveler to this trip first.');
+      return;
+    }
+
+    let startDate = availabilityDraft.startDate.trim();
+    let endDate = availabilityDraft.endDate.trim();
+
+    if (availabilityDraft.kind === 'flexible_month') {
+      const range = monthRange(availabilityDraft.flexibleMonth);
+      if (!range) {
+        Alert.alert('Choose month', 'Pick a flexible month before saving this window.');
+        return;
+      }
+      startDate = range.start.toISOString().slice(0, 10);
+      endDate = range.end.toISOString().slice(0, 10);
+    }
+
+    const start = parseDayStart(startDate);
+    const end = parseDayEnd(endDate);
+    if (!start || !end || end.getTime() < start.getTime()) {
+      Alert.alert('Invalid dates', 'Availability needs a valid start and end date.');
+      return;
+    }
+
+    setDraft(current => ({
+      ...current,
+      availability: [
+        ...current.availability,
+        {
+          id: new Date().toISOString(),
+          participantId: participant.id,
+          participantName: participant.name,
+          kind: availabilityDraft.kind,
+          startDate,
+          endDate,
+        },
+      ],
+    }));
+
+    setAvailabilityDraft(current => ({
+      ...emptyAvailabilityDraft(),
+      participantId: current.participantId,
+    }));
+  };
+
+  const tripSummary = (trip: PlannedTrip) => {
+    const tripCountries = countries.filter(country => trip.countryIso2s.includes(country.iso2));
+
+    if (!tripCountries.length) {
+      return null;
+    }
+
+    const average = (values: number[]) =>
+      Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+
+    const overall = average(
+      tripCountries.map(country => country.scoreTotal ?? 0).filter(value => Number.isFinite(value))
+    );
+    const affordability = average(
+      tripCountries
+        .map(country => country.facts?.affordability)
+        .filter((value): value is number => typeof value === 'number')
+    );
+    const seasonality = average(
+      tripCountries.map(country => seasonalityScoreForMonth(country, selectedMonth))
+    );
+
+    return { overall, affordability, seasonality };
+  };
+
+  const draftTripDays = tripLengthDays(
+    draft.includeDates && draft.startDate ? `${draft.startDate}T00:00:00.000Z` : null,
+    draft.includeDates && draft.endDate ? `${draft.endDate}T00:00:00.000Z` : null
+  );
+  const draftVisaSummaries = computeTripVisaSummaries(
+    countries.filter(country => draft.countryIso2s.includes(country.iso2)),
+    draftTravelers,
+    draft.travelerPassports,
+    visaRowsByPassport,
+    draftTripDays
+  );
+
+  const updateDayPlan = (
+    dayPlanId: string,
+    patch: Partial<Pick<TripDayPlan, 'kind' | 'countryIso2' | 'countryName'>>
+  ) => {
+    setDraft(current => ({
+      ...current,
+      dayPlans: current.dayPlans.map(plan => {
+        if (plan.id !== dayPlanId) return plan;
+
+        if (patch.kind === 'travel') {
+          return {
+            ...plan,
+            kind: 'travel',
+            countryIso2: null,
+            countryName: null,
+          };
+        }
+
+        const nextCountryIso2 = patch.countryIso2 ?? plan.countryIso2;
+        return {
+          ...plan,
+          kind: patch.kind ?? plan.kind,
+          countryIso2: nextCountryIso2,
+          countryName:
+            nextCountryIso2 ? countryNameByIso2.get(nextCountryIso2) ?? nextCountryIso2 : null,
+        };
+      }),
+    }));
+  };
+
+  const updateTravelerPassport = (travelerId: string, passportCountryCode: string) => {
+    setDraft(current => ({
+      ...current,
+      travelerPassports: current.travelerPassports.some(
+        selection => selection.travelerId === travelerId
+      )
+        ? current.travelerPassports.map(selection =>
+            selection.travelerId === travelerId
+              ? { ...selection, passportCountryCode }
+              : selection
+          )
+        : [...current.travelerPassports, { travelerId, passportCountryCode }],
+    }));
+  };
+
+  const travelersForTrip = (trip: PlannedTrip) => {
+    const currentName = currentTraveler?.name ?? profile?.full_name ?? profile?.username ?? 'You';
+
+    return [
+      ...(session?.user?.id ? [{ id: session.user.id, name: currentName }] : []),
+      ...trip.friendIds.map(friendId => ({
+        id: friendId,
+        name: friendNameById.get(friendId) ?? 'Friend',
+      })),
+    ];
+  };
+
+  const addTripToCalendar = async (trip: PlannedTrip) => {
+    if (!trip.startDate || !trip.endDate) {
+      Alert.alert('Missing dates', 'Add trip dates before sending this to your calendar.');
+      return;
+    }
+
+    try {
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Calendar access needed',
+          'Allow calendar access to create an event from this trip.'
+        );
+        return;
+      }
+
+      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+      let writableCalendar = calendars.find(calendar => calendar.allowsModifications);
+
+      if (!writableCalendar) {
+        const sourceMaybe =
+          Platform.OS === 'ios'
+            ? await getDefaultCalendarSource()
+            : {
+                isLocalAccount: true,
+                name: 'Travel AF',
+                type: Calendar.SourceType.LOCAL,
+              };
+
+        if (!sourceMaybe) {
+          Alert.alert('No calendar found', 'No writable calendar is available on this device.');
+          return;
+        }
+
+        const source: Calendar.Source = sourceMaybe;
+
+        const calendarId = await Calendar.createCalendarAsync({
+          title: 'Travel AF Trips',
+          color: '#065F46',
+          entityType: Calendar.EntityTypes.EVENT,
+          sourceId: source.id,
+          source,
+          name: 'Travel AF Trips',
+          ownerAccount: 'personal',
+          accessLevel: Calendar.CalendarAccessLevel.OWNER,
+        });
+
+        writableCalendar = { id: calendarId } as Calendar.Calendar;
+      }
+
+      if (!writableCalendar) {
+        Alert.alert('No calendar found', 'Unable to find a writable calendar.');
+        return;
+      }
+
+      const countrySummary = trip.countryIso2s
+        .map(iso2 => countryNameByIso2.get(iso2) ?? iso2)
+        .join(', ');
+      const friendSummary = trip.friendIds
+        .map(friendId => friendNameById.get(friendId) ?? 'Friend')
+        .join(', ');
+      const tripTravelers = travelersForTrip(trip);
+      const overlaps = computeAvailabilityOverlaps(trip.availability, tripTravelers);
+      const availabilitySummary = availabilityBadge(
+        overlaps,
+        trip.availability,
+        tripTravelers.length
+      );
+      const previewLines = itineraryPreview(trip.dayPlans);
+      const totalDays = tripLengthDays(trip.startDate, trip.endDate);
+      const visaSummaries = computeTripVisaSummaries(
+        countries.filter(country => trip.countryIso2s.includes(country.iso2)),
+        tripTravelers,
+        trip.travelerPassports,
+        visaRowsByPassport,
+        totalDays
+      );
+
+      const notes = [
+        trip.notes || null,
+        countrySummary ? `Countries: ${countrySummary}` : null,
+        friendSummary ? `Friends: ${friendSummary}` : null,
+        availabilitySummary ? `Availability: ${availabilitySummary}` : null,
+        previewLines.length ? `Itinerary:\n${previewLines.join('\n')}` : null,
+        visaSummaries.length
+          ? `Visa prep:\n${visaSummaries
+              .slice(0, 3)
+              .map(
+                summary =>
+                  `${summary.travelerName} (${summary.passportLabel}) · ${summary.countryName}: ${prettyVisaType(summary.visaType)}${
+                    summary.allowedDays ? ` (${summary.allowedDays} days)` : ''
+                  }${summary.exceedsAllowedStay ? ' - trip may exceed allowed stay' : ''}`
+              )
+              .join('\n')}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      await Calendar.createEventAsync(writableCalendar.id, {
+        title: trip.title,
+        startDate: new Date(trip.startDate),
+        endDate: new Date(trip.endDate),
+        allDay: true,
+        notes,
+      });
+
+      Alert.alert('Added to calendar', 'Your trip has been added to the device calendar.');
+    } catch (error) {
+      console.error('Calendar create error', error);
+      Alert.alert('Calendar error', 'Unable to create the calendar event right now.');
+    }
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingTop: insets.top + 18,
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom + 40,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Text style={[styles.backText, { color: colors.textPrimary }]}>Back</Text>
+        </Pressable>
+
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Trip Planner</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Save trip ideas with destinations, dates, travelers, and the best
+              shared windows you can actually make work.
+            </Text>
+          </View>
+
+          <Pressable
+            onPress={openNewTrip}
+            style={[styles.addButton, { backgroundColor: colors.primary }]}
+          >
+            <Ionicons name="add" size={18} color={colors.primaryText} />
+          </Pressable>
+        </View>
+
+        {trips.length === 0 ? (
+          <Pressable
+            onPress={openNewTrip}
+            style={[
+              styles.emptyCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <Ionicons name="airplane-outline" size={28} color={colors.textPrimary} />
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+              Start your first trip plan
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+              Add dates, destinations, shared availability, and expense splits before
+              anything gets booked.
+            </Text>
+          </Pressable>
+        ) : (
+          <View style={styles.tripStack}>
+            {trips.map(trip => {
+              const countrySummary = trip.countryIso2s
+                .map(iso2 => countryNameByIso2.get(iso2) ?? iso2)
+                .join(', ');
+              const friendSummary = trip.friendIds
+                .map(friendId => friendNameById.get(friendId) ?? 'Friend')
+                .join(', ');
+              const summary = tripSummary(trip);
+              const totalExpenses = expenseTotal(trip);
+              const tripTravelers = travelersForTrip(trip);
+              const overlaps = computeAvailabilityOverlaps(trip.availability, tripTravelers);
+              const previewLines = itineraryPreview(trip.dayPlans);
+              const totalDays = tripLengthDays(trip.startDate, trip.endDate);
+              const visaSummaries = computeTripVisaSummaries(
+                countries.filter(country => trip.countryIso2s.includes(country.iso2)),
+                tripTravelers,
+                trip.travelerPassports,
+                visaRowsByPassport,
+                totalDays
+              );
+              const availabilitySummary = availabilityBadge(
+                overlaps,
+                trip.availability,
+                tripTravelers.length
+              );
+
+              return (
+                <View
+                  key={trip.id}
+                  style={[
+                    styles.tripCard,
+                    { backgroundColor: colors.card, borderColor: colors.border },
+                  ]}
+                >
+                  <View style={styles.tripCardHeader}>
+                    <View style={{ flex: 1, marginRight: 12 }}>
+                      <Text style={[styles.tripTitle, { color: colors.textPrimary }]}>
+                        {trip.title}
+                      </Text>
+                      <Text style={[styles.tripMeta, { color: colors.textSecondary }]}>
+                        {trip.startDate
+                          ? `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`
+                          : 'Dates not set'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.tripActions}>
+                      <Pressable
+                        onPress={() => addTripToCalendar(trip)}
+                        disabled={!trip.startDate || !trip.endDate}
+                      >
+                        <Text
+                          style={[
+                            styles.tripActionText,
+                            {
+                              color:
+                                trip.startDate && trip.endDate
+                                  ? colors.primary
+                                  : colors.textMuted,
+                            },
+                          ]}
+                        >
+                          Calendar
+                        </Text>
+                      </Pressable>
+                      <Pressable onPress={() => openEditTrip(trip)}>
+                        <Text style={[styles.tripActionText, { color: colors.primary }]}>
+                          Edit
+                        </Text>
+                      </Pressable>
+                      <Pressable onPress={() => deleteTrip(trip.id)}>
+                        <Text style={[styles.tripActionText, { color: '#DC2626' }]}>
+                          Delete
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  {countrySummary ? (
+                    <Text style={[styles.tripDetail, { color: colors.textPrimary }]}>
+                      Countries: {countrySummary}
+                    </Text>
+                  ) : null}
+
+                  {friendSummary ? (
+                    <Text style={[styles.tripDetail, { color: colors.textPrimary }]}>
+                      Friends: {friendSummary}
+                    </Text>
+                  ) : null}
+
+                  {availabilitySummary ? (
+                    <View
+                      style={[
+                        styles.infoPanel,
+                        { backgroundColor: colors.greenBg, borderColor: colors.greenBorder },
+                      ]}
+                    >
+                      <Text style={[styles.infoText, { color: colors.greenText }]}>
+                        {availabilitySummary}
+                      </Text>
+                      {overlaps.slice(0, 2).map(overlap => (
+                        <Text key={`${overlap.startDate}-${overlap.endDate}`} style={[styles.infoSubtext, { color: colors.greenText }]}>
+                          {formatDate(overlap.startDate)} - {formatDate(overlap.endDate)}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+
+                  {summary ? (
+                    <View style={styles.statRow}>
+                      <View
+                        style={[
+                          styles.statPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          Overall
+                        </Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                          {summary.overall}
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.statPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          Budget
+                        </Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                          {summary.affordability}
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.statPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          Season
+                        </Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                          {summary.seasonality}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null}
+
+                  {previewLines.length ? (
+                    <View style={styles.expenseCard}>
+                      <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                        Itinerary
+                      </Text>
+                      {previewLines.map(line => (
+                        <Text key={line} style={[styles.tripNotes, { color: colors.textSecondary }]}>
+                          {line}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+
+                  <View
+                    style={[
+                      styles.infoPanel,
+                      {
+                        backgroundColor:
+                          visaSummaries.some(summary => summary.exceedsAllowedStay)
+                            ? colors.yellowBg
+                            : colors.surface,
+                        borderColor:
+                          visaSummaries.some(summary => summary.exceedsAllowedStay)
+                            ? colors.yellowBorder
+                            : colors.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.infoText,
+                        {
+                          color: visaSummaries.some(summary => summary.exceedsAllowedStay)
+                            ? colors.yellowText
+                            : colors.textPrimary,
+                        },
+                      ]}
+                    >
+                      {visaHeadline(visaSummaries, tripTravelers.length || 1, totalDays)}
+                    </Text>
+                    <Text style={[styles.infoSubtext, { color: colors.textSecondary }]}>
+                      Assumes the app&apos;s default passport context for all travelers.
+                    </Text>
+                    {visaSummaries.slice(0, 3).map(summary => (
+                      <Text
+                        key={`${summary.travelerId}-${summary.countryIso2}`}
+                        style={[
+                          styles.infoSubtext,
+                          {
+                            color: summary.exceedsAllowedStay ? colors.yellowText : colors.textSecondary,
+                          },
+                        ]}
+                      >
+                        {summary.travelerName} · {summary.passportLabel}: {summary.countryFlag ? `${summary.countryFlag} ` : ''}
+                        {summary.countryName} {prettyVisaType(summary.visaType)}
+                        {summary.allowedDays ? ` · ${summary.allowedDays} days` : ''}
+                        {summary.exceedsAllowedStay ? ' · trip may be too long' : ''}
+                      </Text>
+                    ))}
+                  </View>
+
+                  {trip.expenses.length ? (
+                    <View style={styles.expenseCard}>
+                      <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                        Expenses
+                      </Text>
+                      <Text style={[styles.tripDetail, { color: colors.textPrimary }]}>
+                        Total tracked: ${totalExpenses.toFixed(2)}
+                      </Text>
+                      {trip.expenses.slice(0, 3).map(expense => (
+                        <Text
+                          key={expense.id}
+                          style={[styles.tripNotes, { color: colors.textSecondary }]}
+                        >
+                          {expense.title}: ${expense.totalAmount.toFixed(2)} paid by{' '}
+                          {expense.paidByName}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+
+                  {trip.notes ? (
+                    <Text style={[styles.tripNotes, { color: colors.textSecondary }]}>
+                      {trip.notes}
+                    </Text>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
+
+      <Modal animationType="slide" visible={modalVisible} onRequestClose={closeModal}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <ScrollView
+            contentContainerStyle={{
+              paddingTop: insets.top + 18,
+              paddingHorizontal: 20,
+              paddingBottom: insets.bottom + 40,
+            }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.modalHeader}>
+              <Pressable onPress={closeModal}>
+                <Text style={[styles.backText, { color: colors.textPrimary }]}>Cancel</Text>
+              </Pressable>
+              <Pressable onPress={saveTrip} disabled={!draft.title.trim()}>
+                <Text
+                  style={[
+                    styles.saveText,
+                    {
+                      color: draft.title.trim() ? colors.primary : colors.textMuted,
+                    },
+                  ]}
+                >
+                  Save
+                </Text>
+              </Pressable>
+            </View>
+
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
+              {draft.id ? 'Edit Trip' : 'New Trip'}
+            </Text>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Title</Text>
+              <TextInput
+                value={draft.title}
+                onChangeText={value => setDraft(current => ({ ...current, title: value }))}
+                placeholder="Summer in Portugal"
+                placeholderTextColor={colors.textMuted}
+                style={[
+                  styles.textInput,
+                  {
+                    color: colors.textPrimary,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              />
+
+              <Text
+                style={[styles.sectionTitle, styles.sectionTopGap, { color: colors.textPrimary }]}
+              >
+                Notes
+              </Text>
+              <TextInput
+                multiline
+                value={draft.notes}
+                onChangeText={value => setDraft(current => ({ ...current, notes: value }))}
+                placeholder="Flights, timing, neighborhood ideas..."
+                placeholderTextColor={colors.textMuted}
+                style={[
+                  styles.notesInput,
+                  {
+                    color: colors.textPrimary,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+                textAlignVertical="top"
+              />
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Pressable
+                onPress={toggleIncludeDates}
+                style={styles.switchRow}
+              >
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                  Include dates
+                </Text>
+                <Text style={{ color: colors.primary, fontWeight: '700' }}>
+                  {draft.includeDates ? 'On' : 'Off'}
+                </Text>
+              </Pressable>
+
+              {draft.includeDates ? (
+                <View style={styles.dateRow}>
+                  <View
+                    style={[
+                      styles.dateButton,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                    ]}
+                  >
+                    <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>
+                      Start
+                    </Text>
+                    <TextInput
+                      value={draft.startDate}
+                      onChangeText={value => updateTripDateField('startDate', value)}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor={colors.textMuted}
+                      style={[styles.dateInput, { color: colors.textPrimary }]}
+                    />
+                  </View>
+
+                  <View
+                    style={[
+                      styles.dateButton,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                    ]}
+                  >
+                    <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>
+                      End
+                    </Text>
+                    <TextInput
+                      value={draft.endDate}
+                      onChangeText={value => updateTripDateField('endDate', value)}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor={colors.textMuted}
+                      style={[styles.dateInput, { color: colors.textPrimary }]}
+                    />
+                  </View>
+                </View>
+              ) : null}
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Countries</Text>
+              <TextInput
+                value={countryQuery}
+                onChangeText={setCountryQuery}
+                placeholder="Search countries"
+                placeholderTextColor={colors.textMuted}
+                style={[
+                  styles.textInput,
+                  {
+                    color: colors.textPrimary,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              />
+
+              {selectedCountryNames.length ? (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Selected: {selectedCountryNames.join(', ')}
+                </Text>
+              ) : null}
+
+              {draft.countryIso2s.length ? (
+                <View style={styles.statRow}>
+                  {countries
+                    .filter(country => draft.countryIso2s.includes(country.iso2))
+                    .slice(0, 3)
+                    .map(country => (
+                      <View
+                        key={country.iso2}
+                        style={[
+                          styles.statPill,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                          {country.flagEmoji ? `${country.flagEmoji} ` : ''}
+                          {country.iso2}
+                        </Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                          {country.scoreTotal ?? 0}
+                        </Text>
+                      </View>
+                    ))}
+                </View>
+              ) : null}
+
+              <View style={styles.chipWrap}>
+                {filteredCountries.map(country => {
+                  const selected = draft.countryIso2s.includes(country.iso2);
+                  return (
+                    <Pressable
+                      key={country.iso2}
+                      onPress={() => toggleCountry(country.iso2)}
+                      style={[
+                        styles.chip,
+                        {
+                          backgroundColor: selected ? colors.primary : colors.surface,
+                          borderColor: selected ? colors.primary : colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={{
+                          color: selected ? colors.primaryText : colors.textPrimary,
+                          fontWeight: '600',
+                        }}
+                      >
+                        {country.flagEmoji ? `${country.flagEmoji} ` : ''}
+                        {country.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                Passports
+              </Text>
+              <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                Choose the passport to use for each traveler when calculating visa prep.
+              </Text>
+
+              {draftTravelers.length ? (
+                <View style={styles.expenseList}>
+                  {draftTravelers.map(traveler => {
+                    const selectedPassport =
+                      draft.travelerPassports.find(
+                        selection => selection.travelerId === traveler.id
+                      )?.passportCountryCode ??
+                      (traveler.id === currentTraveler?.id ? defaultPassportCode : 'US');
+
+                    return (
+                      <View
+                        key={`passport-${traveler.id}`}
+                        style={[
+                          styles.itineraryCard,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                          {traveler.name}
+                        </Text>
+                        <Text style={[styles.infoSubtext, { color: colors.textSecondary }]}>
+                          Passport used for visa checks
+                        </Text>
+                        <View style={styles.chipWrap}>
+                          {[
+                            selectedPassport,
+                            ...(traveler.id === currentTraveler?.id
+                              ? savedPassportPreferences.nationalityCountryCodes
+                              : []),
+                            ...plannerCountries.slice(0, 12).map(country => country.iso2),
+                          ]
+                            .map(code => code.toUpperCase())
+                            .filter((code, index, array) => array.indexOf(code) === index)
+                            .slice(0, 12)
+                            .map(code => {
+                              const selected = selectedPassport === code;
+                              return (
+                                <Pressable
+                                  key={`${traveler.id}-${code}`}
+                                  onPress={() => updateTravelerPassport(traveler.id, code)}
+                                  style={[
+                                    styles.chip,
+                                    {
+                                      backgroundColor: selected ? colors.primary : colors.card,
+                                      borderColor: selected ? colors.primary : colors.border,
+                                    },
+                                  ]}
+                                >
+                                  <Text
+                                    style={{
+                                      color: selected ? colors.primaryText : colors.textPrimary,
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    {countryLabelForPassport(code)}
+                                  </Text>
+                                </Pressable>
+                              );
+                            })}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Add travelers before setting passport context.
+                </Text>
+              )}
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Itinerary</Text>
+              {draft.includeDates && draft.dayPlans.length ? (
+                <>
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Shape each day as a country stop or a travel day.
+                  </Text>
+
+                  <View style={styles.expenseList}>
+                    {draft.dayPlans.map(plan => (
+                      <View
+                        key={plan.id}
+                        style={[
+                          styles.itineraryCard,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                          {formatDate(plan.date)}
+                        </Text>
+
+                        <View style={styles.inlineRow}>
+                          {[
+                            { label: 'Country', value: 'country' as const },
+                            { label: 'Travel', value: 'travel' as const },
+                          ].map(option => {
+                            const selected = plan.kind === option.value;
+                            return (
+                              <Pressable
+                                key={`${plan.id}-${option.value}`}
+                                onPress={() => updateDayPlan(plan.id, { kind: option.value })}
+                                style={[
+                                  styles.segmentButton,
+                                  {
+                                    backgroundColor: selected ? colors.primary : colors.card,
+                                    borderColor: selected ? colors.primary : colors.border,
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={{
+                                    color: selected ? colors.primaryText : colors.textPrimary,
+                                    fontWeight: '700',
+                                  }}
+                                >
+                                  {option.label}
+                                </Text>
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+
+                        {plan.kind === 'country' ? (
+                          <View style={styles.chipWrap}>
+                            {draft.countryIso2s.map(iso2 => {
+                              const selected = plan.countryIso2 === iso2;
+                              const label = countryNameByIso2.get(iso2) ?? iso2;
+                              return (
+                                <Pressable
+                                  key={`${plan.id}-${iso2}`}
+                                  onPress={() =>
+                                    updateDayPlan(plan.id, {
+                                      kind: 'country',
+                                      countryIso2: iso2,
+                                      countryName: label,
+                                    })
+                                  }
+                                  style={[
+                                    styles.chip,
+                                    {
+                                      backgroundColor: selected ? colors.primary : colors.card,
+                                      borderColor: selected ? colors.primary : colors.border,
+                                    },
+                                  ]}
+                                >
+                                  <Text
+                                    style={{
+                                      color: selected ? colors.primaryText : colors.textPrimary,
+                                      fontWeight: '600',
+                                    }}
+                                  >
+                                    {label}
+                                  </Text>
+                                </Pressable>
+                              );
+                            })}
+                          </View>
+                        ) : (
+                          <Text style={[styles.infoSubtext, { color: colors.textSecondary }]}>
+                            Travel day between stops
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                </>
+              ) : (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Add trip dates to generate a day-by-day itinerary.
+                </Text>
+              )}
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Friends</Text>
+
+              {friends.length === 0 ? (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Add friends in the Friends tab to include them in a plan.
+                </Text>
+              ) : (
+                <>
+                  {selectedFriendNames.length ? (
+                    <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                      Selected: {selectedFriendNames.join(', ')}
+                    </Text>
+                  ) : null}
+
+                  <View style={styles.chipWrap}>
+                    {friends.map(friend => {
+                      const selected = draft.friendIds.includes(friend.id);
+                      const label = friend.full_name || friend.username || 'Friend';
+                      return (
+                        <Pressable
+                          key={friend.id}
+                          onPress={() => toggleFriend(friend.id)}
+                          style={[
+                            styles.chip,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.surface,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={{
+                              color: selected ? colors.primaryText : colors.textPrimary,
+                              fontWeight: '600',
+                            }}
+                          >
+                            {label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                Availability
+              </Text>
+              <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                Add exact dates or flexible months for each traveler to spot real overlap.
+              </Text>
+
+              {draftTravelers.length === 0 ? (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Add yourself or friends to the trip before tracking shared availability.
+                </Text>
+              ) : (
+                <>
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Traveler
+                  </Text>
+                  <View style={styles.chipWrap}>
+                    {draftTravelers.map(traveler => {
+                      const selected = availabilityDraft.participantId === traveler.id;
+                      return (
+                        <Pressable
+                          key={traveler.id}
+                          onPress={() =>
+                            setAvailabilityDraft(current => ({
+                              ...current,
+                              participantId: traveler.id,
+                            }))
+                          }
+                          style={[
+                            styles.chip,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.surface,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={{
+                              color: selected ? colors.primaryText : colors.textPrimary,
+                              fontWeight: '600',
+                            }}
+                          >
+                            {traveler.name}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Availability type
+                  </Text>
+                  <View style={styles.inlineRow}>
+                    {[
+                      { label: 'Exact dates', value: 'exact_dates' as const },
+                      { label: 'Flexible month', value: 'flexible_month' as const },
+                    ].map(option => {
+                      const selected = availabilityDraft.kind === option.value;
+                      return (
+                        <Pressable
+                          key={option.value}
+                          onPress={() =>
+                            setAvailabilityDraft(current => ({ ...current, kind: option.value }))
+                          }
+                          style={[
+                            styles.segmentButton,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.surface,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={{
+                              color: selected ? colors.primaryText : colors.textPrimary,
+                              fontWeight: '700',
+                            }}
+                          >
+                            {option.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  {availabilityDraft.kind === 'exact_dates' ? (
+                    <View style={styles.dateRow}>
+                      <View
+                        style={[
+                          styles.dateButton,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>
+                          Start
+                        </Text>
+                        <TextInput
+                          value={availabilityDraft.startDate}
+                          onChangeText={value =>
+                            setAvailabilityDraft(current => ({ ...current, startDate: value }))
+                          }
+                          placeholder="YYYY-MM-DD"
+                          placeholderTextColor={colors.textMuted}
+                          style={[styles.dateInput, { color: colors.textPrimary }]}
+                        />
+                      </View>
+
+                      <View
+                        style={[
+                          styles.dateButton,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>
+                          End
+                        </Text>
+                        <TextInput
+                          value={availabilityDraft.endDate}
+                          onChangeText={value =>
+                            setAvailabilityDraft(current => ({ ...current, endDate: value }))
+                          }
+                          placeholder="YYYY-MM-DD"
+                          placeholderTextColor={colors.textMuted}
+                          style={[styles.dateInput, { color: colors.textPrimary }]}
+                        />
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.chipWrap}>
+                      {monthOptions.map(option => {
+                        const selected = availabilityDraft.flexibleMonth === option;
+                        return (
+                          <Pressable
+                            key={option}
+                            onPress={() =>
+                              setAvailabilityDraft(current => ({
+                                ...current,
+                                flexibleMonth: option,
+                              }))
+                            }
+                            style={[
+                              styles.chip,
+                              {
+                                backgroundColor: selected ? colors.primary : colors.surface,
+                                borderColor: selected ? colors.primary : colors.border,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={{
+                                color: selected ? colors.primaryText : colors.textPrimary,
+                                fontWeight: '600',
+                              }}
+                            >
+                              {formatMonthLabel(option)}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  )}
+
+                  <Pressable
+                    onPress={addAvailabilityToDraft}
+                    style={[styles.addExpenseButton, { backgroundColor: colors.primary }]}
+                  >
+                    <Text style={[styles.submitText, { color: colors.primaryText }]}>
+                      Add Availability
+                    </Text>
+                  </Pressable>
+
+                  {draftOverlaps.length ? (
+                    <View
+                      style={[
+                        styles.infoPanel,
+                        { backgroundColor: colors.greenBg, borderColor: colors.greenBorder },
+                      ]}
+                    >
+                      <Text style={[styles.infoText, { color: colors.greenText }]}>
+                        {availabilityBadge(
+                          draftOverlaps,
+                          draft.availability,
+                          draftTravelers.length
+                        )}
+                      </Text>
+                      {draftOverlaps.slice(0, 3).map(overlap => (
+                        <Text
+                          key={`${overlap.startDate}-${overlap.endDate}`}
+                          style={[styles.infoSubtext, { color: colors.greenText }]}
+                        >
+                          {formatDate(overlap.startDate)} - {formatDate(overlap.endDate)}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+
+                  {draft.availability.length ? (
+                    <View style={styles.availabilityList}>
+                      {draftTravelers.map(traveler => {
+                        const travelerProposals = draft.availability.filter(
+                          proposal => proposal.participantId === traveler.id
+                        );
+                        if (travelerProposals.length === 0) return null;
+
+                        return (
+                          <View
+                            key={traveler.id}
+                            style={[
+                              styles.availabilityGroup,
+                              {
+                                backgroundColor: colors.surface,
+                                borderColor: colors.border,
+                              },
+                            ]}
+                          >
+                            <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                              {traveler.name}
+                            </Text>
+                            {travelerProposals.map(proposal => (
+                              <View key={proposal.id} style={styles.availabilityRow}>
+                                <View style={{ flex: 1, marginRight: 12 }}>
+                                  <Text
+                                    style={[styles.tripDetail, { color: colors.textPrimary }]}
+                                  >
+                                    {proposal.kind === 'exact_dates'
+                                      ? `${formatDate(proposal.startDate)} - ${formatDate(proposal.endDate)}`
+                                      : `Flexible ${formatMonthLabel(proposal.startDate.slice(0, 7))}`}
+                                  </Text>
+                                  <Text
+                                    style={[styles.infoSubtext, { color: colors.textSecondary }]}
+                                  >
+                                    {proposal.kind === 'exact_dates'
+                                      ? 'Exact dates'
+                                      : 'Flexible month'}
+                                  </Text>
+                                </View>
+                                <Pressable
+                                  onPress={() =>
+                                    setDraft(current => ({
+                                      ...current,
+                                      availability: current.availability.filter(
+                                        item => item.id !== proposal.id
+                                      ),
+                                    }))
+                                  }
+                                >
+                                  <Text style={[styles.tripActionText, { color: '#DC2626' }]}>
+                                    Remove
+                                  </Text>
+                                </Pressable>
+                              </View>
+                            ))}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : null}
+                </>
+              )}
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                Visa Summary
+              </Text>
+              <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                Uses the app&apos;s current default passport assumption until traveler-specific
+                passport preferences exist in mobile.
+              </Text>
+              <View
+                style={[
+                  styles.infoPanel,
+                  {
+                    backgroundColor: draftVisaSummaries.some(summary => summary.exceedsAllowedStay)
+                      ? colors.yellowBg
+                      : colors.surface,
+                    borderColor: draftVisaSummaries.some(summary => summary.exceedsAllowedStay)
+                      ? colors.yellowBorder
+                      : colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.infoText,
+                    {
+                      color: draftVisaSummaries.some(summary => summary.exceedsAllowedStay)
+                        ? colors.yellowText
+                        : colors.textPrimary,
+                    },
+                  ]}
+                >
+                  {visaHeadline(draftVisaSummaries, draftTravelers.length || 1, draftTripDays)}
+                </Text>
+                {draftVisaSummaries.length ? (
+                  draftVisaSummaries.map(summary => (
+                    <Text
+                      key={`draft-visa-${summary.travelerId}-${summary.countryIso2}`}
+                      style={[
+                        styles.infoSubtext,
+                        {
+                          color: summary.exceedsAllowedStay ? colors.yellowText : colors.textSecondary,
+                        },
+                      ]}
+                    >
+                      {summary.travelerName} · {summary.passportLabel}: {summary.countryFlag ? `${summary.countryFlag} ` : ''}
+                      {summary.countryName} {prettyVisaType(summary.visaType)}
+                      {summary.allowedDays ? ` · ${summary.allowedDays} days` : ''}
+                      {summary.exceedsAllowedStay ? ' · trip may be too long' : ''}
+                    </Text>
+                  ))
+                ) : (
+                  <Text style={[styles.infoSubtext, { color: colors.textSecondary }]}>
+                    No advance visa prep is currently flagged for the selected countries.
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Expenses</Text>
+
+              <TextInput
+                value={expenseDraftTitle}
+                onChangeText={setExpenseDraftTitle}
+                placeholder="Expense title"
+                placeholderTextColor={colors.textMuted}
+                style={[
+                  styles.textInput,
+                  {
+                    color: colors.textPrimary,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              />
+
+              <TextInput
+                value={expenseDraftAmount}
+                onChangeText={setExpenseDraftAmount}
+                placeholder="Amount in USD"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="decimal-pad"
+                style={[
+                  styles.textInput,
+                  {
+                    color: colors.textPrimary,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    marginTop: 10,
+                  },
+                ]}
+              />
+
+              {draftTravelers.length ? (
+                <>
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Who paid?
+                  </Text>
+                  <View style={styles.chipWrap}>
+                    {draftTravelers.map(participant => {
+                      const selected = expenseDraftPaidById === participant.id;
+                      return (
+                        <Pressable
+                          key={participant.id}
+                          onPress={() => setExpenseDraftPaidById(participant.id)}
+                          style={[
+                            styles.chip,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.surface,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={{
+                              color: selected ? colors.primaryText : colors.textPrimary,
+                              fontWeight: '600',
+                            }}
+                          >
+                            {participant.name}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                    Split with
+                  </Text>
+                  <View style={styles.chipWrap}>
+                    {draftTravelers.map(participant => {
+                      const selected = expenseDraftSplitWithIds.includes(participant.id);
+                      return (
+                        <Pressable
+                          key={`split-${participant.id}`}
+                          onPress={() => toggleExpenseSplit(participant.id)}
+                          style={[
+                            styles.chip,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.surface,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={{
+                              color: selected ? colors.primaryText : colors.textPrimary,
+                              fontWeight: '600',
+                            }}
+                          >
+                            {participant.name}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </>
+              ) : (
+                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  Add yourself or friends to the trip before splitting expenses.
+                </Text>
+              )}
+
+              <Pressable
+                onPress={addExpenseToDraft}
+                style={[styles.addExpenseButton, { backgroundColor: colors.primary }]}
+              >
+                <Text style={[styles.submitText, { color: colors.primaryText }]}>
+                  Add Expense
+                </Text>
+              </Pressable>
+
+              {draft.expenses.length ? (
+                <View style={styles.expenseList}>
+                  {draft.expenses.map(expense => (
+                    <View
+                      key={expense.id}
+                      style={[
+                        styles.expenseItem,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      <View style={{ flex: 1, marginRight: 12 }}>
+                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                          {expense.title}
+                        </Text>
+                        <Text style={[styles.tripNotes, { color: colors.textSecondary }]}>
+                          ${expense.totalAmount.toFixed(2)} paid by {expense.paidByName}
+                        </Text>
+                      </View>
+                      <Pressable
+                        onPress={() =>
+                          setDraft(current => ({
+                            ...current,
+                            expenses: current.expenses.filter(item => item.id !== expense.id),
+                          }))
+                        }
+                      >
+                        <Text style={[styles.tripActionText, { color: '#DC2626' }]}>
+                          Remove
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  backText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 8,
+    paddingRight: 12,
+  },
+  addButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  emptyCard: {
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: 22,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 12,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
+  },
+  tripStack: {
+    gap: 14,
+  },
+  tripCard: {
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: 18,
+  },
+  tripCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  tripTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  tripMeta: {
+    fontSize: 13,
+    marginTop: 4,
+  },
+  tripActions: {
+    flexDirection: 'row',
+    gap: 14,
+  },
+  tripActionText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  tripDetail: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  tripNotes: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 10,
+  },
+  expenseCard: {
+    marginTop: 12,
+  },
+  expenseTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  statRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12,
+  },
+  statPill: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minWidth: 84,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  saveText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  submitText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  modalTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 20,
+  },
+  sectionCard: {
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  sectionTopGap: {
+    marginTop: 14,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    marginTop: 10,
+  },
+  notesInput: {
+    minHeight: 110,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    lineHeight: 21,
+    marginTop: 10,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  dateButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+  },
+  dateLabel: {
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  dateInput: {
+    fontSize: 15,
+    fontWeight: '600',
+    paddingVertical: 0,
+  },
+  selectionSummary: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 10,
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12,
+  },
+  chip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  inlineRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12,
+  },
+  segmentButton: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  addExpenseButton: {
+    minHeight: 44,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+  },
+  expenseList: {
+    gap: 10,
+    marginTop: 14,
+  },
+  expenseItem: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itineraryCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 12,
+  },
+  infoPanel: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+    marginTop: 12,
+  },
+  infoText: {
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  infoSubtext: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  availabilityList: {
+    gap: 10,
+    marginTop: 14,
+  },
+  availabilityGroup: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 12,
+  },
+  availabilityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+});

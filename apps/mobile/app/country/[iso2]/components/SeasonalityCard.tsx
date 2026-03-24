@@ -8,6 +8,7 @@ type Props = {
   description?: string;
   normalizedLabel?: string;
   weightOnlyLabel?: string;
+  weightLabel?: string;
 };
 
 const MONTHS = [
@@ -27,6 +28,7 @@ export default function SeasonalityCard({
   description,
   normalizedLabel,
   weightOnlyLabel,
+  weightLabel = 'Today · 5%',
 }: Props) {
   // SAFE: bestMonths may not be an array at runtime
   const safeMonths = Array.isArray(bestMonths) ? bestMonths : [];
@@ -39,7 +41,7 @@ export default function SeasonalityCard({
     <View style={[styles.card, { backgroundColor: theme.card }]}>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Seasonality</Text>
-        <Text style={[styles.weightText, { color: theme.textSecondary }]}>Today · 5%</Text>
+        <Text style={[styles.weightText, { color: theme.textSecondary }]}>{weightLabel}</Text>
       </View>
 
       <View style={styles.metricRow}>

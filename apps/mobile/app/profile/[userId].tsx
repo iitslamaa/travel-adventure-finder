@@ -26,35 +26,44 @@ import { supabase } from '../../lib/supabase';
 export default function FriendProfileScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const { userId } = useLocalSearchParams();
+  const targetUserId = typeof userId === 'string' ? userId : undefined;
+  const colors = useTheme();
+  const { session } = useAuth();
+  const [ctaOpen, setCtaOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { profile, loading, refresh: refreshProfile } = useProfileById(targetUserId);
+  const { isFriend, isPending, refresh: refreshFriendship } =
+    useFriendshipStatus(targetUserId);
+  const {
+    count: friendCount,
+    refresh: refreshFriendCount,
+  } = useFriendCount(targetUserId);
+  const {
+    traveledIsoCodes,
+    refresh: refreshUserCounts,
+  } = useUserCounts(targetUserId);
+  const { countries } = useCountries();
+
+  const isOwnProfile = session?.user?.id === targetUserId;
 
   useEffect(() => {
     navigation.setOptions({
       title: 'Profile',
     });
   }, [navigation]);
-  const { userId } = useLocalSearchParams();
-  if (typeof userId !== 'string') return null;
-  const colors = useTheme();
-
-  const { session } = useAuth();
-  const isOwnProfile = session?.user?.id === userId;
-
-  const [ctaOpen, setCtaOpen] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const { isFriend, isPending, refresh: refreshFriendship } = useFriendshipStatus(userId);
-  const { refresh: refreshFriendCount } = useFriendCount(userId);
 
   const handleUnfriend = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id || !targetUserId) return;
 
-    setCtaOpen(false); // optimistic UI
+    setCtaOpen(false);
 
     await supabase
       .from('friends')
       .delete()
       .or(
-        `and(user_id.eq.${session.user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${session.user.id})`
+        `and(user_id.eq.${session.user.id},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${session.user.id})`
       );
 
     await refreshFriendship();
@@ -62,27 +71,27 @@ export default function FriendProfileScreen() {
   };
 
   const handleAddFriend = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id || !targetUserId) return;
 
     await supabase.from('friend_requests').insert({
       sender_id: session.user.id,
-      receiver_id: userId,
+      receiver_id: targetUserId,
       status: 'pending',
     });
 
-    refreshFriendship(); // optimistic refresh
+    await refreshFriendship();
   };
 
   const handleCancelRequest = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id || !targetUserId) return;
 
     await supabase
       .from('friend_requests')
       .delete()
       .eq('sender_id', session.user.id)
-      .eq('receiver_id', userId);
+      .eq('receiver_id', targetUserId);
 
-    refreshFriendship(); // optimistic refresh
+    await refreshFriendship();
   };
 
   const handleRefresh = async () => {
@@ -90,8 +99,10 @@ export default function FriendProfileScreen() {
 
     try {
       await Promise.all([
-        refreshFriendship?.(),
-        refreshFriendCount?.(),
+        refreshFriendship(),
+        refreshFriendCount(),
+        refreshProfile(),
+        refreshUserCounts(),
       ]);
     } catch (err) {
       console.error('Profile refresh error:', err);
@@ -100,20 +111,16 @@ export default function FriendProfileScreen() {
     setRefreshing(false);
   };
 
-  const { profile, loading } = useProfileById(userId);
-  const { count: friendCount } = useFriendCount(userId);
-  const { traveledCount, traveledIsoCodes } = useUserCounts(userId);
-
-  const { countries } = useCountries();
-
   const nextDestinationIso =
     typeof profile?.next_destination === 'string'
       ? profile.next_destination
       : null;
 
-  const nextDestinationCountry = countries?.find(
-    c => c.iso2 === nextDestinationIso
-  );
+  const nextDestinationCountry = countries.find(c => c.iso2 === nextDestinationIso);
+
+  if (!targetUserId) {
+    return null;
+  }
 
   if (loading || !profile) {
     return (
@@ -122,8 +129,6 @@ export default function FriendProfileScreen() {
       </View>
     );
   }
-
-
 
   const languagesText =
     Array.isArray(profile.languages) && profile.languages.length > 0
@@ -135,7 +140,6 @@ export default function FriendProfileScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Top back */}
       <Pressable onPress={() => router.back()} style={styles.backBtn}>
         <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
       </Pressable>
@@ -154,7 +158,6 @@ export default function FriendProfileScreen() {
           Profile
         </Text>
 
-        {/* Header block */}
         <View style={styles.headerRow}>
           <View style={styles.avatarWrap}>
             {profile.avatar_url ? (
@@ -195,7 +198,6 @@ export default function FriendProfileScreen() {
                 </View>
               )}
 
-            {/* Friend button */}
             {!isOwnProfile && (
               <Pressable
                 onPress={() => {
@@ -203,18 +205,15 @@ export default function FriendProfileScreen() {
                   else if (isPending) handleCancelRequest();
                   else handleAddFriend();
                 }}
-                style={[
-                  styles.friendBtn,
-                  { borderColor: colors.primary },
-                ]}
+                style={[styles.friendBtn, { borderColor: colors.primary }]}
               >
                 <Ionicons
                   name={
                     isFriend
                       ? 'checkmark'
                       : isPending
-                      ? 'time-outline'
-                      : 'person-add-outline'
+                        ? 'time-outline'
+                        : 'person-add-outline'
                   }
                   size={18}
                   color={colors.primary}
@@ -224,69 +223,75 @@ export default function FriendProfileScreen() {
                   {isFriend
                     ? `${friendCount} Friend${friendCount === 1 ? '' : 's'}`
                     : isPending
-                    ? 'Requested'
-                    : 'Add Friend'}
+                      ? 'Requested'
+                      : 'Add Friend'}
                 </Text>
               </Pressable>
             )}
           </View>
         </View>
 
-        {(isOwnProfile || isFriend) ? (
-        <>
-        {/* Cards - (we’ll fill these from profile fields next) */}
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-            Languages
-          </Text>
-          <Text style={[styles.cardValue, { color: colors.textMuted }]}> 
-            {languagesText}
-          </Text>
-        </View>
-
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-            Travel Mode: Solo or Group?
-          </Text>
-          <Text style={[styles.cardValue, { color: colors.textMuted }]}>
-            {profile.travel_mode ?? '—'}
-          </Text>
-        </View>
-
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-            Travel Style: Budget, Comfortable, or In Between?
-          </Text>
-          <Text style={[styles.cardValue, { color: colors.textMuted }]}>
-            {profile.travel_style ?? '—'}
-          </Text>
-        </View>
-
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-            Next Destination
-          </Text>
-          {nextDestinationCountry ? (
-            <View style={styles.inlineRow}>
-              <CountryFlag
-                isoCode={nextDestinationCountry.iso2}
-                size={18}
-                style={{ marginRight: 6 }}
-              />
-              <Text style={[styles.cardValue, { color: colors.textPrimary, marginTop: 0 }]}>
-                {nextDestinationCountry.name}
+        {isOwnProfile || isFriend ? (
+          <>
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                Languages
+              </Text>
+              <Text style={[styles.cardValue, { color: colors.textMuted }]}>
+                {languagesText}
               </Text>
             </View>
-          ) : (
-            <Text style={[styles.cardValue, { color: colors.textMuted }]}>—</Text>
-          )}
-        </View>
 
-        <CollapsibleCountrySection
-          title="Countries Traveled"
-          countries={traveledIsoCodes}
-        />
-        </>
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                Travel Mode: Solo or Group?
+              </Text>
+              <Text style={[styles.cardValue, { color: colors.textMuted }]}>
+                {profile.travel_mode ?? '—'}
+              </Text>
+            </View>
+
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                Travel Style: Budget, Comfortable, or In Between?
+              </Text>
+              <Text style={[styles.cardValue, { color: colors.textMuted }]}>
+                {profile.travel_style ?? '—'}
+              </Text>
+            </View>
+
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                Next Destination
+              </Text>
+              {nextDestinationCountry ? (
+                <View style={styles.inlineRow}>
+                  <CountryFlag
+                    isoCode={nextDestinationCountry.iso2}
+                    size={18}
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text
+                    style={[
+                      styles.cardValue,
+                      { color: colors.textPrimary, marginTop: 0 },
+                    ]}
+                  >
+                    {nextDestinationCountry.name}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={[styles.cardValue, { color: colors.textMuted }]}>
+                  —
+                </Text>
+              )}
+            </View>
+
+            <CollapsibleCountrySection
+              title="Countries Traveled"
+              countries={traveledIsoCodes}
+            />
+          </>
         ) : (
           <View style={[styles.lockedCard, { backgroundColor: colors.card }]}>
             <Text style={[styles.lockedText, { color: colors.textMuted }]}>
@@ -295,9 +300,14 @@ export default function FriendProfileScreen() {
           </View>
         )}
       </ScrollView>
+
       <Modal visible={ctaOpen} transparent animationType="slide">
         <Pressable
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'flex-end',
+          }}
           onPress={() => setCtaOpen(false)}
         >
           <View
@@ -312,11 +322,17 @@ export default function FriendProfileScreen() {
               android_ripple={{ color: '#00000022' }}
               onPress={() => {
                 setCtaOpen(false);
-                router.push(`/profile/${userId}/friends`);
+                router.push(`/profile/${targetUserId}/friends`);
               }}
               style={{ paddingVertical: 16 }}
             >
-              <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                }}
+              >
                 View Friends
               </Text>
             </Pressable>
@@ -324,7 +340,7 @@ export default function FriendProfileScreen() {
             <Pressable
               android_ripple={{ color: '#ef444422' }}
               onPress={() => {
-                setCtaOpen(false); // optimistic close
+                setCtaOpen(false);
                 handleUnfriend();
               }}
               style={{ paddingVertical: 16 }}
@@ -385,13 +401,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  linkRow: {
-    marginTop: 18,
-    borderRadius: 24,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  linkText: { fontSize: 18, fontWeight: '800', marginLeft: 10 },
 });

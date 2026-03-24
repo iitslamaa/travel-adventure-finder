@@ -5,6 +5,12 @@ import { useRouter } from "expo-router";
 import { useCountries } from "../../hooks/useCountries";
 import worldGeo from "../../src/assets/geo/world.geo.json";
 
+type SelectedCountry = {
+  name: string;
+  iso2: string;
+  score?: number;
+};
+
 const mutedMapStyle = [
   { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
@@ -30,7 +36,7 @@ export default function ScoreWorldMap() {
   const { countries } = useCountries();
   const { height } = useWindowDimensions();
 
-  const [selected, setSelected] = useState<any>(null);
+  const [selected, setSelected] = useState<SelectedCountry | null>(null);
 
   const scoreLookup = useMemo(() => {
     const map: Record<string, number> = {};
@@ -75,7 +81,7 @@ export default function ScoreWorldMap() {
     // Compute bounding box
     let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
 
-    allCoords.forEach(({ latitude, longitude }) => {
+    allCoords.forEach(({ latitude, longitude }: { latitude: number; longitude: number }) => {
       minLat = Math.min(minLat, latitude);
       maxLat = Math.max(maxLat, latitude);
       minLng = Math.min(minLng, longitude);

@@ -8,6 +8,17 @@ import { buildCountryOverlay } from '../utils/buildCountryOverlay';
 
 import countrySeeds from '../../../../../../apps/web/data/seeds/countries.json';
 
+type SeedCountry = {
+  iso2?: string;
+  iso3?: string;
+};
+
+type PolygonRing = {
+  key: string;
+  datasetIso: string;
+  coords: LatLng[];
+};
+
 function convertPolygon(coords: number[][]): LatLng[] {
   return coords.map(([lng, lat]) => ({
     latitude: lat,
@@ -55,7 +66,7 @@ export function WorldMap({
 
   const ISO3_TO_ISO2: Record<string, string> = useMemo(() => {
     const map: Record<string, string> = {};
-    for (const c of countrySeeds as any[]) {
+    for (const c of countrySeeds as SeedCountry[]) {
       if (c.iso3 && c.iso2) {
         map[String(c.iso3).toUpperCase()] = String(c.iso2).toUpperCase();
       }
@@ -80,7 +91,7 @@ export function WorldMap({
   const sourceFeatures = selectedIso ? fullFeatures : simplifiedFeatures;
 
   const polygons = useMemo(() => {
-    return (sourceFeatures ?? []).flatMap((feature: any, featureIndex: number) => {
+    return (sourceFeatures ?? []).flatMap((feature: any, featureIndex: number): PolygonRing[] => {
       const NAME_OVERRIDES: Record<string, string> = {
         'Taiwan': 'TW',
         'French Guiana': 'GF',
@@ -138,7 +149,7 @@ export function WorldMap({
   }, [sourceFeatures, ISO3_TO_ISO2]);
 
   const polygonsByIso = useMemo(() => {
-    const map = new Map<string, typeof polygons>();
+    const map = new Map<string, PolygonRing[]>();
     for (const p of polygons) {
       if (!map.has(p.datasetIso)) {
         map.set(p.datasetIso, []);
@@ -172,13 +183,13 @@ export function WorldMap({
       return Math.abs(total);
     };
 
-    const ringAreas = isoPolys.map(p => ({
+    const ringAreas = isoPolys.map((p: PolygonRing) => ({
       poly: p,
       area: computeArea(p.coords),
     }));
 
     const maxArea = ringAreas.length
-      ? Math.max(...ringAreas.map(r => r.area))
+      ? Math.max(...ringAreas.map((r: { area: number }) => r.area))
       : 0;
 
     let zoomRings;
@@ -193,8 +204,8 @@ export function WorldMap({
     } else {
       // Default: include rings >= 5% of largest
       zoomRings = ringAreas
-        .filter(r => r.area >= maxArea * 0.05)
-        .map(r => r.poly);
+        .filter((r: { area: number; poly: PolygonRing }) => r.area >= maxArea * 0.05)
+        .map((r: { area: number; poly: PolygonRing }) => r.poly);
     }
 
     // Hardcoded mainland zoom overrides (ignore overseas territories)
@@ -268,7 +279,7 @@ export function WorldMap({
       console.log('Normalized ISO:', normalized);
       console.log(
         'Available ISO sample:',
-        polygons.slice(0, 20).map((p) => p.datasetIso)
+        polygons.slice(0, 20).map((p: PolygonRing) => p.datasetIso)
       );
       return;
     }
@@ -367,7 +378,7 @@ export function WorldMap({
           longitudeDelta: 60,
         }}
       >
-        {(normalizedSelected ? selectedPolygons : worldPolygons).map((item) => {
+        {(normalizedSelected ? selectedPolygons : worldPolygons).map((item: PolygonRing) => {
           const iso = item.datasetIso;
           if (!iso) return null;
 

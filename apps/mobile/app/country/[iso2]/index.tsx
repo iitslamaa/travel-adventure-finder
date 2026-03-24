@@ -3,25 +3,34 @@ import {
   useColorScheme,
   View,
   ActivityIndicator,
-  Text,
 } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useEffect, useState } from 'react';
 import HeaderCard from './components/HeaderCard';
 import AdvisoryCard from './components/AdvisoryCard';
 import SeasonalityCard from './components/SeasonalityCard';
 import VisaCard from './components/VisaCard';
+import AffordabilityCard from './components/AffordabilityCard';
+import LanguageCompatibilityCard from './components/LanguageCompatibilityCard';
+import FriendEngagementCard from './components/FriendEngagementCard';
 import { lightColors, darkColors } from '../../../theme/colors';
+import { useScorePreferences } from '../../../context/ScorePreferencesContext';
+import { scoreCountry, seasonalityScoreForMonth } from '../../../utils/scoring';
+import { useCountryFriendEngagement } from '../../../hooks/useCountryFriendEngagement';
 
 export default function CountryDetailScreen() {
   const { iso2, name } = useLocalSearchParams<{ iso2: string; name?: string }>();
   const navigation = useNavigation();
+  const { weights, selectedMonth } = useScorePreferences();
 
   const scheme = useColorScheme();
   const colors = scheme === 'dark' ? darkColors : lightColors;
 
   const [country, setCountry] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const { engagement, loading: engagementLoading } = useCountryFriendEngagement(
+    typeof iso2 === 'string' ? iso2 : undefined
+  );
 
   useEffect(() => {
     if (name) {
@@ -76,7 +85,11 @@ export default function CountryDetailScreen() {
     );
   }
 
-  const score = country.scoreTotal ?? country.facts?.scoreTotal ?? 0;
+  const score =
+    scoreCountry(country, weights, selectedMonth) ??
+    country.scoreTotal ??
+    country.facts?.scoreTotal ??
+    0;
   const advisoryLevel = country.facts?.advisoryLevel ?? '—';
 
   const advisoryScore =
@@ -113,11 +126,12 @@ export default function CountryDetailScreen() {
       />
 
       <SeasonalityCard
-        score={country.facts?.seasonality ?? 50}
+        score={seasonalityScoreForMonth(country, selectedMonth)}
         bestMonths={country.facts?.fmSeasonalityBestMonths ?? []}
         description={country.facts?.fmSeasonalityNotes}
-        normalizedLabel={`Normalized: ${country.facts?.seasonality ?? 50}`}
+        normalizedLabel={`Normalized: ${seasonalityScoreForMonth(country, selectedMonth)}`}
         weightOnlyLabel={'Weight: 5%'}
+        weightLabel={`${new Date(2026, selectedMonth, 1).toLocaleString('en-US', { month: 'short' })} · 5%`}
       />
 
       <VisaCard
@@ -128,6 +142,31 @@ export default function CountryDetailScreen() {
         sourceUrl={country.facts?.visaSource}
         normalizedLabel={`Normalized: ${country.facts?.visaEase ?? 0}`}
         weightOnlyLabel={'Weight: 5%'}
+      />
+
+      <AffordabilityCard
+        score={country.facts?.affordability ?? 0}
+        category={country.facts?.affordabilityCategory}
+        averageDailyCost={country.facts?.averageDailyCostUsd}
+        explanation={country.facts?.affordabilityExplanation}
+        normalizedLabel={`Normalized: ${country.facts?.affordability ?? 0}`}
+        weightOnlyLabel={'Weight: 15%'}
+      />
+
+      {typeof country.facts?.languageCompatibilityScore === 'number' ? (
+        <LanguageCompatibilityCard
+          score={country.facts.languageCompatibilityScore}
+          weightLabel={`Your languages · ${Math.round(weights.language * 100)}%`}
+        />
+      ) : null}
+
+      <FriendEngagementCard
+        totalFriends={engagement.totalFriends}
+        visited={engagement.visited}
+        bucketList={engagement.bucketList}
+        fromHere={engagement.fromHere}
+        loading={engagementLoading}
+        onSelectProfile={userId => router.push(`/profile/${userId}`)}
       />
     </ScrollView>
   );

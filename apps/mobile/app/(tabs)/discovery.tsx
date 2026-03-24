@@ -1,272 +1,181 @@
-import {
-  View,
-  FlatList,
-  ActivityIndicator,
-  TextInput,
-  Pressable,
-  Text,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-} from 'react-native';
+import { View, Pressable, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
-import { useState, useMemo } from 'react';
-import AuthGate from '../../components/AuthGate';
-import { useCountries } from '../../hooks/useCountries';
-import CountryRow from '../../components/CountryRow';
-import { useAuth } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
-import { normalizeForSearch } from '../../utils/search';
 
-export default function DiscoveryScreen() {
-  const { countries, loading } = useCountries();
-  const insets = useSafeAreaInsets();
+type DiscoveryCardProps = {
+  title: string;
+  subtitle: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+};
 
+function DiscoveryCard({ title, subtitle, icon, onPress }: DiscoveryCardProps) {
   const colors = useTheme();
 
-  const [sortBy, setSortBy] = useState<'name' | 'score'>('score');
-  const [ascending, setAscending] = useState(false);
-  const [search, setSearch] = useState('');
-  const [searchActive, setSearchActive] = useState(false);
-
-  const { toggleBucket, toggleVisited, isBucketed, isVisited } = useAuth();
-
-  const filteredCountries = useMemo(() => {
-    let data = [...countries];
-    const normalizedSearch = normalizeForSearch(search);
-
-    // Search filter
-    if (normalizedSearch) {
-      data = data.filter(c => {
-        const normalizedName = normalizeForSearch(c.name);
-        const normalizedIso2 = normalizeForSearch(c.iso2);
-        return (
-          normalizedName.includes(normalizedSearch) ||
-          normalizedIso2.includes(normalizedSearch)
-        );
-      });
-    }
-
-    // Sorting
-    data.sort((a, b) => {
-      if (sortBy === 'name') {
-        const result = a.name.localeCompare(b.name);
-        return ascending ? result : -result;
-      } else {
-        const aScore = a.scoreTotal ?? 0;
-        const bScore = b.scoreTotal ?? 0;
-        const result = aScore - bScore;
-        return ascending ? result : -result;
-      }
-    });
-
-    return data;
-  }, [countries, sortBy, ascending, search]);
-
-  const toggleSort = (type: 'name' | 'score') => {
-    if (sortBy === type) {
-      setAscending(prev => !prev);
-    } else {
-      setSortBy(type);
-      setAscending(false);
-    }
-  };
-
   return (
-    <AuthGate>
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        {loading ? (
-          <ActivityIndicator
-            style={{ marginTop: 40 }}
-            size="large"
-            color={colors.primary}
-          />
-        ) : (
-          <FlatList
-            contentContainerStyle={{
-              paddingHorizontal: 16,
-              paddingBottom: 140,
-            }}
-            data={filteredCountries}
-            extraData={`${sortBy}-${ascending}-${search}`}
-            keyExtractor={item => item.iso2}
-            stickyHeaderIndices={[0]}
-            ListHeaderComponent={
-              <View
-                style={{
-                  paddingTop: insets.top + 12,
-                  paddingBottom: 20,
-                  borderBottomWidth: 1,
-                  backgroundColor: colors.background,
-                  borderBottomColor: colors.border,
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 16,
-                  }}
-                >
-                  {/* Segmented Control */}
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      backgroundColor: colors.segmentBg,
-                      borderRadius: 24,
-                      flex: 1,
-                      padding: 4,
-                      marginRight: 12,
-                    }}
-                  >
-                    <Pressable
-                      onPress={() => toggleSort('name')}
-                      android_ripple={{ color: '#E0E0E0', borderless: false }}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      pressRetentionOffset={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      style={{
-                        flex: 1,
-                        paddingVertical: 14,
-                        alignItems: 'center',
-                        borderRadius: 20,
-                        backgroundColor:
-                          sortBy === 'name' ? colors.segmentActive : 'transparent',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontWeight: sortBy === 'name' ? '600' : '500',
-                          color: colors.textPrimary,
-                        }}
-                      >
-                        Name {sortBy === 'name' ? (ascending ? '↓' : '↑') : ''}
-                      </Text>
-                    </Pressable>
-
-                    <Pressable
-                      onPress={() => toggleSort('score')}
-                      android_ripple={{ color: '#E0E0E0', borderless: false }}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      pressRetentionOffset={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      style={{
-                        flex: 1,
-                        paddingVertical: 14,
-                        alignItems: 'center',
-                        borderRadius: 20,
-                        backgroundColor:
-                          sortBy === 'score' ? colors.segmentActive : 'transparent',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontWeight: sortBy === 'score' ? '600' : '500',
-                          color: colors.textPrimary,
-                        }}
-                      >
-                        Score {sortBy === 'score' ? (ascending ? '↓' : '↑') : ''}
-                      </Text>
-                    </Pressable>
-                  </View>
-
-                  {/* World Map Button */}
-                  <Pressable
-                    onPress={() => router.push('/score-map')}
-                    android_ripple={{ color: '#E5E7EB', borderless: false }}
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 24,
-                      backgroundColor: colors.segmentBg,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Ionicons
-                      name="map-outline"
-                      size={20}
-                      color={colors.textPrimary}
-                    />
-                  </Pressable>
-                </View>
-              </View>
-            }
-            renderItem={({ item }) => (
-              <CountryRow
-                country={item}
-                onPress={() =>
-                  router.push({
-                    pathname: '/country/[iso2]',
-                    params: {
-                      iso2: item.iso2,
-                      name: item.name,
-                    },
-                  })
-                }
-                isBucketed={isBucketed(item.iso2)}
-                onToggleBucket={() => toggleBucket(item.iso2)}
-                isVisited={isVisited(item.iso2)}
-                onToggleVisited={() => toggleVisited(item.iso2)}
-              />
-            )}
-          />
-        )}
-
-        {/* Floating Bottom Search */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <View
-            style={{
-              position: 'absolute',
-              bottom: insets.bottom + 16,
-              width: '100%',
-              maxWidth: 720,
-              alignSelf: 'center',
-              paddingHorizontal: 16,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: colors.segmentBg,
-                borderRadius: 26,
-                paddingHorizontal: 18,
-                paddingVertical: 14,
-                shadowColor: '#000',
-                shadowOpacity: 0.15,
-                shadowRadius: 14,
-                elevation: 8,
-              }}
-            >
-              <TextInput
-                placeholder="Search destinations by country or code"
-                placeholderTextColor={colors.textMuted}
-                value={search}
-                onFocus={() => setSearchActive(true)}
-                onChangeText={setSearch}
-                style={{ flex: 1, color: colors.textPrimary }}
-              />
-
-              {searchActive && (
-                <Pressable
-                  onPress={() => {
-                    Keyboard.dismiss();
-                    setSearchActive(false);
-                  }}
-                >
-                  <Text style={{ fontSize: 18, color: colors.textPrimary }}>↓</Text>
-                </Pressable>
-              )}
-            </View>
-          </View>
-        </KeyboardAvoidingView>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.card,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+          opacity: pressed ? 0.92 : 1,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.cardIconWrap,
+          { backgroundColor: colors.segmentBg, borderColor: colors.border },
+        ]}
+      >
+        <Ionicons name={icon} size={20} color={colors.textPrimary} />
       </View>
-    </AuthGate>
+
+      <View style={styles.cardBody}>
+        <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+          {title}
+        </Text>
+        <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+          {subtitle}
+        </Text>
+      </View>
+
+      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+    </Pressable>
   );
 }
+
+export default function DiscoveryScreen() {
+  const insets = useSafeAreaInsets();
+  const colors = useTheme();
+
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          paddingTop: insets.top + 18,
+          paddingBottom: insets.bottom + 24,
+        },
+      ]}
+    >
+      <View style={styles.headerRow}>
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>
+            Discovery
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Explore countries, seasonality, and the score map from one place.
+          </Text>
+        </View>
+
+        <Pressable
+          onPress={() => router.push('/weights' as any)}
+          style={[
+            styles.settingsButton,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Ionicons
+            name="options-outline"
+            size={20}
+            color={colors.textPrimary}
+          />
+        </Pressable>
+      </View>
+
+      <View style={styles.stack}>
+        <DiscoveryCard
+          title="Countries"
+          subtitle="Browse and rank every destination."
+          icon="globe-outline"
+          onPress={() => router.push('/countries' as any)}
+        />
+
+        <DiscoveryCard
+          title="When to Go"
+          subtitle="Explore peak and shoulder seasons by month."
+          icon="calendar-outline"
+          onPress={() => router.push('/(tabs)/when-to-go')}
+        />
+
+        <DiscoveryCard
+          title="Score Map"
+          subtitle="Compare destinations on the world map."
+          icon="map-outline"
+          onPress={() => router.push('/score-map')}
+        />
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  settingsButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  stack: {
+    gap: 14,
+  },
+  card: {
+    borderWidth: 1,
+    borderRadius: 22,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  cardBody: {
+    flex: 1,
+    marginRight: 12,
+  },
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});
