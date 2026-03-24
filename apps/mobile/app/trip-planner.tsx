@@ -93,6 +93,17 @@ type AvailabilityOverlap = {
   totalParticipantCount: number;
 };
 
+type TripVisaSummary = {
+  countryIso2: string;
+  countryName: string;
+  countryFlag: string;
+  visaType: string | null;
+  allowedDays: number | null;
+  sourceUrl: string | null;
+  notes: string | null;
+  exceedsAllowedStay: boolean;
+};
+
 type AvailabilityDraft = {
   participantId: string | null;
   kind: AvailabilityKind;
@@ -396,6 +407,78 @@ function itineraryPreview(dayPlans: TripDayPlan[]) {
       ? `${formatDate(plan.date)}: Travel day`
       : `${formatDate(plan.date)}: ${plan.countryName ?? plan.countryIso2 ?? 'Country day'}`
   );
+}
+
+function prettyVisaType(visaType?: string | null) {
+  if (!visaType) return 'Visa details unavailable';
+  const labelMap: Record<string, string> = {
+    own_passport: 'Own passport',
+    freedom_of_movement: 'Freedom of movement',
+    visa_free: 'Visa-free',
+    voa: 'Visa on arrival',
+    eta: 'ETA required',
+    evisa: 'eVisa required',
+    visa_required: 'Visa required',
+    entry_permit: 'Entry permit required',
+    ban: 'Travel restricted',
+  };
+  return labelMap[visaType] ?? visaType.replace(/_/g, ' ');
+}
+
+function tripLengthDays(startDate: string | null, endDate: string | null) {
+  if (!startDate || !endDate) return null;
+  const start = parseDayStart(startDate.slice(0, 10));
+  const end = parseDayStart(endDate.slice(0, 10));
+  if (!start || !end || end.getTime() < start.getTime()) return null;
+  return Math.floor((end.getTime() - start.getTime()) / 86400000) + 1;
+}
+
+function computeTripVisaSummaries(
+  tripCountries: {
+    iso2: string;
+    name: string;
+    flagEmoji?: string;
+    facts?: Record<string, any>;
+  }[],
+  totalDays: number | null
+) {
+  return tripCountries
+    .map(country => {
+      const visaType = typeof country.facts?.visaType === 'string' ? country.facts.visaType : null;
+      const allowedDays =
+        typeof country.facts?.visaAllowedDays === 'number' ? country.facts.visaAllowedDays : null;
+      const exceedsAllowedStay =
+        typeof totalDays === 'number' &&
+        typeof allowedDays === 'number' &&
+        totalDays > allowedDays;
+
+      return {
+        countryIso2: country.iso2,
+        countryName: country.name,
+        countryFlag: country.flagEmoji ?? '',
+        visaType,
+        allowedDays,
+        sourceUrl: typeof country.facts?.visaSource === 'string' ? country.facts.visaSource : null,
+        notes: typeof country.facts?.visaNotes === 'string' ? country.facts.visaNotes : null,
+        exceedsAllowedStay,
+      };
+    })
+    .filter(summary => summary.visaType && !['own_passport', 'freedom_of_movement', 'visa_free', 'voa'].includes(summary.visaType));
+}
+
+function visaHeadline(
+  summaries: TripVisaSummary[],
+  travelerCount: number,
+  totalDays: number | null
+) {
+  const overstayCount = summaries.filter(summary => summary.exceedsAllowedStay).length;
+  if (overstayCount > 0) {
+    return `${overstayCount} stop${overstayCount === 1 ? '' : 's'} may exceed the allowed stay${typeof totalDays === 'number' ? ` for ${totalDays} days` : ''}`;
+  }
+  if (summaries.length === 0) {
+    return 'No advance visa prep flagged';
+  }
+  return `${summaries.length} stop${summaries.length === 1 ? '' : 's'} need visa prep for ${travelerCount} traveler${travelerCount === 1 ? '' : 's'}`;
 }
 
 async function getDefaultCalendarSource() {
@@ -854,6 +937,15 @@ export default function TripPlannerScreen() {
     return { overall, affordability, seasonality };
   };
 
+  const draftTripDays = tripLengthDays(
+    draft.includeDates && draft.startDate ? `${draft.startDate}T00:00:00.000Z` : null,
+    draft.includeDates && draft.endDate ? `${draft.endDate}T00:00:00.000Z` : null
+  );
+  const draftVisaSummaries = computeTripVisaSummaries(
+    countries.filter(country => draft.countryIso2s.includes(country.iso2)),
+    draftTripDays
+  );
+
   const updateDayPlan = (
     dayPlanId: string,
     patch: Partial<Pick<TripDayPlan, 'kind' | 'countryIso2' | 'countryName'>>
@@ -965,6 +1057,11 @@ export default function TripPlannerScreen() {
         tripTravelers.length
       );
       const previewLines = itineraryPreview(trip.dayPlans);
+      const totalDays = tripLengthDays(trip.startDate, trip.endDate);
+      const visaSummaries = computeTripVisaSummaries(
+        countries.filter(country => trip.countryIso2s.includes(country.iso2)),
+        totalDays
+      );
 
       const notes = [
         trip.notes || null,
@@ -972,6 +1069,17 @@ export default function TripPlannerScreen() {
         friendSummary ? `Friends: ${friendSummary}` : null,
         availabilitySummary ? `Availability: ${availabilitySummary}` : null,
         previewLines.length ? `Itinerary:\n${previewLines.join('\n')}` : null,
+        visaSummaries.length
+          ? `Visa prep:\n${visaSummaries
+              .slice(0, 3)
+              .map(
+                summary =>
+                  `${summary.countryName}: ${prettyVisaType(summary.visaType)}${
+                    summary.allowedDays ? ` (${summary.allowedDays} days)` : ''
+                  }${summary.exceedsAllowedStay ? ' - trip may exceed allowed stay' : ''}`
+              )
+              .join('\n')}`
+          : null,
       ]
         .filter(Boolean)
         .join('\n');
@@ -1053,6 +1161,11 @@ export default function TripPlannerScreen() {
               const tripTravelers = travelersForTrip(trip);
               const overlaps = computeAvailabilityOverlaps(trip.availability, tripTravelers);
               const previewLines = itineraryPreview(trip.dayPlans);
+              const totalDays = tripLengthDays(trip.startDate, trip.endDate);
+              const visaSummaries = computeTripVisaSummaries(
+                countries.filter(country => trip.countryIso2s.includes(country.iso2)),
+                totalDays
+              );
               const availabilitySummary = availabilityBadge(
                 overlaps,
                 trip.availability,
@@ -1199,6 +1312,54 @@ export default function TripPlannerScreen() {
                       ))}
                     </View>
                   ) : null}
+
+                  <View
+                    style={[
+                      styles.infoPanel,
+                      {
+                        backgroundColor:
+                          visaSummaries.some(summary => summary.exceedsAllowedStay)
+                            ? colors.yellowBg
+                            : colors.surface,
+                        borderColor:
+                          visaSummaries.some(summary => summary.exceedsAllowedStay)
+                            ? colors.yellowBorder
+                            : colors.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.infoText,
+                        {
+                          color: visaSummaries.some(summary => summary.exceedsAllowedStay)
+                            ? colors.yellowText
+                            : colors.textPrimary,
+                        },
+                      ]}
+                    >
+                      {visaHeadline(visaSummaries, tripTravelers.length || 1, totalDays)}
+                    </Text>
+                    <Text style={[styles.infoSubtext, { color: colors.textSecondary }]}>
+                      Assumes the app&apos;s default passport context for all travelers.
+                    </Text>
+                    {visaSummaries.slice(0, 3).map(summary => (
+                      <Text
+                        key={summary.countryIso2}
+                        style={[
+                          styles.infoSubtext,
+                          {
+                            color: summary.exceedsAllowedStay ? colors.yellowText : colors.textSecondary,
+                          },
+                        ]}
+                      >
+                        {summary.countryFlag ? `${summary.countryFlag} ` : ''}
+                        {summary.countryName}: {prettyVisaType(summary.visaType)}
+                        {summary.allowedDays ? ` · ${summary.allowedDays} days` : ''}
+                        {summary.exceedsAllowedStay ? ' · trip may be too long' : ''}
+                      </Text>
+                    ))}
+                  </View>
 
                   {trip.expenses.length ? (
                     <View style={styles.expenseCard}>
@@ -1876,6 +2037,69 @@ export default function TripPlannerScreen() {
                   ) : null}
                 </>
               )}
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                Visa Summary
+              </Text>
+              <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                Uses the app&apos;s current default passport assumption until traveler-specific
+                passport preferences exist in mobile.
+              </Text>
+              <View
+                style={[
+                  styles.infoPanel,
+                  {
+                    backgroundColor: draftVisaSummaries.some(summary => summary.exceedsAllowedStay)
+                      ? colors.yellowBg
+                      : colors.surface,
+                    borderColor: draftVisaSummaries.some(summary => summary.exceedsAllowedStay)
+                      ? colors.yellowBorder
+                      : colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.infoText,
+                    {
+                      color: draftVisaSummaries.some(summary => summary.exceedsAllowedStay)
+                        ? colors.yellowText
+                        : colors.textPrimary,
+                    },
+                  ]}
+                >
+                  {visaHeadline(draftVisaSummaries, draftTravelers.length || 1, draftTripDays)}
+                </Text>
+                {draftVisaSummaries.length ? (
+                  draftVisaSummaries.map(summary => (
+                    <Text
+                      key={`draft-visa-${summary.countryIso2}`}
+                      style={[
+                        styles.infoSubtext,
+                        {
+                          color: summary.exceedsAllowedStay ? colors.yellowText : colors.textSecondary,
+                        },
+                      ]}
+                    >
+                      {summary.countryFlag ? `${summary.countryFlag} ` : ''}
+                      {summary.countryName}: {prettyVisaType(summary.visaType)}
+                      {summary.allowedDays ? ` · ${summary.allowedDays} days` : ''}
+                      {summary.exceedsAllowedStay ? ' · trip may be too long' : ''}
+                    </Text>
+                  ))
+                ) : (
+                  <Text style={[styles.infoSubtext, { color: colors.textSecondary }]}>
+                    No advance visa prep is currently flagged for the selected countries.
+                  </Text>
+                )}
+              </View>
             </View>
 
             <View
