@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { getResizedAvatarUrl } from '../utils/avatar';
@@ -17,8 +17,12 @@ export function useFriends(targetUserId?: string) {
   const [friends, setFriends] = useState<FriendProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchFriends = async () => {
-    if (!effectiveUserId) return;
+  const fetchFriends = useCallback(async () => {
+    if (!effectiveUserId) {
+      setFriends([]);
+      setLoading(false);
+      return;
+    }
     const userId = effectiveUserId;
 
     setLoading(true);
@@ -71,7 +75,7 @@ export function useFriends(targetUserId?: string) {
     }
 
     setLoading(false);
-  };
+  }, [effectiveUserId]);
 
   const refresh = async () => {
     if (!effectiveUserId) return;
@@ -80,7 +84,7 @@ export function useFriends(targetUserId?: string) {
 
   useEffect(() => {
     fetchFriends();
-  }, [effectiveUserId]);
+  }, [fetchFriends]);
 
   return { friends, loading, refresh };
 }

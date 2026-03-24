@@ -1,7 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
-import { View, Text } from 'react-native';
 
 export default function TabLayout() {
   const colors = useTheme();
@@ -32,11 +31,11 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="when-to-go"
+        name="planning"
         options={{
-          title: 'When to Go',
+          title: 'Planning',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+            <Ionicons name="list-outline" size={size} color={color} />
           ),
         }}
       />
