@@ -157,6 +157,12 @@ final class LanguageRepository {
 
     private static let localizedDisplayNameOverridesByLanguageCode: [String: [String: String]] = [
         "ar": [
+            "acm": "العربية العراقية",
+            "aeb": "العربية التونسية",
+            "apc": "العربية الشامية",
+            "arb": "العربية الفصحى",
+            "ars": "العربية النجدية",
+            "ary": "العربية المغربية",
             "arz": "العربية المصرية"
         ]
     ]
