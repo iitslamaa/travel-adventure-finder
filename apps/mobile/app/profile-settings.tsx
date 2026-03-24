@@ -17,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useCountries } from '../hooks/useCountries';
 import { useTheme } from '../hooks/useTheme';
+import { formatLanguageList, normalizeLanguageDraft } from '../utils/language';
 
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -236,7 +237,7 @@ export default function ProfileSettingsScreen() {
         travel_mode: draftMode ? [draftMode] : null,
         travel_style: draftStyle ? [draftStyle] : null,
         next_destination: draftNextDestination,
-        languages: draftLanguages,
+        languages: normalizeLanguageDraft(draftLanguages),
         lived_countries: draftLivedCountries,
       });
 
@@ -471,12 +472,7 @@ export default function ProfileSettingsScreen() {
           <Row
             label="Languages"
             value={
-              draftLanguages.length
-                ? draftLanguages
-                    .map((l: any) => (typeof l === 'string' ? l : l?.name))
-                    .filter(Boolean)
-                    .join(' · ')
-                : '—'
+              formatLanguageList(draftLanguages)
             }
             onPress={() => setSelectorOpen('languages')}
           />
@@ -603,10 +599,12 @@ export default function ProfileSettingsScreen() {
                 value={draftLanguages.join(', ')}
                 onChangeText={text =>
                   setDraftLanguages(
-                    text
-                      .split(',')
-                      .map(t => t.trim())
-                      .filter(Boolean)
+                    normalizeLanguageDraft(
+                      text
+                        .split(',')
+                        .map(t => t.trim())
+                        .filter(Boolean)
+                    )
                   )
                 }
                 style={[styles.input, { borderColor }]}

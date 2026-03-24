@@ -9,7 +9,9 @@ import Foundation
 
 enum SeasonType: String, Codable, Hashable {
     case peak
+    case good
     case shoulder
+    case poor
 }
 
 struct WhenToGoItem: Identifiable, Hashable {

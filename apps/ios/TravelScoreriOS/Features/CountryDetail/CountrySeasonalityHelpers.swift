@@ -8,6 +8,11 @@
 import Foundation
 
 enum CountrySeasonalityHelpers {
+    static func notes(for country: Country) -> String? {
+        let trimmed = country.seasonalityNotes?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let trimmed, !trimmed.isEmpty else { return nil }
+        return trimmed
+    }
 
     static func headline(for country: Country, selectedMonth: Int? = nil) -> String {
         switch country.resolvedSeasonalityLabel(for: selectedMonth) {
@@ -25,18 +30,7 @@ enum CountrySeasonalityHelpers {
     }
 
     static func body(for country: Country, selectedMonth: Int? = nil) -> String {
-        switch country.resolvedSeasonalityLabel(for: selectedMonth) {
-        case "best":
-            return String(localized: "country_detail.seasonality.body.best")
-        case "good":
-            return String(localized: "country_detail.seasonality.body.good")
-        case "shoulder":
-            return String(localized: "country_detail.seasonality.body.shoulder")
-        case "poor":
-            return String(localized: "country_detail.seasonality.body.poor")
-        default:
-            return String(localized: "country_detail.seasonality.body.current")
-        }
+        notes(for: country) ?? ""
     }
 
     static func shortMonthName(for month: Int) -> String {

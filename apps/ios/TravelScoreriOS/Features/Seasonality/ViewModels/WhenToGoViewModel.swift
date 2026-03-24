@@ -76,9 +76,29 @@ final class WhenToGoViewModel: ObservableObject {
             }
     }
 
+    var goodCountries: [WhenToGoItem] {
+        countriesForSelectedMonth
+            .filter { $0.seasonType == .good }
+            .sorted {
+                ($0.country.score ?? Int.min) >
+                ($1.country.score ?? Int.min)
+            }
+    }
+
+    var poorCountries: [WhenToGoItem] {
+        countriesForSelectedMonth
+            .filter { $0.seasonType == .poor }
+            .sorted {
+                ($0.country.score ?? Int.min) >
+                ($1.country.score ?? Int.min)
+            }
+    }
+
     var peakCount: Int { peakCountries.count }
+    var goodCount: Int { goodCountries.count }
     var shoulderCount: Int { shoulderCountries.count }
-    var totalCount: Int { peakCount + shoulderCount }
+    var poorCount: Int { poorCountries.count }
+    var totalCount: Int { peakCount + goodCount + shoulderCount + poorCount }
 
     func recalculateForSelectedMonth() {
         countriesForSelectedMonth = allCountries.compactMap { country -> WhenToGoItem? in
@@ -104,8 +124,12 @@ final class WhenToGoViewModel: ObservableObject {
         switch country.resolvedSeasonalityLabel(for: selectedMonthIndex) {
         case "best":
             return .peak
-        case "shoulder", "good":
+        case "good":
+            return .good
+        case "shoulder":
             return .shoulder
+        case "poor":
+            return .poor
         default:
             return nil
         }

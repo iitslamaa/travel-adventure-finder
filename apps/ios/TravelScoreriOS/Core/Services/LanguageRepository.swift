@@ -241,6 +241,9 @@ final class LanguageRepository {
         let normalized = normalizeLookupKey(rawValue)
         guard !normalized.isEmpty else { return rawValue }
         return rawValue
+            .replacingOccurrences(of: "_", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .localizedCapitalized
     }
 
     func localizedDisplayName(for rawValue: String, locale: Locale = AppDisplayLocale.current) -> String {

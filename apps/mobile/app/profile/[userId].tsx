@@ -22,6 +22,7 @@ import { useCountries } from '../../hooks/useCountries';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { formatLanguageList } from '../../utils/language';
 
 export default function FriendProfileScreen() {
   const router = useRouter();
@@ -130,13 +131,7 @@ export default function FriendProfileScreen() {
     );
   }
 
-  const languagesText =
-    Array.isArray(profile.languages) && profile.languages.length > 0
-      ? profile.languages
-          .map((l: any) => (typeof l === 'string' ? l : l?.name))
-          .filter(Boolean)
-          .join(' · ')
-      : '—';
+  const languagesText = formatLanguageList(profile.languages);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

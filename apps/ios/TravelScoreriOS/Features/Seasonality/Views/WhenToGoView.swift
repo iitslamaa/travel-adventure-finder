@@ -94,17 +94,13 @@ struct WhenToGoView: View {
         ScrollView {
             VStack(spacing: 16) {
                 VStack(spacing: 12) {
-                    countryListSection(
-                        title: String(localized: "seasonality.view.peak_season"),
-                        note: String(localized: "seasonality.view.peak_season_note"),
-                        countries: viewModel.peakCountries.sorted { ($0.country.score ?? Int.min) > ($1.country.score ?? Int.min) }
-                    )
-                    
-                    countryListSection(
-                        title: String(localized: "seasonality.view.shoulder_season"),
-                        note: String(localized: "seasonality.view.shoulder_season_note"),
-                        countries: viewModel.shoulderCountries.sorted { ($0.country.score ?? Int.min) > ($1.country.score ?? Int.min) }
-                    )
+                    ForEach(seasonSections, id: \.title) { section in
+                        countryListSection(
+                            title: section.title,
+                            note: section.note,
+                            countries: section.countries
+                        )
+                    }
                 }
                 .padding(.bottom, floatingTabBarInset + 8)
             }
@@ -123,6 +119,32 @@ struct WhenToGoView: View {
         .refreshable {
             viewModel.recalculateForSelectedMonth()
         }
+    }
+
+    private var seasonSections: [(title: String, note: String, countries: [WhenToGoItem])] {
+        [
+            (
+                title: "Peak season",
+                note: "Best weather and overall conditions. Expect the busiest stretch, higher prices, and the strongest all-around travel scores.",
+                countries: viewModel.peakCountries
+            ),
+            (
+                title: "Good season",
+                note: "Strong month to go with reliable conditions, but usually a little less perfect than the absolute best window.",
+                countries: viewModel.goodCountries
+            ),
+            (
+                title: "Shoulder season",
+                note: "A balanced middle ground. You may trade some ideal weather for lighter crowds, lower prices, or a more flexible trip.",
+                countries: viewModel.shoulderCountries
+            ),
+            (
+                title: "Rough season",
+                note: "This month is usually harder for travel here. Weather, crowds, closures, or value may all work against the trip.",
+                countries: viewModel.poorCountries
+            ),
+        ]
+        .filter { !$0.countries.isEmpty }
     }
     
     private func countryListSection(
