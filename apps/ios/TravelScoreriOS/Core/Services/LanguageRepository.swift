@@ -295,11 +295,12 @@ final class LanguageRepository {
             languageByTravelCode[language.travelLanguageCode] = languageByTravelCode[language.travelLanguageCode] ?? language
         }
 
-        travelCodeByDisplayName = Dictionary(
-            uniqueKeysWithValues: allLanguages.map {
-                (normalizeLookupKey($0.displayName), $0.travelLanguageCode)
-            }
-        )
+        travelCodeByDisplayName = [:]
+        for language in allLanguages {
+            let normalizedDisplayName = normalizeLookupKey(language.displayName)
+            guard !normalizedDisplayName.isEmpty else { continue }
+            travelCodeByDisplayName[normalizedDisplayName] = travelCodeByDisplayName[normalizedDisplayName] ?? language.travelLanguageCode
+        }
 
         travelCodeByAlias = [:]
         for (travelCode, aliases) in Self.searchAliasesByTravelCode {
