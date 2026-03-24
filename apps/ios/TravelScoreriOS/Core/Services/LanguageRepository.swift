@@ -33,9 +33,9 @@ enum AppDisplayLocale {
     static var numberFormattingLocale: Locale {
         switch languageCode {
         case "ar":
-            return Locale(identifier: "\(current.identifier)-u-nu-arab")
+            return Locale(identifier: "ar-EG")
         case "fa", "ur":
-            return Locale(identifier: "\(current.identifier)-u-nu-arabext")
+            return Locale(identifier: "fa")
         default:
             return current
         }
