@@ -22,7 +22,7 @@ struct WhenToGoCountryDrawerView: View {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
-                            Text(country.country.name)
+                            Text(country.country.localizedDisplayName)
                                 .font(.system(size: 20, weight: .bold, design: .rounded))
                                 .lineLimit(2)
                                 .multilineTextAlignment(.leading)
@@ -33,7 +33,7 @@ struct WhenToGoCountryDrawerView: View {
                                 .fixedSize()
                         }
 
-                        if let region = country.country.regionLabel {
+                        if let region = country.country.localizedRegionLabel {
                             Text(region.uppercased())
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)

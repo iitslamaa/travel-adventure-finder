@@ -26,15 +26,16 @@ struct WrapChips: View {
             onSelect(country)
         } label: {
             VStack(alignment: .leading, spacing: 6) {
-                Text(country.country.name)
-                    .font(.caption.weight(.semibold))
+                Text(country.country.localizedDisplayName)
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
-                    .lineLimit(2)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, minHeight: 68, alignment: .topLeading)
             .background(bg.opacity(0.9))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
