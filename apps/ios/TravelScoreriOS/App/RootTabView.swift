@@ -61,11 +61,13 @@ struct RootTabView: View {
     }
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var countries: [Country] = []
     @State private var hasLoadedCountries = false
     @StateObject private var friendsSocialNav = SocialNavigationController()
     @StateObject private var profileSocialNav = SocialNavigationController()
+    @StateObject private var sharedTripInbox = SharedTripInboxStore()
 
     @State private var discoveryPath = NavigationPath()
     @State private var planningPath = NavigationPath()
@@ -90,6 +92,7 @@ struct RootTabView: View {
         // Planning
         NavigationStack(path: $planningPath) {
             PlanningView()
+                .environmentObject(sharedTripInbox)
                 .onAppear {
                     print("🧪 DEBUG: Planning NavigationStack content appeared")
                 }
@@ -177,6 +180,12 @@ struct RootTabView: View {
             guard userId == nil else { return }
             resetNavigationState()
         }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task {
+                await sharedTripInbox.refresh()
+            }
+        }
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.light, for: .navigationBar)
         .task {
@@ -211,7 +220,7 @@ struct RootTabView: View {
     private var customTabBar: some View {
         HStack(spacing: 10) {
             tabButton(.discovery, title: String(localized: "tab.discovery"), systemImage: "globe.americas.fill")
-            tabButton(.planning, title: String(localized: "tab.planning"), systemImage: "list.bullet")
+            tabButton(.planning, title: String(localized: "tab.planning"), systemImage: "list.bullet", badgeCount: sharedTripInbox.pendingCount)
             tabButton(.friends, title: String(localized: "tab.friends"), systemImage: "person.2.fill")
             tabButton(.profile, title: String(localized: "tab.profile"), systemImage: "person.crop.circle")
             tabButton(.more, title: String(localized: "tab.more"), systemImage: "ellipsis")
@@ -309,15 +318,26 @@ struct RootTabView: View {
     }
 
     @ViewBuilder
-    private func tabButton(_ tab: Tab, title: String, systemImage: String) -> some View {
+    private func tabButton(_ tab: Tab, title: String, systemImage: String, badgeCount: Int = 0) -> some View {
         let isSelected = selectedTab == tab
 
         Button {
             selectedTab = tab
         } label: {
             VStack(spacing: 4) {
-                Image(systemName: systemImage)
-                    .font(TAFTypography.title(.bold))
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: systemImage)
+                        .font(TAFTypography.title(.bold))
+
+                    if badgeCount > 0 {
+                        Text(AppNumberFormatting.integerString(min(badgeCount, 9)))
+                            .font(TAFTypography.caption(.bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 18, height: 18)
+                            .background(Circle().fill(.red))
+                            .offset(x: 10, y: -10)
+                    }
+                }
                 Text(title)
                     .font(TAFTypography.caption(.bold))
                     .lineLimit(1)
