@@ -13,6 +13,184 @@ import NukeUI
 import Supabase
 import PostgREST
 
+private enum TripPlannerDebugLog {
+    static func message(_ text: String) {
+        print("🧭 [TripShare] \(text)")
+    }
+
+    static func userLabel(_ userId: UUID?) -> String {
+        userId?.uuidString ?? "nil-user"
+    }
+
+    static func tripLabel(_ trip: TripPlannerTrip) -> String {
+        "\(trip.title) [\(trip.id.uuidString)]"
+    }
+
+    static func participantLabels(for ids: [UUID]) -> String {
+        ids.map(\.uuidString).joined(separator: ", ")
+    }
+}
+
+extension Notification.Name {
+    static let sharedTripsUpdated = Notification.Name("sharedTripsUpdated")
+}
+
+struct SharedTripInboxEntry: Identifiable, Equatable {
+    let trip: TripPlannerTrip
+
+    var id: UUID { trip.id }
+}
+
+@MainActor
+final class SharedTripInboxStore: ObservableObject {
+    @Published private(set) var notifications: [SharedTripInboxEntry] = []
+
+    private let supabase = SupabaseManager.shared
+    private let syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
+    private var cancellables = Set<AnyCancellable>()
+    private var realtimeChannel: RealtimeChannelV2?
+    private var realtimeTask: Task<Void, Never>?
+
+    init() {
+        observeAuthState()
+        observeTripUpdates()
+
+        Task {
+            await configureRealtimeSubscription()
+            await refresh()
+        }
+    }
+
+    var pendingCount: Int {
+        notifications.count
+    }
+
+    func refresh() async {
+        guard let userId = supabase.currentUserId else {
+            notifications = []
+            return
+        }
+
+        do {
+            let trips = try await syncService.fetchTrips(userId: userId)
+            let seenTripIDs = seenSharedTripIDs(for: userId)
+
+            notifications = trips
+                .filter { trip in
+                    trip.ownerId != nil
+                        && trip.ownerId != userId
+                        && !seenTripIDs.contains(trip.id.uuidString)
+                }
+                .sorted { $0.updatedAt > $1.updatedAt }
+                .map(SharedTripInboxEntry.init)
+
+            TripPlannerDebugLog.message(
+                "Inbox refresh for \(TripPlannerDebugLog.userLabel(userId)) fetched \(trips.count) trips, pending notifications=\(notifications.count)"
+            )
+        } catch {
+            print("❌ Shared trip inbox refresh failed:", error)
+            notifications = []
+        }
+    }
+
+    func markSeen(tripId: UUID) {
+        guard let userId = supabase.currentUserId else { return }
+
+        var ids = seenSharedTripIDs(for: userId)
+        ids.insert(tripId.uuidString)
+        UserDefaults.standard.set(Array(ids), forKey: seenKey(for: userId))
+        notifications.removeAll { $0.trip.id == tripId }
+    }
+
+    private func observeAuthState() {
+        supabase.authStatePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                guard let self else { return }
+                Task {
+                    await self.configureRealtimeSubscription()
+                    await self.refresh()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func observeTripUpdates() {
+        NotificationCenter.default.publisher(for: .sharedTripsUpdated)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task {
+                    await self.refresh()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func seenSharedTripIDs(for userId: UUID) -> Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: seenKey(for: userId)) ?? [])
+    }
+
+    private func seenKey(for userId: UUID) -> String {
+        "trip_planner_seen_shared_trip_ids_\(userId.uuidString)"
+    }
+
+    private func configureRealtimeSubscription() async {
+        await tearDownRealtimeSubscription()
+
+        guard let userId = supabase.currentUserId else { return }
+
+        TripPlannerDebugLog.message("Configuring realtime subscription for \(TripPlannerDebugLog.userLabel(userId))")
+
+        let channel = supabase.client.channel("shared-trip-inbox-\(userId.uuidString)")
+        let changes = channel.postgresChange(
+            AnyAction.self,
+            schema: "public",
+            table: "user_trip_plans",
+            filter: .eq("user_id", value: userId)
+        )
+
+        do {
+            try await channel.subscribeWithError()
+            realtimeChannel = channel
+            TripPlannerDebugLog.message("Realtime subscribed for \(TripPlannerDebugLog.userLabel(userId))")
+            realtimeTask = Task {
+                for await _ in changes {
+                    guard !Task.isCancelled else { break }
+                    TripPlannerDebugLog.message("Realtime change received for \(TripPlannerDebugLog.userLabel(userId))")
+                    await MainActor.run {
+                        NotificationCenter.default.post(name: .sharedTripsUpdated, object: nil)
+                    }
+                }
+            }
+        } catch {
+            print("❌ Shared trip realtime subscribe failed:", error)
+            await supabase.client.removeChannel(channel)
+        }
+    }
+
+    private func tearDownRealtimeSubscription() async {
+        realtimeTask?.cancel()
+        realtimeTask = nil
+
+        if let realtimeChannel {
+            await supabase.client.removeChannel(realtimeChannel)
+            self.realtimeChannel = nil
+        }
+    }
+
+    deinit {
+        let channel = realtimeChannel
+        let client = supabase.client
+        realtimeTask?.cancel()
+        if let channel {
+            Task {
+                await client.removeChannel(channel)
+            }
+        }
+    }
+}
+
 enum PlanningListKind {
     case bucket
     case visited
@@ -135,6 +313,7 @@ struct PlanningView: View {
 // MARK: - Lists Root
 
 struct ListsView: View {
+    @EnvironmentObject private var sharedTripInbox: SharedTripInboxStore
     @State private var scrollAnchor: String? = nil
 
     var body: some View {
@@ -170,6 +349,7 @@ struct ListsView: View {
 
                         NavigationLink {
                             TripPlannerView()
+                                .environmentObject(sharedTripInbox)
                         } label: {
                             PlanningCard(
                                 title: String(localized: "planning.trip_planner.title"),
@@ -448,14 +628,14 @@ struct PlanningCountryPickerView: View {
     }
 }
 
-struct TripPlannerFriendSnapshot: Codable, Identifiable, Hashable {
+struct TripPlannerFriendSnapshot: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let displayName: String
     let username: String
     let avatarURL: String?
 }
 
-enum TripPlannerAvailabilityKind: String, Codable, CaseIterable, Identifiable {
+enum TripPlannerAvailabilityKind: String, Codable, CaseIterable, Identifiable, Sendable {
     case exactDates
     case flexibleMonth
 
@@ -480,7 +660,7 @@ enum TripPlannerAvailabilityKind: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-struct TripPlannerAvailabilityProposal: Codable, Identifiable, Hashable {
+struct TripPlannerAvailabilityProposal: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let participantId: String
     let participantName: String
@@ -489,9 +669,52 @@ struct TripPlannerAvailabilityProposal: Codable, Identifiable, Hashable {
     let kind: TripPlannerAvailabilityKind
     let startDate: Date
     let endDate: Date
+
+    init(
+        id: UUID = UUID(),
+        participantId: String,
+        participantName: String,
+        participantUsername: String?,
+        participantAvatarURL: String?,
+        kind: TripPlannerAvailabilityKind,
+        startDate: Date,
+        endDate: Date
+    ) {
+        self.id = id
+        self.participantId = participantId
+        self.participantName = participantName
+        self.participantUsername = participantUsername
+        self.participantAvatarURL = participantAvatarURL
+        self.kind = kind
+        self.startDate = startDate
+        self.endDate = endDate
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case participantId
+        case participantName
+        case participantUsername
+        case participantAvatarURL
+        case kind
+        case startDate
+        case endDate
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        participantId = try container.decode(String.self, forKey: .participantId)
+        participantName = try container.decode(String.self, forKey: .participantName)
+        participantUsername = try container.decodeIfPresent(String.self, forKey: .participantUsername)
+        participantAvatarURL = try container.decodeIfPresent(String.self, forKey: .participantAvatarURL)
+        kind = try container.decode(TripPlannerAvailabilityKind.self, forKey: .kind)
+        startDate = try container.decodeFlexibleDate(forKey: .startDate)
+        endDate = try container.decodeFlexibleDate(forKey: .endDate)
+    }
 }
 
-enum TripPlannerDayPlanKind: String, Codable, CaseIterable, Identifiable {
+enum TripPlannerDayPlanKind: String, Codable, CaseIterable, Identifiable, Sendable {
     case country
     case travel
 
@@ -505,7 +728,7 @@ enum TripPlannerDayPlanKind: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-struct TripPlannerDayPlan: Codable, Identifiable, Hashable {
+struct TripPlannerDayPlan: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let date: Date
     let kind: TripPlannerDayPlanKind
@@ -525,9 +748,26 @@ struct TripPlannerDayPlan: Codable, Identifiable, Hashable {
         self.countryId = countryId
         self.countryName = countryName
     }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case date
+        case kind
+        case countryId
+        case countryName
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        date = Calendar.current.startOfDay(for: try container.decodeFlexibleDate(forKey: .date))
+        kind = try container.decode(TripPlannerDayPlanKind.self, forKey: .kind)
+        countryId = try container.decodeIfPresent(String.self, forKey: .countryId)
+        countryName = try container.decodeIfPresent(String.self, forKey: .countryName)
+    }
 }
 
-enum TripPlannerExpenseSplitMode: String, Codable, CaseIterable, Identifiable {
+enum TripPlannerExpenseSplitMode: String, Codable, CaseIterable, Identifiable, Sendable {
     case everyone
     case selectedPeople
 
@@ -541,7 +781,7 @@ enum TripPlannerExpenseSplitMode: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-enum TripPlannerExpensePaymentMethod: String, Codable, CaseIterable, Identifiable {
+enum TripPlannerExpensePaymentMethod: String, Codable, CaseIterable, Identifiable, Sendable {
     case manual
     case venmo
     case applePay
@@ -557,7 +797,7 @@ enum TripPlannerExpensePaymentMethod: String, Codable, CaseIterable, Identifiabl
     }
 }
 
-struct TripPlannerExpenseShare: Codable, Identifiable, Hashable {
+struct TripPlannerExpenseShare: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let participantId: String
     let participantName: String
@@ -585,7 +825,7 @@ struct TripPlannerExpenseShare: Codable, Identifiable, Hashable {
     }
 }
 
-struct TripPlannerExpense: Codable, Identifiable, Hashable {
+struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let title: String
     let totalAmount: Double
@@ -623,11 +863,41 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable {
         self.participantNames = participantNames
         self.shares = shares
     }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case totalAmount
+        case paidById
+        case paidByName
+        case paidByUsername
+        case splitMode
+        case date
+        case participantIds
+        case participantNames
+        case shares
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        totalAmount = try container.decode(Double.self, forKey: .totalAmount)
+        paidById = try container.decode(String.self, forKey: .paidById)
+        paidByName = try container.decode(String.self, forKey: .paidByName)
+        paidByUsername = try container.decodeIfPresent(String.self, forKey: .paidByUsername)
+        splitMode = try container.decode(TripPlannerExpenseSplitMode.self, forKey: .splitMode)
+        date = try container.decodeFlexibleDate(forKey: .date)
+        participantIds = try container.decode([String].self, forKey: .participantIds)
+        participantNames = try container.decode([String].self, forKey: .participantNames)
+        shares = try container.decode([TripPlannerExpenseShare].self, forKey: .shares)
+    }
 }
 
-struct TripPlannerTrip: Codable, Identifiable, Hashable {
+struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let createdAt: Date
+    let updatedAt: Date
     let title: String
     let notes: String
     let startDate: Date?
@@ -637,6 +907,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
     let friendIds: [UUID]
     let friendNames: [String]
     let friends: [TripPlannerFriendSnapshot]
+    let ownerId: UUID?
     let availability: [TripPlannerAvailabilityProposal]
     let dayPlans: [TripPlannerDayPlan]
     let expenses: [TripPlannerExpense]
@@ -645,9 +916,38 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         !friendIds.isEmpty
     }
 
+    var travelerDisplayNames: [String] {
+        let snapshots = friends.compactMap { friend -> String? in
+            let trimmed = friend.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                return trimmed
+            }
+
+            let username = friend.username.trimmingCharacters(in: .whitespacesAndNewlines)
+            return username.isEmpty ? nil : "@\(username)"
+        }
+
+        let source = snapshots.isEmpty ? friendNames : snapshots
+        var seen = Set<String>()
+        var ordered: [String] = []
+
+        for rawName in source {
+            let trimmed = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+
+            let normalized = trimmed
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: AppDisplayLocale.current)
+            guard seen.insert(normalized).inserted else { continue }
+            ordered.append(trimmed)
+        }
+
+        return ordered
+    }
+
     enum CodingKeys: String, CodingKey {
         case id
         case createdAt
+        case updatedAt
         case title
         case notes
         case startDate
@@ -657,6 +957,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         case friendIds
         case friendNames
         case friends
+        case ownerId
         case availability
         case dayPlans
         case expenses
@@ -665,6 +966,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
     init(
         id: UUID,
         createdAt: Date,
+        updatedAt: Date? = nil,
         title: String,
         notes: String,
         startDate: Date?,
@@ -674,12 +976,14 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         friendIds: [UUID],
         friendNames: [String],
         friends: [TripPlannerFriendSnapshot],
+        ownerId: UUID? = nil,
         availability: [TripPlannerAvailabilityProposal],
         dayPlans: [TripPlannerDayPlan] = [],
         expenses: [TripPlannerExpense] = []
     ) {
         self.id = id
         self.createdAt = createdAt
+        self.updatedAt = updatedAt ?? createdAt
         self.title = title
         self.notes = notes
         self.startDate = startDate
@@ -689,6 +993,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         self.friendIds = friendIds
         self.friendNames = friendNames
         self.friends = friends
+        self.ownerId = ownerId
         self.availability = availability
         self.dayPlans = dayPlans
         self.expenses = expenses
@@ -698,11 +1003,12 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         id = try container.decode(UUID.self, forKey: .id)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        createdAt = try container.decodeFlexibleDate(forKey: .createdAt)
+        updatedAt = try container.decodeFlexibleDateIfPresent(forKey: .updatedAt) ?? createdAt
         title = try container.decode(String.self, forKey: .title)
         notes = try container.decode(String.self, forKey: .notes)
-        startDate = try container.decodeIfPresent(Date.self, forKey: .startDate)
-        endDate = try container.decodeIfPresent(Date.self, forKey: .endDate)
+        startDate = try container.decodeFlexibleDateIfPresent(forKey: .startDate)
+        endDate = try container.decodeFlexibleDateIfPresent(forKey: .endDate)
         countryIds = try container.decode([String].self, forKey: .countryIds)
         countryNames = try container.decode([String].self, forKey: .countryNames)
         friendIds = try container.decodeIfPresent([UUID].self, forKey: .friendIds) ?? []
@@ -716,9 +1022,68 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable {
                     avatarURL: nil
                 )
             }
+        ownerId = try container.decodeIfPresent(UUID.self, forKey: .ownerId)
         availability = try container.decodeIfPresent([TripPlannerAvailabilityProposal].self, forKey: .availability) ?? []
         dayPlans = try container.decodeIfPresent([TripPlannerDayPlan].self, forKey: .dayPlans) ?? []
         expenses = try container.decodeIfPresent([TripPlannerExpense].self, forKey: .expenses) ?? []
+    }
+
+    func preparedForSync(currentUserId: UUID?) -> TripPlannerTrip {
+        TripPlannerTrip(
+            id: id,
+            createdAt: createdAt,
+            updatedAt: Date(),
+            title: title,
+            notes: notes,
+            startDate: startDate,
+            endDate: endDate,
+            countryIds: countryIds,
+            countryNames: countryNames,
+            friendIds: friendIds,
+            friendNames: friendNames,
+            friends: friends,
+            ownerId: ownerId ?? currentUserId,
+            availability: availability,
+            dayPlans: dayPlans,
+            expenses: expenses
+        )
+    }
+
+    func participantIDs(including currentUserId: UUID?) -> [UUID] {
+        var ids = Set(friendIds)
+        if let currentUserId {
+            ids.insert(currentUserId)
+        }
+        return Array(ids)
+    }
+}
+
+private extension KeyedDecodingContainer {
+    func decodeFlexibleDate(forKey key: Key) throws -> Date {
+        if let numeric = try? decode(Double.self, forKey: key) {
+            return Date(timeIntervalSinceReferenceDate: numeric)
+        }
+
+        if let seconds = try? decode(Int.self, forKey: key) {
+            return Date(timeIntervalSinceReferenceDate: Double(seconds))
+        }
+
+        if let string = try? decode(String.self, forKey: key) {
+            if let isoDate = ISO8601DateFormatter().date(from: string) {
+                return isoDate
+            }
+
+            if let timestamp = Double(string) {
+                return Date(timeIntervalSinceReferenceDate: timestamp)
+            }
+        }
+
+        return try decode(Date.self, forKey: key)
+    }
+
+    func decodeFlexibleDateIfPresent(forKey key: Key) throws -> Date? {
+        guard contains(key), try !decodeNil(forKey: key) else { return nil }
+        return try decodeFlexibleDate(forKey: key)
     }
 }
 
@@ -800,6 +1165,7 @@ final class TripPlannerStore: ObservableObject {
     init() {
         loadLocal()
         observeAuthState()
+        observeTripUpdates()
 
         Task {
             await refreshFromRemoteIfNeeded(migrateLocalTrips: true)
@@ -807,34 +1173,39 @@ final class TripPlannerStore: ObservableObject {
     }
 
     func add(_ trip: TripPlannerTrip) {
-        trips.insert(trip, at: 0)
+        let syncedTrip = trip.preparedForSync(currentUserId: supabase.currentUserId)
+        trips.insert(syncedTrip, at: 0)
         persistLocal()
 
         Task {
-            await syncUpsert(trip)
+            await syncUpsert(syncedTrip, previousTrip: nil)
         }
     }
 
     func upsert(_ trip: TripPlannerTrip) {
+        let syncedTrip = trip.preparedForSync(currentUserId: supabase.currentUserId)
+        let previousTrip = trips.first(where: { $0.id == syncedTrip.id })
+
         if let index = trips.firstIndex(where: { $0.id == trip.id }) {
-            trips[index] = trip
-            trips.sort { $0.createdAt > $1.createdAt }
+            trips[index] = syncedTrip
+            trips.sort { $0.updatedAt > $1.updatedAt }
         } else {
-            trips.insert(trip, at: 0)
+            trips.insert(syncedTrip, at: 0)
         }
         persistLocal()
 
         Task {
-            await syncUpsert(trip)
+            await syncUpsert(syncedTrip, previousTrip: previousTrip)
         }
     }
 
     func delete(id: UUID) {
+        let removedTrip = trips.first(where: { $0.id == id })
         trips.removeAll { $0.id == id }
         persistLocal()
 
         Task {
-            await syncDelete(id: id)
+            await syncDelete(id: id, previousTrip: removedTrip)
         }
     }
 
@@ -845,6 +1216,18 @@ final class TripPlannerStore: ObservableObject {
                 guard let self else { return }
                 Task {
                     await self.handleAuthStateChange()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func observeTripUpdates() {
+        NotificationCenter.default.publisher(for: .sharedTripsUpdated)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task {
+                    await self.refreshFromRemoteIfNeeded(migrateLocalTrips: false)
                 }
             }
             .store(in: &cancellables)
@@ -869,11 +1252,11 @@ final class TripPlannerStore: ObservableObject {
 
         for key in candidateKeys {
             guard let data = defaults.data(forKey: key),
-                  let decoded = try? JSONDecoder().decode([TripPlannerTrip].self, from: data) else {
+                  let decoded = try? TripPlannerJSONCoding.decoder.decode([TripPlannerTrip].self, from: data) else {
                 continue
             }
 
-            trips = decoded.sorted { $0.createdAt > $1.createdAt }
+            trips = decoded.sorted { $0.updatedAt > $1.updatedAt }
             return
         }
 
@@ -881,7 +1264,7 @@ final class TripPlannerStore: ObservableObject {
     }
 
     private func persistLocal() {
-        guard let data = try? JSONEncoder().encode(trips) else { return }
+        guard let data = try? TripPlannerJSONCoding.encoder.encode(trips) else { return }
         UserDefaults.standard.set(data, forKey: localSaveKey)
     }
 
@@ -889,6 +1272,9 @@ final class TripPlannerStore: ObservableObject {
         guard let userId = supabase.currentUserId else { return }
 
         let localTrips = trips
+        TripPlannerDebugLog.message(
+            "Refreshing remote trips for \(TripPlannerDebugLog.userLabel(userId)); local count=\(localTrips.count), migrateLocal=\(migrateLocalTrips)"
+        )
 
         do {
             let remoteTrips = try await syncService.fetchTrips(userId: userId)
@@ -900,12 +1286,21 @@ final class TripPlannerStore: ObservableObject {
                 }
 
                 for trip in localOnlyTrips {
-                    try await syncService.upsertTrip(userId: userId, trip: trip)
+                    if trip.isGroupTrip {
+                        TripPlannerDebugLog.message(
+                            "Skipping automatic migration for local group trip \(TripPlannerDebugLog.tripLabel(trip)); it will sync on explicit save"
+                        )
+                    } else {
+                        try await syncService.upsertTrip(userId: userId, trip: trip)
+                    }
                 }
             }
 
             trips = mergedTrips
             persistLocal()
+            TripPlannerDebugLog.message(
+                "Remote refresh complete for \(TripPlannerDebugLog.userLabel(userId)); remote count=\(remoteTrips.count), merged count=\(mergedTrips.count)"
+            )
 
             if !mergedTrips.isEmpty {
                 UserDefaults.standard.removeObject(forKey: legacySaveKey)
@@ -915,39 +1310,83 @@ final class TripPlannerStore: ObservableObject {
         }
     }
 
-    private func syncUpsert(_ trip: TripPlannerTrip) async {
+    private func syncUpsert(_ trip: TripPlannerTrip, previousTrip: TripPlannerTrip?) async {
         guard let userId = supabase.currentUserId else { return }
 
         do {
-            try await syncService.upsertTrip(userId: userId, trip: trip)
+            let oldParticipantIDs = Set(previousTrip?.participantIDs(including: userId) ?? [userId])
+            let newParticipantIDs = Set(trip.participantIDs(including: userId))
+            let removedParticipantIDs = oldParticipantIDs.subtracting(newParticipantIDs)
+
+            TripPlannerDebugLog.message(
+                """
+                Saving shared trip \(TripPlannerDebugLog.tripLabel(trip))
+                actor=\(TripPlannerDebugLog.userLabel(userId))
+                owner=\(TripPlannerDebugLog.userLabel(trip.ownerId))
+                participants=[\(TripPlannerDebugLog.participantLabels(for: Array(newParticipantIDs)))]
+                removedParticipants=[\(TripPlannerDebugLog.participantLabels(for: Array(removedParticipantIDs)))]
+                """
+            )
+
+            try await syncService.shareTrip(
+                trip: trip,
+                participantIDs: Array(newParticipantIDs)
+            )
+
             let remoteTrips = try await syncService.fetchTrips(userId: userId)
             trips = mergedTrips(local: trips, remote: remoteTrips)
             persistLocal()
+            NotificationCenter.default.post(name: .sharedTripsUpdated, object: nil)
+            TripPlannerDebugLog.message(
+                "Save completed for \(TripPlannerDebugLog.tripLabel(trip)); actor now sees \(remoteTrips.count) remote trips"
+            )
         } catch {
             print("❌ Trip planner upsert failed:", error)
         }
     }
 
-    private func syncDelete(id: UUID) async {
+    private func syncDelete(id: UUID, previousTrip: TripPlannerTrip?) async {
         guard let userId = supabase.currentUserId else { return }
 
         do {
-            try await syncService.deleteTrip(userId: userId, tripId: id)
+            let participantIDs = Set(previousTrip?.participantIDs(including: userId) ?? [userId])
+            TripPlannerDebugLog.message(
+                "Deleting trip \(id.uuidString) for actor=\(TripPlannerDebugLog.userLabel(userId)) participants=[\(TripPlannerDebugLog.participantLabels(for: Array(participantIDs)))]"
+            )
+            if let previousTrip {
+                try await syncService.deleteSharedTrip(
+                    trip: previousTrip,
+                    participantIDs: Array(participantIDs)
+                )
+            } else {
+                for participantId in participantIDs {
+                    try await syncService.deleteTrip(userId: participantId, tripId: id)
+                }
+            }
+            NotificationCenter.default.post(name: .sharedTripsUpdated, object: nil)
         } catch {
             print("❌ Trip planner delete failed:", error)
         }
     }
 
     private func mergedTrips(local: [TripPlannerTrip], remote: [TripPlannerTrip]) -> [TripPlannerTrip] {
-        // Prefer the local copy when IDs collide so freshly edited trip data
-        // does not get replaced by an older remote snapshot during refresh.
+        // Prefer the newest copy so shared-trip edits made by any participant
+        // converge for everyone instead of being overwritten by stale local data.
         var mergedByID = Dictionary(uniqueKeysWithValues: local.map { ($0.id, $0) })
 
-        for trip in remote where mergedByID[trip.id] == nil {
-            mergedByID[trip.id] = trip
+        for trip in remote {
+            if let existing = mergedByID[trip.id] {
+                mergedByID[trip.id] = existing.updatedAt >= trip.updatedAt ? existing : trip
+            } else {
+                mergedByID[trip.id] = trip
+            }
         }
 
-        return mergedByID.values.sorted { $0.createdAt > $1.createdAt }
+        return mergedByID.values.sorted { $0.updatedAt > $1.updatedAt }
+    }
+
+    func refresh() async {
+        await refreshFromRemoteIfNeeded(migrateLocalTrips: false)
     }
 }
 
@@ -986,12 +1425,17 @@ private struct TripPlannerSyncService {
             .execute()
             .value
 
+        TripPlannerDebugLog.message(
+            "Fetched \(rows.count) raw trip rows for user \(TripPlannerDebugLog.userLabel(userId)): [\(rows.map { $0.tripId.uuidString }.joined(separator: ", "))]"
+        )
+
         return rows
             .map(\.tripData)
             .sorted { $0.createdAt > $1.createdAt }
     }
 
     func upsertTrip(userId: UUID, trip: TripPlannerTrip) async throws {
+        TripPlannerDebugLog.message("Attempting row upsert for user \(userId.uuidString) trip \(TripPlannerDebugLog.tripLabel(trip))")
         try await deleteTrip(userId: userId, tripId: trip.id)
 
         try await supabase.client
@@ -1004,16 +1448,142 @@ private struct TripPlannerSyncService {
                 )
             )
             .execute()
+        TripPlannerDebugLog.message("Row upsert succeeded for user \(userId.uuidString) trip \(trip.id.uuidString)")
+    }
+
+    func shareTrip(trip: TripPlannerTrip, participantIDs: [UUID]) async throws {
+        let payload = try encodedTripPayload(trip)
+        TripPlannerDebugLog.message(
+            """
+            Calling share_trip_plan for \(TripPlannerDebugLog.tripLabel(trip))
+            participants=[\(TripPlannerDebugLog.participantLabels(for: participantIDs))]
+            """
+        )
+
+        try await supabase.client.rpc(
+            "share_trip_plan",
+            params: rpcParams(
+                participantIDs: participantIDs,
+                tripID: trip.id,
+                tripPayload: payload
+            )
+        )
+        .execute()
+
+        TripPlannerDebugLog.message("share_trip_plan succeeded for \(trip.id.uuidString)")
+    }
+
+    func deleteSharedTrip(trip: TripPlannerTrip, participantIDs: [UUID]) async throws {
+        let payload = try encodedTripPayload(trip)
+        TripPlannerDebugLog.message(
+            """
+            Calling delete_shared_trip_plan for \(TripPlannerDebugLog.tripLabel(trip))
+            participants=[\(TripPlannerDebugLog.participantLabels(for: participantIDs))]
+            """
+        )
+
+        try await supabase.client.rpc(
+            "delete_shared_trip_plan",
+            params: rpcParams(
+                participantIDs: participantIDs,
+                tripID: trip.id,
+                tripPayload: payload
+            )
+        )
+        .execute()
+
+        TripPlannerDebugLog.message("delete_shared_trip_plan succeeded for \(trip.id.uuidString)")
     }
 
     func deleteTrip(userId: UUID, tripId: UUID) async throws {
+        TripPlannerDebugLog.message("Attempting row delete for user \(userId.uuidString) trip \(tripId.uuidString)")
         try await supabase.client
             .from("user_trip_plans")
             .delete()
             .eq("user_id", value: userId.uuidString)
             .eq("trip_id", value: tripId.uuidString)
             .execute()
+        TripPlannerDebugLog.message("Row delete succeeded for user \(userId.uuidString) trip \(tripId.uuidString)")
     }
+
+    private func encodedTripPayload(_ trip: TripPlannerTrip) throws -> String {
+        let data = try TripPlannerJSONCoding.encoder.encode(trip)
+        guard let payload = String(data: data, encoding: .utf8) else {
+            throw NSError(
+                domain: "TripPlannerSyncService",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Unable to encode trip payload as UTF-8"]
+            )
+        }
+        return payload
+    }
+
+    private func rpcParams(
+        participantIDs: [UUID],
+        tripID: UUID,
+        tripPayload: String
+    ) -> JSONObject {
+        [
+            "p_target_user_ids": .array(participantIDs.map { .string($0.uuidString) }),
+            "p_trip_id": .string(tripID.uuidString),
+            "p_trip_payload": .string(tripPayload)
+        ]
+    }
+}
+
+private enum TripPlannerJSONCoding {
+    static let formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+
+    static let fallbackFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+
+    static let encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(formatter.string(from: date))
+        }
+        return encoder
+    }()
+
+    static let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+
+            if let string = try? container.decode(String.self) {
+                if let date = formatter.date(from: string) ?? fallbackFormatter.date(from: string) {
+                    return date
+                }
+                if let timestamp = Double(string) {
+                    return Date(timeIntervalSinceReferenceDate: timestamp)
+                }
+            }
+
+            if let timestamp = try? container.decode(Double.self) {
+                return Date(timeIntervalSinceReferenceDate: timestamp)
+            }
+
+            if let timestamp = try? container.decode(Int.self) {
+                return Date(timeIntervalSinceReferenceDate: Double(timestamp))
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Unsupported Trip Planner date value"
+            )
+        }
+        return decoder
+    }()
 }
 
 private struct TripPlannerCalendarDraft: Identifiable {
@@ -1023,9 +1593,14 @@ private struct TripPlannerCalendarDraft: Identifiable {
 }
 
 struct TripPlannerView: View {
+    @EnvironmentObject private var sharedTripInbox: SharedTripInboxStore
     @StateObject private var store = TripPlannerStore()
     @State private var calendarDraft: TripPlannerCalendarDraft?
     @State private var calendarError: String?
+
+    private var pendingSharedTripIDs: Set<UUID> {
+        Set(sharedTripInbox.notifications.map { $0.trip.id })
+    }
 
     var body: some View {
         ZStack {
@@ -1037,6 +1612,21 @@ struct TripPlannerView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
+                        if !sharedTripInbox.notifications.isEmpty {
+                            VStack(spacing: 12) {
+                                ForEach(sharedTripInbox.notifications) { entry in
+                                    if let trip = store.trips.first(where: { $0.id == entry.trip.id }) {
+                                        TripPlannerSharedTripNotificationCard(
+                                            trip: trip,
+                                            onDismiss: {
+                                                sharedTripInbox.markSeen(tripId: trip.id)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                         if store.trips.isEmpty {
                             NavigationLink {
                                 TripPlannerComposerView { trip in
@@ -1050,23 +1640,11 @@ struct TripPlannerView: View {
                             LazyVStack(spacing: 14) {
                                 ForEach(store.trips) { trip in
                                     NavigationLink {
-                                        TripPlannerDetailView(
-                                            trip: trip,
-                                            onSave: { updatedTrip in
-                                                store.upsert(updatedTrip)
-                                            },
-                                            onDelete: {
-                                                store.delete(id: trip.id)
-                                            },
-                                            onAddToCalendar: { selectedTrip in
-                                                Task {
-                                                    await openCalendar(for: selectedTrip)
-                                                }
-                                            }
-                                        )
+                                        tripDetailDestination(for: trip)
                                     } label: {
                                         TripPlannerSavedTripCard(
                                             trip: trip,
+                                            isNewSharedTrip: pendingSharedTripIDs.contains(trip.id),
                                             onDelete: {
                                                 store.delete(id: trip.id)
                                             },
@@ -1087,6 +1665,9 @@ struct TripPlannerView: View {
                     .padding(.bottom, 32)
                 }
                 .scrollIndicators(.hidden)
+                .refreshable {
+                    await store.refresh()
+                }
             }
         }
         .navigationTitle("")
@@ -1097,26 +1678,19 @@ struct TripPlannerView: View {
                     store.add(trip)
                 }
             } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 13, weight: .bold))
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.94))
+                        .frame(width: 40, height: 40)
+                        .shadow(color: .black.opacity(0.12), radius: 10, y: 4)
 
-                    Text("trip_planner.new_trip")
-                        .font(.system(size: 15, weight: .bold))
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .black))
+                        .foregroundStyle(.black)
                 }
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .fill(Color.white.opacity(0.9))
-                    )
-                    .overlay(
-                        Capsule()
-                            .stroke(Color.black.opacity(0.12), lineWidth: 1)
-                    )
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(String(localized: "trip_planner.new_trip"))
         }
         .sheet(item: $calendarDraft) { draft in
             TripPlannerCalendarSheet(draft: draft)
@@ -1132,6 +1706,30 @@ struct TripPlannerView: View {
             Button(String(localized: "common.ok"), role: .cancel) {}
         } message: {
             Text(calendarError ?? "")
+        }
+        .task {
+            await sharedTripInbox.refresh()
+        }
+    }
+
+    @ViewBuilder
+    private func tripDetailDestination(for trip: TripPlannerTrip) -> some View {
+        TripPlannerDetailView(
+            trip: trip,
+            onSave: { updatedTrip in
+                store.upsert(updatedTrip)
+            },
+            onDelete: {
+                store.delete(id: trip.id)
+            },
+            onAddToCalendar: { selectedTrip in
+                Task {
+                    await openCalendar(for: selectedTrip)
+                }
+            }
+        )
+        .task {
+            sharedTripInbox.markSeen(tripId: trip.id)
         }
     }
 
@@ -1166,10 +1764,10 @@ struct TripPlannerView: View {
                     locale: AppDisplayLocale.current,
                     trip.countryNames.joined(separator: ", ")
                 ),
-                trip.friendNames.isEmpty ? nil : String(
+                trip.travelerDisplayNames.isEmpty ? nil : String(
                     format: String(localized: "trip_planner.calendar_notes_friends"),
                     locale: AppDisplayLocale.current,
-                    trip.friendNames.joined(separator: ", ")
+                    trip.travelerDisplayNames.joined(separator: ", ")
                 )
             ].compactMap { $0 }
             event.notes = noteParts.joined(separator: "\n")
@@ -1213,9 +1811,13 @@ private struct TripPlannerComposerView: View {
     @State private var friendsError: String?
     @State private var showingAllFriends = false
     @State private var showingBucketCountries = false
+    @State private var usernameSearchText = ""
+    @State private var searchedUsers: [Profile] = []
+    @State private var isSearchingUsers = false
 
     private let friendService = FriendService()
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
+    private let supabase = SupabaseManager.shared
 
     init(
         existingTrip: TripPlannerTrip? = nil,
@@ -1512,6 +2114,33 @@ private struct TripPlannerComposerView: View {
                                                     .tint(.black)
                                             }
                                         }
+
+                                        TripPlannerTextInput(
+                                            title: "Add by username",
+                                            text: $usernameSearchText,
+                                            placeholder: "@username"
+                                        )
+
+                                        if isSearchingUsers {
+                                            ProgressView()
+                                                .tint(.black)
+                                        } else if !searchedUsers.isEmpty {
+                                            LazyVStack(spacing: 10) {
+                                                ForEach(searchedUsers) { profile in
+                                                    Button {
+                                                        addSearchedUser(profile)
+                                                    } label: {
+                                                        TripPlannerFriendRow(
+                                                            profile: profile,
+                                                            isSelected: selectedFriendIds.contains(profile.id),
+                                                            displayName: displayName(for: profile),
+                                                            mutualBucketCount: mutualBucketCount(for: profile.id)
+                                                        )
+                                                    }
+                                                    .buttonStyle(.plain)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1678,6 +2307,13 @@ private struct TripPlannerComposerView: View {
         .onChange(of: includeFriends) { _, enabled in
             if !enabled {
                 selectedFriendIds.removeAll()
+                usernameSearchText = ""
+                searchedUsers = []
+            }
+        }
+        .onChange(of: usernameSearchText) { _, _ in
+            Task {
+                await searchUsersByUsername()
             }
         }
     }
@@ -1760,6 +2396,46 @@ private struct TripPlannerComposerView: View {
         }
     }
 
+    @MainActor
+    private func searchUsersByUsername() async {
+        let query = usernameSearchText
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "@", with: "")
+
+        guard includeFriends, !query.isEmpty else {
+            searchedUsers = []
+            return
+        }
+
+        isSearchingUsers = true
+        defer { isSearchingUsers = false }
+
+        do {
+            let results = try await supabase.searchUsers(byUsername: query)
+            TripPlannerDebugLog.message(
+                "Username search '\(query)' returned \(results.count) results for actor=\(TripPlannerDebugLog.userLabel(sessionManager.userId))"
+            )
+            searchedUsers = results.filter { profile in
+                profile.id != sessionManager.userId
+            }
+        } catch {
+            TripPlannerDebugLog.message("Username search '\(query)' failed")
+            searchedUsers = []
+        }
+    }
+
+    private func addSearchedUser(_ profile: Profile) {
+        if !friends.contains(where: { $0.id == profile.id }) {
+            friends.append(profile)
+        }
+        selectedFriendIds.insert(profile.id)
+        usernameSearchText = ""
+        searchedUsers = []
+        TripPlannerDebugLog.message(
+            "Added searched user @\(profile.username) [\(profile.id.uuidString)] to draft trip for actor=\(TripPlannerDebugLog.userLabel(sessionManager.userId))"
+        )
+    }
+
     private func resolvedTripTitle() -> String {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
@@ -1820,6 +2496,15 @@ private struct TripPlannerComposerView: View {
             expenses: existingTrip?.expenses ?? []
         )
 
+        TripPlannerDebugLog.message(
+            """
+            Composer save prepared trip \(TripPlannerDebugLog.tripLabel(trip))
+            actor=\(TripPlannerDebugLog.userLabel(sessionManager.userId))
+            usernames=[\(trip.friends.map(\.username).joined(separator: ", "))]
+            participantIds=[\(TripPlannerDebugLog.participantLabels(for: trip.participantIDs(including: sessionManager.userId)))]
+            """
+        )
+
         onSave(trip)
         dismiss()
     }
@@ -1862,6 +2547,7 @@ private struct TripPlannerDetailView: View {
     @State private var isLoadingFriendProfiles = false
     @State private var resolvedCountries: [Country] = []
     @State private var currentUserSnapshot: TripPlannerFriendSnapshot?
+    @State private var ownerSnapshot: TripPlannerFriendSnapshot?
     @State private var currentPassportPreferences: PassportPreferences = .empty
     @State private var travelerPassportPreferences: [UUID: PassportPreferences] = [:]
     @State private var travelerProfiles: [UUID: Profile] = [:]
@@ -1909,8 +2595,16 @@ private struct TripPlannerDetailView: View {
             travelers.append(currentUserSnapshot)
         }
 
+        if let ownerSnapshot {
+            travelers.append(ownerSnapshot)
+        }
+
         travelers.append(contentsOf: displayedFriends)
-        return travelers
+
+        var seen = Set<UUID>()
+        return travelers.filter { traveler in
+            seen.insert(traveler.id).inserted
+        }
     }
 
     private var displayedCountries: [Country] {
@@ -2167,6 +2861,18 @@ private struct TripPlannerDetailView: View {
                 currentPassportPreferences = preferences
                 passportPreferencesByUserID[currentUserId] = preferences
             }
+        }
+
+        if let ownerId = trip.ownerId, ownerId != sessionManager.userId {
+            if let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+                profilesByID[ownerId] = cachedOwner
+                ownerSnapshot = friendSnapshot(from: cachedOwner)
+            } else if let ownerProfile = try? await profileService.fetchMyProfile(userId: ownerId) {
+                profilesByID[ownerId] = ownerProfile
+                ownerSnapshot = friendSnapshot(from: ownerProfile)
+            }
+        } else {
+            ownerSnapshot = nil
         }
 
         for snapshot in trip.friends {
@@ -2495,8 +3201,12 @@ private struct TripPlannerFriendsEditorView: View {
     @State private var selectedFriendIds: Set<UUID>
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var usernameSearchText = ""
+    @State private var searchedUsers: [Profile] = []
+    @State private var isSearchingUsers = false
 
     private let friendService = FriendService()
+    private let supabase = SupabaseManager.shared
 
     init(trip: TripPlannerTrip, onSave: @escaping (TripPlannerTrip) -> Void) {
         self.trip = trip
@@ -2552,6 +3262,32 @@ private struct TripPlannerFriendsEditorView: View {
                                         }
                                     }
                                 }
+
+                                TripPlannerTextInput(
+                                    title: "Add by username",
+                                    text: $usernameSearchText,
+                                    placeholder: "@username"
+                                )
+
+                                if isSearchingUsers {
+                                    ProgressView()
+                                        .tint(.black)
+                                } else if !searchedUsers.isEmpty {
+                                    LazyVStack(spacing: 10) {
+                                        ForEach(searchedUsers) { profile in
+                                            Button {
+                                                addSearchedUser(profile)
+                                            } label: {
+                                                TripPlannerFriendRow(
+                                                    profile: profile,
+                                                    isSelected: selectedFriendIds.contains(profile.id),
+                                                    displayName: displayName(for: profile)
+                                                )
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                }
                             }
                             .padding(.horizontal, Theme.pageHorizontalInset)
                             .padding(.top, 18)
@@ -2596,6 +3332,11 @@ private struct TripPlannerFriendsEditorView: View {
         .task {
             await loadFriends()
         }
+        .onChange(of: usernameSearchText) { _, _ in
+            Task {
+                await searchUsersByUsername()
+            }
+        }
     }
 
     @MainActor
@@ -2608,7 +3349,9 @@ private struct TripPlannerFriendsEditorView: View {
         }
 
         do {
-            friends = try await friendService.fetchFriends(for: userId)
+            let fetchedFriends = try await friendService.fetchFriends(for: userId)
+            let existingParticipants = try await fetchProfiles(for: trip.friendIds)
+            friends = mergedProfiles(fetchedFriends + existingParticipants)
         } catch {
             errorMessage = String(localized: "trip_planner.friends.load_error")
         }
@@ -2619,6 +3362,56 @@ private struct TripPlannerFriendsEditorView: View {
             selectedFriendIds.remove(id)
         } else {
             selectedFriendIds.insert(id)
+        }
+    }
+
+    @MainActor
+    private func searchUsersByUsername() async {
+        let query = usernameSearchText
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "@", with: "")
+
+        guard !query.isEmpty else {
+            searchedUsers = []
+            return
+        }
+
+        isSearchingUsers = true
+        defer { isSearchingUsers = false }
+
+        do {
+            let results = try await supabase.searchUsers(byUsername: query)
+            searchedUsers = results.filter { profile in
+                profile.id != sessionManager.userId
+            }
+        } catch {
+            searchedUsers = []
+        }
+    }
+
+    private func addSearchedUser(_ profile: Profile) {
+        friends = mergedProfiles(friends + [profile])
+        selectedFriendIds.insert(profile.id)
+        usernameSearchText = ""
+        searchedUsers = []
+    }
+
+    private func fetchProfiles(for ids: [UUID]) async throws -> [Profile] {
+        guard !ids.isEmpty else { return [] }
+
+        let response: PostgrestResponse<[Profile]> = try await supabase.client
+            .from("profiles")
+            .select("*")
+            .in("id", values: ids.map(\.uuidString))
+            .execute()
+
+        return response.value
+    }
+
+    private func mergedProfiles(_ profiles: [Profile]) -> [Profile] {
+        var seen = Set<UUID>()
+        return profiles.filter { profile in
+            seen.insert(profile.id).inserted
         }
     }
 
@@ -5511,6 +6304,7 @@ private struct TripPlannerOverlapCard: View {
 
 private struct TripPlannerSavedTripCard: View {
     let trip: TripPlannerTrip
+    let isNewSharedTrip: Bool
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
 
@@ -5518,6 +6312,24 @@ private struct TripPlannerSavedTripCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
+                    if isNewSharedTrip {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bell.badge.fill")
+                                .font(.system(size: 11, weight: .black))
+
+                            Text("New shared trip")
+                                .font(.system(size: 11, weight: .black))
+                                .tracking(0.3)
+                        }
+                        .foregroundStyle(Color(red: 0.52, green: 0.24, blue: 0.08))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(Color.white.opacity(0.78))
+                        )
+                    }
+
                     Text(trip.title)
                         .font(.system(size: 19, weight: .bold))
                         .foregroundStyle(.black)
@@ -5551,11 +6363,11 @@ private struct TripPlannerSavedTripCard: View {
                     .foregroundStyle(.black.opacity(0.74))
             }
 
-            if !trip.friendNames.isEmpty {
+            if !trip.travelerDisplayNames.isEmpty {
                 Text(String(
                     format: String(localized: "trip_planner.saved_trip.with_format"),
                     locale: AppDisplayLocale.current,
-                    trip.friendNames.joined(separator: ", ")
+                    trip.travelerDisplayNames.joined(separator: ", ")
                 ))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(.black.opacity(0.8))
@@ -5591,6 +6403,84 @@ private struct TripPlannerSavedTripCard: View {
                 .fill(Color(red: 0.97, green: 0.94, blue: 0.88).opacity(0.94))
                 .overlay(
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(.white.opacity(0.45), lineWidth: 1)
+                )
+        )
+        .shadow(color: .black.opacity(0.1), radius: 10, y: 6)
+    }
+}
+
+private struct TripPlannerSharedTripNotificationCard: View {
+    let trip: TripPlannerTrip
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                Label("Shared trip", systemImage: "bell.badge.fill")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.72))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.72))
+                    )
+
+                Spacer(minLength: 8)
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.7))
+                        .frame(width: 30, height: 30)
+                        .background(Circle().fill(.white.opacity(0.76)))
+                }
+                .buttonStyle(.plain)
+            }
+
+            HStack(alignment: .top, spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.72))
+                        .frame(width: 48, height: 48)
+
+                    Image(systemName: "airplane.departure")
+                        .font(.system(size: 19, weight: .black))
+                        .foregroundStyle(.black.opacity(0.82))
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Added to your planner")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.black)
+
+                    Text(trip.title)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.86))
+
+                    Text("This trip is ready to edit with the rest of the group.")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.black.opacity(0.68))
+                        .multilineTextAlignment(.leading)
+                }
+            }
+
+            HStack(spacing: 8) {
+                TripPlannerBadge(text: "Shared")
+
+                if let rangeText = TripPlannerDateFormatter.rangeText(start: trip.startDate, end: trip.endDate) {
+                    TripPlannerBadge(text: rangeText)
+                }
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(red: 0.97, green: 0.94, blue: 0.88).opacity(0.94))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
                         .stroke(.white.opacity(0.45), lineWidth: 1)
                 )
         )
