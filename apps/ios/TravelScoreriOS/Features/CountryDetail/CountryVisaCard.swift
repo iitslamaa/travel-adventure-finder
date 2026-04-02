@@ -74,6 +74,63 @@ struct CountryVisaCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.countryDetailCardBackground(corner: 14))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        } else if showsPassportSetupPrompt {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("country_detail.visa.title")
+                        .font(.headline)
+                    Spacer()
+                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.visa.passport_weight_format"), locale: AppDisplayLocale.current, "Passport needed", weightPercentage)))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
+                Text("Add a passport to personalize visa guidance")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+
+                Text("Visa access depends on the passport you travel with. Add one in Profile Settings to see accurate visa rules and visa-based scoring.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button(action: onOpenPassportSettings) {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "person.text.rectangle")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.black.opacity(0.78))
+                            .padding(.top, 2)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Open passport settings")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.black)
+
+                            Text("Add your passport to unlock personalized visa access for this destination.")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.black.opacity(0.68))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        Spacer(minLength: 8)
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.black.opacity(0.5))
+                            .padding(.top, 4)
+                    }
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Color.black.opacity(0.05))
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.countryDetailCardBackground(corner: 14))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         } else if country.visaEaseScore != nil || country.visaType != nil {
             VStack(alignment: .leading, spacing: 12) {
 
@@ -143,42 +200,6 @@ struct CountryVisaCard: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-
-                if showsPassportSetupPrompt {
-                    Button(action: onOpenPassportSettings) {
-                        HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: "person.text.rectangle")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.black.opacity(0.78))
-                                .padding(.top, 2)
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Using a U.S. passport for now")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.black)
-
-                                Text("Add your passports in Profile Settings for more accurate visa guidance.")
-                                    .font(.system(size: 13))
-                                    .foregroundStyle(.black.opacity(0.68))
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-
-                            Spacer(minLength: 8)
-
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(.black.opacity(0.5))
-                                .padding(.top, 4)
-                        }
-                        .padding(14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Color.black.opacity(0.05))
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
-
                 // Details rows
                 VStack(alignment: .leading, spacing: 4) {
                     if let type = country.visaType {

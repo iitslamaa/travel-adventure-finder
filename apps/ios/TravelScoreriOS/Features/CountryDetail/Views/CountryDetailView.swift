@@ -31,10 +31,6 @@ struct CountryDetailView: View {
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
 
-    private var passportFallbackCountryCode: String {
-        profileVM.effectivePassportCountryCode?.nilIfBlank ?? "US"
-    }
-
     private var shouldPromptForPassportSetup: Bool {
         sessionManager.isAuthenticated && profileVM.passportNationalities.isEmpty
     }
@@ -98,10 +94,6 @@ struct CountryDetailView: View {
             return [CountrySelectionFormatter.localizedName(for: effectivePassportCode)]
         }
 
-        if shouldPromptForPassportSetup {
-            return [CountrySelectionFormatter.localizedName(for: passportFallbackCountryCode)]
-        }
-
         if let activePassportLabel = visaStore.activePassportLabel?.nilIfBlank {
             return [activePassportLabel]
         }
@@ -118,7 +110,11 @@ struct CountryDetailView: View {
             return String(localized: "trip_planner.visa.best_saved_passport")
         }
 
-        return visaStore.activePassportLabel ?? String(localized: "trip_planner.visa.default_passport_label")
+        if shouldPromptForPassportSetup {
+            return "Passport needed"
+        }
+
+        return visaStore.activePassportLabel ?? "Passport needed"
     }
 
     private var recommendedPassportLabel: String? {
@@ -173,7 +169,7 @@ struct CountryDetailView: View {
         country = await visaStore.hydrate(
             country: country,
             passportCountryCodes: profileVM.passportNationalities,
-            fallbackPassportCountryCode: passportFallbackCountryCode
+            fallbackPassportCountryCode: profileVM.effectivePassportCountryCode
         )
     }
     

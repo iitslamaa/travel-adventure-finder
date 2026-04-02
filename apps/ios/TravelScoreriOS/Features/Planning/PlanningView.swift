@@ -3550,7 +3550,7 @@ private struct TripPlannerDetailView: View {
             return CountrySelectionFormatter.localizedName(for: code)
         }
 
-        return visaStore.activePassportLabel ?? String(localized: "trip_planner.visa.default_passport_label")
+        return "Passport needed"
     }
 
     @MainActor

@@ -342,9 +342,7 @@ final class VisaRequirementsStore: ObservableObject {
     private var lastVersionCheckAtByPassport: [String: Date] = [:]
     private var latestVersionByPassport: [String: Int] = [:]
 
-    private init() {
-        loadCachedDataset(for: "US")
-    }
+    private init() {}
 
     func hydrate(
         country: Country,
@@ -540,8 +538,7 @@ final class VisaRequirementsStore: ObservableObject {
             .uppercased()
 
         let merged = normalizedSavedPassports + [normalizedFallback].compactMap { $0 }
-        let unique = Array(NSOrderedSet(array: merged)) as? [String] ?? []
-        return unique.isEmpty ? ["US"] : unique
+        return Array(NSOrderedSet(array: merged)) as? [String] ?? []
     }
 
     private func hydratedResult(from snapshots: [VisaSnapshot]) -> HydratedVisaResult? {
