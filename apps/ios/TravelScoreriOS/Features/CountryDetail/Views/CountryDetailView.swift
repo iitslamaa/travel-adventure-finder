@@ -1067,25 +1067,20 @@ private enum CountryLanguageCompatibilityScorer {
 
         let normalizedUserLanguages = userLanguages.map { language in
             ScoredUserLanguage(
-                code: LanguageRepository.shared.canonicalLanguageCode(for: language.code)
-                    ?? language.code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                codes: LanguageRepository.shared.compatibilityLanguageCodes(for: language.code),
                 proficiency: LanguageProficiency(storageValue: language.proficiency)
             )
         }
 
-        let userLanguageByCode = Dictionary(
-            uniqueKeysWithValues: normalizedUserLanguages.map { ($0.code, $0) }
-        )
-
         let exactMatches = countryProfile.languages.compactMap { countryLanguage -> ExactLanguageMatch? in
-            let normalizedCode = countryLanguage.code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let normalizedCodes = LanguageRepository.shared.compatibilityLanguageCodes(for: countryLanguage.code)
 
-            guard let userLanguage = userLanguageByCode[normalizedCode] else {
+            guard let userLanguage = normalizedUserLanguages.first(where: { !$0.codes.isDisjoint(with: normalizedCodes) }) else {
                 return nil
             }
 
             return ExactLanguageMatch(
-                code: normalizedCode,
+                code: countryLanguage.code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
                 type: countryLanguage.type,
                 coverage: countryLanguage.coverage,
                 proficiency: userLanguage.proficiency,
@@ -1181,7 +1176,7 @@ private enum CountryLanguageCompatibilityScorer {
     }
 
     private struct ScoredUserLanguage {
-        let code: String
+        let codes: Set<String>
         let proficiency: LanguageProficiency
     }
 
