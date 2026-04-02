@@ -13,6 +13,7 @@ struct FeedbackService {
     
     struct FeedbackEmailPayload: Encodable {
         let message: String
+        let contact_email: String?
         let user_id: String
         let device: String
         let app_version: String
@@ -21,6 +22,7 @@ struct FeedbackService {
 
     static func submitFeedback(
         message: String,
+        contactEmail: String?,
         userId: UUID,
         supabase: SupabaseManager
     ) async throws {
@@ -40,6 +42,7 @@ struct FeedbackService {
         
         let payload = FeedbackEmailPayload(
             message: message,
+            contact_email: contactEmail,
             user_id: userId.uuidString,
             device: device,
             app_version: version ?? "unknown",

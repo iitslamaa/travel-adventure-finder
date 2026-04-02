@@ -6,7 +6,7 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"))
 
 Deno.serve(async (req) => {
   try {
-    const { message, user_id, device, app_version, created_at } = await req.json()
+    const { message, contact_email, user_id, device, app_version, created_at } = await req.json()
 
     await resend.emails.send({
       from: "onboarding@resend.dev",
@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
         <p><strong>Message:</strong></p>
         <p>${message}</p>
         <hr />
+        <p><strong>Contact Email:</strong> ${contact_email || "Not provided"}</p>
         <p><strong>User ID:</strong> ${user_id}</p>
         <p><strong>Device:</strong> ${device}</p>
         <p><strong>App Version:</strong> ${app_version}</p>

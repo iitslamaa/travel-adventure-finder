@@ -346,6 +346,8 @@ struct RootTabView: View {
 }
 
 struct MoreView: View {
+    @Environment(\.floatingTabBarInset) private var floatingTabBarInset
+
     var body: some View {
         ZStack {
             Theme.pageBackground("travel2")
@@ -380,7 +382,7 @@ struct MoreView: View {
                     }
                     .padding(.horizontal, Theme.pageHorizontalInset)
                     .padding(.top, 18)
-                    .padding(.bottom, 120)
+                    .padding(.bottom, floatingTabBarInset + 24)
                 }
             }
         }

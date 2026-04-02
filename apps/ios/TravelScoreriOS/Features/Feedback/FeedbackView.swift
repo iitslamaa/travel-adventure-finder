@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Auth
 
 struct FeedbackView: View {
     
@@ -13,9 +14,30 @@ struct FeedbackView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     
     @State private var message: String = ""
+    @State private var contactEmail: String = ""
     @State private var isSubmitting = false
     @State private var didSubmit = false
     @State private var errorMessage: String?
+
+    private var trimmedMessage: String {
+        message.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var trimmedContactEmail: String {
+        contactEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var hasValidContactEmail: Bool {
+        let parts = trimmedContactEmail.split(separator: "@")
+        guard parts.count == 2,
+              !parts[0].isEmpty,
+              !parts[1].isEmpty,
+              parts[1].contains(".")
+        else {
+            return false
+        }
+        return true
+    }
     
     var body: some View {
         ZStack {
@@ -65,6 +87,26 @@ struct FeedbackView: View {
                         }
 
                         Theme.scrapbookSection {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Your email")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+
+                                TextField(String(localized: "auth.email_address_placeholder"), text: $contactEmail)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+                                    .keyboardType(.emailAddress)
+                                    .textContentType(.emailAddress)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 14)
+                                    .background(Color(red: 0.95, green: 0.92, blue: 0.86))
+                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            }
+
+                            Text("Add an email you check so we can follow up if your note raises something useful or unclear.")
+                                .font(.footnote)
+                                .foregroundStyle(Theme.textSecondary)
+
                             TextEditor(text: $message)
                                 .frame(minHeight: 170)
                                 .padding(12)
@@ -93,20 +135,26 @@ struct FeedbackView: View {
                                     }
                                 }
                                 .padding()
-                                .background(message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSubmitting ? Color.gray.opacity(0.3) : Theme.accent)
+                                .background(trimmedMessage.isEmpty || !hasValidContactEmail || isSubmitting ? Color.gray.opacity(0.3) : Theme.accent)
                                 .foregroundColor(.white)
                                 .cornerRadius(12)
                             }
-                            .disabled(message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSubmitting)
+                            .disabled(trimmedMessage.isEmpty || !hasValidContactEmail || isSubmitting)
                         }
                     }
                     .padding(.top, 12)
-                    .padding(.bottom, 120)
+                    .padding(.bottom, 32)
                 }
             }
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            guard contactEmail.isEmpty else { return }
+            if let session = try? await sessionManager.supabase.fetchCurrentSession() {
+                contactEmail = session.user.email ?? ""
+            }
+        }
     }
     
     private func submit() async {
@@ -114,10 +162,17 @@ struct FeedbackView: View {
         
         isSubmitting = true
         errorMessage = nil
+
+        guard hasValidContactEmail else {
+            errorMessage = "Please enter a valid email address."
+            isSubmitting = false
+            return
+        }
         
         do {
             try await FeedbackService.submitFeedback(
-                message: message,
+                message: trimmedMessage,
+                contactEmail: trimmedContactEmail,
                 userId: userId,
                 supabase: sessionManager.supabase
             )
