@@ -39,6 +39,7 @@ final class FriendsViewModel: ObservableObject {
         }
     }
     @Published private(set) var hasLoaded: Bool = false
+    @Published private(set) var hasAttemptedLoad: Bool = false
 
     // MARK: - Dependencies
     private let supabase = SupabaseManager.shared
@@ -58,8 +59,19 @@ final class FriendsViewModel: ObservableObject {
             return
         }
 
+        if let cachedFriends = friendService.cachedFriends(for: userId),
+           !cachedFriends.isEmpty,
+           friends.isEmpty {
+            friends = cachedFriends
+        }
+
         isLoading = true
-        errorMessage = nil
+        hasAttemptedLoad = true
+        defer { isLoading = false }
+
+        if forceRefresh || friends.isEmpty {
+            errorMessage = nil
+        }
 
         do {
             let fetchedFriends = try await friendService.fetchFriends(for: userId)
@@ -71,11 +83,17 @@ final class FriendsViewModel: ObservableObject {
             }
 
             print("❌ [FriendsVM:", instanceId, "] loadFriends failed:", error)
-            errorMessage = error.localizedDescription
-            friends = []
+            if let urlError = error as? URLError {
+                switch urlError.code {
+                case .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost, .timedOut:
+                    errorMessage = "Couldn't load friends. Check your connection and pull to retry."
+                default:
+                    errorMessage = error.localizedDescription
+                }
+            } else {
+                errorMessage = error.localizedDescription
+            }
         }
-
-        isLoading = false
     }
 
     // MARK: - Load Display Name

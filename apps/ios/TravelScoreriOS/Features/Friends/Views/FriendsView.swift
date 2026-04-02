@@ -144,14 +144,17 @@ struct FriendsView: View {
                 Text(friendsVM.errorMessage ?? "")
             }
             .task(id: userId) {
+                let shouldLoadDisplayName = friendsVM.displayName.isEmpty
+                let shouldLoadRequestCount = isOwnFriendsPage
+
                 await friendsVM.loadFriends(for: userId, forceRefresh: false)
 
-                if friendsVM.displayName.isEmpty {
+                if shouldLoadDisplayName {
                     await friendsVM.loadDisplayName(for: userId)
                     displayName = friendsVM.displayName
                 }
 
-                if isOwnFriendsPage {
+                if shouldLoadRequestCount {
                     await friendsVM.loadIncomingRequestCount()
                 }
             }
@@ -172,7 +175,47 @@ struct FriendsView: View {
                 Theme.notebookListBackground(corner: 22)
                     .allowsHitTesting(false)
 
-                VStack(spacing: 14) {
+                if friendsVM.isLoading && displayedProfiles.isEmpty {
+                    ProgressView("friends.loading")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.top, 24)
+                } else if friendsVM.hasAttemptedLoad && displayedProfiles.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "person.2")
+                            .font(.system(size: 44))
+                            .foregroundStyle(.black.opacity(0.7))
+
+                        Text(friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            ? String(localized: "friends.empty.title")
+                            : String(localized: "friends.search.empty"))
+                            .font(TAFTypography.title(.bold))
+                            .foregroundStyle(.black)
+
+                        Text(friendsVM.errorMessage ?? String(localized: "friends.empty.subtitle"))
+                            .font(TAFTypography.section())
+                            .foregroundStyle(.black.opacity(0.72))
+                            .multilineTextAlignment(.center)
+
+                        if !friendsVM.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Button(String(localized: "common.clear")) {
+                                friendsVM.clearSearch()
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.black)
+                        } else {
+                            Button(String(localized: "common.retry")) {
+                                Task {
+                                    await friendsVM.loadFriends(for: userId, forceRefresh: true)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.black)
+                        }
+                    }
+                    .padding(24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    VStack(spacing: 14) {
                     searchBar
                         .padding(.horizontal, 16)
                         .padding(.top, 16)
@@ -247,12 +290,13 @@ struct FriendsView: View {
                         .padding(.top, 6)
                         .padding(.bottom, floatingTabBarInset + 20)
                     }
-                }
-                .refreshable {
-                    await friendsVM.loadFriends(for: userId, forceRefresh: true)
-                    if isOwnFriendsPage {
-                        await friendsVM.loadIncomingRequestCount()
+                    .refreshable {
+                        await friendsVM.loadFriends(for: userId, forceRefresh: true)
+                        if isOwnFriendsPage {
+                            await friendsVM.loadIncomingRequestCount()
+                        }
                     }
+                }
                 }
             }
             .frame(width: contentWidth)
