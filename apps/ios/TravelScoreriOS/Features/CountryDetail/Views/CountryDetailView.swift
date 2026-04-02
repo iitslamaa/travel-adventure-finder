@@ -27,6 +27,7 @@ struct CountryDetailView: View {
     @State private var scrollAnchor: String? = nil
     @State private var countryLanguageProfile: CountryLanguageProfile?
     @State private var isPreparingContent: Bool = true
+    @State private var isResolvingVisaContext: Bool = false
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
 
@@ -139,6 +140,12 @@ struct CountryDetailView: View {
         return recommendedPassportLabel != nil || equalBestPassportLabels.count > 1
     }
 
+    private var shouldResolveVisaContextBeforeDisplay: Bool {
+        guard sessionManager.isAuthenticated else { return false }
+        guard profileVM.userId == sessionManager.userId else { return false }
+        return !profileVM.hasLoadedCoreData
+    }
+
     @MainActor
     private func refreshCountryIfAvailable() async {
         let iso2 = country.iso2.uppercased()
@@ -230,6 +237,7 @@ struct CountryDetailView: View {
                                     CountryVisaCard(
                                         country: displayedCountry,
                                         weightPercentage: weightsStore.visaPercentage,
+                                        isLoading: isResolvingVisaContext,
                                         passportLabel: visaPassportLabel,
                                         recommendedPassportLabel: recommendedPassportLabel,
                                         equalBestPassportLabels: equalBestPassportLabels,
@@ -314,12 +322,8 @@ struct CountryDetailView: View {
         }
         .task(id: country.iso2.uppercased()) {
             isPreparingContent = true
-
-            if sessionManager.isAuthenticated {
-                Task {
-                    await profileVM.reloadProfile()
-                }
-            }
+            let shouldResolveVisaContext = shouldResolveVisaContextBeforeDisplay
+            isResolvingVisaContext = shouldResolveVisaContext
 
             Task {
                 await engagementVM.load(
@@ -329,11 +333,17 @@ struct CountryDetailView: View {
                 )
             }
 
+            async let profileLoad: Void = {
+                guard shouldResolveVisaContext else { return }
+                await profileVM.loadIfNeeded()
+            }()
             async let countryRefresh: Void = refreshCountryIfAvailable()
             async let languageProfileRefresh: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
 
             _ = await countryRefresh
+            _ = await profileLoad
             await refreshVisaPresentation()
+            isResolvingVisaContext = false
             countryLanguageProfile = await languageProfileRefresh
             isPreparingContent = false
         }
