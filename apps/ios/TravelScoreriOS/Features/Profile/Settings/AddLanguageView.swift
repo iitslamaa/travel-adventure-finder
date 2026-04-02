@@ -21,12 +21,20 @@ struct AddLanguageView: View {
         }
 
         var seenTravelCodes: Set<String> = []
+        var seenDisplayLabels: Set<String> = []
 
         return filtered.compactMap { language in
             let canonicalCode = LanguageRepository.shared.canonicalLanguageCode(for: language.travelLanguageCode)
                 ?? language.travelLanguageCode
+            let displayLabel = LanguageRepository.shared.localizedDisplayName(for: language.travelLanguageCode)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: AppDisplayLocale.current)
 
             guard seenTravelCodes.insert(canonicalCode).inserted else {
+                return nil
+            }
+
+            guard seenDisplayLabels.insert(displayLabel).inserted else {
                 return nil
             }
 

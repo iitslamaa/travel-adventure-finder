@@ -170,7 +170,7 @@ struct FriendsView: View {
     }
 
     private func contentView(contentWidth: CGFloat) -> some View {
-        ScrollViewReader { proxy in
+        GeometryReader { container in
             ZStack {
                 Theme.notebookListBackground(corner: 22)
                     .allowsHitTesting(false)
@@ -214,93 +214,94 @@ struct FriendsView: View {
                     }
                     .padding(24)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
+                }
+                else {
                     VStack(spacing: 14) {
-                    searchBar
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
+                        searchBar
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
 
-                    ScrollView {
-                        LazyVStack(spacing: 18) {
-                            ForEach(displayedProfiles, id: \.id) { profile in
-                                Button {
-                                    socialNav.push(.profile(profile.id))
-                                } label: {
-                                    HStack(spacing: 14) {
-                                        if let urlString = profile.avatarUrl,
-                                           let url = URL(string: urlString) {
-                                            LazyImage(url: url) { state in
-                                                if let image = state.image {
-                                                    image
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                } else {
-                                                    Image(systemName: "person.crop.circle.fill")
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                        .foregroundColor(.gray)
+                        ScrollView {
+                            LazyVStack(spacing: 18) {
+                                ForEach(displayedProfiles, id: \.id) { profile in
+                                    Button {
+                                        socialNav.push(.profile(profile.id))
+                                    } label: {
+                                        HStack(spacing: 14) {
+                                            if let urlString = profile.avatarUrl,
+                                               let url = URL(string: urlString) {
+                                                LazyImage(url: url) { state in
+                                                    if let image = state.image {
+                                                        image
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                    } else {
+                                                        Image(systemName: "person.crop.circle.fill")
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                            .foregroundColor(.gray)
+                                                    }
                                                 }
-                                            }
-                                            .processors([
-                                                ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
-                                            ])
-                                            .priority(.high)
-                                            .frame(width: 44, height: 44)
-                                            .clipShape(Circle())
-                                        } else {
-                                            Image(systemName: "person.crop.circle.fill")
-                                                .resizable()
-                                                .scaledToFill()
-                                                .foregroundColor(.gray)
+                                                .processors([
+                                                    ImageProcessors.Resize(size: CGSize(width: 120, height: 120))
+                                                ])
+                                                .priority(.high)
                                                 .frame(width: 44, height: 44)
+                                                .clipShape(Circle())
+                                            } else {
+                                                Image(systemName: "person.crop.circle.fill")
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .foregroundColor(.gray)
+                                                    .frame(width: 44, height: 44)
+                                            }
+
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(profile.fullName)
+                                                    .font(.headline)
+                                                    .foregroundColor(.black)
+                                                Text("@\(profile.username)")
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.black)
+                                            }
+
+                                            Spacer()
+
+                                            Image(systemName: "chevron.right")
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundColor(.black.opacity(0.35))
                                         }
-
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(profile.fullName)
-                                                .font(.headline)
-                                                .foregroundColor(.black)
-                                            Text("@\(profile.username)")
-                                                .font(.subheadline)
-                                                .foregroundColor(.black)
-                                        }
-
-                                        Spacer()
-
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundColor(.black.opacity(0.35))
+                                        .padding(16)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 18)
+                                                .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                        .stroke(.white.opacity(0.35), lineWidth: 1)
+                                                )
+                                        )
+                                        .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
                                     }
-                                    .padding(16)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 18)
-                                            .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.92))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                                    .stroke(.white.opacity(0.35), lineWidth: 1)
-                                            )
-                                    )
-                                    .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
+                            }
+                            .id("friendsListTop")
+                            .padding(.horizontal, 16)
+                            .padding(.top, 6)
+                            .padding(.bottom, floatingTabBarInset + 20)
+                        }
+                        .refreshable {
+                            await friendsVM.loadFriends(for: userId, forceRefresh: true)
+                            if isOwnFriendsPage {
+                                await friendsVM.loadIncomingRequestCount()
                             }
                         }
-                        .id("friendsListTop")
-                        .padding(.horizontal, 16)
-                        .padding(.top, 6)
-                        .padding(.bottom, floatingTabBarInset + 20)
                     }
-                    .refreshable {
-                        await friendsVM.loadFriends(for: userId, forceRefresh: true)
-                        if isOwnFriendsPage {
-                            await friendsVM.loadIncomingRequestCount()
-                        }
-                    }
-                }
                 }
             }
             .frame(width: contentWidth)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, minHeight: container.size.height, maxHeight: .infinity, alignment: .top)
             .padding(.top, 18)
             .padding(.bottom, floatingTabBarInset + 18)
         }
