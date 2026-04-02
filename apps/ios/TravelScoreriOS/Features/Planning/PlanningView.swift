@@ -1449,13 +1449,18 @@ final class TripPlannerStore: ObservableObject {
         }
     }
 
-    func delete(id: UUID) {
+    enum DeleteScope {
+        case justMe
+        case everyone
+    }
+
+    func delete(id: UUID, scope: DeleteScope) {
         let removedTrip = trips.first(where: { $0.id == id })
         trips.removeAll { $0.id == id }
         persistLocal()
 
         Task {
-            await syncDelete(id: id, previousTrip: removedTrip)
+            await syncDelete(id: id, previousTrip: removedTrip, scope: scope)
         }
     }
 
@@ -1595,31 +1600,90 @@ final class TripPlannerStore: ObservableObject {
         }
     }
 
-    private func syncDelete(id: UUID, previousTrip: TripPlannerTrip?) async {
+    private func syncDelete(id: UUID, previousTrip: TripPlannerTrip?, scope: DeleteScope) async {
         guard let userId = supabase.currentUserId else { return }
 
         do {
             let participantIDs = Set(previousTrip?.participantIDs(including: userId) ?? [userId])
             TripPlannerDebugLog.message(
-                "Deleting trip \(id.uuidString) for actor=\(TripPlannerDebugLog.userLabel(userId)) participants=[\(TripPlannerDebugLog.participantLabels(for: Array(participantIDs)))]"
+                "Deleting trip \(id.uuidString) scope=\(scope) actor=\(TripPlannerDebugLog.userLabel(userId)) participants=[\(TripPlannerDebugLog.participantLabels(for: Array(participantIDs)))]"
             )
-            if let previousTrip {
-                try await syncService.deleteSharedTrip(
-                    trip: previousTrip,
-                    participantIDs: Array(participantIDs)
-                )
-            } else {
-                for participantId in participantIDs {
-                    try await syncService.deleteTrip(userId: participantId, tripId: id)
+
+            switch scope {
+            case .justMe:
+                try await syncService.deleteTrip(userId: userId, tripId: id)
+            case .everyone:
+                if let previousTrip {
+                    try await syncService.deleteSharedTrip(
+                        trip: previousTrip,
+                        participantIDs: Array(participantIDs)
+                    )
+                } else {
+                    for participantId in participantIDs {
+                        try await syncService.deleteTrip(userId: participantId, tripId: id)
+                    }
                 }
+            }
+
+            if scope == .justMe, let previousTrip {
+                TripPlannerDebugLog.message(
+                    "Removed trip \(TripPlannerDebugLog.tripLabel(previousTrip)) for current user only"
+                )
             }
             NotificationCenter.default.post(name: .sharedTripsUpdated, object: nil)
         } catch {
             print("❌ Trip planner delete failed:", error)
         }
     }
+}
 
-    private func mergedTrips(local: [TripPlannerTrip], remote: [TripPlannerTrip]) -> [TripPlannerTrip] {
+private enum TripPlannerDeleteChoice: String, Identifiable {
+    case justMe
+    case everyone
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .justMe:
+            return "Delete for me only"
+        case .everyone:
+            return "Delete for everyone"
+        }
+    }
+
+    var confirmationTitle: String {
+        switch self {
+        case .justMe:
+            return "Remove This Trip For You?"
+        case .everyone:
+            return "Delete This Trip For Everyone?"
+        }
+    }
+
+    var confirmationMessage: String {
+        switch self {
+        case .justMe:
+            return "This removes the trip from your planner only. Everyone else keeps it."
+        case .everyone:
+            return "This deletes the trip for every participant in the group."
+        }
+    }
+
+    var buttonRole: ButtonRole? { .destructive }
+
+    var storeScope: TripPlannerStore.DeleteScope {
+        switch self {
+        case .justMe:
+            return .justMe
+        case .everyone:
+            return .everyone
+        }
+    }
+}
+ 
+private extension TripPlannerStore {
+    func mergedTrips(local: [TripPlannerTrip], remote: [TripPlannerTrip]) -> [TripPlannerTrip] {
         // Prefer the newest copy so shared-trip edits made by any participant
         // converge for everyone instead of being overwritten by stale local data.
         var mergedByID = Dictionary(uniqueKeysWithValues: local.map { ($0.id, $0) })
@@ -1634,7 +1698,9 @@ final class TripPlannerStore: ObservableObject {
 
         return mergedByID.values.sorted { $0.updatedAt > $1.updatedAt }
     }
+}
 
+extension TripPlannerStore {
     func refresh() async {
         await refreshFromRemoteIfNeeded(migrateLocalTrips: false)
     }
@@ -1847,6 +1913,8 @@ struct TripPlannerView: View {
     @StateObject private var store = TripPlannerStore()
     @State private var calendarDraft: TripPlannerCalendarDraft?
     @State private var calendarError: String?
+    @State private var pendingDeleteTrip: TripPlannerTrip?
+    @State private var pendingDeleteChoice: TripPlannerDeleteChoice?
 
     private var pendingSharedTripIDs: Set<UUID> {
         Set(sharedTripInbox.notifications.map { $0.trip.id })
@@ -1896,7 +1964,7 @@ struct TripPlannerView: View {
                                             trip: trip,
                                             isNewSharedTrip: pendingSharedTripIDs.contains(trip.id),
                                             onDelete: {
-                                                store.delete(id: trip.id)
+                                                pendingDeleteTrip = trip
                                             },
                                             onAddToCalendar: {
                                                 Task {
@@ -1957,6 +2025,57 @@ struct TripPlannerView: View {
         } message: {
             Text(calendarError ?? "")
         }
+        .confirmationDialog(
+            "Delete Trip",
+            isPresented: Binding(
+                get: { pendingDeleteTrip != nil && pendingDeleteChoice == nil },
+                set: { newValue in
+                    if !newValue, pendingDeleteChoice == nil {
+                        pendingDeleteTrip = nil
+                    }
+                }
+            )
+        ) {
+            Button("Delete for me only", role: .destructive) {
+                pendingDeleteChoice = .justMe
+            }
+
+            Button("Delete for everyone", role: .destructive) {
+                pendingDeleteChoice = .everyone
+            }
+
+            Button("Cancel", role: .cancel) {
+                pendingDeleteTrip = nil
+            }
+        } message: {
+            Text("Choose whether to remove this trip only from your planner or from the whole group.")
+        }
+        .alert(
+            pendingDeleteChoice?.confirmationTitle ?? "Delete Trip",
+            isPresented: Binding(
+                get: { pendingDeleteChoice != nil },
+                set: { newValue in
+                    if !newValue {
+                        pendingDeleteChoice = nil
+                    }
+                }
+            ),
+            presenting: pendingDeleteChoice
+        ) { choice in
+            Button(choice.title, role: .destructive) {
+                if let trip = pendingDeleteTrip {
+                    store.delete(id: trip.id, scope: choice.storeScope)
+                }
+                pendingDeleteTrip = nil
+                pendingDeleteChoice = nil
+            }
+
+            Button("Cancel", role: .cancel) {
+                pendingDeleteChoice = nil
+            }
+        } message: { choice in
+            Text(choice.confirmationMessage)
+        }
         .task {
             await sharedTripInbox.refresh()
         }
@@ -1969,8 +2088,8 @@ struct TripPlannerView: View {
             onSave: { updatedTrip in
                 store.upsert(updatedTrip)
             },
-            onDelete: {
-                store.delete(id: trip.id)
+            onDelete: { choice in
+                store.delete(id: trip.id, scope: choice.storeScope)
             },
             onAddToCalendar: { selectedTrip in
                 Task {
@@ -2792,7 +2911,7 @@ private struct TripPlannerDetailView: View {
 
     @State private var trip: TripPlannerTrip
     let onSave: (TripPlannerTrip) -> Void
-    let onDelete: () -> Void
+    let onDelete: (TripPlannerDeleteChoice) -> Void
     let onAddToCalendar: (TripPlannerTrip) -> Void
 
     @State private var resolvedFriends: [TripPlannerFriendSnapshot]
@@ -2805,6 +2924,8 @@ private struct TripPlannerDetailView: View {
     @State private var travelerProfiles: [UUID: Profile] = [:]
     @State private var groupLanguageScoresByCountry: [String: Int] = [:]
     @State private var groupVisaNeeds: [TripPlannerTravelerVisaNeed] = []
+    @State private var showingDeleteOptions = false
+    @State private var pendingDeleteChoice: TripPlannerDeleteChoice?
 
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
     private let visaStore = VisaRequirementsStore.shared
@@ -2813,7 +2934,7 @@ private struct TripPlannerDetailView: View {
     init(
         trip: TripPlannerTrip,
         onSave: @escaping (TripPlannerTrip) -> Void,
-        onDelete: @escaping () -> Void,
+        onDelete: @escaping (TripPlannerDeleteChoice) -> Void,
         onAddToCalendar: @escaping (TripPlannerTrip) -> Void
     ) {
         _trip = State(initialValue: trip)
@@ -3133,7 +3254,7 @@ private struct TripPlannerDetailView: View {
                                 }
 
                                 Button(role: .destructive) {
-                                    onDelete()
+                                    showingDeleteOptions = true
                                 } label: {
                                     Label("trip_planner.actions.delete_trip", systemImage: "trash")
                                         .font(.system(size: 15, weight: .bold))
@@ -3160,6 +3281,42 @@ private struct TripPlannerDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
             EmptyView()
+        }
+        .confirmationDialog("Delete Trip", isPresented: $showingDeleteOptions) {
+            Button("Delete for me only", role: .destructive) {
+                pendingDeleteChoice = .justMe
+            }
+
+            Button("Delete for everyone", role: .destructive) {
+                pendingDeleteChoice = .everyone
+            }
+
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Choose whether to remove this trip only from your planner or from the whole group.")
+        }
+        .alert(
+            pendingDeleteChoice?.confirmationTitle ?? "Delete Trip",
+            isPresented: Binding(
+                get: { pendingDeleteChoice != nil },
+                set: { newValue in
+                    if !newValue {
+                        pendingDeleteChoice = nil
+                    }
+                }
+            ),
+            presenting: pendingDeleteChoice
+        ) { choice in
+            Button(choice.title, role: .destructive) {
+                onDelete(choice)
+                pendingDeleteChoice = nil
+            }
+
+            Button("Cancel", role: .cancel) {
+                pendingDeleteChoice = nil
+            }
+        } message: { choice in
+            Text(choice.confirmationMessage)
         }
         .task(id: tripContentRefreshKey) {
             await loadTravelerProfiles()
@@ -7624,6 +7781,28 @@ private struct TripPlannerSavedTripCard: View {
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
 
+    private var travelerChips: [TripPlannerTravelerChip] {
+        if !trip.friends.isEmpty {
+            return trip.friends.map {
+                TripPlannerTravelerChip(
+                    id: $0.id.uuidString,
+                    name: $0.displayName,
+                    username: $0.username,
+                    avatarURL: $0.avatarURL
+                )
+            }
+        }
+
+        return trip.friendNames.map { name in
+            TripPlannerTravelerChip(
+                id: name,
+                name: name,
+                username: name.replacingOccurrences(of: " ", with: "").lowercased(),
+                avatarURL: nil
+            )
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
@@ -7679,14 +7858,8 @@ private struct TripPlannerSavedTripCard: View {
                     .foregroundStyle(.black.opacity(0.74))
             }
 
-            if !trip.travelerDisplayNames.isEmpty {
-                Text(String(
-                    format: String(localized: "trip_planner.saved_trip.with_format"),
-                    locale: AppDisplayLocale.current,
-                    trip.travelerDisplayNames.joined(separator: ", ")
-                ))
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.black.opacity(0.8))
+            if !travelerChips.isEmpty {
+                TripPlannerTravelerChipGrid(travelers: travelerChips)
             }
 
             TripPlannerChipGrid(
@@ -8076,6 +8249,51 @@ private struct TripPlannerSelectedFriendCard: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color.white.opacity(0.78))
         )
+    }
+}
+
+private struct TripPlannerTravelerChip: Identifiable {
+    let id: String
+    let name: String
+    let username: String
+    let avatarURL: String?
+}
+
+private struct TripPlannerTravelerChipGrid: View {
+    let travelers: [TripPlannerTravelerChip]
+
+    var body: some View {
+        LazyVGrid(
+            columns: [
+                GridItem(.adaptive(minimum: 132), spacing: 10, alignment: .leading)
+            ],
+            alignment: .leading,
+            spacing: 10
+        ) {
+            ForEach(travelers) { traveler in
+                HStack(spacing: 10) {
+                    TripPlannerAvatarView(
+                        name: traveler.name,
+                        username: traveler.username,
+                        avatarURL: traveler.avatarURL,
+                        size: 34
+                    )
+
+                    Text(traveler.name)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.black)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.8))
+                )
+            }
+        }
     }
 }
 
