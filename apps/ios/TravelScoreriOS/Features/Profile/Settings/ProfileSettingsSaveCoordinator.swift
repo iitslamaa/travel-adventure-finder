@@ -85,22 +85,38 @@ struct ProfileSettingsSaveCoordinator {
                 return .usernameTaken
             }
 
-            if let urlError = error as? URLError {
-                switch urlError.code {
-                case .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost, .timedOut:
-                    return .failure("Couldn't save changes. Check your connection and try again.")
-                default:
-                    break
-                }
-            }
-
-            if errorString.localizedCaseInsensitiveContains("connection") ||
-                errorString.localizedCaseInsensitiveContains("network") {
-                return .failure("Couldn't save changes. Check your connection and try again.")
-            }
-
-            return .failure(error.localizedDescription)
+            return .failure(friendlySaveErrorMessage(for: error))
         }
+    }
+
+    private static func friendlySaveErrorMessage(for error: Error) -> String {
+        let errorString = "\(error)"
+        let localized = error.localizedDescription
+
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost, .timedOut:
+                return "Couldn't save passport changes. Check your connection and try again."
+            default:
+                break
+            }
+        }
+
+        let networkPhrases = [
+            "connection",
+            "network",
+            "timed out",
+            "timeout",
+            "local endpoint",
+            "offline",
+            "could not connect"
+        ]
+
+        if networkPhrases.contains(where: { errorString.localizedCaseInsensitiveContains($0) || localized.localizedCaseInsensitiveContains($0) }) {
+            return "Couldn't save passport changes. Check your connection and try again."
+        }
+
+        return localized
     }
 
     // MARK: - Avatar Handling

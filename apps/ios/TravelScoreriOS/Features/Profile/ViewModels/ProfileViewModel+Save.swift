@@ -12,6 +12,11 @@ import PostgREST
 
 extension ProfileViewModel {
 
+    private struct ComparableLanguageEntry: Equatable {
+        let code: String
+        let proficiency: String
+    }
+
     // MARK: - Save (single source of truth)
 
     func saveProfile(
@@ -88,13 +93,15 @@ extension ProfileViewModel {
             favoriteCountries: normalizedFavoriteCountries,
             onboardingCompleted: true
         )
-        
-        try await profileService.updateProfile(
-            userId: userId,
-            payload: payload
-        )
 
-        try await profileService.upsertPassportPreferences(
+        if shouldUpdateProfile(payload: payload, combinedName: combinedName) {
+            try await profileService.updateProfile(
+                userId: userId,
+                payload: payload
+            )
+        }
+
+        try await profileService.replacePassportPreferences(
             userId: userId,
             nationalityCountryCodes: normalizedPassportNationalities,
             passportCountryCode: normalizedVisaPassportCountryCode
@@ -138,6 +145,45 @@ extension ProfileViewModel {
         )
 
         
+    }
+
+    private func shouldUpdateProfile(payload: ProfileUpdate, combinedName: String) -> Bool {
+        guard let current = profile else { return true }
+
+        let normalizedCurrentLastName = current.lastName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedPayloadLastName = payload.lastName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedCurrentAvatar = current.avatarUrl ?? ""
+        let normalizedPayloadAvatar = payload.avatarUrl ?? current.avatarUrl ?? ""
+        let normalizedCurrentLanguages = current.languages.map {
+            ComparableLanguageEntry(
+                code: LanguageRepository.shared.canonicalLanguageCode(for: $0.code) ?? $0.code,
+                proficiency: LanguageProficiency(storageValue: $0.proficiency).storageValue
+            )
+        }
+        let normalizedPayloadLanguages = (payload.languages ?? current.languages.map { [
+            "code": $0.code,
+            "proficiency": $0.proficiency
+        ] }).compactMap { dict -> ComparableLanguageEntry? in
+            guard let code = dict["code"], let proficiency = dict["proficiency"] else { return nil }
+            return ComparableLanguageEntry(
+                code: LanguageRepository.shared.canonicalLanguageCode(for: code) ?? code,
+                proficiency: LanguageProficiency(storageValue: proficiency).storageValue
+            )
+        }
+
+        return current.username != (payload.username ?? current.username)
+            || current.fullName != combinedName
+            || (current.firstName ?? "") != (payload.firstName ?? "")
+            || normalizedCurrentLastName != normalizedPayloadLastName
+            || normalizedCurrentAvatar != normalizedPayloadAvatar
+            || current.livedCountries != (payload.livedCountries ?? current.livedCountries)
+            || normalizedCurrentLanguages != normalizedPayloadLanguages
+            || current.travelStyle != (payload.travelStyle ?? current.travelStyle)
+            || current.travelMode != (payload.travelMode ?? current.travelMode)
+            || current.nextDestination != payload.nextDestination
+            || current.currentCountry != payload.currentCountry
+            || current.favoriteCountries != (payload.favoriteCountries ?? current.favoriteCountries)
+            || current.onboardingCompleted != true
     }
     
     func uploadAvatar(data: Data, fileName: String) async throws -> String {

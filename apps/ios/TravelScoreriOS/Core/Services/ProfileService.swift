@@ -373,6 +373,36 @@ final class ProfileService {
         )
     }
 
+    func replacePassportPreferences(
+        userId: UUID,
+        nationalityCountryCodes: [String],
+        passportCountryCode: String?
+    ) async throws {
+        let normalizedNationalityCountryCodes = nationalityCountryCodes
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            .filter { !$0.isEmpty }
+        let normalizedPassportCountryCode = passportCountryCode?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+
+        if normalizedNationalityCountryCodes.isEmpty, normalizedPassportCountryCode == nil {
+            try await supabase.client
+                .from("user_passport_preferences")
+                .delete()
+                .eq("user_id", value: userId.uuidString)
+                .execute()
+
+            Self.passportPreferencesCache[userId] = .empty
+            return
+        }
+
+        try await upsertPassportPreferences(
+            userId: userId,
+            nationalityCountryCodes: normalizedNationalityCountryCodes,
+            passportCountryCode: normalizedPassportCountryCode
+        )
+    }
+
     private func hydrateProfileIdentityFromAuthMetadataIfNeeded(
         userId: UUID,
         profile: Profile
