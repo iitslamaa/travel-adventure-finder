@@ -21,16 +21,9 @@ struct ScrapbookThemeContainer: View {
     }
 
     var body: some View {
-        let _ = print("🧪 DEBUG: ScrapbookThemeContainer.body recomputed.")
         backgroundGradient
             .ignoresSafeArea()
-            .onAppear {
-                print("🧪 DEBUG: ScrapbookThemeContainer gradient appeared")
-            }
             .overlay {
-
-                let _ = print("🧪 DEBUG: Scrapbook floating paper overlay recomputed")
-
                 // floating scrapbook paper layers
                 ZStack {
 

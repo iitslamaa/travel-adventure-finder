@@ -154,7 +154,6 @@ struct DiscoveryView: View {
     }
 
     var body: some View {
-        let _ = print("🧪 DEBUG: DiscoveryView.body recomputed")
         ZStack {
             Theme.pageBackground("travel1")
                 .ignoresSafeArea()
@@ -256,9 +255,6 @@ struct DiscoveryView: View {
                 )
                     .environmentObject(weightsStore)
             }
-        }
-        .onAppear {
-            print("🧪 DEBUG: DiscoveryView appeared on screen")
         }
     }
 

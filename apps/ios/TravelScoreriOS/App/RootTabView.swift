@@ -77,15 +77,10 @@ struct RootTabView: View {
     @State private var floatingTabBarInset: CGFloat = 0
 
     var body: some View {
-        let _ = print("🧪 DEBUG: RootTabView body recomputed")
-
         TabView(selection: $selectedTab) {
         // Discovery
         NavigationStack(path: $discoveryPath) {
             DiscoveryView()
-                .onAppear {
-                    print("🧪 DEBUG: Discovery NavigationStack content appeared")
-                }
         }
         .tag(Tab.discovery)
 
@@ -93,9 +88,6 @@ struct RootTabView: View {
         NavigationStack(path: $planningPath) {
             PlanningView()
                 .environmentObject(sharedTripInbox)
-                .onAppear {
-                    print("🧪 DEBUG: Planning NavigationStack content appeared")
-                }
         }
         .tag(Tab.planning)
 
@@ -169,9 +161,6 @@ struct RootTabView: View {
             floatingTabBarInset = inset
         }
         .environment(\.floatingTabBarInset, floatingTabBarInset)
-        .onAppear {
-            print("🧪 DEBUG: RootTabView fully appeared")
-        }
         .onChange(of: sessionManager.isAuthenticated) { _, isAuthenticated in
             guard !isAuthenticated else { return }
             resetNavigationState()

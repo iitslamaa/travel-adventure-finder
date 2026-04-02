@@ -30,6 +30,14 @@ struct CountryDetailView: View {
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
 
+    private var passportFallbackCountryCode: String {
+        profileVM.effectivePassportCountryCode?.nilIfBlank ?? "US"
+    }
+
+    private var shouldPromptForPassportSetup: Bool {
+        sessionManager.isAuthenticated && profileVM.passportNationalities.isEmpty
+    }
+
     private var displayedCountry: Country {
         country.applyingOverallScore(using: weightsStore.weights, selectedMonth: weightsStore.selectedMonth)
     }
@@ -85,6 +93,10 @@ struct CountryDetailView: View {
 
         if let effectivePassportCode = profileVM.effectivePassportCountryCode?.nilIfBlank {
             return [CountrySelectionFormatter.localizedName(for: effectivePassportCode)]
+        }
+
+        if shouldPromptForPassportSetup {
+            return [CountrySelectionFormatter.localizedName(for: passportFallbackCountryCode)]
         }
 
         if let activePassportLabel = visaStore.activePassportLabel?.nilIfBlank {
@@ -212,7 +224,12 @@ struct CountryDetailView: View {
                                         passportLabel: visaPassportLabel,
                                         recommendedPassportLabel: recommendedPassportLabel,
                                         equalBestPassportLabels: equalBestPassportLabels,
-                                        showPassportRecommendation: shouldShowPassportRecommendation
+                                        showPassportRecommendation: shouldShowPassportRecommendation,
+                                        showsPassportSetupPrompt: shouldPromptForPassportSetup,
+                                        onOpenPassportSettings: {
+                                            guard let userId = sessionManager.userId else { return }
+                                            activeSheet = .passportSettings(userId)
+                                        }
                                     )
                                 }
 
@@ -310,7 +327,7 @@ struct CountryDetailView: View {
             country = await visaStore.hydrate(
                 country: country,
                 passportCountryCodes: profileVM.passportNationalities,
-                fallbackPassportCountryCode: profileVM.effectivePassportCountryCode
+                fallbackPassportCountryCode: passportFallbackCountryCode
             )
             countryLanguageProfile = await languageProfileRefresh
             isPreparingContent = false
@@ -324,6 +341,8 @@ struct CountryDetailView: View {
                 )
             case .profile(let userId):
                 CountryFriendProfileSheet(userId: userId)
+            case .passportSettings(let userId):
+                CountryPassportSettingsSheet(userId: userId, profileVM: profileVM)
             }
         }
     }
@@ -378,6 +397,7 @@ private extension String {
 private enum CountryDetailSheet: Identifiable {
     case engagement
     case profile(UUID)
+    case passportSettings(UUID)
 
     var id: String {
         switch self {
@@ -385,6 +405,8 @@ private enum CountryDetailSheet: Identifiable {
             return "engagement"
         case .profile(let userId):
             return "profile-\(userId.uuidString)"
+        case .passportSettings(let userId):
+            return "passport-settings-\(userId.uuidString)"
         }
     }
 }
@@ -870,6 +892,20 @@ private struct CountryFriendProfileSheet: View {
         case .friendRequests:
             FriendRequestsView()
                 .environmentObject(socialNav)
+        }
+    }
+}
+
+private struct CountryPassportSettingsSheet: View {
+    let userId: UUID
+    @ObservedObject var profileVM: ProfileViewModel
+
+    var body: some View {
+        NavigationStack {
+            ProfileSettingsView(
+                profileVM: profileVM,
+                viewedUserId: userId
+            )
         }
     }
 }

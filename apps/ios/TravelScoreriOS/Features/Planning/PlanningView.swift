@@ -15,7 +15,6 @@ import PostgREST
 
 private enum TripPlannerDebugLog {
     static func message(_ text: String) {
-        print("🧭 [TripShare] \(text)")
     }
 
     static func userLabel(_ userId: UUID?) -> String {
@@ -8508,7 +8507,7 @@ private struct TripPlannerTravelerNameList: View {
         VStack(alignment: .leading, spacing: 4) {
             ForEach(travelers) { traveler in
                 Text(traveler.name)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13))
                     .foregroundStyle(.black.opacity(0.78))
                     .lineLimit(1)
             }
