@@ -2919,6 +2919,10 @@ private struct TripPlannerDetailView: View {
         )
     }
 
+    private var limitedVisaNeeds: [TripPlannerTravelerVisaNeed] {
+        Array(groupVisaNeeds.prefix(3))
+    }
+
     var body: some View {
         ZStack {
             Theme.pageBackground("travel5")
@@ -3022,7 +3026,7 @@ private struct TripPlannerDetailView: View {
                             TripPlannerCountryNavigationGrid(countries: displayedCountries)
                         }
 
-                        TripPlannerEditableSectionCard(
+                        TripPlannerSectionCard(
                             title: "Planning checklist",
                             subtitle: "Track bookings, reservations, and prep tasks by day"
                         ) {
@@ -3035,19 +3039,16 @@ private struct TripPlannerDetailView: View {
                                     onSave: saveTripChanges
                                 )
                             } label: {
-                                Text("common.edit")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black)
+                                TripPlannerChecklistPreviewSection(
+                                    trip: syncedTrip,
+                                    countries: displayedCountries,
+                                    groupVisaNeeds: groupVisaNeeds
+                                )
                             }
                             .buttonStyle(.plain)
-                        } content: {
-                            TripPlannerChecklistPreviewSection(
-                                trip: syncedTrip,
-                                countries: displayedCountries
-                            )
                         }
 
-                        TripPlannerEditableSectionCard(
+                        TripPlannerSectionCard(
                             title: String(localized: "trip_planner.expenses.title"),
                             subtitle: String(localized: "trip_planner.expenses.subtitle")
                         ) {
@@ -3058,16 +3059,9 @@ private struct TripPlannerDetailView: View {
                                     onSave: saveTripChanges
                                 )
                             } label: {
-                                Text("common.edit")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black)
+                                TripPlannerExpensesPreviewSection(expenses: trip.expenses)
                             }
                             .buttonStyle(.plain)
-                        } content: {
-                            TripPlannerExpensesSection(
-                                expenses: trip.expenses,
-                                participants: displayedTravelers
-                            )
                         }
 
                         TripPlannerSectionCard(
@@ -3097,26 +3091,23 @@ private struct TripPlannerDetailView: View {
                                     weights: effectiveScoreWeights,
                                     preferredMonth: scoreWeightsStore.selectedMonth,
                                     isGroupTrip: trip.isGroupTrip,
-                                    travelerCount: displayedTravelers.count
+                                    travelerCount: displayedTravelers.count,
+                                    groupVisaNeeds: limitedVisaNeeds
                                 )
                             }
                             .buttonStyle(.plain)
                         }
 
-                        TripPlannerEditableSectionCard(
+                        TripPlannerSectionCard(
                             title: String(localized: "trip_planner.availability.title"),
                             subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.availability_group_subtitle") : String(localized: "trip_planner.detail.availability_solo_subtitle")
                         ) {
                             NavigationLink {
                                 TripPlannerAvailabilityEditorView(trip: trip, onSave: saveTripChanges)
                             } label: {
-                                Text("common.edit")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black)
+                                TripPlannerAvailabilityPreviewSection(trip: syncedTrip)
                             }
                             .buttonStyle(.plain)
-                        } content: {
-                            TripPlannerAvailabilitySection(trip: trip)
                         }
 
                         TripPlannerSectionCard(
@@ -4663,6 +4654,7 @@ private struct TripPlannerChecklistPreviewEntry: Identifiable {
 private struct TripPlannerChecklistPreviewSection: View {
     let trip: TripPlannerTrip
     let countries: [Country]
+    let groupVisaNeeds: [TripPlannerTravelerVisaNeed]
 
     private var overallItems: [TripPlannerChecklistItem] {
         TripPlannerChecklistBuilder.syncedOverallChecklistItems(
@@ -4710,6 +4702,10 @@ private struct TripPlannerChecklistPreviewSection: View {
         previewEntries.filter(\.isCompleted).count
     }
 
+    private var visibleVisaNeeds: [TripPlannerTravelerVisaNeed] {
+        Array(groupVisaNeeds.prefix(2))
+    }
+
     var body: some View {
         if previewEntries.isEmpty {
             TripPlannerInfoCard(
@@ -4730,6 +4726,33 @@ private struct TripPlannerChecklistPreviewSection: View {
                         value: "\(max(previewEntries.count - completedCount, 0))",
                         detail: overallItems.isEmpty ? "Daily prep only" : "Includes trip-wide prep"
                     )
+                }
+
+                if !groupVisaNeeds.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Visa prep")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.black.opacity(0.72))
+
+                        ForEach(visibleVisaNeeds) { need in
+                            HStack(alignment: .top, spacing: 10) {
+                                Image(systemName: need.exceedsAllowedStay ? "exclamationmark.triangle.fill" : "globe.badge.chevron.backward")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(.black.opacity(0.56))
+                                    .padding(.top, 2)
+
+                                Text(need.summaryText(tripLengthDays: tripLengthDays))
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.black.opacity(0.68))
+                            }
+                        }
+
+                        if groupVisaNeeds.count > visibleVisaNeeds.count {
+                            Text("\(groupVisaNeeds.count - visibleVisaNeeds.count) more visa requirements inside")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.black.opacity(0.56))
+                        }
+                    }
                 }
 
                 VStack(spacing: 10) {
@@ -4774,6 +4797,12 @@ private struct TripPlannerChecklistPreviewSection: View {
                 }
             }
         }
+    }
+
+    private var tripLengthDays: Int? {
+        guard let startDate = trip.startDate, let endDate = trip.endDate else { return nil }
+        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: startDate), to: Calendar.current.startOfDay(for: endDate)).day ?? 0
+        return max(days + 1, 1)
     }
 }
 
@@ -5165,6 +5194,52 @@ private struct TripPlannerExpenseBalance: Identifiable {
     var id: String { participantId }
     var isOwed: Bool { amount > 0.009 }
     var owes: Bool { amount < -0.009 }
+}
+
+private struct TripPlannerExpensesPreviewSection: View {
+    let expenses: [TripPlannerExpense]
+
+    private var totalSpent: Double {
+        expenses.reduce(0) { $0 + $1.totalAmount }
+    }
+
+    private var outstandingTotal: Double {
+        expenses.flatMap(\.shares).filter { !$0.isPaid }.reduce(0) { $0 + $1.amountOwed }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 10) {
+                TripPlannerStatPill(
+                    title: String(localized: "trip_planner.expenses.stats.total_logged"),
+                    value: currency(totalSpent),
+                    detail: "\(expenses.count) expenses"
+                )
+
+                TripPlannerStatPill(
+                    title: String(localized: "trip_planner.expenses.stats.still_owed"),
+                    value: currency(outstandingTotal),
+                    detail: outstandingTotal > 0 ? "Tap to view balances" : "Tap to manage expenses"
+                )
+            }
+
+            HStack {
+                Spacer()
+
+                Label("Open expenses", systemImage: "chevron.forward.circle.fill")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.52))
+            }
+        }
+    }
+
+    private func currency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.locale = AppDisplayLocale.current
+        return formatter.string(from: NSNumber(value: amount)) ?? "$\(AppNumberFormatting.integerString(Int(amount)))"
+    }
 }
 
 private struct TripPlannerExpensesSection: View {
@@ -6009,6 +6084,7 @@ private struct TripPlannerStatsPreviewSection: View {
     let preferredMonth: Int
     let isGroupTrip: Bool
     let travelerCount: Int
+    let groupVisaNeeds: [TripPlannerTravelerVisaNeed]
 
     private var selectedMonth: Int {
         guard let startDate else { return preferredMonth }
@@ -6074,43 +6150,66 @@ private struct TripPlannerStatsPreviewSection: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Overall trip score")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.62))
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 14) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Overall trip Score")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.62))
 
-                if let tripScore {
-                    ScorePill(score: tripScore)
-                        .fixedSize(horizontal: true, vertical: true)
-                } else {
-                    Text("trip_planner.stats.na")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.black)
+                    if let tripScore {
+                        ScorePill(score: tripScore)
+                            .fixedSize(horizontal: true, vertical: true)
+                    } else {
+                        Text("trip_planner.stats.na")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundStyle(.black)
+                    }
+
+                    Text(summaryText)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.black.opacity(0.68))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Text(summaryText)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.black.opacity(0.68))
-                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+
+                VStack(alignment: .trailing, spacing: 8) {
+                    Text(costText)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(.black)
+                        .multilineTextAlignment(.trailing)
+
+                    Text(isGroupTrip ? "Average likely spend with hotel share split across travelers" : "Average likely per-person spend")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.black.opacity(0.56))
+                        .multilineTextAlignment(.trailing)
+
+                    Image(systemName: "chevron.forward.circle.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.36))
+                }
             }
 
-            Spacer(minLength: 0)
+            if let visaSummaryText {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "globe.badge.chevron.backward")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.56))
+                        .padding(.top, 2)
 
-            VStack(alignment: .trailing, spacing: 8) {
-                Text(costText)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.black)
-                    .multilineTextAlignment(.trailing)
+                    Text(visaSummaryText)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.black.opacity(0.7))
+                }
+            }
 
-                Text(isGroupTrip ? "Hotel share is split across travelers" : "Per-person estimate")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.black.opacity(0.56))
-                    .multilineTextAlignment(.trailing)
+            HStack {
+                Spacer()
 
-                Image(systemName: "chevron.forward.circle.fill")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.36))
+                Label("Open Trip Score", systemImage: "chevron.forward.circle.fill")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.52))
             }
         }
         .padding(16)
@@ -6118,6 +6217,16 @@ private struct TripPlannerStatsPreviewSection: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Color.white.opacity(0.8))
         )
+    }
+
+    private var visaSummaryText: String? {
+        guard !groupVisaNeeds.isEmpty else { return nil }
+        if groupVisaNeeds.count == 1, let need = groupVisaNeeds.first {
+            return need.summaryText(tripLengthDays: tripLengthDays)
+        }
+        let travelerNames = Array(NSOrderedSet(array: groupVisaNeeds.map(\.travelerName))) as? [String] ?? []
+        let joined = ListFormatter.localizedString(byJoining: travelerNames)
+        return "\(joined) have visa prep for this trip."
     }
 
     private var summaryText: String {
@@ -6129,9 +6238,9 @@ private struct TripPlannerStatsPreviewSection: View {
 
     private var costText: String {
         if let estimatedTripCostPerPerson {
-            return "$\(estimatedTripCostPerPerson) USD"
+            return "AVERAGE LIKELY\n$\(estimatedTripCostPerPerson) USD"
         }
-        return "Add dates for estimate"
+        return "AVERAGE LIKELY\nAdd dates"
     }
 
     private func estimatedDailySpendPerTraveler(for country: Country) -> Double? {
@@ -6176,7 +6285,7 @@ private struct TripPlannerTripScoreBreakdownView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Trip score")
+                Theme.titleBanner("Trip Score")
 
                 ScrollView {
                     VStack(spacing: 18) {
@@ -6476,13 +6585,13 @@ private struct TripPlannerStatsSection: View {
 
             HStack(spacing: 10) {
                 TripPlannerStatPill(
-                    title: String(localized: "trip_planner.stats.estimated_total_per_person"),
+                    title: "AVERAGE LIKELY total per person",
                     value: estimatedTripCostPerPerson.map { "$\($0) USD" } ?? String(localized: "trip_planner.stats.add_trip_dates"),
                     detail: "\(estimatedCostDetail) · USD"
                 )
 
                 TripPlannerStatPill(
-                    title: String(localized: "trip_planner.stats.typical_daily_spend"),
+                    title: "AVERAGE LIKELY daily spend",
                     value: averageDailySpend.map { "$\($0) USD" } ?? String(localized: "trip_planner.stats.na"),
                     detail: "\(dailySpendDetail) · USD"
                 )
@@ -6784,7 +6893,7 @@ private struct TripPlannerVisaSummaryCard: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.82))
+                .fill(Color.white.opacity(0.93))
         )
     }
 
@@ -6914,7 +7023,7 @@ private struct TripPlannerScoreHighlightCard: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.82))
+                .fill(Color.white.opacity(0.93))
         )
     }
 }
@@ -6958,7 +7067,7 @@ private struct TripPlannerCategoryAverageCard: View {
         .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.76))
+                .fill(Color.white.opacity(0.91))
         )
     }
 }
@@ -7061,7 +7170,7 @@ private struct TripPlannerStatPill: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.78))
+                .fill(Color.white.opacity(0.9))
         )
     }
 }
@@ -7134,6 +7243,57 @@ private struct TripPlannerAvailabilitySection: View {
                             monthProposalCount
                         ))
                     }
+                }
+            }
+        }
+    }
+}
+
+private struct TripPlannerAvailabilityPreviewSection: View {
+    let trip: TripPlannerTrip
+
+    private var exactProposalCount: Int {
+        trip.availability.filter { $0.kind == .exactDates }.count
+    }
+
+    private var monthProposalCount: Int {
+        trip.availability.filter { $0.kind == .flexibleMonth }.count
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if trip.availability.isEmpty {
+                TripPlannerInfoCard(
+                    text: trip.isGroupTrip
+                        ? String(localized: "trip_planner.availability.summary_empty_group")
+                        : String(localized: "trip_planner.availability.summary_empty_solo"),
+                    systemImage: "calendar.badge.plus"
+                )
+            } else {
+                TripPlannerAvailabilityCalendarBoard(trip: trip)
+
+                HStack(alignment: .center, spacing: 10) {
+                    HStack(spacing: 8) {
+                        TripPlannerBadge(text: String(
+                            format: String(localized: "trip_planner.availability.date_range_count"),
+                            locale: AppDisplayLocale.current,
+                            exactProposalCount
+                        ))
+
+                        if monthProposalCount > 0 {
+                            TripPlannerBadge(text: String(
+                                format: String(localized: "trip_planner.availability.flexible_month_count"),
+                                locale: AppDisplayLocale.current,
+                                monthProposalCount
+                            ))
+                        }
+                    }
+
+                    Spacer()
+
+                    Label("View route and day plans", systemImage: "chevron.forward.circle.fill")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.52))
                 }
             }
         }
