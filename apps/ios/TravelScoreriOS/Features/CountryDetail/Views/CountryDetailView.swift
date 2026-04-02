@@ -66,7 +66,12 @@ struct CountryDetailView: View {
     }
 
     private var localizedVisaPassportLabels: [String] {
-        if let passportCode = country.visaPassportCode?.nilIfBlank {
+        let currentPassportCodes = profileVM.passportNationalities
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+            .filter { !$0.isEmpty }
+
+        if let passportCode = country.visaPassportCode?.nilIfBlank,
+           currentPassportCodes.isEmpty || currentPassportCodes.contains(passportCode.uppercased()) {
             return [CountrySelectionFormatter.localizedName(for: passportCode)]
         }
 
@@ -74,12 +79,8 @@ struct CountryDetailView: View {
             let rawLabel = country.visaPassportLabel?.nilIfBlank,
             rawLabel.contains(" / ")
         {
-            let passportCodes = profileVM.passportNationalities
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
-                .filter { !$0.isEmpty }
-
-            if !passportCodes.isEmpty {
-                return passportCodes.map(CountrySelectionFormatter.localizedName(for:))
+            if !currentPassportCodes.isEmpty {
+                return currentPassportCodes.map(CountrySelectionFormatter.localizedName(for:))
             }
 
             return rawLabel
@@ -88,7 +89,8 @@ struct CountryDetailView: View {
                 .filter { !$0.isEmpty }
         }
 
-        if let rawLabel = country.visaPassportLabel?.nilIfBlank {
+        if let rawLabel = country.visaPassportLabel?.nilIfBlank,
+           currentPassportCodes.isEmpty {
             return [rawLabel]
         }
 

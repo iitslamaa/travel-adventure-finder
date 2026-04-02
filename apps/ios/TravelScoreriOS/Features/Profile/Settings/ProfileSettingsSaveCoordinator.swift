@@ -85,6 +85,20 @@ struct ProfileSettingsSaveCoordinator {
                 return .usernameTaken
             }
 
+            if let urlError = error as? URLError {
+                switch urlError.code {
+                case .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost, .timedOut:
+                    return .failure("Couldn't save changes. Check your connection and try again.")
+                default:
+                    break
+                }
+            }
+
+            if errorString.localizedCaseInsensitiveContains("connection") ||
+                errorString.localizedCaseInsensitiveContains("network") {
+                return .failure("Couldn't save changes. Check your connection and try again.")
+            }
+
             return .failure(error.localizedDescription)
         }
     }
