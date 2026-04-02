@@ -11,6 +11,7 @@ import SwiftUI
 struct CountryVisaCard: View {
     let country: Country
     let weightPercentage: Int
+    let isLoading: Bool
     let passportLabel: String
     let recommendedPassportLabel: String?
     let equalBestPassportLabels: [String]
@@ -50,7 +51,30 @@ struct CountryVisaCard: View {
     }
 
     var body: some View {
-        if country.visaEaseScore != nil || country.visaType != nil {
+        if isLoading {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("country_detail.visa.title")
+                        .font(.headline)
+                    Spacer()
+                    ProgressView()
+                        .controlSize(.small)
+                }
+
+                Text("Matching visa guidance to your passport...")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+
+                Text("We are loading your saved passport details so this advice is accurate the first time it appears.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.countryDetailCardBackground(corner: 14))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        } else if country.visaEaseScore != nil || country.visaType != nil {
             VStack(alignment: .leading, spacing: 12) {
 
                 // Title row

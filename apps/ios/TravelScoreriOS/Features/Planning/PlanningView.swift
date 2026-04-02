@@ -2067,8 +2067,10 @@ struct TripPlannerView: View {
                 }
                 .scrollIndicators(.hidden)
                 .refreshable {
-                    await store.refresh()
-                    await loadCurrentUserSnapshot()
+                    async let tripRefresh: Void = store.refresh()
+                    async let inboxRefresh: Void = sharedTripInbox.refresh()
+                    async let snapshotRefresh: Void = loadCurrentUserSnapshot()
+                    _ = await (tripRefresh, inboxRefresh, snapshotRefresh)
                 }
             }
         }
@@ -2161,8 +2163,9 @@ struct TripPlannerView: View {
             Text(choice.confirmationMessage)
         }
         .task {
-            await sharedTripInbox.refresh()
-            await loadCurrentUserSnapshot()
+            async let inboxRefresh: Void = sharedTripInbox.refresh()
+            async let snapshotRefresh: Void = loadCurrentUserSnapshot()
+            _ = await (inboxRefresh, snapshotRefresh)
         }
     }
 
@@ -2807,17 +2810,27 @@ private struct TripPlannerComposerView: View {
 
         bucketCountryIds = bucketListStore.ids
 
+        let userId = sessionManager.userId
         async let freshCountriesTask = CountryAPI.refreshCountriesIfNeeded(minInterval: 60)
+        async let fetchedBucketIdsTask: Set<String>? = {
+            guard let userId else { return nil }
+            return try? await profileService.fetchBucketListCountries(userId: userId)
+        }()
+        async let fetchedFriendsTask: [Profile]? = {
+            guard let userId else { return nil }
+            return try? await friendService.fetchFriends(for: userId)
+        }()
 
-        if let userId = sessionManager.userId {
-            if let bucketIds = try? await profileService.fetchBucketListCountries(userId: userId) {
+        if userId != nil {
+            if let bucketIds = await fetchedBucketIdsTask {
                 bucketCountryIds = bucketIds
             }
 
-            do {
-                friends = try await friendService.fetchFriends(for: userId)
-                await loadFriendBuckets(for: friends.map(\.id))
-            } catch {
+            if let fetchedFriends = await fetchedFriendsTask {
+                friends = fetchedFriends
+                friendsError = nil
+                await loadFriendBuckets(for: fetchedFriends.map(\.id))
+            } else {
                 friendsError = String(localized: "trip_planner.friends.load_error")
             }
         }
@@ -2852,11 +2865,26 @@ private struct TripPlannerComposerView: View {
 
     @MainActor
     private func loadFriendBuckets(for friendIds: [UUID]) async {
-        guard !friendIds.isEmpty else { return }
+        let uncachedFriendIds = friendIds.filter { friendBucketLists[$0] == nil }
+        guard !uncachedFriendIds.isEmpty else { return }
 
-        for friendId in friendIds {
-            guard friendBucketLists[friendId] == nil else { continue }
-            friendBucketLists[friendId] = (try? await profileService.fetchBucketListCountries(userId: friendId)) ?? []
+        let fetchedBuckets = await withTaskGroup(of: (UUID, Set<String>).self, returning: [(UUID, Set<String>)].self) { group in
+            for friendId in uncachedFriendIds {
+                group.addTask {
+                    let bucketIds = (try? await profileService.fetchBucketListCountries(userId: friendId)) ?? []
+                    return (friendId, bucketIds)
+                }
+            }
+
+            var results: [(UUID, Set<String>)] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results
+        }
+
+        for (friendId, bucketIds) in fetchedBuckets {
+            friendBucketLists[friendId] = bucketIds
         }
     }
 
@@ -3952,8 +3980,10 @@ private struct TripPlannerFriendsEditorView: View {
         }
 
         do {
-            let fetchedFriends = try await friendService.fetchFriends(for: userId)
-            let existingParticipants = try await fetchProfiles(for: trip.friendIds)
+            async let fetchedFriendsTask = friendService.fetchFriends(for: userId)
+            async let existingParticipantsTask = fetchProfiles(for: trip.friendIds)
+            let fetchedFriends = try await fetchedFriendsTask
+            let existingParticipants = try await existingParticipantsTask
             friends = mergedProfiles(fetchedFriends + existingParticipants)
         } catch {
             errorMessage = String(localized: "trip_planner.friends.load_error")
@@ -4691,13 +4721,27 @@ private struct TripPlannerCountriesEditorView: View {
             return
         }
 
-        var intersection = bucketListStore.ids
-
-        for friendId in trip.friendIds {
-            guard let friendBucketIds = try? await profileService.fetchBucketListCountries(userId: friendId) else {
-                sharedBucketCountryIds = []
-                return
+        let bucketResults = await withTaskGroup(of: Set<String>?.self, returning: [Set<String>?].self) { group in
+            for friendId in trip.friendIds {
+                group.addTask {
+                    try? await profileService.fetchBucketListCountries(userId: friendId)
+                }
             }
+
+            var results: [Set<String>?] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results
+        }
+
+        guard bucketResults.allSatisfy({ $0 != nil }) else {
+            sharedBucketCountryIds = []
+            return
+        }
+
+        var intersection = bucketListStore.ids
+        for friendBucketIds in bucketResults.compactMap({ $0 }) {
             intersection.formIntersection(friendBucketIds)
         }
 
@@ -8889,28 +8933,34 @@ private struct TripPlannerSavedTripCard: View {
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
 
+    private var currentUserChip: TripPlannerTravelerChip? {
+        if let currentUserSnapshot {
+            return TripPlannerTravelerChip(
+                id: currentUserSnapshot.id.uuidString,
+                name: String(localized: "trip_planner.you"),
+                username: currentUserSnapshot.username,
+                avatarURL: currentUserSnapshot.avatarURL
+            )
+        }
+
+        guard let currentUserId = sessionManager.userId,
+              !trip.friends.contains(where: { $0.id == currentUserId }) else {
+            return nil
+        }
+
+        return TripPlannerTravelerChip(
+            id: currentUserId.uuidString,
+            name: String(localized: "trip_planner.you"),
+            username: String(localized: "trip_planner.you"),
+            avatarURL: nil
+        )
+    }
+
     private var travelerChips: [TripPlannerTravelerChip] {
         var chips: [TripPlannerTravelerChip] = []
 
-        if let currentUserSnapshot {
-            chips.append(
-                TripPlannerTravelerChip(
-                    id: currentUserSnapshot.id.uuidString,
-                    name: currentUserSnapshot.displayName,
-                    username: currentUserSnapshot.username,
-                    avatarURL: currentUserSnapshot.avatarURL
-                )
-            )
-        } else if let currentUserId = sessionManager.userId,
-                  !trip.friends.contains(where: { $0.id == currentUserId }) {
-            chips.append(
-                TripPlannerTravelerChip(
-                    id: currentUserId.uuidString,
-                    name: String(localized: "trip_planner.you"),
-                    username: String(localized: "trip_planner.you"),
-                    avatarURL: nil
-                )
-            )
+        if let currentUserChip {
+            chips.append(currentUserChip)
         }
 
         chips.append(contentsOf: trip.friends.map {

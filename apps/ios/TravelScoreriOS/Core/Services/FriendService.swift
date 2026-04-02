@@ -14,6 +14,7 @@ private struct FriendRow: Decodable {
 
 @MainActor
 final class FriendService {
+    private static var friendsCache: [UUID: [Profile]] = [:]
 
     private let instanceId = UUID()
 
@@ -30,9 +31,8 @@ final class FriendService {
         let requestId = UUID()
         let start = Date()
         
-
-        // Query 1: user_id = me (use UUID directly, NOT uuidString)
-        let sentResponse: PostgrestResponse<[FriendRow]> = try await supabase.client
+        // These queries are independent, so fetch both directions in parallel.
+        async let sentResponse: PostgrestResponse<[FriendRow]> = supabase.client
             .from("friends")
             .select("user_id, friend_id")
             .eq("user_id", value: userId)
@@ -40,8 +40,7 @@ final class FriendService {
             .execute()
         
 
-        // Query 2: friend_id = me (use UUID directly)
-        let receivedResponse: PostgrestResponse<[FriendRow]> = try await supabase.client
+        async let receivedResponse: PostgrestResponse<[FriendRow]> = supabase.client
             .from("friends")
             .select("user_id, friend_id")
             .eq("friend_id", value: userId)
@@ -49,29 +48,35 @@ final class FriendService {
             .execute()
         
 
-        let rows = sentResponse.value + receivedResponse.value
+        let rows = try await sentResponse.value + receivedResponse.value
 
         let friendIds: [UUID] = rows.map { row in
             row.user_id == userId ? row.friend_id : row.user_id
         }
+        let uniqueFriendIds = Array(NSOrderedSet(array: friendIds)) as? [UUID] ?? []
         
-
-        if friendIds.isEmpty {
-            
+        if uniqueFriendIds.isEmpty {
+            Self.friendsCache[userId] = []
             return []
         }
 
         let profilesResponse: PostgrestResponse<[Profile]> = try await supabase.client
             .from("profiles")
             .select("*")
-            .in("id", values: friendIds)
+            .in("id", values: uniqueFriendIds)
             .execute()
         
 
         let elapsed = Date().timeIntervalSince(start)
-        
-        
-        return profilesResponse.value
+        let profilesById = Dictionary(uniqueKeysWithValues: profilesResponse.value.map { ($0.id, $0) })
+        let orderedProfiles = uniqueFriendIds.compactMap { profilesById[$0] }
+
+        Self.friendsCache[userId] = orderedProfiles
+        return orderedProfiles
+    }
+
+    func cachedFriends(for userId: UUID) -> [Profile]? {
+        Self.friendsCache[userId]
     }
 
     func isFriend(currentUserId: UUID, otherUserId: UUID) async throws -> Bool {

@@ -106,7 +106,18 @@ struct FriendRequestsView: View {
                     .foregroundStyle(.black.opacity(0.75))
                     .multilineTextAlignment(.center)
             }
-            .padding()
+            .padding(.horizontal, 24)
+            .padding(.vertical, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color(red: 0.96, green: 0.92, blue: 0.85).opacity(0.96))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(.white.opacity(0.45), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
+            .padding(.horizontal, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ZStack {

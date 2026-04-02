@@ -153,18 +153,24 @@ struct MyTravelsView: View {
         isLoading = shouldShowBlockingLoad
         hasLoadedOnce = true
 
+        let isAuthenticated = sessionManager.isAuthenticated
+        let userId = sessionManager.userId
+        let service = ProfileService(supabase: SupabaseManager.shared)
         async let freshCountriesTask = CountryAPI.refreshCountriesIfNeeded(minInterval: 60)
-
-        if sessionManager.isAuthenticated {
+        async let profileLoadTask: Void = {
+            guard isAuthenticated else { return }
             await profileVM.loadIfNeeded()
-        }
+        }()
+        async let traveledFetchTask: Set<String>? = {
+            guard let userId else { return nil }
+            return try? await service.fetchTraveledCountries(userId: userId)
+        }()
 
-        if let userId = sessionManager.userId {
-            let service = ProfileService(supabase: SupabaseManager.shared)
-            if let traveled = try? await service.fetchTraveledCountries(userId: userId) {
-                traveledCountryIds = traveled
-                traveledStore.replace(with: traveled)
-            }
+        _ = await profileLoadTask
+
+        if let traveled = await traveledFetchTask {
+            traveledCountryIds = traveled
+            traveledStore.replace(with: traveled)
         }
 
         if let fresh = await freshCountriesTask, !fresh.isEmpty {

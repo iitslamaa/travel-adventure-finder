@@ -67,6 +67,7 @@ struct ProfileSettingsView: View {
     @State private var showSaveSuccess = false
     @State private var isSavingProfile = false
     @State private var usernameError: String? = nil
+    @State private var saveErrorMessage: String? = nil
     @State private var isLoggingOut = false
 
     private var isFormValid: Bool {
@@ -182,6 +183,7 @@ struct ProfileSettingsView: View {
 
             ToolbarItem(placement: .confirmationAction) {
                 Button {
+                    saveErrorMessage = nil
                     Task {
                         let result = await ProfileSettingsSaveCoordinator.handleSave(
                             profileVM: profileVM,
@@ -213,6 +215,7 @@ struct ProfileSettingsView: View {
                                 showSaveSuccess = true
                             }
                             usernameError = nil
+                            saveErrorMessage = nil
                             Task { @MainActor in
                                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
@@ -222,9 +225,11 @@ struct ProfileSettingsView: View {
 
                         case .usernameTaken:
                             usernameError = String(localized: "profile.settings.username_taken")
+                            saveErrorMessage = nil
 
                         case .failure(let message):
-                            usernameError = message
+                            usernameError = nil
+                            saveErrorMessage = message
                         }
                     }
                 } label: {
@@ -412,7 +417,23 @@ struct ProfileSettingsView: View {
                 .ignoresSafeArea()
         )
         .overlay(alignment: .top) {
-            if showSaveSuccess {
+            if let saveErrorMessage {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.red)
+                    Text(saveErrorMessage)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.black)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Color.white.opacity(0.97))
+                .clipShape(Capsule())
+                .shadow(radius: 8)
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .zIndex(1)
+            } else if showSaveSuccess {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
@@ -628,7 +649,7 @@ struct SettingsScrollContent: View {
                 SectionCard {
                     VStack(spacing: 16) {
 
-                        Button(role: .destructive) {
+                        Button {
                             onLogout()
                         } label: {
                             HStack {
@@ -637,7 +658,7 @@ struct SettingsScrollContent: View {
                                     .fontWeight(.semibold)
                                 Spacer()
                             }
-                            .foregroundStyle(.red)
+                            .foregroundStyle(.black)
                             .padding(.vertical, 8)
                         }
                         .disabled(isLoggingOut)
