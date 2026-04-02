@@ -94,6 +94,15 @@ extension ProfileViewModel {
             }
 
         } catch {
+            if let urlError = error as? URLError, urlError.code == .cancelled {
+                return
+            }
+
+            let nsError = error as NSError
+            if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
+                return
+            }
+
             print("❌ load() failed:", error)
             errorMessage = error.localizedDescription
         }

@@ -62,6 +62,41 @@ struct ProfileCreate: Encodable {
     let last_name: String?
 }
 
+private struct LegacyProfileUpdate: Encodable {
+    let username: String?
+    let fullName: String?
+    let avatarUrl: String?
+    let languages: [[String: String]]?
+    let livedCountries: [String]?
+    let travelStyle: [String]?
+    let travelMode: [String]?
+    let nextDestination: String?
+    let currentCountry: String?
+    let favoriteCountries: [String]?
+    let onboardingCompleted: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case username
+        case fullName = "full_name"
+        case avatarUrl = "avatar_url"
+        case languages
+        case livedCountries = "lived_countries"
+        case travelStyle = "travel_style"
+        case travelMode = "travel_mode"
+        case nextDestination = "next_destination"
+        case currentCountry = "current_country"
+        case favoriteCountries = "favorite_countries"
+        case onboardingCompleted = "onboarding_completed"
+    }
+}
+
+private struct LegacyProfileCreate: Encodable {
+    let id: UUID
+    let username: String
+    let avatar_url: String
+    let full_name: String
+}
+
 private struct ResolvedProfileIdentity {
     let firstName: String?
     let lastName: String?
@@ -205,10 +240,21 @@ final class ProfileService {
             }
 
             do {
-                try await supabase.client
-                    .from("profiles")
-                    .insert(createPayload)
-                    .execute()
+                do {
+                    try await supabase.client
+                        .from("profiles")
+                        .insert(createPayload)
+                        .execute()
+                } catch {
+                    guard Self.isMissingSplitNameColumnsError(error) else {
+                        throw error
+                    }
+
+                    try await supabase.client
+                        .from("profiles")
+                        .insert(Self.legacyProfileCreate(from: createPayload))
+                        .execute()
+                }
 
                 return
 
@@ -262,11 +308,23 @@ final class ProfileService {
         userId: UUID,
         payload: ProfileUpdate
     ) async throws {
-        try await supabase.client
-            .from("profiles")
-            .update(payload)
-            .eq("id", value: userId)
-            .execute()
+        do {
+            try await supabase.client
+                .from("profiles")
+                .update(payload)
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            guard Self.isMissingSplitNameColumnsError(error) else {
+                throw error
+            }
+
+            try await supabase.client
+                .from("profiles")
+                .update(Self.legacyProfileUpdate(from: payload))
+                .eq("id", value: userId)
+                .execute()
+        }
     }
 
     func fetchPassportPreferences(userId: UUID) async throws -> PassportPreferences {
@@ -482,6 +540,42 @@ final class ProfileService {
             .eq("user_id", value: userId.uuidString)
             .eq("country_id", value: countryCode)
             .execute()
+    }
+
+    private static func isMissingSplitNameColumnsError(_ error: Error) -> Bool {
+        guard let postgrestError = error as? PostgrestError,
+              postgrestError.code == "PGRST204" else {
+            return false
+        }
+
+        let message = postgrestError.message.lowercased()
+        return message.contains("profiles")
+            && (message.contains("first_name") || message.contains("last_name"))
+    }
+
+    private static func legacyProfileUpdate(from payload: ProfileUpdate) -> LegacyProfileUpdate {
+        LegacyProfileUpdate(
+            username: payload.username,
+            fullName: payload.fullName,
+            avatarUrl: payload.avatarUrl,
+            languages: payload.languages,
+            livedCountries: payload.livedCountries,
+            travelStyle: payload.travelStyle,
+            travelMode: payload.travelMode,
+            nextDestination: payload.nextDestination,
+            currentCountry: payload.currentCountry,
+            favoriteCountries: payload.favoriteCountries,
+            onboardingCompleted: payload.onboardingCompleted
+        )
+    }
+
+    private static func legacyProfileCreate(from payload: ProfileCreate) -> LegacyProfileCreate {
+        LegacyProfileCreate(
+            id: payload.id,
+            username: payload.username,
+            avatar_url: payload.avatar_url,
+            full_name: payload.full_name
+        )
     }
 }
 

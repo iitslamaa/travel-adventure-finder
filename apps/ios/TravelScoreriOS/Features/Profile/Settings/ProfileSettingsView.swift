@@ -283,7 +283,7 @@ struct ProfileSettingsView: View {
                 )
 
             case .addLanguage:
-                AddLanguageView { entry in
+                AddLanguageView(selectedLanguages: languages) { entry in
                     if !languages.contains(where: { $0.name == entry.name }) {
                         languages.append(entry)
                     }
@@ -506,7 +506,7 @@ struct SettingsScrollContent: View {
                 Theme.titleBanner(String(localized: "profile.settings.title"))
 
                 SectionCard {
-                    HStack(alignment: .top, spacing: 20) {
+                    HStack(alignment: .center, spacing: 20) {
 
                         ProfileSettingsAvatarSection(
                             selectedUIImage: $selectedUIImage,
@@ -517,7 +517,6 @@ struct SettingsScrollContent: View {
                             onRemoveAvatar: onRemoveAvatar
                         )
                         .frame(width: 96)
-                        .padding(.top, 4)
 
                         VStack(alignment: .leading, spacing: 12) {
 
@@ -531,7 +530,7 @@ struct SettingsScrollContent: View {
                                      Text(" *")
                                         .foregroundStyle(.red))
                             )
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(size: 16))
                             .padding(.vertical, 10)
                             .padding(.horizontal, 12)
                             .background(Color.white)
@@ -638,6 +637,7 @@ struct SettingsScrollContent: View {
                                     .fontWeight(.semibold)
                                 Spacer()
                             }
+                            .foregroundStyle(.red)
                             .padding(.vertical, 8)
                         }
                         .disabled(isLoggingOut)
@@ -653,6 +653,7 @@ struct SettingsScrollContent: View {
                                     .fontWeight(.semibold)
                                 Spacer()
                             }
+                            .foregroundStyle(.red)
                             .padding(.vertical, 8)
                         }
                         .disabled(isDeletingAccount)

@@ -78,18 +78,13 @@ struct ProfileSettingsSaveCoordinator {
         } catch {
             setSaving(false)
 
-            print("❌ SAVE FAILED — raw error:", error)
-
             let errorString = "\(error)"
-            print("❌ SAVE FAILED — errorString:", errorString)
 
             if errorString.contains("23505") ||
                errorString.localizedCaseInsensitiveContains("duplicate key") {
-                print("⚠️ Username duplicate detected")
                 return .usernameTaken
             }
 
-            print("⚠️ SAVE FAILURE returning localizedDescription:", error.localizedDescription)
             return .failure(error.localizedDescription)
         }
     }

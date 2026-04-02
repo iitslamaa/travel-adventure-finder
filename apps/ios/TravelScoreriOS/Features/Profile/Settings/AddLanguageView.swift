@@ -11,6 +11,7 @@ struct AddLanguageView: View {
 
     @State private var searchText = ""
 
+    let selectedLanguages: [LanguageEntry]
     let onSelect: (LanguageEntry) -> Void
 
     private var languages: [AppLanguage] {
@@ -33,19 +34,51 @@ struct AddLanguageView: View {
         }
     }
 
+    private var selectedLanguageEntries: [LanguageEntry] {
+        selectedLanguages.sorted {
+            LanguageRepository.shared.localizedDisplayName(for: $0.canonicalCode)
+                < LanguageRepository.shared.localizedDisplayName(for: $1.canonicalCode)
+        }
+    }
+
+    private var availableLanguages: [AppLanguage] {
+        let selectedCodes = Set(selectedLanguages.map(\.canonicalCode))
+        return languages.filter { language in
+            let canonicalCode = LanguageRepository.shared.canonicalLanguageCode(for: language.travelLanguageCode)
+                ?? language.travelLanguageCode
+            return !selectedCodes.contains(canonicalCode)
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            List(languages) { language in
-                Button {
-                    onSelect(
-                        LanguageEntry(
-                            name: language.travelLanguageCode,
-                            proficiency: LanguageProficiency.fluent.storageValue
+            List {
+                if !selectedLanguageEntries.isEmpty {
+                    Section("Selected") {
+                        ForEach(selectedLanguageEntries) { entry in
+                            HStack {
+                                Text(LanguageRepository.shared.localizedDisplayName(for: entry.canonicalCode))
+                                Spacer()
+                                Text(LanguageProficiency(storageValue: entry.proficiency).label)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+
+                ForEach(availableLanguages) { language in
+                    Button {
+                        onSelect(
+                            LanguageEntry(
+                                name: language.travelLanguageCode,
+                                proficiency: LanguageProficiency.fluent.storageValue
+                            )
                         )
-                    )
-                    dismiss()
-                } label: {
-                    Text(LanguageRepository.shared.localizedDisplayName(for: language.travelLanguageCode))
+                        dismiss()
+                    } label: {
+                        Text(LanguageRepository.shared.localizedDisplayName(for: language.travelLanguageCode))
+                    }
                 }
             }
             .searchable(text: $searchText)

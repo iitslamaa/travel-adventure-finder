@@ -15,6 +15,10 @@ struct CountrySingleSelectView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
+    @State private var draftSelection: String?
+    @State private var hasChanges = false
+
+    private let initialSelection: String?
 
     init(
         title: String,
@@ -24,6 +28,8 @@ struct CountrySingleSelectView: View {
     ) {
         self.title = title
         self._selection = selection
+        self.initialSelection = selection.wrappedValue
+        self._draftSelection = State(initialValue: selection.wrappedValue)
         self.allowedCodes = allowedCodes
         self.excludedCodes = Set(excludedCodes.map { $0.uppercased() })
     }
@@ -36,26 +42,88 @@ struct CountrySingleSelectView: View {
             }
             .sorted { $0.1 < $1.1 }
 
+    private var selectedCountry: (code: String, name: String)? {
+        guard let draftSelection else { return nil }
+        return countries.first { $0.code == draftSelection }
+    }
+
     var body: some View {
         NavigationStack {
-            List(filteredCountries, id: \.code) { country in
-                Button {
-                    selection = country.code
-                    dismiss()
-                } label: {
-                    HStack {
-                        Text(countryCodeToFlag(country.code))
-                        Text(country.name)
-                        Spacer()
-                        if selection == country.code {
-                            Image(systemName: "checkmark")
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+
+                    TextField("profile.settings.search_countries", text: $searchText)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.horizontal, 16)
+
+                List {
+                    if let selectedCountry {
+                        Section("Selected") {
+                            Button {
+                                toggleSelection(selectedCountry.code)
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Text(countryCodeToFlag(selectedCountry.code))
+                                        .font(.title3)
+
+                                    Text(selectedCountry.name)
+
+                                    Spacer()
+
+                                    Image(systemName: "checkmark")
+                                }
+                                .padding(.vertical, 8)
+                            }
+                        }
+                    }
+
+                    ForEach(filteredCountries, id: \.code) { country in
+                        Button {
+                            toggleSelection(country.code)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Text(countryCodeToFlag(country.code))
+                                    .font(.title3)
+
+                                Text(country.name)
+
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
                         }
                     }
                 }
+                .listStyle(.insetGrouped)
             }
-            .searchable(text: $searchText)
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("common.save") {
+                        selection = draftSelection
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundStyle(hasChanges ? .blue : .secondary)
+                    .disabled(!hasChanges)
+                }
+
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("common.cancel") {
+                        draftSelection = initialSelection
+                        selection = initialSelection
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 
@@ -66,12 +134,23 @@ struct CountrySingleSelectView: View {
             guard let allowedCodes, !allowedCodes.isEmpty else { return visibleCountries }
             return visibleCountries.filter { allowedCodes.contains($0.code.uppercased()) }
         }()
+        let unselectedCountries = baseCountries.filter { $0.code != draftSelection }
 
-        guard !searchText.isEmpty else { return baseCountries }
+        guard !searchText.isEmpty else { return unselectedCountries }
         let normalizedSearch = searchText.normalizedSearchKey
-        return baseCountries.filter {
+        return unselectedCountries.filter {
             $0.name.normalizedSearchKey.contains(normalizedSearch)
         }
+    }
+
+    private func toggleSelection(_ code: String) {
+        if draftSelection == code {
+            draftSelection = nil
+        } else {
+            draftSelection = code
+        }
+
+        hasChanges = draftSelection != initialSelection
     }
 
     private func countryCodeToFlag(_ code: String) -> String {

@@ -632,6 +632,59 @@ struct TripPlannerFriendSnapshot: Codable, Identifiable, Hashable, Sendable {
     let displayName: String
     let username: String
     let avatarURL: String?
+
+    init(
+        id: UUID,
+        displayName: String,
+        username: String,
+        avatarURL: String?
+    ) {
+        self.id = id
+        self.displayName = Self.normalizedTripDisplayName(displayName, username: username)
+        self.username = username
+        self.avatarURL = avatarURL
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case displayName
+        case username
+        case avatarURL
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        let rawDisplayName = try container.decodeIfPresent(String.self, forKey: .displayName) ?? ""
+        username = try container.decode(String.self, forKey: .username)
+        avatarURL = try container.decodeIfPresent(String.self, forKey: .avatarURL)
+        displayName = Self.normalizedTripDisplayName(rawDisplayName, username: username)
+    }
+
+    private static func normalizedTripDisplayName(_ rawDisplayName: String, username: String) -> String {
+        let trimmed = rawDisplayName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.contains(",") {
+            let commaSeparatedParts = trimmed
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+
+            if commaSeparatedParts.count >= 2 {
+                let preferred = commaSeparatedParts[1]
+                if let firstWord = preferred.split(whereSeparator: \.isWhitespace).first {
+                    return String(firstWord)
+                }
+            }
+        }
+
+        if let firstWord = trimmed.split(whereSeparator: \.isWhitespace).first, !firstWord.isEmpty {
+            return String(firstWord)
+        }
+
+        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedUsername.isEmpty ? "You" : trimmedUsername
+    }
 }
 
 enum TripPlannerAvailabilityKind: String, Codable, CaseIterable, Identifiable, Sendable {
@@ -930,6 +983,25 @@ enum TripPlannerExpenseCategory: String, Codable, CaseIterable, Identifiable, Se
         }
     }
 
+    var tintColor: Color {
+        switch self {
+        case .accommodation:
+            return Color(red: 0.71, green: 0.45, blue: 0.22)
+        case .food:
+            return Color(red: 0.78, green: 0.36, blue: 0.24)
+        case .transportation:
+            return Color(red: 0.20, green: 0.47, blue: 0.62)
+        case .activities:
+            return Color(red: 0.22, green: 0.54, blue: 0.38)
+        case .other:
+            return Color(red: 0.39, green: 0.39, blue: 0.42)
+        }
+    }
+
+    var backgroundTint: Color {
+        tintColor.opacity(0.14)
+    }
+
     var suggestedSplitMode: TripPlannerExpenseSplitMode {
         switch self {
         case .accommodation:
@@ -1016,6 +1088,7 @@ struct TripPlannerExpenseShare: Codable, Identifiable, Hashable, Sendable {
 struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let category: TripPlannerExpenseCategory
+    let customCategoryName: String?
     let title: String
     let totalAmount: Double
     let paidById: String
@@ -1030,6 +1103,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
     init(
         id: UUID = UUID(),
         category: TripPlannerExpenseCategory = .other,
+        customCategoryName: String? = nil,
         title: String,
         totalAmount: Double,
         paidById: String,
@@ -1043,6 +1117,8 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
     ) {
         self.id = id
         self.category = category
+        let trimmedCustomCategory = customCategoryName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        self.customCategoryName = trimmedCustomCategory.isEmpty ? nil : trimmedCustomCategory
         self.title = title
         self.totalAmount = totalAmount
         self.paidById = paidById
@@ -1058,6 +1134,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id
         case category
+        case customCategoryName
         case title
         case totalAmount
         case paidById
@@ -1074,6 +1151,8 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
         category = try container.decodeIfPresent(TripPlannerExpenseCategory.self, forKey: .category) ?? .other
+        let rawCustomCategoryName = try container.decodeIfPresent(String.self, forKey: .customCategoryName) ?? ""
+        customCategoryName = rawCustomCategoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : rawCustomCategoryName.trimmingCharacters(in: .whitespacesAndNewlines)
         title = try container.decode(String.self, forKey: .title)
         totalAmount = try container.decode(Double.self, forKey: .totalAmount)
         paidById = try container.decode(String.self, forKey: .paidById)
@@ -3179,63 +3258,63 @@ private struct TripPlannerDetailView: View {
                             TripPlannerCountryNavigationGrid(countries: displayedCountries)
                         }
 
-                        TripPlannerNavigationSectionCard(
-                            title: "Planning checklist",
-                            subtitle: "Track bookings, reservations, and prep tasks by day"
-                        ) {
-                            NavigationLink {
-                                TripPlannerChecklistEditorView(
-                                    trip: syncedTrip,
-                                    actorId: sessionManager.userId,
-                                    actorName: checklistActorName,
-                                    countries: displayedCountries,
-                                    onSave: saveTripChanges
-                                )
-                            } label: {
+                        NavigationLink {
+                            TripPlannerChecklistEditorView(
+                                trip: syncedTrip,
+                                actorId: sessionManager.userId,
+                                actorName: checklistActorName,
+                                countries: displayedCountries,
+                                onSave: saveTripChanges
+                            )
+                        } label: {
+                            TripPlannerNavigationSectionCard(
+                                title: "Planning checklist",
+                                subtitle: "Track bookings, reservations, and prep tasks by day"
+                            ) {
                                 TripPlannerChecklistPreviewSection(
                                     trip: syncedTrip,
                                     countries: displayedCountries,
                                     groupVisaNeeds: groupVisaNeeds
                                 )
                             }
-                            .buttonStyle(.plain)
                         }
+                        .buttonStyle(.plain)
 
-                        TripPlannerNavigationSectionCard(
-                            title: String(localized: "trip_planner.expenses.title"),
-                            subtitle: String(localized: "trip_planner.expenses.subtitle")
-                        ) {
-                            NavigationLink {
-                                TripPlannerExpensesEditorView(
-                                    trip: trip,
-                                    participants: displayedTravelers,
-                                    onSave: saveTripChanges
-                                )
-                            } label: {
+                        NavigationLink {
+                            TripPlannerExpensesEditorView(
+                                trip: trip,
+                                participants: displayedTravelers,
+                                onSave: saveTripChanges
+                            )
+                        } label: {
+                            TripPlannerNavigationSectionCard(
+                                title: String(localized: "trip_planner.expenses.title"),
+                                subtitle: String(localized: "trip_planner.expenses.subtitle")
+                            ) {
                                 TripPlannerExpensesPreviewSection(expenses: trip.expenses)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .buttonStyle(.plain)
 
-                        TripPlannerNavigationSectionCard(
-                            title: String(localized: "trip_planner.detail.trip_stats"),
-                            subtitle: String(localized: "trip_planner.detail.trip_stats_subtitle")
-                        ) {
-                            NavigationLink {
-                                TripPlannerTripScoreBreakdownView(
-                                    countries: displayedCountries,
-                                    startDate: trip.startDate,
-                                    endDate: trip.endDate,
-                                    tripDayPlans: syncedTrip.dayPlans,
-                                    weights: effectiveScoreWeights,
-                                    preferredMonth: scoreWeightsStore.selectedMonth,
-                                    isGroupTrip: trip.isGroupTrip,
-                                    travelerCount: displayedTravelers.count,
-                                    passportLabel: tripPassportLabel,
-                                    groupLanguageScoresByCountry: groupLanguageScoresByCountry,
-                                    groupVisaNeeds: groupVisaNeeds
-                                )
-                            } label: {
+                        NavigationLink {
+                            TripPlannerTripScoreBreakdownView(
+                                countries: displayedCountries,
+                                startDate: trip.startDate,
+                                endDate: trip.endDate,
+                                tripDayPlans: syncedTrip.dayPlans,
+                                weights: effectiveScoreWeights,
+                                preferredMonth: scoreWeightsStore.selectedMonth,
+                                isGroupTrip: trip.isGroupTrip,
+                                travelerCount: displayedTravelers.count,
+                                passportLabel: tripPassportLabel,
+                                groupLanguageScoresByCountry: groupLanguageScoresByCountry,
+                                groupVisaNeeds: groupVisaNeeds
+                            )
+                        } label: {
+                            TripPlannerNavigationSectionCard(
+                                title: String(localized: "trip_planner.detail.trip_stats"),
+                                subtitle: String(localized: "trip_planner.detail.trip_stats_subtitle")
+                            ) {
                                 TripPlannerStatsPreviewSection(
                                     countries: displayedCountries,
                                     startDate: trip.startDate,
@@ -3248,20 +3327,20 @@ private struct TripPlannerDetailView: View {
                                     groupVisaNeeds: limitedVisaNeeds
                                 )
                             }
-                            .buttonStyle(.plain)
                         }
+                        .buttonStyle(.plain)
 
-                        TripPlannerNavigationSectionCard(
-                            title: String(localized: "trip_planner.availability.title"),
-                            subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.availability_group_subtitle") : String(localized: "trip_planner.detail.availability_solo_subtitle")
-                        ) {
-                            NavigationLink {
-                                TripPlannerAvailabilityEditorView(trip: trip, onSave: saveTripChanges)
-                            } label: {
+                        NavigationLink {
+                            TripPlannerAvailabilityEditorView(trip: trip, onSave: saveTripChanges)
+                        } label: {
+                            TripPlannerNavigationSectionCard(
+                                title: String(localized: "trip_planner.availability.title"),
+                                subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.availability_group_subtitle") : String(localized: "trip_planner.detail.availability_solo_subtitle")
+                            ) {
                                 TripPlannerAvailabilityPreviewSection(trip: syncedTrip)
                             }
-                            .buttonStyle(.plain)
                         }
+                        .buttonStyle(.plain)
 
                         TripPlannerSectionCard(
                             title: String(localized: "trip_planner.actions.title"),
@@ -4983,10 +5062,6 @@ private struct TripPlannerChecklistPreviewSection: View {
         previewEntries.filter(\.isCompleted).count
     }
 
-    private var visibleVisaNeeds: [TripPlannerTravelerVisaNeed] {
-        Array(groupVisaNeeds.prefix(2))
-    }
-
     var body: some View {
         if previewEntries.isEmpty {
             TripPlannerInfoCard(
@@ -5008,82 +5083,8 @@ private struct TripPlannerChecklistPreviewSection: View {
                         detail: overallItems.isEmpty ? "Daily prep only" : "Includes trip-wide prep"
                     )
                 }
-
-                if !groupVisaNeeds.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Visa prep")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(.black.opacity(0.72))
-
-                        ForEach(visibleVisaNeeds) { need in
-                            HStack(alignment: .top, spacing: 10) {
-                                Image(systemName: need.exceedsAllowedStay ? "exclamationmark.triangle.fill" : "globe.badge.chevron.backward")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black.opacity(0.56))
-                                    .padding(.top, 2)
-
-                                Text(need.summaryText(tripLengthDays: tripLengthDays))
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(.black.opacity(0.68))
-                            }
-                        }
-
-                        if groupVisaNeeds.count > visibleVisaNeeds.count {
-                            Text("\(groupVisaNeeds.count - visibleVisaNeeds.count) more visa requirements inside")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(.black.opacity(0.56))
-                        }
-                    }
-                }
-
-                VStack(spacing: 10) {
-                    ForEach(Array(previewEntries.prefix(5))) { entry in
-                        HStack(alignment: .top, spacing: 10) {
-                            Image(systemName: entry.isCompleted ? "checkmark.circle.fill" : "circle")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundStyle(entry.isCompleted ? Color(red: 0.16, green: 0.52, blue: 0.27) : .black.opacity(0.42))
-                                .padding(.top, 2)
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(entry.title)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(.black)
-
-                                Text(entry.subtitle)
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.black.opacity(0.6))
-
-                                if let completedByName = entry.completedByName, entry.isCompleted {
-                                    Text("Completed by \(completedByName)")
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(.black.opacity(0.56))
-                                }
-                            }
-
-                            Spacer()
-                        }
-                        .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.white.opacity(0.74))
-                        )
-                    }
-                }
-
-                if previewEntries.count > 5 {
-                    TripPlannerInfoCard(
-                        text: "\(previewEntries.count - 5) more checklist items inside",
-                        systemImage: "ellipsis.circle.fill"
-                    )
-                }
             }
         }
-    }
-
-    private var tripLengthDays: Int? {
-        guard let startDate = trip.startDate, let endDate = trip.endDate else { return nil }
-        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: startDate), to: Calendar.current.startOfDay(for: endDate)).day ?? 0
-        return max(days + 1, 1)
     }
 }
 
@@ -5098,6 +5099,8 @@ private struct TripPlannerChecklistEditorView: View {
 
     @State private var overallItems: [TripPlannerChecklistItem]
     @State private var dayPlans: [TripPlannerDayPlan]
+    @State private var selectedMonthPage: Date
+    @State private var selectedDayPlanID: UUID?
 
     init(
         trip: TripPlannerTrip,
@@ -5121,6 +5124,52 @@ private struct TripPlannerChecklistEditorView: View {
             endDate: trip.endDate,
             countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
         ))
+        let initialPlans = TripPlannerDayPlanBuilder.syncedDayPlans(
+            existingPlans: trip.dayPlans,
+            startDate: trip.startDate,
+            endDate: trip.endDate,
+            countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
+        )
+        let initialSelectedDate = initialPlans.first?.date
+            ?? trip.startDate
+            ?? Date()
+        _selectedMonthPage = State(
+            initialValue: TripPlannerAvailabilityCalculator.startOfMonth(for: initialSelectedDate)
+        )
+        _selectedDayPlanID = State(initialValue: initialPlans.first?.id)
+    }
+
+    private var countryOptions: [(id: String, name: String)] {
+        zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
+    }
+
+    private var monthsToDisplay: [Date] {
+        let planDates = dayPlans.map(\.date)
+        guard let minDate = planDates.min(), let maxDate = planDates.max() else { return [] }
+
+        let calendar = Calendar.current
+        let startMonth = TripPlannerAvailabilityCalculator.startOfMonth(for: minDate)
+        let endMonth = TripPlannerAvailabilityCalculator.startOfMonth(for: maxDate)
+
+        var months: [Date] = []
+        var current = startMonth
+
+        while current <= endMonth {
+            months.append(current)
+            guard let next = calendar.date(byAdding: .month, value: 1, to: current) else { break }
+            current = next
+        }
+
+        return months
+    }
+
+    private var selectedDayIndex: Int? {
+        if let selectedDayPlanID,
+           let selectedIndex = dayPlans.firstIndex(where: { $0.id == selectedDayPlanID }) {
+            return selectedIndex
+        }
+
+        return dayPlans.indices.first
     }
 
     var body: some View {
@@ -5166,35 +5215,74 @@ private struct TripPlannerChecklistEditorView: View {
                             }
                         }
 
-                        ForEach(dayPlans.indices, id: \.self) { index in
-                            let plan = dayPlans[index]
+                        TripPlannerSectionCard(
+                            title: "Daily plans",
+                            subtitle: "Tap a date to edit that day’s schedule and checklist"
+                        ) {
+                            VStack(alignment: .leading, spacing: 14) {
+                                if !monthsToDisplay.isEmpty {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Select a day")
+                                            .font(.system(size: 13, weight: .bold))
+                                            .foregroundStyle(.black.opacity(0.72))
 
-                            TripPlannerSectionCard(
-                                title: AppDateFormatting.dateString(from: plan.date, dateStyle: .full),
-                                subtitle: plan.countryName ?? (plan.kind == .travel ? "Travel day" : "Day plan")
-                            ) {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    checklistSuggestionButtons(
-                                        items: availableDaySuggestions(for: plan),
-                                        addAction: { addDaySuggestion($0, to: index) }
-                                    )
+                                        TabView(selection: $selectedMonthPage) {
+                                            ForEach(monthsToDisplay, id: \.self) { month in
+                                                TripPlannerChecklistMonthCard(
+                                                    month: month,
+                                                    plans: dayPlans,
+                                                    selectedDayPlanID: $selectedDayPlanID
+                                                )
+                                                .tag(month)
+                                                .padding(.bottom, 8)
+                                            }
+                                        }
+                                        .frame(height: 286)
+                                        .tabViewStyle(.page(indexDisplayMode: monthsToDisplay.count > 1 ? .automatic : .never))
+                                    }
+                                }
 
-                                    VStack(spacing: 10) {
-                                        ForEach(plan.checklistItems.indices, id: \.self) { itemIndex in
-                                            TripPlannerChecklistItemEditorRow(
-                                                item: bindingForDayItem(dayIndex: index, itemIndex: itemIndex),
-                                                actorId: actorId,
-                                                actorName: actorName,
-                                                showsRemove: dayPlans[index].checklistItems[itemIndex].category != .accommodation,
-                                                onRemove: {
-                                                    removeDayItem(at: itemIndex, from: index)
-                                                }
-                                            )
+                                if let selectedDayIndex {
+                                    let plan = dayPlans[selectedDayIndex]
+
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        Text(AppDateFormatting.dateString(from: plan.date, dateStyle: .full))
+                                            .font(.system(size: 18, weight: .bold))
+                                            .foregroundStyle(.black)
+
+                                        TripPlannerDayPlanEditorRow(
+                                            plan: bindingForDayPlan(at: selectedDayIndex),
+                                            countryOptions: countryOptions
+                                        )
+
+                                        checklistSuggestionButtons(
+                                            items: availableDaySuggestions(for: plan),
+                                            addAction: { addDaySuggestion($0, to: selectedDayIndex) }
+                                        )
+
+                                        VStack(spacing: 10) {
+                                            ForEach(plan.checklistItems.indices, id: \.self) { itemIndex in
+                                                TripPlannerChecklistItemEditorRow(
+                                                    item: bindingForDayItem(dayIndex: selectedDayIndex, itemIndex: itemIndex),
+                                                    actorId: actorId,
+                                                    actorName: actorName,
+                                                    showsRemove: dayPlans[selectedDayIndex].checklistItems[itemIndex].category != .accommodation,
+                                                    onRemove: {
+                                                        removeDayItem(at: itemIndex, from: selectedDayIndex)
+                                                    }
+                                                )
+                                            }
                                         }
                                     }
+                                } else {
+                                    TripPlannerInfoCard(
+                                        text: "Add trip dates to start planning day-by-day details.",
+                                        systemImage: "calendar.badge.plus"
+                                    )
                                 }
                             }
                         }
+
                     }
                     .padding(.horizontal, Theme.pageHorizontalInset)
                     .padding(.top, 18)
@@ -5212,6 +5300,22 @@ private struct TripPlannerChecklistEditorView: View {
             }
             .foregroundStyle(.black)
             .font(.system(size: 17, weight: .semibold))
+        }
+        .onAppear {
+            guard selectedDayPlanID == nil else { return }
+            selectedDayPlanID = dayPlans.first?.id
+        }
+        .onChange(of: dayPlans.map(\.id)) { _, ids in
+            guard !ids.isEmpty else {
+                selectedDayPlanID = nil
+                return
+            }
+
+            if let selectedDayPlanID, ids.contains(selectedDayPlanID) {
+                return
+            }
+
+            selectedDayPlanID = ids.first
         }
     }
 
@@ -5271,6 +5375,13 @@ private struct TripPlannerChecklistEditorView: View {
         Binding(
             get: { overallItems[index] },
             set: { overallItems[index] = $0 }
+        )
+    }
+
+    private func bindingForDayPlan(at index: Int) -> Binding<TripPlannerDayPlan> {
+        Binding(
+            get: { dayPlans[index] },
+            set: { dayPlans[index] = $0 }
         )
     }
 
@@ -5367,6 +5478,126 @@ private struct TripPlannerChecklistEditorView: View {
     }
 }
 
+private struct TripPlannerChecklistMonthCard: View {
+    let month: Date
+    let plans: [TripPlannerDayPlan]
+    @Binding var selectedDayPlanID: UUID?
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
+
+    private var daySlots: [Date?] {
+        TripPlannerAvailabilityCalculator.daySlots(for: month)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(TripPlannerAvailabilityCalculator.monthTitle(for: month))
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(.black)
+
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(TripPlannerAvailabilityCalculator.weekdaySymbols(), id: \.self) { symbol in
+                    Text(symbol)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.black.opacity(0.55))
+                        .frame(maxWidth: .infinity)
+                }
+
+                ForEach(Array(daySlots.enumerated()), id: \.offset) { _, day in
+                    if let day {
+                        TripPlannerChecklistDayCell(
+                            date: day,
+                            month: month,
+                            plans: plans,
+                            selectedDayPlanID: $selectedDayPlanID
+                        )
+                    } else {
+                        Color.clear
+                            .frame(height: 42)
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.72))
+        )
+    }
+}
+
+private struct TripPlannerChecklistDayCell: View {
+    let date: Date
+    let month: Date
+    let plans: [TripPlannerDayPlan]
+    @Binding var selectedDayPlanID: UUID?
+
+    private var planForDate: TripPlannerDayPlan? {
+        let calendar = Calendar.current
+        return plans.first { calendar.isDate($0.date, inSameDayAs: date) }
+    }
+
+    private var isSelected: Bool {
+        guard let planForDate else { return false }
+        return planForDate.id == selectedDayPlanID
+    }
+
+    private var isInMonth: Bool {
+        Calendar.current.isDate(date, equalTo: month, toGranularity: .month)
+    }
+
+    var body: some View {
+        Button {
+            selectedDayPlanID = planForDate?.id
+        } label: {
+            VStack(spacing: 4) {
+                Text(AppNumberFormatting.integerString(Calendar.current.component(.day, from: date)))
+                    .font(.system(size: 13, weight: isSelected ? .bold : .semibold))
+                    .foregroundStyle(isSelected ? .white : .black)
+
+                if let planForDate {
+                    Image(systemName: planForDate.kind == .travel ? "airplane" : "bed.double.fill")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(isSelected ? .white.opacity(0.95) : .black.opacity(0.58))
+                } else {
+                    Circle()
+                        .fill(Color.clear)
+                        .frame(width: 8, height: 8)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 42)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(backgroundColor)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(borderColor, lineWidth: isSelected ? 1.4 : 1)
+            )
+            .opacity(isInMonth ? 1 : 0.35)
+        }
+        .buttonStyle(.plain)
+        .disabled(planForDate == nil)
+    }
+
+    private var backgroundColor: Color {
+        if isSelected {
+            return Color.black.opacity(0.84)
+        }
+        if planForDate != nil {
+            return Color.white.opacity(0.88)
+        }
+        return Color.white.opacity(0.42)
+    }
+
+    private var borderColor: Color {
+        if isSelected {
+            return Color.black.opacity(0.9)
+        }
+        return Color.black.opacity(planForDate != nil ? 0.08 : 0.03)
+    }
+}
+
 private struct TripPlannerChecklistItemEditorRow: View {
     @Binding var item: TripPlannerChecklistItem
     let actorId: UUID?
@@ -5459,12 +5690,25 @@ private struct TripPlannerExpenseParticipant: Identifiable, Hashable {
     let id: String
     let name: String
     let username: String?
+    let avatarURL: String?
 
-    init(friend: TripPlannerFriendSnapshot) {
+    var firstName: String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return username ?? "" }
+        return trimmed.split(separator: " ").first.map(String.init) ?? trimmed
+    }
+
+    nonisolated init(friend: TripPlannerFriendSnapshot) {
         self.id = friend.id.uuidString
         self.name = friend.displayName
         self.username = friend.username
+        self.avatarURL = friend.avatarURL
     }
+}
+
+private struct TripPlannerExpenseShareDraftState: Equatable {
+    var isPaid: Bool
+    var paymentMethod: TripPlannerExpensePaymentMethod?
 }
 
 private struct TripPlannerExpenseBalance: Identifiable {
@@ -5553,7 +5797,11 @@ private struct TripPlannerExpensesSection: View {
             } else {
                 VStack(spacing: 10) {
                     ForEach(expenses.prefix(3)) { expense in
-                        TripPlannerExpenseRow(expense: expense, onEdit: nil, onUpdate: nil)
+                        TripPlannerExpenseRow(
+                            expense: expense,
+                            participants: participants.map(TripPlannerExpenseParticipant.init(friend:)),
+                            onEdit: nil
+                        )
                     }
 
                     if expenses.count > 3 {
@@ -5598,7 +5846,7 @@ private struct TripPlannerExpensesEditorView: View {
         self.trip = trip
         self.participants = participants
         self.onSave = onSave
-        _expenses = State(initialValue: trip.expenses.sorted { $0.date > $1.date })
+        _expenses = State(initialValue: Self.sortedExpenses(trip.expenses))
     }
 
     private var expenseParticipants: [TripPlannerExpenseParticipant] {
@@ -5627,6 +5875,28 @@ private struct TripPlannerExpensesEditorView: View {
         }
     }
 
+    private var categoryBreakdown: [TripPlannerExpenseCategoryBreakdown] {
+        let total = expenses.reduce(0) { $0 + $1.totalAmount }
+        guard total > 0.009 else { return [] }
+
+        var groupedAmounts: [String: (amount: Double, tintColor: Color)] = [:]
+        for expense in expenses {
+            let key = expense.categoryDisplayTitle
+            groupedAmounts[key, default: (0, expense.categoryTintColor)].amount += expense.totalAmount
+        }
+
+        return groupedAmounts.compactMap { title, info in
+            guard info.amount > 0.009 else { return nil }
+            return TripPlannerExpenseCategoryBreakdown(
+                title: title,
+                tintColor: info.tintColor,
+                amount: info.amount,
+                percentage: info.amount / total
+            )
+        }
+        .sorted { $0.amount > $1.amount }
+    }
+
     var body: some View {
         ZStack {
             Theme.pageBackground("travel2")
@@ -5637,6 +5907,18 @@ private struct TripPlannerExpensesEditorView: View {
 
                 ScrollView {
                     VStack(spacing: 18) {
+                        if !categoryBreakdown.isEmpty {
+                            TripPlannerSectionCard(
+                                title: "Spending breakdown",
+                                subtitle: ""
+                            ) {
+                                TripPlannerExpenseCategoryBreakdownView(
+                                    breakdown: categoryBreakdown,
+                                    totalSpent: expenses.reduce(0) { $0 + $1.totalAmount }
+                                )
+                            }
+                        }
+
                         TripPlannerSectionCard(
                             title: String(localized: "trip_planner.expenses.outstanding_balances"),
                             subtitle: ""
@@ -5667,33 +5949,13 @@ private struct TripPlannerExpensesEditorView: View {
                             } else {
                                 VStack(spacing: 10) {
                                     ForEach(expenses) { expense in
-                                        VStack(spacing: 10) {
-                                            TripPlannerExpenseRow(
-                                                expense: expense,
-                                                onEdit: {
-                                                    composerPresentation = TripPlannerExpenseComposerPresentation(expense: expense)
-                                                },
-                                                onUpdate: { updatedExpense in
-                                                    updateExpense(updatedExpense)
-                                                }
-                                            )
-
-                                            Button(role: .destructive) {
-                                                expenses.removeAll { $0.id == expense.id }
-                                                persistExpenses()
-                                            } label: {
-                                                Text("trip_planner.expenses.delete_expense")
-                                                    .font(.system(size: 13, weight: .bold))
-                                                    .foregroundStyle(.black)
-                                                    .frame(maxWidth: .infinity)
-                                                    .padding(.vertical, 10)
-                                                    .background(
-                                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                                            .fill(Color.white.opacity(0.74))
-                                                    )
+                                        TripPlannerExpenseRow(
+                                            expense: expense,
+                                            participants: expenseParticipants,
+                                            onEdit: {
+                                                composerPresentation = TripPlannerExpenseComposerPresentation(expense: expense)
                                             }
-                                            .buttonStyle(.plain)
-                                        }
+                                        )
                                     }
                                 }
                             }
@@ -5713,6 +5975,13 @@ private struct TripPlannerExpensesEditorView: View {
                     onClose: {
                         self.composerPresentation = nil
                     },
+                    onDeleteExpense: composerPresentation.expense == nil ? nil : {
+                        if let expense = composerPresentation.expense {
+                            expenses.removeAll { $0.id == expense.id }
+                            persistExpenses()
+                        }
+                        self.composerPresentation = nil
+                    },
                     onSaveExpense: { expense in
                         if expenses.contains(where: { $0.id == expense.id }) {
                             updateExpense(expense)
@@ -5730,7 +5999,8 @@ private struct TripPlannerExpensesEditorView: View {
         .animation(.spring(response: 0.28, dampingFraction: 0.92), value: composerPresentation != nil)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .tripPlannerNavigationChrome {
+        .navigationBarBackButtonHidden(composerPresentation != nil)
+        .tripPlannerNavigationChrome(showsBackButton: composerPresentation == nil) {
             if composerPresentation == nil {
                 Button {
                     composerPresentation = TripPlannerExpenseComposerPresentation(expense: nil)
@@ -5761,10 +6031,13 @@ private struct TripPlannerExpensesEditorView: View {
     private func updateExpense(_ expense: TripPlannerExpense) {
         guard let index = expenses.firstIndex(where: { $0.id == expense.id }) else { return }
         expenses[index] = expense
+        expenses = Self.sortedExpenses(expenses)
         persistExpenses()
     }
 
     private func persistExpenses() {
+        let sortedExpenses = Self.sortedExpenses(expenses)
+        expenses = sortedExpenses
         onSave(
             TripPlannerTrip(
                 id: trip.id,
@@ -5782,9 +6055,18 @@ private struct TripPlannerExpensesEditorView: View {
                 availability: trip.availability,
                 dayPlans: trip.dayPlans,
                 overallChecklistItems: trip.overallChecklistItems,
-                expenses: expenses.sorted { $0.date > $1.date }
+                expenses: sortedExpenses
             )
         )
+    }
+
+    private static func sortedExpenses(_ expenses: [TripPlannerExpense]) -> [TripPlannerExpense] {
+        expenses.sorted { lhs, rhs in
+            if lhs.isSettled != rhs.isSettled {
+                return !lhs.isSettled && rhs.isSettled
+            }
+            return lhs.date > rhs.date
+        }
     }
 }
 
@@ -5853,38 +6135,59 @@ private struct TripPlannerExpenseComposerOverlay: View {
     let participants: [TripPlannerExpenseParticipant]
     let existingExpense: TripPlannerExpense?
     let onClose: () -> Void
+    let onDeleteExpense: (() -> Void)?
     let onSaveExpense: (TripPlannerExpense) -> Void
 
     @State private var title = ""
     @State private var amountText = ""
     @State private var category: TripPlannerExpenseCategory = .other
+    @State private var customCategoryName = ""
     @State private var selectedPayerId: String = ""
     @State private var splitMode: TripPlannerExpenseSplitMode = .everyone
     @State private var selectedParticipantIds: Set<String> = []
+    @State private var shareStates: [String: TripPlannerExpenseShareDraftState] = [:]
+    @State private var isShowingCustomCategoryPrompt = false
+    @State private var isShowingTitlePrompt = false
+    @State private var isShowingDeleteConfirmation = false
 
     init(
         participants: [TripPlannerExpenseParticipant],
         existingExpense: TripPlannerExpense? = nil,
         onClose: @escaping () -> Void,
+        onDeleteExpense: (() -> Void)? = nil,
         onSaveExpense: @escaping (TripPlannerExpense) -> Void
     ) {
         self.participants = participants
         self.existingExpense = existingExpense
         self.onClose = onClose
+        self.onDeleteExpense = onDeleteExpense
         self.onSaveExpense = onSaveExpense
         _title = State(initialValue: existingExpense?.title ?? "")
         if let existingExpense {
             _amountText = State(initialValue: existingExpense.totalAmount == 0 ? "" : String(format: "%.2f", existingExpense.totalAmount))
             _category = State(initialValue: existingExpense.category)
+            _customCategoryName = State(initialValue: existingExpense.customCategoryName ?? "")
             _selectedPayerId = State(initialValue: existingExpense.paidById)
             _splitMode = State(initialValue: existingExpense.splitMode)
             _selectedParticipantIds = State(initialValue: Set(existingExpense.participantIds))
+            _shareStates = State(
+                initialValue: Dictionary(
+                    uniqueKeysWithValues: existingExpense.shares.map {
+                        (
+                            $0.participantId,
+                            TripPlannerExpenseShareDraftState(isPaid: $0.isPaid, paymentMethod: $0.paymentMethod)
+                        )
+                    }
+                )
+            )
         } else {
             _amountText = State(initialValue: "")
             _category = State(initialValue: .other)
+            _customCategoryName = State(initialValue: "")
             _selectedPayerId = State(initialValue: "")
             _splitMode = State(initialValue: TripPlannerExpenseCategory.other.suggestedSplitMode)
             _selectedParticipantIds = State(initialValue: [])
+            _shareStates = State(initialValue: [:])
         }
     }
 
@@ -5908,6 +6211,57 @@ private struct TripPlannerExpenseComposerOverlay: View {
         }
     }
 
+    private var selectedPayer: TripPlannerExpenseParticipant? {
+        participants.first(where: { $0.id == selectedPayerId })
+    }
+
+    private var selectedBeneficiaries: [TripPlannerExpenseParticipant] {
+        participants.filter { selectedBeneficiaryIds.contains($0.id) }
+    }
+
+    private var payerMenuLabel: some View {
+        Group {
+            if let selectedPayer {
+                TripPlannerExpenseInlineParticipantBadge(participant: selectedPayer)
+            } else {
+                Text(String(localized: "trip_planner.expenses.paid_by"))
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.black)
+            }
+        }
+    }
+
+    private var draftShares: [TripPlannerExpenseShare] {
+        let amount = parsedAmount ?? 0
+        let equalShare = selectedBeneficiaries.isEmpty ? 0 : amount / Double(selectedBeneficiaries.count)
+
+        return selectedBeneficiaries.compactMap { participant in
+            guard participant.id != selectedPayerId else { return nil }
+            let state = shareStates[participant.id] ?? TripPlannerExpenseShareDraftState(isPaid: false, paymentMethod: nil)
+            return TripPlannerExpenseShare(
+                participantId: participant.id,
+                participantName: participant.name,
+                participantUsername: participant.username,
+                amountOwed: equalShare,
+                isPaid: state.isPaid,
+                paymentMethod: state.paymentMethod
+            )
+        }
+    }
+
+    private var selectedCategoryLabel: String {
+        let trimmedCustom = customCategoryName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if category == .other, !trimmedCustom.isEmpty {
+            return trimmedCustom
+        }
+        return category.title
+    }
+
+    private var displayTitle: String {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Expense title" : trimmed
+    }
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.22)
@@ -5917,129 +6271,197 @@ private struct TripPlannerExpenseComposerOverlay: View {
                 }
 
             VStack(spacing: 0) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(existingExpense == nil ? String(localized: "trip_planner.expenses.add_expense") : String(localized: "trip_planner.expenses.edit_expense"))
-                            .font(.system(size: 21, weight: .bold))
-                            .foregroundStyle(.black)
-
-                        Text("trip_planner.expenses.overlay_subtitle")
-                            .font(.system(size: 15))
-                            .foregroundStyle(.black.opacity(0.66))
+                HStack(alignment: .center, spacing: 12) {
+                    Button {
+                        onClose()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.black.opacity(0.82))
+                            .frame(width: 34, height: 34)
+                            .background(Circle().fill(Color.white.opacity(0.82)))
                     }
+                    .buttonStyle(.plain)
 
                     Spacer()
 
-                    HStack(spacing: 10) {
-                        Button(String(localized: "common.close")) {
-                            onClose()
-                        }
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.black.opacity(0.65))
-
-                        Button(existingExpense == nil ? String(localized: "common.add") : String(localized: "common.save")) {
-                            saveExpense()
-                        }
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.black)
-                        .opacity(canSaveExpense ? 1 : 0.45)
-                        .disabled(!canSaveExpense)
+                    Button(existingExpense == nil ? String(localized: "common.add") : String(localized: "common.save")) {
+                        saveExpense()
                     }
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.black)
+                    .opacity(canSaveExpense ? 1 : 0.45)
+                    .disabled(!canSaveExpense)
                 }
-                .padding(.bottom, 18)
+                .padding(.bottom, 14)
 
-                VStack(alignment: .leading, spacing: 14) {
-                    TripPlannerTextInput(
-                        title: String(localized: "trip_planner.expenses.expense_title"),
-                        text: $title,
-                        placeholder: String(localized: "trip_planner.expenses.expense_title_placeholder")
-                    )
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(alignment: .center, spacing: 10) {
+                            Text(displayTitle)
+                                .font(.system(size: 24, weight: .black, design: .rounded))
+                                .foregroundStyle(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .black.opacity(0.42) : .black)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.leading)
 
-                    TripPlannerCurrencyInput(
-                        title: String(localized: "trip_planner.expenses.amount_usd"),
-                        text: $amountText,
-                        placeholder: String(localized: "trip_planner.expenses.usd")
-                    )
+                            Spacer(minLength: 0)
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Category")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.black.opacity(0.72))
+                            Button {
+                                isShowingTitlePrompt = true
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(.black.opacity(0.72))
+                                    .frame(width: 32, height: 32)
+                                    .background(Circle().fill(Color.white.opacity(0.84)))
+                            }
+                            .buttonStyle(.plain)
+                        }
 
-                        Picker("Category", selection: $category) {
-                            ForEach(TripPlannerExpenseCategory.allCases) { category in
-                                Text(category.title).tag(category)
+                        HStack(alignment: .top, spacing: 10) {
+                            TripPlannerCurrencyInput(
+                                title: String(localized: "trip_planner.expenses.amount_usd"),
+                                text: $amountText,
+                                placeholder: String(localized: "trip_planner.expenses.usd")
+                            )
+                            .frame(maxWidth: 170)
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Category")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.black.opacity(0.72))
+
+                                Menu {
+                                    ForEach(TripPlannerExpenseCategory.allCases) { category in
+                                        Button(category.title) {
+                                            self.category = category
+                                            self.customCategoryName = ""
+                                        }
+                                    }
+
+                                    Button("Custom...") {
+                                        isShowingCustomCategoryPrompt = true
+                                    }
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        Text(selectedCategoryLabel)
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundStyle(.black)
+
+                                        Spacer(minLength: 0)
+
+                                        Image(systemName: "chevron.down")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundStyle(.black.opacity(0.48))
+                                    }
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 12)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                            .fill(Color.white.opacity(0.84))
+                                    )
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
-                        .pickerStyle(.menu)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.white.opacity(0.84))
-                        )
 
-                        Text(category.splitGuidance)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.black.opacity(0.58))
-                    }
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("trip_planner.expenses.paid_by")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.black.opacity(0.72))
-
-                        Picker(String(localized: "trip_planner.expenses.paid_by"), selection: $selectedPayerId) {
-                            ForEach(participants) { participant in
-                                Text(participant.name).tag(participant.id)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.white.opacity(0.84))
-                        )
-
-                    }
-
-                    Picker(String(localized: "trip_planner.expenses.split"), selection: $splitMode) {
-                        ForEach(TripPlannerExpenseSplitMode.allCases) { mode in
-                            Text(mode.title).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-
-                    if splitMode == .selectedPeople {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("trip_planner.expenses.split_between")
+                        HStack(alignment: .center, spacing: 12) {
+                            Text("trip_planner.expenses.paid_by")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.black.opacity(0.72))
 
-                            TripPlannerChipGrid(
-                                items: participants.map { participant in
-                                    TripPlannerChipItem(
-                                        id: participant.id,
-                                        title: participant.name,
-                                        isSelected: selectedParticipantIds.contains(participant.id)
-                                    )
-                                },
-                                onTap: { item in
-                                    if selectedParticipantIds.contains(item.id) {
-                                        selectedParticipantIds.remove(item.id)
-                                    } else {
-                                        selectedParticipantIds.insert(item.id)
+                            Menu {
+                                ForEach(participants) { participant in
+                                    Button(participant.name) {
+                                        selectedPayerId = participant.id
                                     }
                                 }
-                            )
+                            } label: {
+                                payerMenuLabel
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Picker(String(localized: "trip_planner.expenses.split"), selection: $splitMode) {
+                                ForEach(TripPlannerExpenseSplitMode.allCases) { mode in
+                                    Text(mode.title).tag(mode)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+
+                            if splitMode == .selectedPeople {
+                                TripPlannerExpenseParticipantGrid(
+                                    participants: participants,
+                                    selectedIDs: selectedParticipantIds,
+                                    onToggle: { id in
+                                        if selectedParticipantIds.contains(id) {
+                                            selectedParticipantIds.remove(id)
+                                        } else {
+                                            selectedParticipantIds.insert(id)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Who shared this expense")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.black.opacity(0.72))
+
+                            if draftShares.isEmpty {
+                                Text("trip_planner.expenses.no_one_owes")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(.black.opacity(0.58))
+                                    .padding(.horizontal, 2)
+                            } else {
+                                VStack(spacing: 8) {
+                                    ForEach(draftShares) { share in
+                                        TripPlannerExpenseShareEditorRow(
+                                            share: share,
+                                            participant: participants.first(where: { $0.id == share.participantId }),
+                                            onUpdate: { isPaid in
+                                                shareStates[share.participantId] = TripPlannerExpenseShareDraftState(
+                                                    isPaid: isPaid,
+                                                    paymentMethod: isPaid ? .manual : nil
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if onDeleteExpense != nil {
+                            Button(role: .destructive) {
+                                isShowingDeleteConfirmation = true
+                            } label: {
+                                Text("trip_planner.expenses.delete_expense")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(Color(red: 0.72, green: 0.18, blue: 0.18))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                            .fill(Color.white.opacity(0.84))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                            .stroke(Color(red: 0.72, green: 0.18, blue: 0.18).opacity(0.18), lineWidth: 1)
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.top, 4)
                         }
                     }
                 }
+                .scrollIndicators(.hidden)
             }
             .padding(22)
             .frame(maxWidth: min(UIScreen.main.bounds.width - 32, 620))
-            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxHeight: min(UIScreen.main.bounds.height - 64, 760))
             .background(
                 RoundedRectangle(cornerRadius: 30, style: .continuous)
                     .fill(Color(red: 0.98, green: 0.95, blue: 0.88).opacity(0.98))
@@ -6051,6 +6473,48 @@ private struct TripPlannerExpenseComposerOverlay: View {
             .shadow(color: .black.opacity(0.18), radius: 24, y: 10)
             .padding(.horizontal, 16)
             .padding(.vertical, 32)
+
+            if isShowingCustomCategoryPrompt {
+                TripPlannerCustomExpenseCategoryPrompt(
+                    initialValue: customCategoryName,
+                    onCancel: {
+                        isShowingCustomCategoryPrompt = false
+                    },
+                    onSave: { name in
+                        customCategoryName = name
+                        category = .other
+                        isShowingCustomCategoryPrompt = false
+                    }
+                )
+                .zIndex(2)
+            }
+
+            if isShowingTitlePrompt {
+                TripPlannerExpenseTitlePrompt(
+                    initialValue: title,
+                    onCancel: {
+                        isShowingTitlePrompt = false
+                    },
+                    onSave: { newTitle in
+                        title = newTitle
+                        isShowingTitlePrompt = false
+                    }
+                )
+                .zIndex(3)
+            }
+
+            if isShowingDeleteConfirmation {
+                TripPlannerExpenseDeleteConfirmationPrompt(
+                    onCancel: {
+                        isShowingDeleteConfirmation = false
+                    },
+                    onDelete: {
+                        isShowingDeleteConfirmation = false
+                        onDeleteExpense?()
+                    }
+                )
+                .zIndex(3)
+            }
         }
         .onAppear {
             if selectedPayerId.isEmpty {
@@ -6063,6 +6527,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
                     selectedParticipantIds = Set(participants.map(\.id))
                 }
             }
+            normalizeShareStates()
         }
         .onChange(of: category) { _, newCategory in
             splitMode = newCategory.suggestedSplitMode
@@ -6071,12 +6536,22 @@ private struct TripPlannerExpenseComposerOverlay: View {
             } else if selectedParticipantIds.isEmpty, let payer = participants.first(where: { $0.id == selectedPayerId }) ?? participants.first {
                 selectedParticipantIds = [payer.id]
             }
+            normalizeShareStates()
         }
         .onChange(of: selectedPayerId) { _, newPayerId in
-            guard splitMode == .selectedPeople else { return }
-            if selectedParticipantIds.isEmpty, !newPayerId.isEmpty {
+            if splitMode == .selectedPeople, selectedParticipantIds.isEmpty, !newPayerId.isEmpty {
                 selectedParticipantIds = [newPayerId]
             }
+            normalizeShareStates()
+        }
+        .onChange(of: splitMode) { _, _ in
+            normalizeShareStates()
+        }
+        .onChange(of: selectedParticipantIds) { _, _ in
+            normalizeShareStates()
+        }
+        .onChange(of: amountText) { _, _ in
+            normalizeShareStates()
         }
     }
 
@@ -6088,22 +6563,13 @@ private struct TripPlannerExpenseComposerOverlay: View {
             return
         }
 
-        let beneficiaries = participants.filter { selectedBeneficiaryIds.contains($0.id) }
-        let equalShare = beneficiaries.isEmpty ? 0 : amount / Double(beneficiaries.count)
-        let shares = beneficiaries.compactMap { participant -> TripPlannerExpenseShare? in
-            guard participant.id != payer.id else { return nil }
-            return TripPlannerExpenseShare(
-                participantId: participant.id,
-                participantName: participant.name,
-                participantUsername: participant.username,
-                amountOwed: equalShare
-            )
-        }
+        let beneficiaries = selectedBeneficiaries
 
         onSaveExpense(
             TripPlannerExpense(
                 id: existingExpense?.id ?? UUID(),
                 category: category,
+                customCategoryName: customCategoryName,
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 totalAmount: amount,
                 paidById: payer.id,
@@ -6113,183 +6579,159 @@ private struct TripPlannerExpenseComposerOverlay: View {
                 date: existingExpense?.date ?? Date(),
                 participantIds: beneficiaries.map(\.id),
                 participantNames: beneficiaries.map(\.name),
-                shares: shares
+                shares: draftShares
             )
         )
+    }
+
+    private func normalizeShareStates() {
+        let validIDs = Set(draftShares.map(\.participantId))
+        shareStates = shareStates.filter { validIDs.contains($0.key) }
+        for share in draftShares where shareStates[share.participantId] == nil {
+            shareStates[share.participantId] = TripPlannerExpenseShareDraftState(
+                isPaid: share.isPaid,
+                paymentMethod: share.paymentMethod
+            )
+        }
     }
 }
 
 private struct TripPlannerExpenseRow: View {
     let expense: TripPlannerExpense
+    let participants: [TripPlannerExpenseParticipant]
     let onEdit: (() -> Void)?
-    let onUpdate: ((TripPlannerExpense) -> Void)?
-
-    @Environment(\.openURL) private var openURL
 
     var body: some View {
+        Group {
+            if let onEdit {
+                Button {
+                    onEdit()
+                } label: {
+                    rowContent(showsChevron: true)
+                }
+                .buttonStyle(.plain)
+            } else {
+                rowContent(showsChevron: false)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func rowContent(showsChevron: Bool) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 8) {
-                        Text(expense.category.title)
+                        Text(expense.categoryDisplayTitle)
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(.black.opacity(0.62))
+                            .foregroundStyle(expense.categoryTintColor)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 5)
-                            .background(Capsule().fill(Color.white.opacity(0.9)))
+                            .background(Capsule().fill(expense.categoryBackgroundTint))
 
-                        Text(expense.splitMode.title)
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(.black.opacity(0.5))
+                        Text(currency(expense.totalAmount))
+                            .font(.system(size: 14, weight: .black))
+                            .foregroundStyle(.black)
                     }
 
                     Text(expense.title)
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.black)
+                        .lineLimit(1)
 
-                    Text(
-                        String(
-                            format: String(localized: "trip_planner.expenses.paid_by_format"),
-                            locale: AppDisplayLocale.current,
-                            currency(expense.totalAmount),
-                            expense.paidByName
-                        )
-                    )
-                        .font(.system(size: 14))
-                        .foregroundStyle(.black.opacity(0.7))
+                    HStack(spacing: 8) {
+                        if let payer = participants.first(where: { $0.id == expense.paidById }) {
+                            TripPlannerAvatarView(
+                                name: payer.name,
+                                username: payer.username ?? "",
+                                avatarURL: payer.avatarURL,
+                                size: 22
+                            )
+
+                            Text("Paid by \(payer.firstName)")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.black.opacity(0.74))
+                        } else {
+                            Text("Paid by \(expense.paidByName)")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.black.opacity(0.74))
+                        }
+                    }
                 }
 
                 Spacer()
 
-                if let onEdit {
-                    Button(String(localized: "common.edit")) {
-                        onEdit()
-                    }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Capsule().fill(Color.white.opacity(0.82)))
+                if showsChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.38))
+                        .padding(.top, 4)
                 }
             }
 
-            if expense.shares.isEmpty {
+            if expense.isSettled {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Color(red: 0.12, green: 0.50, blue: 0.25))
+
+                    Text(String(localized: "trip_planner.expenses.settled_up"))
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Color(red: 0.12, green: 0.50, blue: 0.25))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(Color(red: 0.90, green: 0.97, blue: 0.90))
+                )
+            } else if expense.shares.isEmpty {
                 Text("trip_planner.expenses.no_one_owes")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.black.opacity(0.62))
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.black.opacity(0.56))
             } else {
-                VStack(spacing: 8) {
-                    ForEach(expense.shares) { share in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text(
-                                    String(
-                                        format: String(localized: "trip_planner.expenses.owes_format"),
-                                        locale: AppDisplayLocale.current,
-                                        share.participantName,
-                                        currency(share.amountOwed)
-                                    )
-                                )
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(.black)
+                HStack(spacing: 8) {
+                    Text("\(unpaidShares.count) open")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Color(red: 0.72, green: 0.18, blue: 0.18))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(Color.white.opacity(0.88)))
 
-                                Spacer()
-
-                                Text(share.isPaid ? String(localized: "trip_planner.expenses.paid") : String(localized: "trip_planner.expenses.not_paid"))
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundStyle(.black.opacity(0.7))
-                            }
-
-                            if let onUpdate {
-                                HStack(spacing: 8) {
-                                    Button(share.isPaid ? String(localized: "trip_planner.expenses.mark_unpaid") : String(localized: "trip_planner.expenses.mark_paid")) {
-                                        onUpdate(updatedExpense(for: share, method: .manual, isPaid: !share.isPaid))
-                                    }
-                                    .buttonStyle(.plain)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Capsule().fill(Color.white.opacity(0.82)))
-
-                                    Button(String(localized: "trip_planner.expenses.venmo")) {
-                                        onUpdate(updatedExpense(for: share, method: .venmo, isPaid: true))
-                                        openVenmo(for: share)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Capsule().fill(Color.white.opacity(0.82)))
-
-                                    Button(String(localized: "trip_planner.expenses.apple_pay")) {
-                                        onUpdate(updatedExpense(for: share, method: .applePay, isPaid: true))
-                                    }
-                                    .buttonStyle(.plain)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Capsule().fill(Color.white.opacity(0.82)))
-                                }
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(.black)
-                            }
-                        }
-                        .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.white.opacity(0.7))
-                        )
-                    }
+                    Text(unpaidSummary)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.black.opacity(0.66))
+                        .lineLimit(1)
                 }
             }
         }
         .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.78))
+                .fill(expense.isSettled ? Color(red: 0.95, green: 0.99, blue: 0.95) : Color.white.opacity(0.78))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(expense.isSettled ? Color(red: 0.12, green: 0.50, blue: 0.25).opacity(0.16) : Color.clear, lineWidth: 1)
         )
     }
 
-    private func updatedExpense(
-        for share: TripPlannerExpenseShare,
-        method: TripPlannerExpensePaymentMethod,
-        isPaid: Bool
-    ) -> TripPlannerExpense {
-        let updatedShares = expense.shares.map { currentShare in
-            guard currentShare.id == share.id else { return currentShare }
-            return TripPlannerExpenseShare(
-                id: currentShare.id,
-                participantId: currentShare.participantId,
-                participantName: currentShare.participantName,
-                participantUsername: currentShare.participantUsername,
-                amountOwed: currentShare.amountOwed,
-                isPaid: isPaid,
-                paymentMethod: isPaid ? method : nil
-            )
-        }
-
-        return TripPlannerExpense(
-            id: expense.id,
-            category: expense.category,
-            title: expense.title,
-            totalAmount: expense.totalAmount,
-            paidById: expense.paidById,
-            paidByName: expense.paidByName,
-            paidByUsername: expense.paidByUsername,
-            splitMode: expense.splitMode,
-            date: expense.date,
-            participantIds: expense.participantIds,
-            participantNames: expense.participantNames,
-            shares: updatedShares
-        )
+    private var unpaidShares: [TripPlannerExpenseShare] {
+        expense.shares.filter { !$0.isPaid }
     }
 
-    private func openVenmo(for share: TripPlannerExpenseShare) {
-        guard let recipient = expense.paidByUsername, !recipient.isEmpty else { return }
-        let note = "\(expense.title) - \(share.participantName)"
-        let encodedNote = note.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? note
-        let amount = String(format: "%.2f", share.amountOwed)
-        if let venmoURL = URL(string: "venmo://paycharge?txn=pay&recipients=\(recipient)&amount=\(amount)&note=\(encodedNote)") {
-            openURL(venmoURL)
+    private var unpaidSummary: String {
+        let names = unpaidShares.prefix(2).map { share in
+            share.participantName.split(separator: " ").first.map(String.init) ?? share.participantName
         }
+        if unpaidShares.isEmpty {
+            return String(localized: "trip_planner.expenses.settled_up")
+        }
+        if unpaidShares.count > 2 {
+            return "\(names.joined(separator: ", ")) +\(unpaidShares.count - 2) more"
+        }
+        return names.joined(separator: ", ")
     }
 
     private func currency(_ amount: Double) -> String {
@@ -6298,6 +6740,571 @@ private struct TripPlannerExpenseRow: View {
         formatter.currencyCode = "USD"
         formatter.locale = AppDisplayLocale.current
         return formatter.string(from: NSNumber(value: amount)) ?? "$\(AppNumberFormatting.integerString(Int(amount)))"
+    }
+}
+
+private struct TripPlannerExpenseInlineParticipantBadge: View {
+    let participant: TripPlannerExpenseParticipant
+
+    var body: some View {
+        HStack(spacing: 8) {
+            TripPlannerAvatarView(
+                name: participant.name,
+                username: participant.username ?? "",
+                avatarURL: participant.avatarURL,
+                size: 28
+            )
+
+            Text(participant.firstName)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(.black)
+
+            Image(systemName: "chevron.down")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(.black.opacity(0.48))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            Capsule()
+                .fill(Color.white.opacity(0.84))
+        )
+    }
+}
+
+private struct TripPlannerExpenseCategoryBreakdown: Identifiable {
+    let title: String
+    let tintColor: Color
+    let amount: Double
+    let percentage: Double
+
+    var id: String { title }
+}
+
+private struct TripPlannerExpenseCategoryBreakdownView: View {
+    let breakdown: [TripPlannerExpenseCategoryBreakdown]
+    let totalSpent: Double
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            GeometryReader { geometry in
+                HStack(spacing: 0) {
+                    ForEach(Array(breakdown.enumerated()), id: \.element.id) { index, item in
+                        item.tintColor
+                            .frame(
+                                width: segmentWidth(
+                                    for: item,
+                                    totalWidth: geometry.size.width,
+                                    index: index,
+                                    count: breakdown.count
+                                )
+                            )
+                    }
+                }
+            }
+            .frame(height: 14)
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(Color.black.opacity(0.08), lineWidth: 1)
+            )
+
+            VStack(spacing: 10) {
+                ForEach(breakdown) { item in
+                    HStack(spacing: 10) {
+                        Circle()
+                            .fill(item.tintColor)
+                            .frame(width: 8, height: 8)
+
+                        Text(item.title)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.black)
+
+                        Spacer()
+
+                        Text(percentText(item.percentage))
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(item.tintColor)
+
+                        Text(currency(item.amount))
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.black.opacity(0.58))
+                    }
+                }
+            }
+
+            Text("Total tracked: \(currency(totalSpent))")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.black.opacity(0.56))
+        }
+    }
+
+    private func percentText(_ value: Double) -> String {
+        "\(Int((value * 100).rounded()))%"
+    }
+
+    private func segmentWidth(
+        for item: TripPlannerExpenseCategoryBreakdown,
+        totalWidth: CGFloat,
+        index: Int,
+        count: Int
+    ) -> CGFloat {
+        if index == count - 1 {
+            let used = breakdown.prefix(index).reduce(CGFloat.zero) { partial, item in
+                partial + max(6, totalWidth * item.percentage)
+            }
+            return max(6, totalWidth - used)
+        }
+        return max(6, totalWidth * item.percentage)
+    }
+
+    private func currency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.locale = AppDisplayLocale.current
+        return formatter.string(from: NSNumber(value: amount)) ?? "$\(AppNumberFormatting.integerString(Int(amount)))"
+    }
+}
+
+private struct TripPlannerCustomExpenseCategoryPrompt: View {
+    let initialValue: String
+    let onCancel: () -> Void
+    let onSave: (String) -> Void
+
+    @State private var name: String
+
+    init(
+        initialValue: String,
+        onCancel: @escaping () -> Void,
+        onSave: @escaping (String) -> Void
+    ) {
+        self.initialValue = initialValue
+        self.onCancel = onCancel
+        self.onSave = onSave
+        _name = State(initialValue: initialValue)
+    }
+
+    private var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.22)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    onCancel()
+                }
+
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Custom category")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.black)
+
+                TextField("Type a category name", text: $name)
+                    .textInputAutocapitalization(.words)
+                    .font(.system(size: 15, weight: .semibold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white.opacity(0.9))
+                    )
+
+                HStack(spacing: 10) {
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.65))
+
+                    Spacer()
+
+                    Button("Save") {
+                        onSave(trimmedName)
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.black)
+                    .opacity(trimmedName.isEmpty ? 0.4 : 1)
+                    .disabled(trimmedName.isEmpty)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: 320)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color(red: 0.98, green: 0.95, blue: 0.88).opacity(0.98))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.18), radius: 24, y: 10)
+            .padding(.horizontal, 24)
+        }
+    }
+}
+
+private struct TripPlannerExpenseTitlePrompt: View {
+    let initialValue: String
+    let onCancel: () -> Void
+    let onSave: (String) -> Void
+
+    @State private var title: String
+
+    init(
+        initialValue: String,
+        onCancel: @escaping () -> Void,
+        onSave: @escaping (String) -> Void
+    ) {
+        self.initialValue = initialValue
+        self.onCancel = onCancel
+        self.onSave = onSave
+        _title = State(initialValue: initialValue)
+    }
+
+    private var trimmedTitle: String {
+        title.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.22)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    onCancel()
+                }
+
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Expense title")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.black)
+
+                TextField("Name this expense", text: $title)
+                    .textInputAutocapitalization(.words)
+                    .font(.system(size: 15, weight: .semibold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white.opacity(0.9))
+                    )
+
+                HStack(spacing: 10) {
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.65))
+
+                    Spacer()
+
+                    Button("Save") {
+                        onSave(trimmedTitle)
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.black)
+                    .opacity(trimmedTitle.isEmpty ? 0.4 : 1)
+                    .disabled(trimmedTitle.isEmpty)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: 320)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color(red: 0.98, green: 0.95, blue: 0.88).opacity(0.98))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.18), radius: 24, y: 10)
+            .padding(.horizontal, 24)
+        }
+    }
+}
+
+private struct TripPlannerExpenseDeleteConfirmationPrompt: View {
+    let onCancel: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.16)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    onCancel()
+                }
+
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Delete this expense?")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.black)
+
+                    Text("This will permanently remove it from the trip expenses.")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.black.opacity(0.66))
+                }
+
+                HStack(spacing: 10) {
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.65))
+
+                    Spacer()
+
+                    Button("Delete") {
+                        onDelete()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color(red: 0.72, green: 0.18, blue: 0.18))
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: 320)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color(red: 0.98, green: 0.95, blue: 0.88).opacity(0.98))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(Color.white.opacity(0.65), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.18), radius: 24, y: 10)
+            .padding(.horizontal, 24)
+        }
+    }
+}
+
+private struct TripPlannerExpenseParticipantGrid: View {
+    let participants: [TripPlannerExpenseParticipant]
+    let selectedIDs: Set<String>
+    let onToggle: (String) -> Void
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 8),
+        GridItem(.flexible(), spacing: 8)
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+            ForEach(participants) { participant in
+                Button {
+                    onToggle(participant.id)
+                } label: {
+                    HStack(spacing: 8) {
+                        TripPlannerAvatarView(
+                            name: participant.name,
+                            username: participant.username ?? "",
+                            avatarURL: participant.avatarURL,
+                            size: 26
+                        )
+
+                        Text(participant.firstName)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.black)
+                            .lineLimit(1)
+
+                        Spacer(minLength: 0)
+
+                        if selectedIDs.contains(participant.id) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(.black)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white.opacity(selectedIDs.contains(participant.id) ? 0.95 : 0.78))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(selectedIDs.contains(participant.id) ? Color.black.opacity(0.22) : Color.clear, lineWidth: 1.4)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+private struct TripPlannerExpenseShareEditorRow: View {
+    let share: TripPlannerExpenseShare
+    let participant: TripPlannerExpenseParticipant?
+    let onUpdate: (Bool) -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            if let participant {
+                TripPlannerAvatarView(
+                    name: participant.name,
+                    username: participant.username ?? "",
+                    avatarURL: participant.avatarURL,
+                    size: 34
+                )
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(participant?.firstName ?? share.participantName)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(share.isPaid ? Color(red: 0.14, green: 0.47, blue: 0.25) : .black)
+
+                Text(currency(share.amountOwed))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(share.isPaid ? Color(red: 0.14, green: 0.47, blue: 0.25).opacity(0.78) : .black.opacity(0.64))
+            }
+
+            Spacer()
+
+            TripPlannerExpensePaidStatusControl(
+                isPaid: share.isPaid,
+                onChange: onUpdate
+            )
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(share.isPaid ? Color(red: 0.90, green: 0.97, blue: 0.90) : Color.white.opacity(0.74))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(share.isPaid ? Color(red: 0.12, green: 0.50, blue: 0.25).opacity(0.18) : Color.clear, lineWidth: 1)
+        )
+    }
+
+    private func currency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.locale = AppDisplayLocale.current
+        return formatter.string(from: NSNumber(value: amount)) ?? "$\(AppNumberFormatting.integerString(Int(amount)))"
+    }
+}
+
+private struct TripPlannerExpensePaidStatusControl: View {
+    let isPaid: Bool
+    let onChange: (Bool) -> Void
+
+    var body: some View {
+        GeometryReader { geometry in
+            let inset: CGFloat = 3
+            let thumbWidth = max((geometry.size.width - (inset * 2)) / 2, 0)
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.black.opacity(0.045))
+
+                Capsule()
+                    .fill(isPaid ? Color(red: 0.84, green: 0.95, blue: 0.88) : Color.white.opacity(0.96))
+                    .overlay(
+                        Capsule()
+                            .stroke(isPaid ? Color(red: 0.25, green: 0.63, blue: 0.40).opacity(0.16) : Color.black.opacity(0.05), lineWidth: 0.8)
+                    )
+                    .shadow(color: .black.opacity(0.08), radius: 8, y: 2)
+                    .frame(width: thumbWidth, height: geometry.size.height - (inset * 2))
+                    .offset(x: isPaid ? thumbWidth : 0)
+                    .padding(inset)
+
+                HStack(spacing: 0) {
+                    optionButton(
+                        title: String(localized: "trip_planner.expenses.not_paid"),
+                        isActive: !isPaid,
+                        activeColor: Color(red: 0.63, green: 0.18, blue: 0.18),
+                        action: { onChange(false) }
+                    )
+
+                    optionButton(
+                        title: String(localized: "trip_planner.expenses.paid"),
+                        isActive: isPaid,
+                        activeColor: Color(red: 0.17, green: 0.52, blue: 0.28),
+                        action: { onChange(true) }
+                    )
+                }
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+        }
+        .frame(width: 152, height: 38)
+        .overlay(
+            Capsule()
+                .stroke(Color.white.opacity(0.58), lineWidth: 0.8)
+        )
+        .animation(.interactiveSpring(response: 0.28, dampingFraction: 0.82, blendDuration: 0.14), value: isPaid)
+    }
+
+    private func optionButton(
+        title: String,
+        isActive: Bool,
+        activeColor: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(isActive ? activeColor : .black.opacity(0.46))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private extension TripPlannerExpense {
+    var isSettled: Bool {
+        shares.allSatisfy(\.isPaid)
+    }
+
+    var categoryDisplayTitle: String {
+        let trimmedCustom = customCategoryName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if category == .other, !trimmedCustom.isEmpty {
+            return trimmedCustom
+        }
+        return category.title
+    }
+
+    var categoryTintColor: Color {
+        if category == .other,
+           let customCategoryName,
+           !customCategoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return Self.customCategoryColor(for: customCategoryName)
+        }
+        return category.tintColor
+    }
+
+    var categoryBackgroundTint: Color {
+        categoryTintColor.opacity(0.14)
+    }
+
+    private static func customCategoryColor(for name: String) -> Color {
+        let palette: [Color] = [
+            Color(red: 0.20, green: 0.47, blue: 0.62),
+            Color(red: 0.22, green: 0.54, blue: 0.38),
+            Color(red: 0.78, green: 0.36, blue: 0.24),
+            Color(red: 0.71, green: 0.45, blue: 0.22),
+            Color(red: 0.54, green: 0.33, blue: 0.64),
+            Color(red: 0.76, green: 0.30, blue: 0.46),
+            Color(red: 0.28, green: 0.57, blue: 0.56),
+            Color(red: 0.55, green: 0.41, blue: 0.25)
+        ]
+
+        let normalized = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let scalarTotal = normalized.unicodeScalars.reduce(0) { partialResult, scalar in
+            partialResult + Int(scalar.value)
+        }
+
+        return palette[abs(scalarTotal) % palette.count]
     }
 }
 
@@ -7942,8 +8949,10 @@ private struct TripPlannerSavedTripCard: View {
                     }
 
                     Text(trip.title)
-                        .font(.system(size: 19, weight: .bold))
+                        .font(.system(size: 24, weight: .black, design: .rounded))
                         .foregroundStyle(.black)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
 
                     Text(trip.isGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip"))
                         .font(.caption.weight(.semibold))
@@ -7968,14 +8977,8 @@ private struct TripPlannerSavedTripCard: View {
                     .foregroundStyle(.black.opacity(0.8))
             }
 
-            if !trip.notes.isEmpty {
-                Text(trip.notes)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.black.opacity(0.74))
-            }
-
             if !travelerChips.isEmpty {
-                HStack(alignment: .top, spacing: 14) {
+                HStack(alignment: .center, spacing: 14) {
                     TripPlannerAvatarStack(travelers: travelerChips)
                     TripPlannerTravelerNameList(travelers: travelerChips)
                 }
@@ -7987,6 +8990,12 @@ private struct TripPlannerSavedTripCard: View {
                 },
                 onTap: { _ in }
             )
+
+            if !trip.notes.isEmpty {
+                Text(trip.notes)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.black.opacity(0.74))
+            }
 
             if trip.startDate != nil, trip.endDate != nil {
                 Button {
@@ -8503,14 +9512,25 @@ private struct TripPlannerAvatarStack: View {
 private struct TripPlannerTravelerNameList: View {
     let travelers: [TripPlannerTravelerChip]
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ForEach(travelers) { traveler in
-                Text(traveler.name)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.black.opacity(0.78))
-                    .lineLimit(1)
+    private var firstNamesText: String {
+        travelers
+            .map { traveler in
+                let trimmed = traveler.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return traveler.username }
+                return trimmed.split(separator: " ").first.map(String.init) ?? trimmed
             }
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .joined(separator: ", ")
+    }
+
+    var body: some View {
+        if !firstNamesText.isEmpty {
+            Text(firstNamesText)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.black.opacity(0.82))
+                .lineLimit(1)
+                .multilineTextAlignment(.leading)
+                .frame(maxHeight: .infinity, alignment: .center)
         }
     }
 }

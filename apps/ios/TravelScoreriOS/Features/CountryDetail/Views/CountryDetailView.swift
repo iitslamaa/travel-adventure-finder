@@ -158,6 +158,15 @@ struct CountryDetailView: View {
             country = fetched
         }
     }
+
+    @MainActor
+    private func refreshVisaPresentation() async {
+        country = await visaStore.hydrate(
+            country: country,
+            passportCountryCodes: profileVM.passportNationalities,
+            fallbackPassportCountryCode: passportFallbackCountryCode
+        )
+    }
     
     var body: some View {
         Group {
@@ -324,13 +333,14 @@ struct CountryDetailView: View {
             async let languageProfileRefresh: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
 
             _ = await countryRefresh
-            country = await visaStore.hydrate(
-                country: country,
-                passportCountryCodes: profileVM.passportNationalities,
-                fallbackPassportCountryCode: passportFallbackCountryCode
-            )
+            await refreshVisaPresentation()
             countryLanguageProfile = await languageProfileRefresh
             isPreparingContent = false
+        }
+        .onChange(of: profileVM.passportPreferences) { _, _ in
+            Task {
+                await refreshVisaPresentation()
+            }
         }
         .fullScreenCover(item: $activeSheet) { sheet in
             switch sheet {
