@@ -104,10 +104,7 @@ struct ProfileView: View {
     }
 
     private var firstName: String? {
-        let raw = (profileVM.profile?.fullName ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !raw.isEmpty else { return nil }
-        return raw.split(separator: " ").first.map(String.init)
+        profileVM.profile?.firstName
     }
 
     private var navigationTitle: String {

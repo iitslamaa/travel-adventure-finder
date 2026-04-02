@@ -107,6 +107,16 @@ struct WorldMapView: UIViewRepresentable {
             self._selectedCountryISO = selectedCountryISO
         }
 
+        private func isTinyCountry(_ polygon: CountryPolygon) -> Bool {
+            let worldRect = MKMapRect.world
+            let widthRatio = polygon.boundingMapRect.size.width / worldRect.size.width
+            let heightRatio = polygon.boundingMapRect.size.height / worldRect.size.height
+            let areaRatio = polygon.boundingMapRect.size.width * polygon.boundingMapRect.size.height
+                / (worldRect.size.width * worldRect.size.height)
+
+            return max(widthRatio, heightRatio) < 0.012 || areaRatio < 0.000015
+        }
+
         // 🔥 ONLY set selection here. DO NOT zoom.
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             guard let mapView = mapView else { return }
@@ -161,16 +171,17 @@ struct WorldMapView: UIViewRepresentable {
             let isHighlighted = geoISO != nil &&
                 highlightedCountryCodes.contains(geoISO!)
             let isSelected = geoISO == selectedCountryISO?.uppercased()
+            let isTiny = isTinyCountry(multi)
 
             renderer.fillColor = isHighlighted
-                ? UIColor.systemYellow.withAlphaComponent(isSelected ? 0.85 : 0.6)
-                : UIColor.systemGray.withAlphaComponent(0.2)
+                ? UIColor.systemYellow.withAlphaComponent(isSelected ? (isTiny ? 0.95 : 0.85) : (isTiny ? 0.78 : 0.6))
+                : UIColor.systemGray.withAlphaComponent(isTiny ? 0.28 : 0.2)
 
             renderer.strokeColor = isSelected
                 ? UIColor.systemYellow
-                : UIColor.black.withAlphaComponent(0.2)
+                : UIColor.black.withAlphaComponent(isTiny ? 0.08 : 0.2)
 
-            renderer.lineWidth = isSelected ? 2.5 : 0.5
+            renderer.lineWidth = isSelected ? (isTiny ? 1.0 : 2.5) : (isTiny ? 0.15 : 0.5)
 
             return renderer
         }

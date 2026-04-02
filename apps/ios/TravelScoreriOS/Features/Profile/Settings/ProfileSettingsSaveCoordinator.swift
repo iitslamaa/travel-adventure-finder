@@ -16,6 +16,7 @@ struct ProfileSettingsSaveCoordinator {
     static func handleSave(
         profileVM: ProfileViewModel,
         firstName: String,
+        lastName: String,
         username: String,
         homeCountries: Set<String>,
         passportNationalities: Set<String>,
@@ -43,6 +44,7 @@ struct ProfileSettingsSaveCoordinator {
         )
 
         let trimmedName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedLastName = lastName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
 
         do {
@@ -50,6 +52,7 @@ struct ProfileSettingsSaveCoordinator {
 
             try await profileVM.saveProfile(
                 firstName: trimmedName,
+                lastName: trimmedLastName,
                 username: trimmedUsername,
                 homeCountries: Array(homeCountries).sorted(),
                 passportNationalities: Array(passportNationalities).sorted(),
@@ -75,18 +78,13 @@ struct ProfileSettingsSaveCoordinator {
         } catch {
             setSaving(false)
 
-            print("❌ SAVE FAILED — raw error:", error)
-
             let errorString = "\(error)"
-            print("❌ SAVE FAILED — errorString:", errorString)
 
             if errorString.contains("23505") ||
                errorString.localizedCaseInsensitiveContains("duplicate key") {
-                print("⚠️ Username duplicate detected")
                 return .usernameTaken
             }
 
-            print("⚠️ SAVE FAILURE returning localizedDescription:", error.localizedDescription)
             return .failure(error.localizedDescription)
         }
     }

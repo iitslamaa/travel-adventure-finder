@@ -15,31 +15,24 @@ struct TravelScoreriOSApp: App {
     private func forceTransparentRootBackgrounds() {
         // Run twice to ensure the UIHostingController + UITabBarController stack exists.
         func clearBackgrounds() {
-            print("🧪 DEBUG: clearBackgrounds() invoked")
             let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
             let windows = scenes.flatMap { $0.windows }
 
             for window in windows {
-                print("🧪 DEBUG: Inspecting window: \(window)")
                 window.isOpaque = false
                 window.backgroundColor = .clear
 
                 if let root = window.rootViewController {
-                    print("🧪 DEBUG: Root VC: \(type(of: root))")
-                    print("🧪 DEBUG: Root VC view frame: \(root.view.frame)")
                     root.view.isOpaque = false
                     root.view.backgroundColor = .clear
 
                     // Walk child controllers because TabView inserts UITabBarController
                     for child in root.children {
-                        print("🧪 DEBUG: Child VC detected: \(type(of: child))")
                         child.view.isOpaque = false
                         child.view.backgroundColor = .clear
                     }
                 }
             }
-
-            print("🧪 DEBUG: Forced transparent UIWindow/root VC backgrounds. windowCount=\(windows.count)")
         }
 
         // First pass (next run loop)
@@ -59,11 +52,6 @@ struct TravelScoreriOSApp: App {
     @StateObject private var scoreWeightsStore: ScoreWeightsStore
 
     init() {
-        print("🧪 DEBUG: TravelScoreriOSApp.init() called")
-        print("🧪 DEBUG: UIApplication state: \(UIApplication.shared.applicationState.rawValue)")
-        print("🧪 DEBUG: Connected scenes: \(UIApplication.shared.connectedScenes.count)")
-        
-
         let bucket = BucketListStore()
         let traveled = TraveledStore()
         let weights = ScoreWeightsStore()
@@ -87,9 +75,6 @@ struct TravelScoreriOSApp: App {
         config.dataCache = dataCache
 
         ImagePipeline.shared = ImagePipeline(configuration: config)
-        print("🧪 DEBUG: Nuke pipeline configured")
-        print("🧪 DEBUG: ImagePipeline.shared configured: \(ImagePipeline.shared)")
-        // 🧪 DEBUG: Force UIKit chrome (TabBar / NavBar / List) to be transparent
         let tabBarAppearance = UITabBarAppearance()
         tabBarAppearance.configureWithTransparentBackground()
         UITabBar.appearance().standardAppearance = tabBarAppearance
@@ -107,31 +92,16 @@ struct TravelScoreriOSApp: App {
 
         UITableView.appearance().backgroundColor = .clear
         UICollectionView.appearance().backgroundColor = .clear
-
-        print("🧪 DEBUG: UIKit appearances forced transparent")
     }
 
     var body: some Scene {
-        let _ = print("🧪 DEBUG: TravelScoreriOSApp.body evaluated")
-        let _ = print("🧪 DEBUG: Current scenes: \(UIApplication.shared.connectedScenes)")
         WindowGroup {
-            let _ = print("🧪 DEBUG: WindowGroup rendering root UI")
             AppRootView()
                 .environmentObject(sessionManager)
                 .environmentObject(bucketListStore)
                 .environmentObject(traveledStore)
                 .environmentObject(scoreWeightsStore)
                 .preferredColorScheme(.light)
-            .task {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    print("🧪 DEBUG: Active windows count: \(UIApplication.shared.windows.count)")
-                    print("🧪 DEBUG: Connected scenes: \(UIApplication.shared.connectedScenes.count)")
-
-                    if let window = UIApplication.shared.windows.first {
-                        print("🧪 WINDOW GESTURES:", window.gestureRecognizers ?? [])
-                    }
-                }
-            }
         }
     }
 }

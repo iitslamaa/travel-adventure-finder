@@ -30,6 +30,14 @@ struct CountryDetailView: View {
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
 
+    private var passportFallbackCountryCode: String {
+        profileVM.effectivePassportCountryCode?.nilIfBlank ?? "US"
+    }
+
+    private var shouldPromptForPassportSetup: Bool {
+        sessionManager.isAuthenticated && profileVM.passportNationalities.isEmpty
+    }
+
     private var displayedCountry: Country {
         country.applyingOverallScore(using: weightsStore.weights, selectedMonth: weightsStore.selectedMonth)
     }
@@ -85,6 +93,10 @@ struct CountryDetailView: View {
 
         if let effectivePassportCode = profileVM.effectivePassportCountryCode?.nilIfBlank {
             return [CountrySelectionFormatter.localizedName(for: effectivePassportCode)]
+        }
+
+        if shouldPromptForPassportSetup {
+            return [CountrySelectionFormatter.localizedName(for: passportFallbackCountryCode)]
         }
 
         if let activePassportLabel = visaStore.activePassportLabel?.nilIfBlank {
@@ -145,6 +157,15 @@ struct CountryDetailView: View {
             .first(where: { $0.iso2.uppercased() == iso2 }) {
             country = fetched
         }
+    }
+
+    @MainActor
+    private func refreshVisaPresentation() async {
+        country = await visaStore.hydrate(
+            country: country,
+            passportCountryCodes: profileVM.passportNationalities,
+            fallbackPassportCountryCode: passportFallbackCountryCode
+        )
     }
     
     var body: some View {
@@ -212,7 +233,12 @@ struct CountryDetailView: View {
                                         passportLabel: visaPassportLabel,
                                         recommendedPassportLabel: recommendedPassportLabel,
                                         equalBestPassportLabels: equalBestPassportLabels,
-                                        showPassportRecommendation: shouldShowPassportRecommendation
+                                        showPassportRecommendation: shouldShowPassportRecommendation,
+                                        showsPassportSetupPrompt: shouldPromptForPassportSetup,
+                                        onOpenPassportSettings: {
+                                            guard let userId = sessionManager.userId else { return }
+                                            activeSheet = .passportSettings(userId)
+                                        }
                                     )
                                 }
 
@@ -307,13 +333,14 @@ struct CountryDetailView: View {
             async let languageProfileRefresh: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
 
             _ = await countryRefresh
-            country = await visaStore.hydrate(
-                country: country,
-                passportCountryCodes: profileVM.passportNationalities,
-                fallbackPassportCountryCode: profileVM.effectivePassportCountryCode
-            )
+            await refreshVisaPresentation()
             countryLanguageProfile = await languageProfileRefresh
             isPreparingContent = false
+        }
+        .onChange(of: profileVM.passportPreferences) { _, _ in
+            Task {
+                await refreshVisaPresentation()
+            }
         }
         .fullScreenCover(item: $activeSheet) { sheet in
             switch sheet {
@@ -324,6 +351,8 @@ struct CountryDetailView: View {
                 )
             case .profile(let userId):
                 CountryFriendProfileSheet(userId: userId)
+            case .passportSettings(let userId):
+                CountryPassportSettingsSheet(userId: userId, profileVM: profileVM)
             }
         }
     }
@@ -378,6 +407,7 @@ private extension String {
 private enum CountryDetailSheet: Identifiable {
     case engagement
     case profile(UUID)
+    case passportSettings(UUID)
 
     var id: String {
         switch self {
@@ -385,6 +415,8 @@ private enum CountryDetailSheet: Identifiable {
             return "engagement"
         case .profile(let userId):
             return "profile-\(userId.uuidString)"
+        case .passportSettings(let userId):
+            return "passport-settings-\(userId.uuidString)"
         }
     }
 }
@@ -874,6 +906,20 @@ private struct CountryFriendProfileSheet: View {
     }
 }
 
+private struct CountryPassportSettingsSheet: View {
+    let userId: UUID
+    @ObservedObject var profileVM: ProfileViewModel
+
+    var body: some View {
+        NavigationStack {
+            ProfileSettingsView(
+                profileVM: profileVM,
+                viewedUserId: userId
+            )
+        }
+    }
+}
+
 private struct CountryFriendEngagementSheet: View {
     let country: Country
     let engagement: CountryFriendEngagement
@@ -1067,25 +1113,20 @@ private enum CountryLanguageCompatibilityScorer {
 
         let normalizedUserLanguages = userLanguages.map { language in
             ScoredUserLanguage(
-                code: LanguageRepository.shared.canonicalLanguageCode(for: language.code)
-                    ?? language.code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                codes: LanguageRepository.shared.compatibilityLanguageCodes(for: language.code),
                 proficiency: LanguageProficiency(storageValue: language.proficiency)
             )
         }
 
-        let userLanguageByCode = Dictionary(
-            uniqueKeysWithValues: normalizedUserLanguages.map { ($0.code, $0) }
-        )
-
         let exactMatches = countryProfile.languages.compactMap { countryLanguage -> ExactLanguageMatch? in
-            let normalizedCode = countryLanguage.code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let normalizedCodes = LanguageRepository.shared.compatibilityLanguageCodes(for: countryLanguage.code)
 
-            guard let userLanguage = userLanguageByCode[normalizedCode] else {
+            guard let userLanguage = normalizedUserLanguages.first(where: { !$0.codes.isDisjoint(with: normalizedCodes) }) else {
                 return nil
             }
 
             return ExactLanguageMatch(
-                code: normalizedCode,
+                code: countryLanguage.code.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
                 type: countryLanguage.type,
                 coverage: countryLanguage.coverage,
                 proficiency: userLanguage.proficiency,
@@ -1181,7 +1222,7 @@ private enum CountryLanguageCompatibilityScorer {
     }
 
     private struct ScoredUserLanguage {
-        let code: String
+        let codes: Set<String>
         let proficiency: LanguageProficiency
     }
 

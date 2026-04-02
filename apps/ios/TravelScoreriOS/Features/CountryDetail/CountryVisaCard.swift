@@ -15,6 +15,8 @@ struct CountryVisaCard: View {
     let recommendedPassportLabel: String?
     let equalBestPassportLabels: [String]
     let showPassportRecommendation: Bool
+    let showsPassportSetupPrompt: Bool
+    let onOpenPassportSettings: () -> Void
 
     private var equalBestPassportText: String? {
         guard recommendedPassportLabel == nil else { return nil }
@@ -116,6 +118,41 @@ struct CountryVisaCard: View {
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+                }
+
+                if showsPassportSetupPrompt {
+                    Button(action: onOpenPassportSettings) {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "person.text.rectangle")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(.black.opacity(0.78))
+                                .padding(.top, 2)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Using a U.S. passport for now")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(.black)
+
+                                Text("Add your passports in Profile Settings for more accurate visa guidance.")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(.black.opacity(0.68))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+
+                            Spacer(minLength: 8)
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(.black.opacity(0.5))
+                                .padding(.top, 4)
+                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(Color.black.opacity(0.05))
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 // Details rows

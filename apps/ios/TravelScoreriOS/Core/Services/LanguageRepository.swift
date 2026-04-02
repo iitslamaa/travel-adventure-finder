@@ -185,6 +185,15 @@ final class LanguageRepository {
         "fa": "Persian (Farsi)"
     ]
 
+    private static let compatibilityParentByTravelCode: [String: String] = [
+        "acm": "ar",
+        "aeb": "ar",
+        "arb": "ar",
+        "ars": "ar",
+        "ary": "ar",
+        "arz": "ar"
+    ]
+
     private static let searchAliasesByTravelCode: [String: [String]] = [
         "fa": ["farsi", "iran", "iranian", "iranian persian"]
     ]
@@ -285,6 +294,34 @@ final class LanguageRepository {
             ?? language.travelLanguageCode
 
         return Self.preferredDisplayNamesByTravelCode[travelCode] ?? language.displayName
+    }
+
+    func compatibilityLanguageCodes(for rawValue: String) -> Set<String> {
+        let normalized = normalizeLookupKey(rawValue)
+        guard !normalized.isEmpty else { return [] }
+
+        var codes = Set([normalized])
+
+        if let language = resolveLanguage(for: rawValue) {
+            let languageCode = normalizeLookupKey(language.code)
+            let travelCode = normalizeLookupKey(language.travelLanguageCode)
+            let canonicalTravelCode = normalizeLookupKey(canonicalLanguageCode(for: language.travelLanguageCode) ?? language.travelLanguageCode)
+
+            codes.formUnion([languageCode, travelCode, canonicalTravelCode])
+
+            if let parent = Self.compatibilityParentByTravelCode[canonicalTravelCode] {
+                codes.insert(parent)
+            }
+            if let parent = Self.compatibilityParentByTravelCode[travelCode] {
+                codes.insert(parent)
+            }
+        }
+
+        if let parent = Self.compatibilityParentByTravelCode[normalized] {
+            codes.insert(parent)
+        }
+
+        return codes
     }
 
     func resolveLanguage(for rawValue: String) -> AppLanguage? {

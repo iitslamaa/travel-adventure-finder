@@ -11,6 +11,7 @@ import SwiftUI
 struct ProfileSettingsAccountSection: View {
 
     @Binding var firstName: String
+    @Binding var lastName: String
     @Binding var username: String
 
     var body: some View {
@@ -19,11 +20,23 @@ struct ProfileSettingsAccountSection: View {
                 "",
                 text: $firstName,
                 prompt:
-                    (Text("profile.settings.full_name")
+                    (Text("First name")
                         .foregroundStyle(.secondary)
                      +
                      Text(" *")
                         .foregroundStyle(.red))
+            )
+            .padding(12)
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .foregroundStyle(.primary)
+            .tint(.primary)
+
+            TextField(
+                "",
+                text: $lastName,
+                prompt: Text("Last name")
+                    .foregroundStyle(.secondary)
             )
             .padding(12)
             .background(.regularMaterial)

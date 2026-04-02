@@ -60,7 +60,7 @@ struct ProfileHeaderView: View {
 
                 VStack(alignment: .center, spacing: 6) {
 
-                    Text(profile?.fullName ?? "")
+                    Text(profile?.formattedFullName ?? "")
                         .font(.title2)
                         .fontWeight(.semibold)
                         .foregroundColor(.black)

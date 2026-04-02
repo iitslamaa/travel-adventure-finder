@@ -38,6 +38,12 @@ struct CountryMultiSelectView: View {
             }
             .sorted { $0.1 < $1.1 }
 
+    private var selectedCountries: [(code: String, name: String)] {
+        countries
+            .filter { selection.contains($0.code) && !excludedCodes.contains($0.code.uppercased()) }
+            .sorted { $0.name < $1.name }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 12) {
@@ -66,6 +72,28 @@ struct CountryMultiSelectView: View {
                 .padding(.horizontal, 16)
 
                 List {
+                    if !selectedCountries.isEmpty {
+                        Section("Selected") {
+                            ForEach(selectedCountries, id: \.code) { country in
+                                Button {
+                                    toggleSelection(country.code)
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Text(countryCodeToFlag(country.code))
+                                            .font(.title3)
+
+                                        Text(country.name)
+
+                                        Spacer()
+
+                                        Image(systemName: "checkmark")
+                                    }
+                                    .padding(.vertical, 8)
+                                }
+                            }
+                        }
+                    }
+
                     ForEach(filteredCountries, id: \.code) { country in
                         Button {
                             toggleSelection(country.code)
@@ -112,10 +140,11 @@ struct CountryMultiSelectView: View {
 
     private var filteredCountries: [(code: String, name: String)] {
         let visibleCountries = countries.filter { !excludedCodes.contains($0.code.uppercased()) }
+        let unselectedCountries = visibleCountries.filter { !selection.contains($0.code) }
 
-        guard !searchText.isEmpty else { return visibleCountries }
+        guard !searchText.isEmpty else { return unselectedCountries }
         let normalizedSearch = searchText.normalizedSearchKey
-        return visibleCountries.filter {
+        return unselectedCountries.filter {
             $0.name.normalizedSearchKey.contains(normalizedSearch)
         }
     }

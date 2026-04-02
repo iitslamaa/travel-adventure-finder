@@ -18,6 +18,7 @@ struct ProfileSettingsView: View {
     // MARK: - Draft state (UI only)
 
     @State private var firstName: String = ""
+    @State private var lastName: String = ""
     @State private var username: String = ""
 
     @State private var homeCountries: Set<String> = []
@@ -78,7 +79,8 @@ struct ProfileSettingsView: View {
         guard hasLoadedProfile else { return false }
         guard let profile = profileVM.profile else { return false }
 
-        let originalFirstName = profile.fullName
+        let originalFirstName = profile.firstName ?? ""
+        let originalLastName = profile.lastName ?? ""
         let originalUsername = profile.username
         let originalHomeCountries = Set(profile.livedCountries)
         let originalTravelMode = profile.travelMode.first.flatMap { TravelMode(rawValue: $0) }
@@ -94,6 +96,7 @@ struct ProfileSettingsView: View {
         let avatarChanged = shouldRemoveAvatar || selectedUIImage != nil
 
         return firstName != originalFirstName
+            || lastName != originalLastName
             || username != originalUsername
             || homeCountries != originalHomeCountries
             || travelMode != originalTravelMode
@@ -135,7 +138,8 @@ struct ProfileSettingsView: View {
                         hasLoadedProfile = true
 
                         if let profile = profileVM.profile {
-                            firstName = profile.fullName
+                            firstName = profile.firstName ?? profile.tripDisplayName
+                            lastName = profile.lastName ?? ""
                             username = profile.username
 
                             homeCountries = Set(profile.livedCountries)
@@ -182,6 +186,7 @@ struct ProfileSettingsView: View {
                         let result = await ProfileSettingsSaveCoordinator.handleSave(
                             profileVM: profileVM,
                             firstName: firstName,
+                            lastName: lastName,
                             username: username,
                             homeCountries: homeCountries,
                             passportNationalities: passportNationalities,
@@ -278,7 +283,7 @@ struct ProfileSettingsView: View {
                 )
 
             case .addLanguage:
-                AddLanguageView { entry in
+                AddLanguageView(selectedLanguages: languages) { entry in
                     if !languages.contains(where: { $0.name == entry.name }) {
                         languages.append(entry)
                     }
@@ -340,6 +345,7 @@ struct ProfileSettingsView: View {
         SettingsScrollContent(
             profileVM: profileVM,
             firstName: $firstName,
+            lastName: $lastName,
             username: $username,
             homeCountries: $homeCountries,
             currentCountry: $currentCountry,
@@ -464,6 +470,7 @@ struct SettingsScrollContent: View {
     @State private var isDeletingAccount = false
 
     @Binding var firstName: String
+    @Binding var lastName: String
     @Binding var username: String
     @Binding var homeCountries: Set<String>
     @Binding var currentCountry: String?
@@ -499,7 +506,7 @@ struct SettingsScrollContent: View {
                 Theme.titleBanner(String(localized: "profile.settings.title"))
 
                 SectionCard {
-                    HStack(alignment: .top, spacing: 20) {
+                    HStack(alignment: .center, spacing: 20) {
 
                         ProfileSettingsAvatarSection(
                             selectedUIImage: $selectedUIImage,
@@ -510,7 +517,6 @@ struct SettingsScrollContent: View {
                             onRemoveAvatar: onRemoveAvatar
                         )
                         .frame(width: 96)
-                        .padding(.top, 4)
 
                         VStack(alignment: .leading, spacing: 12) {
 
@@ -518,13 +524,29 @@ struct SettingsScrollContent: View {
                                 "",
                                 text: $firstName,
                                 prompt:
-                                    (Text("profile.settings.full_name")
+                                    (Text("First name")
                                         .foregroundStyle(.secondary)
                                      +
                                      Text(" *")
                                         .foregroundStyle(.red))
                             )
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(size: 16))
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 12)
+                            .background(Color.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                            TextField(
+                                "",
+                                text: $lastName,
+                                prompt: Text("Last name")
+                                    .foregroundStyle(.secondary)
+                            )
+                            .font(.system(size: 16))
                             .padding(.vertical, 10)
                             .padding(.horizontal, 12)
                             .background(Color.white)
@@ -615,6 +637,7 @@ struct SettingsScrollContent: View {
                                     .fontWeight(.semibold)
                                 Spacer()
                             }
+                            .foregroundStyle(.red)
                             .padding(.vertical, 8)
                         }
                         .disabled(isLoggingOut)
@@ -630,6 +653,7 @@ struct SettingsScrollContent: View {
                                     .fontWeight(.semibold)
                                 Spacer()
                             }
+                            .foregroundStyle(.red)
                             .padding(.vertical, 8)
                         }
                         .disabled(isDeletingAccount)

@@ -89,7 +89,7 @@ final class FriendsViewModel: ObservableObject {
                 .single()
                 .execute()
 
-            displayName = response.value.fullName
+            displayName = response.value.displayName
         } catch {
             if (error as? URLError)?.code == .cancelled || Task.isCancelled {
                 return
