@@ -16,6 +16,7 @@ extension ProfileViewModel {
 
     func saveProfile(
         firstName: String,
+        lastName: String,
         username: String,
         homeCountries: [String]?,
         passportNationalities: [String],
@@ -31,8 +32,12 @@ extension ProfileViewModel {
         let userId = self.userId
         errorMessage = nil
         
-        let trimmedName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedFirstName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedLastName = lastName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let combinedName = [trimmedFirstName, trimmedLastName]
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
 
         let normalizedCurrentCountry: String? = {
             guard let currentCountry,
@@ -60,7 +65,7 @@ extension ProfileViewModel {
                 : normalizedPassportNationalities.first
         }()
 
-        guard !trimmedName.isEmpty, !trimmedUsername.isEmpty else {
+        guard !trimmedFirstName.isEmpty, !trimmedUsername.isEmpty else {
             throw NSError(
                 domain: "ProfileValidation",
                 code: 1,
@@ -70,7 +75,9 @@ extension ProfileViewModel {
         
         let payload = ProfileUpdate(
             username: trimmedUsername,
-            fullName: trimmedName,
+            fullName: combinedName,
+            firstName: trimmedFirstName,
+            lastName: trimmedLastName.isEmpty ? nil : trimmedLastName,
             avatarUrl: avatarUrl,
             languages: languages,
             livedCountries: homeCountries,
@@ -96,7 +103,9 @@ extension ProfileViewModel {
         // 🔥 META GOLD STANDARD: deterministic local state merge (no immediate refetch)
         if var current = profile {
             current.username = trimmedUsername
-            current.fullName = trimmedName
+            current.firstName = trimmedFirstName
+            current.lastName = trimmedLastName.isEmpty ? nil : trimmedLastName
+            current.fullName = combinedName
             current.livedCountries = homeCountries ?? current.livedCountries
             if let languages {
                 current.languages = languages.compactMap { dict in

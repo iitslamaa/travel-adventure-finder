@@ -16,6 +16,7 @@ struct ProfileSettingsSaveCoordinator {
     static func handleSave(
         profileVM: ProfileViewModel,
         firstName: String,
+        lastName: String,
         username: String,
         homeCountries: Set<String>,
         passportNationalities: Set<String>,
@@ -43,6 +44,7 @@ struct ProfileSettingsSaveCoordinator {
         )
 
         let trimmedName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedLastName = lastName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
 
         do {
@@ -50,6 +52,7 @@ struct ProfileSettingsSaveCoordinator {
 
             try await profileVM.saveProfile(
                 firstName: trimmedName,
+                lastName: trimmedLastName,
                 username: trimmedUsername,
                 homeCountries: Array(homeCountries).sorted(),
                 passportNationalities: Array(passportNationalities).sorted(),

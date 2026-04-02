@@ -1909,12 +1909,16 @@ private struct TripPlannerCalendarDraft: Identifiable {
 }
 
 struct TripPlannerView: View {
+    @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var sharedTripInbox: SharedTripInboxStore
     @StateObject private var store = TripPlannerStore()
     @State private var calendarDraft: TripPlannerCalendarDraft?
     @State private var calendarError: String?
     @State private var pendingDeleteTrip: TripPlannerTrip?
     @State private var pendingDeleteChoice: TripPlannerDeleteChoice?
+    @State private var currentUserSnapshot: TripPlannerFriendSnapshot?
+
+    private let profileService = ProfileService(supabase: SupabaseManager.shared)
 
     private var pendingSharedTripIDs: Set<UUID> {
         Set(sharedTripInbox.notifications.map { $0.trip.id })
@@ -1963,6 +1967,7 @@ struct TripPlannerView: View {
                                         TripPlannerSavedTripCard(
                                             trip: trip,
                                             isNewSharedTrip: pendingSharedTripIDs.contains(trip.id),
+                                            currentUserSnapshot: currentUserSnapshot,
                                             onDelete: {
                                                 pendingDeleteTrip = trip
                                             },
@@ -1985,6 +1990,7 @@ struct TripPlannerView: View {
                 .scrollIndicators(.hidden)
                 .refreshable {
                     await store.refresh()
+                    await loadCurrentUserSnapshot()
                 }
             }
         }
@@ -2078,6 +2084,34 @@ struct TripPlannerView: View {
         }
         .task {
             await sharedTripInbox.refresh()
+            await loadCurrentUserSnapshot()
+        }
+    }
+
+    @MainActor
+    private func loadCurrentUserSnapshot() async {
+        guard let userId = sessionManager.userId else {
+            currentUserSnapshot = nil
+            return
+        }
+
+        if let cachedProfile = profileService.cachedProfile(userId: userId) {
+            currentUserSnapshot = TripPlannerFriendSnapshot(
+                id: cachedProfile.id,
+                displayName: cachedProfile.tripDisplayName,
+                username: cachedProfile.username,
+                avatarURL: cachedProfile.avatarUrl
+            )
+            return
+        }
+
+        if let profile = try? await profileService.fetchOrCreateProfile(userId: userId) {
+            currentUserSnapshot = TripPlannerFriendSnapshot(
+                id: profile.id,
+                displayName: profile.tripDisplayName,
+                username: profile.username,
+                avatarURL: profile.avatarUrl
+            )
         }
     }
 
@@ -2731,8 +2765,7 @@ private struct TripPlannerComposerView: View {
     }
 
     private func displayName(for profile: Profile) -> String {
-        let trimmed = profile.fullName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? profile.username : trimmed
+        profile.tripDisplayName
     }
 
     private func mutualBucketCount(for friendId: UUID) -> Int {
@@ -3394,10 +3427,9 @@ private struct TripPlannerDetailView: View {
     }
 
     private func friendSnapshot(from profile: Profile) -> TripPlannerFriendSnapshot {
-        let trimmed = profile.fullName.trimmingCharacters(in: .whitespacesAndNewlines)
         return TripPlannerFriendSnapshot(
             id: profile.id,
-            displayName: trimmed.isEmpty ? profile.username : trimmed,
+            displayName: profile.tripDisplayName,
             username: profile.username,
             avatarURL: profile.avatarUrl
         )
@@ -3909,8 +3941,7 @@ private struct TripPlannerFriendsEditorView: View {
     }
 
     private func displayName(for profile: Profile) -> String {
-        let trimmed = profile.fullName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? profile.username : trimmed
+        profile.tripDisplayName
     }
 
     private func friendSnapshot(for profile: Profile) -> TripPlannerFriendSnapshot {
@@ -7845,23 +7876,48 @@ private struct TripPlannerOverlapCard: View {
 }
 
 private struct TripPlannerSavedTripCard: View {
+    @EnvironmentObject private var sessionManager: SessionManager
     let trip: TripPlannerTrip
     let isNewSharedTrip: Bool
+    let currentUserSnapshot: TripPlannerFriendSnapshot?
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
 
     private var travelerChips: [TripPlannerTravelerChip] {
-        if !trip.availabilityParticipants.isEmpty {
-            return trip.availabilityParticipants.map {
+        var chips: [TripPlannerTravelerChip] = []
+
+        if let currentUserSnapshot {
+            chips.append(
                 TripPlannerTravelerChip(
-                    id: $0.id,
-                    name: $0.name,
-                    username: $0.username ?? $0.name,
-                    avatarURL: $0.avatarURL
+                    id: currentUserSnapshot.id.uuidString,
+                    name: currentUserSnapshot.displayName,
+                    username: currentUserSnapshot.username,
+                    avatarURL: currentUserSnapshot.avatarURL
                 )
-            }
+            )
+        } else if let currentUserId = sessionManager.userId,
+                  !trip.friends.contains(where: { $0.id == currentUserId }) {
+            chips.append(
+                TripPlannerTravelerChip(
+                    id: currentUserId.uuidString,
+                    name: String(localized: "trip_planner.you"),
+                    username: String(localized: "trip_planner.you"),
+                    avatarURL: nil
+                )
+            )
         }
-        return []
+
+        chips.append(contentsOf: trip.friends.map {
+            TripPlannerTravelerChip(
+                id: $0.id.uuidString,
+                name: $0.displayName,
+                username: $0.username,
+                avatarURL: $0.avatarURL
+            )
+        })
+
+        var seen = Set<String>()
+        return chips.filter { seen.insert($0.id).inserted }
     }
 
     var body: some View {
@@ -7920,7 +7976,7 @@ private struct TripPlannerSavedTripCard: View {
             }
 
             if !travelerChips.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 14) {
                     TripPlannerAvatarStack(travelers: travelerChips)
                     TripPlannerTravelerNameList(travelers: travelerChips)
                 }

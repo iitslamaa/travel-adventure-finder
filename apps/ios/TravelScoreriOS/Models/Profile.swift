@@ -10,6 +10,8 @@ struct Profile: Codable, Identifiable {
 
     var username: String
     var fullName: String
+    var firstName: String?
+    var lastName: String?
     var avatarUrl: String?
 
     // NEW: structured language storage
@@ -35,6 +37,8 @@ struct Profile: Codable, Identifiable {
         case id
         case username
         case fullName = "full_name"
+        case firstName = "first_name"
+        case lastName = "last_name"
         case avatarUrl = "avatar_url"
         case languages
         case livedCountries = "lived_countries"
@@ -66,7 +70,13 @@ struct Profile: Codable, Identifiable {
 
         id = try container.decode(UUID.self, forKey: .id)
         username = try container.decode(String.self, forKey: .username)
-        fullName = try container.decodeIfPresent(String.self, forKey: .fullName) ?? ""
+        let decodedFullName = try container.decodeIfPresent(String.self, forKey: .fullName) ?? ""
+        let decodedFirstName = try container.decodeIfPresent(String.self, forKey: .firstName)?.nilIfEmpty
+        let decodedLastName = try container.decodeIfPresent(String.self, forKey: .lastName)?.nilIfEmpty
+        let splitName = Self.splitName(decodedFullName)
+        firstName = decodedFirstName ?? splitName.firstName
+        lastName = decodedLastName ?? splitName.lastName
+        fullName = Self.combinedName(firstName: firstName, lastName: lastName, fallback: decodedFullName)
         avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
 
         // Flexible decoding: support legacy string array OR JSON objects
@@ -99,5 +109,62 @@ struct Profile: Codable, Identifiable {
 
         onboardingCompleted = try container.decodeIfPresent(Bool.self, forKey: .onboardingCompleted)
         friendCount = try container.decodeIfPresent(Int.self, forKey: .friendCount) ?? 0
+    }
+
+    var formattedFullName: String {
+        Self.combinedName(firstName: firstName, lastName: lastName, fallback: fullName)
+    }
+
+    var displayName: String {
+        let resolvedFullName = formattedFullName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !resolvedFullName.isEmpty {
+            return resolvedFullName
+        }
+
+        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedUsername.isEmpty ? "User" : trimmedUsername
+    }
+
+    var tripDisplayName: String {
+        if let firstName, !firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return firstName
+        }
+
+        let resolvedFullName = formattedFullName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !resolvedFullName.isEmpty {
+            return resolvedFullName.split(separator: " ").first.map(String.init) ?? resolvedFullName
+        }
+
+        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedUsername.isEmpty ? "You" : trimmedUsername
+    }
+
+    private static func combinedName(firstName: String?, lastName: String?, fallback: String) -> String {
+        let pieces = [firstName?.nilIfEmpty, lastName?.nilIfEmpty].compactMap { $0 }
+        if !pieces.isEmpty {
+            return pieces.joined(separator: " ")
+        }
+
+        return fallback.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func splitName(_ fullName: String) -> (firstName: String?, lastName: String?) {
+        let trimmed = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return (nil, nil) }
+
+        let parts = trimmed.split(whereSeparator: \.isWhitespace)
+        guard let first = parts.first else { return (nil, nil) }
+
+        return (
+            firstName: String(first),
+            lastName: parts.dropFirst().joined(separator: " ").nilIfEmpty
+        )
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

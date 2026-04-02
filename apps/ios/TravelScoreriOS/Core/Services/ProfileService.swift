@@ -24,6 +24,8 @@ struct ProfileInsert: Encodable {
 struct ProfileUpdate: Encodable {
     let username: String?
     let fullName: String?
+    let firstName: String?
+    let lastName: String?
     let avatarUrl: String?
     let languages: [[String: String]]?
     let livedCountries: [String]?
@@ -37,6 +39,8 @@ struct ProfileUpdate: Encodable {
     enum CodingKeys: String, CodingKey {
         case username
         case fullName = "full_name"
+        case firstName = "first_name"
+        case lastName = "last_name"
         case avatarUrl = "avatar_url"
         case languages
         case livedCountries = "lived_countries"
@@ -54,6 +58,15 @@ struct ProfileCreate: Encodable {
     let username: String
     let avatar_url: String
     let full_name: String
+    let first_name: String?
+    let last_name: String?
+}
+
+private struct ResolvedProfileIdentity {
+    let firstName: String?
+    let lastName: String?
+    let fullName: String
+    let avatarURL: String?
 }
 
 private struct PassportPreferencesRow: Codable {
@@ -156,12 +169,7 @@ final class ProfileService {
             )
         }
 
-        let metadata = user.userMetadata
-
-        let fullName =
-            metadata["full_name"]?.stringValue ??
-            metadata["name"]?.stringValue ??
-            "User"
+        let identity = resolvedIdentity(from: user)
 
         // Generate a safe default username if none provided
         let generatedUsername: String = {
@@ -179,8 +187,10 @@ final class ProfileService {
         let createPayload = ProfileCreate(
             id: userId,
             username: generatedUsername,
-            avatar_url: defaultAvatarUrl ?? "",
-            full_name: fullName
+            avatar_url: defaultAvatarUrl ?? identity.avatarURL ?? "",
+            full_name: identity.fullName,
+            first_name: identity.firstName,
+            last_name: identity.lastName
         )
 
         // Insert can transiently fail right after signup if auth.users row isn't visible yet.
@@ -227,14 +237,22 @@ final class ProfileService {
         defaultAvatarUrl: String? = nil
     ) async throws -> Profile {
         do {
-            return try await fetchMyProfile(userId: userId)
+            let profile = try await fetchMyProfile(userId: userId)
+            return try await hydrateProfileIdentityFromAuthMetadataIfNeeded(
+                userId: userId,
+                profile: profile
+            )
         } catch let error as NSError where error.code == 404 {
             try await ensureProfileExists(
                 userId: userId,
                 defaultUsername: defaultUsername,
                 defaultAvatarUrl: defaultAvatarUrl
             )
-            return try await fetchMyProfile(userId: userId)
+            let profile = try await fetchMyProfile(userId: userId)
+            return try await hydrateProfileIdentityFromAuthMetadataIfNeeded(
+                userId: userId,
+                profile: profile
+            )
         }
     }
 
@@ -294,6 +312,82 @@ final class ProfileService {
         Self.passportPreferencesCache[userId] = PassportPreferences(
             nationalityCountryCodes: normalizedNationalityCountryCodes,
             passportCountryCode: normalizedPassportCountryCode
+        )
+    }
+
+    private func hydrateProfileIdentityFromAuthMetadataIfNeeded(
+        userId: UUID,
+        profile: Profile
+    ) async throws -> Profile {
+        guard userId == supabase.currentUserId,
+              let user = supabase.client.auth.currentUser else {
+            return profile
+        }
+
+        let identity = resolvedIdentity(from: user)
+        let shouldFillFirstName = (profile.firstName?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+            && identity.firstName != nil
+        let shouldFillLastName = (profile.lastName?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+            && identity.lastName != nil
+        let shouldFillFullName = profile.formattedFullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !identity.fullName.isEmpty
+        let shouldFillAvatar = (profile.avatarUrl?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+            && identity.avatarURL != nil
+
+        guard shouldFillFirstName || shouldFillLastName || shouldFillFullName || shouldFillAvatar else {
+            return profile
+        }
+
+        let payload = ProfileUpdate(
+            username: nil,
+            fullName: shouldFillFullName ? identity.fullName : nil,
+            firstName: shouldFillFirstName ? identity.firstName : nil,
+            lastName: shouldFillLastName ? identity.lastName : nil,
+            avatarUrl: shouldFillAvatar ? identity.avatarURL : nil,
+            languages: nil,
+            livedCountries: nil,
+            travelStyle: nil,
+            travelMode: nil,
+            nextDestination: nil,
+            currentCountry: nil,
+            favoriteCountries: nil,
+            onboardingCompleted: nil
+        )
+
+        try await updateProfile(userId: userId, payload: payload)
+
+        var hydratedProfile = profile
+        if shouldFillFirstName { hydratedProfile.firstName = identity.firstName }
+        if shouldFillLastName { hydratedProfile.lastName = identity.lastName }
+        if shouldFillFullName { hydratedProfile.fullName = identity.fullName }
+        if shouldFillAvatar { hydratedProfile.avatarUrl = identity.avatarURL }
+        Self.profileCache[userId] = hydratedProfile
+        return hydratedProfile
+    }
+
+    private func resolvedIdentity(from user: User) -> ResolvedProfileIdentity {
+        let metadata = user.userMetadata
+        let firstName =
+            metadata["first_name"]?.stringValue?.nilIfEmpty ??
+            metadata["given_name"]?.stringValue?.nilIfEmpty
+        let lastName =
+            metadata["last_name"]?.stringValue?.nilIfEmpty ??
+            metadata["family_name"]?.stringValue?.nilIfEmpty
+        let fullName =
+            ([firstName, lastName].compactMap { $0 }.joined(separator: " ")).nilIfEmpty ??
+            metadata["full_name"]?.stringValue?.nilIfEmpty ??
+            metadata["name"]?.stringValue?.nilIfEmpty ??
+            firstName ??
+            "User"
+        let avatarURL =
+            metadata["avatar_url"]?.stringValue?.nilIfEmpty ??
+            metadata["picture"]?.stringValue?.nilIfEmpty
+
+        return ResolvedProfileIdentity(
+            firstName: firstName,
+            lastName: lastName,
+            fullName: fullName,
+            avatarURL: avatarURL
         )
     }
 
@@ -388,5 +482,12 @@ final class ProfileService {
             .eq("user_id", value: userId.uuidString)
             .eq("country_id", value: countryCode)
             .execute()
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

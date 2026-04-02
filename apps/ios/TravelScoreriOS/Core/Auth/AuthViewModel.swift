@@ -130,22 +130,8 @@ final class AuthViewModel: ObservableObject {
 
     private func ensureProfileExists() async throws {
         guard let user = supabase.client.auth.currentUser else { return }
-
-        let result = try await supabase.client
-            .from("profiles")
-            .select("id")
-            .eq("id", value: user.id.uuidString)
-            .execute()
-
-        if result.data.isEmpty {
-            _ = try await supabase.client
-                .from("profiles")
-                .insert([
-                    "id": user.id.uuidString,
-                    "email": user.email ?? ""
-                ])
-                .execute()
-        }
+        let profileService = ProfileService(supabase: supabase)
+        try await profileService.ensureProfileExists(userId: user.id)
     }
     // MARK: - OAuth Callback Helper
 
