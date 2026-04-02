@@ -188,7 +188,6 @@ final class LanguageRepository {
     private static let compatibilityParentByTravelCode: [String: String] = [
         "acm": "ar",
         "aeb": "ar",
-        "apc": "ar",
         "arb": "ar",
         "ars": "ar",
         "ary": "ar",

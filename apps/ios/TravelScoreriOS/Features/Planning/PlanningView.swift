@@ -3147,7 +3147,7 @@ private struct TripPlannerDetailView: View {
                             TripPlannerCountryNavigationGrid(countries: displayedCountries)
                         }
 
-                        TripPlannerSectionCard(
+                        TripPlannerNavigationSectionCard(
                             title: "Planning checklist",
                             subtitle: "Track bookings, reservations, and prep tasks by day"
                         ) {
@@ -3169,7 +3169,7 @@ private struct TripPlannerDetailView: View {
                             .buttonStyle(.plain)
                         }
 
-                        TripPlannerSectionCard(
+                        TripPlannerNavigationSectionCard(
                             title: String(localized: "trip_planner.expenses.title"),
                             subtitle: String(localized: "trip_planner.expenses.subtitle")
                         ) {
@@ -3185,7 +3185,7 @@ private struct TripPlannerDetailView: View {
                             .buttonStyle(.plain)
                         }
 
-                        TripPlannerSectionCard(
+                        TripPlannerNavigationSectionCard(
                             title: String(localized: "trip_planner.detail.trip_stats"),
                             subtitle: String(localized: "trip_planner.detail.trip_stats_subtitle")
                         ) {
@@ -3219,7 +3219,7 @@ private struct TripPlannerDetailView: View {
                             .buttonStyle(.plain)
                         }
 
-                        TripPlannerSectionCard(
+                        TripPlannerNavigationSectionCard(
                             title: String(localized: "trip_planner.availability.title"),
                             subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.availability_group_subtitle") : String(localized: "trip_planner.detail.availability_solo_subtitle")
                         ) {
@@ -4337,6 +4337,7 @@ private struct TripPlannerCountriesEditorView: View {
     @State private var selectedCountryIds: Set<String>
     @State private var searchText = ""
     @State private var isLoading = true
+    @State private var showingAllRecommendations = false
 
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
 
@@ -4363,6 +4364,43 @@ private struct TripPlannerCountriesEditorView: View {
         countries
             .filter { sharedBucketCountryIds.contains($0.id) }
             .sorted { $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending }
+    }
+
+    private var recommendationMonth: Int? {
+        guard let startDate = trip.startDate else { return nil }
+        return Calendar.current.component(.month, from: startDate)
+    }
+
+    private var recommendedCountries: [Country] {
+        let selectedCountries = countries.filter { selectedCountryIds.contains($0.id) }
+        let selectedRegions = Set(selectedCountries.compactMap(\.region))
+        let selectedSubregions = Set(selectedCountries.compactMap(\.subregion))
+        let selectedIDs = Set(selectedCountries.map(\.id))
+
+        return countries
+            .filter { !selectedIDs.contains($0.id) }
+            .filter { country in
+                if selectedRegions.isEmpty && selectedSubregions.isEmpty {
+                    return true
+                }
+                return selectedRegions.contains(country.region ?? "")
+                    || selectedSubregions.contains(country.subregion ?? "")
+            }
+            .map { country in
+                (country: country, score: recommendationScore(for: country))
+            }
+            .filter { $0.score > 0 }
+            .sorted { lhs, rhs in
+                if lhs.score != rhs.score {
+                    return lhs.score > rhs.score
+                }
+                return lhs.country.localizedDisplayName.localizedCaseInsensitiveCompare(rhs.country.localizedDisplayName) == .orderedAscending
+            }
+            .map(\.country)
+    }
+
+    private var visibleRecommendedCountries: [Country] {
+        showingAllRecommendations ? recommendedCountries : Array(recommendedCountries.prefix(2))
     }
 
     var body: some View {
@@ -4405,6 +4443,43 @@ private struct TripPlannerCountriesEditorView: View {
 
                                         TripPlannerChipGrid(
                                             items: sharedBucketCountries.map { country in
+                                                TripPlannerChipItem(
+                                                    id: country.id,
+                                                    title: "\(country.flagEmoji) \(country.localizedDisplayName)",
+                                                    isSelected: selectedCountryIds.contains(country.id)
+                                                )
+                                            },
+                                            onTap: { item in
+                                                toggle(item.id)
+                                            }
+                                        )
+                                    }
+                                }
+
+                                if !recommendedCountries.isEmpty {
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        HStack {
+                                            Text("Recommended for this trip")
+                                                .font(.system(size: 15, weight: .bold))
+                                                .foregroundStyle(.black)
+
+                                            Spacer()
+
+                                            if recommendedCountries.count > 2 {
+                                                Button(showingAllRecommendations ? "Show less" : "Show more") {
+                                                    showingAllRecommendations.toggle()
+                                                }
+                                                .font(.system(size: 13, weight: .bold))
+                                                .foregroundStyle(.black)
+                                            }
+                                        }
+
+                                        Text(recommendationSubtitle)
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(.black.opacity(0.62))
+
+                                        TripPlannerChipGrid(
+                                            items: visibleRecommendedCountries.map { country in
                                                 TripPlannerChipItem(
                                                     id: country.id,
                                                     title: "\(country.flagEmoji) \(country.localizedDisplayName)",
@@ -4526,6 +4601,25 @@ private struct TripPlannerCountriesEditorView: View {
         } else {
             selectedCountryIds.insert(id)
         }
+    }
+
+    private func recommendationScore(for country: Country) -> Int {
+        let seasonalityScore = country.resolvedSeasonalityScore(for: recommendationMonth) ?? country.seasonalityScore ?? 0
+        let selectedCountries = countries.filter { selectedCountryIds.contains($0.id) }
+        let sharesSubregion = selectedCountries.contains { $0.subregion == country.subregion && country.subregion != nil }
+        let sharesRegion = selectedCountries.contains { $0.region == country.region && country.region != nil }
+        let regionBoost = sharesSubregion ? 20 : (sharesRegion ? 10 : 0)
+        return seasonalityScore + regionBoost
+    }
+
+    private var recommendationSubtitle: String {
+        if let recommendationMonth {
+            let formatter = DateFormatter()
+            formatter.locale = AppDisplayLocale.current
+            let monthName = formatter.monthSymbols[recommendationMonth - 1]
+            return "Good timing for \(monthName) and close to the regions already in this trip."
+        }
+        return "Good timing and nearby additions for the regions already in this trip."
     }
 }
 
@@ -5365,28 +5459,18 @@ private struct TripPlannerExpensesPreviewSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 10) {
-                TripPlannerStatPill(
-                    title: String(localized: "trip_planner.expenses.stats.total_logged"),
-                    value: currency(totalSpent),
-                    detail: "\(expenses.count) expenses"
-                )
+        HStack(alignment: .top, spacing: 10) {
+            TripPlannerStatPill(
+                title: String(localized: "trip_planner.expenses.stats.total_logged"),
+                value: currency(totalSpent),
+                detail: "\(expenses.count) expenses"
+            )
 
-                TripPlannerStatPill(
-                    title: String(localized: "trip_planner.expenses.stats.still_owed"),
-                    value: currency(outstandingTotal),
-                    detail: outstandingTotal > 0 ? "Tap to view balances" : "Tap to manage expenses"
-                )
-            }
-
-            HStack {
-                Spacer()
-
-                Label("Open expenses", systemImage: "chevron.forward.circle.fill")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.52))
-            }
+            TripPlannerStatPill(
+                title: String(localized: "trip_planner.expenses.stats.still_owed"),
+                value: currency(outstandingTotal),
+                detail: outstandingTotal > 0 ? "Tap to view balances" : "Tap to manage expenses"
+            )
         }
     }
 
@@ -6337,14 +6421,10 @@ private struct TripPlannerStatsPreviewSection: View {
                         .foregroundStyle(.black)
                         .multilineTextAlignment(.trailing)
 
-                    Text(isGroupTrip ? "Average likely spend with hotel share split across travelers" : "Average likely per-person spend")
+                    Text(isGroupTrip ? "Hotel share is split across travelers" : "Per-person estimate")
                         .font(.system(size: 12))
                         .foregroundStyle(.black.opacity(0.56))
                         .multilineTextAlignment(.trailing)
-
-                    Image(systemName: "chevron.forward.circle.fill")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(.black.opacity(0.36))
                 }
             }
 
@@ -6361,13 +6441,6 @@ private struct TripPlannerStatsPreviewSection: View {
                 }
             }
 
-            HStack {
-                Spacer()
-
-                Label("Open Trip Score", systemImage: "chevron.forward.circle.fill")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.52))
-            }
         }
         .padding(16)
         .background(
@@ -6395,9 +6468,9 @@ private struct TripPlannerStatsPreviewSection: View {
 
     private var costText: String {
         if let estimatedTripCostPerPerson {
-            return "AVERAGE LIKELY\n$\(estimatedTripCostPerPerson) USD"
+            return "$\(estimatedTripCostPerPerson) USD"
         }
-        return "AVERAGE LIKELY\nAdd dates"
+        return "Add dates"
     }
 
     private func estimatedDailySpendPerTraveler(for country: Country) -> Double? {
@@ -6742,13 +6815,13 @@ private struct TripPlannerStatsSection: View {
 
             HStack(spacing: 10) {
                 TripPlannerStatPill(
-                    title: "AVERAGE LIKELY total per person",
+                    title: String(localized: "trip_planner.stats.estimated_total_per_person"),
                     value: estimatedTripCostPerPerson.map { "$\($0) USD" } ?? String(localized: "trip_planner.stats.add_trip_dates"),
                     detail: "\(estimatedCostDetail) · USD"
                 )
 
                 TripPlannerStatPill(
-                    title: "AVERAGE LIKELY daily spend",
+                    title: String(localized: "trip_planner.stats.typical_daily_spend"),
                     value: averageDailySpend.map { "$\($0) USD" } ?? String(localized: "trip_planner.stats.na"),
                     detail: "\(dailySpendDetail) · USD"
                 )
@@ -7447,10 +7520,6 @@ private struct TripPlannerAvailabilityPreviewSection: View {
                     }
 
                     Spacer()
-
-                    Label("View route and day plans", systemImage: "chevron.forward.circle.fill")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.black.opacity(0.52))
                 }
             }
         }
@@ -7782,25 +7851,17 @@ private struct TripPlannerSavedTripCard: View {
     let onAddToCalendar: () -> Void
 
     private var travelerChips: [TripPlannerTravelerChip] {
-        if !trip.friends.isEmpty {
-            return trip.friends.map {
+        if !trip.availabilityParticipants.isEmpty {
+            return trip.availabilityParticipants.map {
                 TripPlannerTravelerChip(
-                    id: $0.id.uuidString,
-                    name: $0.displayName,
-                    username: $0.username,
+                    id: $0.id,
+                    name: $0.name,
+                    username: $0.username ?? $0.name,
                     avatarURL: $0.avatarURL
                 )
             }
         }
-
-        return trip.friendNames.map { name in
-            TripPlannerTravelerChip(
-                id: name,
-                name: name,
-                username: name.replacingOccurrences(of: " ", with: "").lowercased(),
-                avatarURL: nil
-            )
-        }
+        return []
     }
 
     var body: some View {
@@ -7859,7 +7920,10 @@ private struct TripPlannerSavedTripCard: View {
             }
 
             if !travelerChips.isEmpty {
-                TripPlannerTravelerChipGrid(travelers: travelerChips)
+                VStack(alignment: .leading, spacing: 10) {
+                    TripPlannerAvatarStack(travelers: travelerChips)
+                    TripPlannerTravelerNameList(travelers: travelerChips)
+                }
             }
 
             TripPlannerChipGrid(
@@ -8113,6 +8177,58 @@ private struct TripPlannerSectionCard<Content: View>: View {
     }
 }
 
+private struct TripPlannerNavigationSectionCard<Content: View>: View {
+    let title: String
+    let subtitle: String
+    let content: Content
+
+    init(
+        title: String,
+        subtitle: String,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.content = content()
+    }
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: subtitle.isEmpty ? 0 : 4) {
+                    Text(title)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.black)
+
+                    if !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.system(size: 14))
+                            .foregroundStyle(.black.opacity(0.68))
+                    }
+                }
+
+                content
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(Color(red: 0.97, green: 0.94, blue: 0.88).opacity(0.94))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .stroke(.white.opacity(0.45), lineWidth: 1)
+                    )
+            )
+            .shadow(color: .black.opacity(0.1), radius: 10, y: 6)
+
+            Image(systemName: "chevron.forward")
+                .font(.system(size: 14, weight: .black))
+                .foregroundStyle(.black.opacity(0.62))
+                .padding(18)
+        }
+    }
+}
+
 private struct TripPlannerCountryList: View {
     let countries: [Country]
     let selectedIds: Set<String>
@@ -8292,6 +8408,53 @@ private struct TripPlannerTravelerChipGrid: View {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.white.opacity(0.8))
                 )
+            }
+        }
+    }
+}
+
+private struct TripPlannerAvatarStack: View {
+    let travelers: [TripPlannerTravelerChip]
+
+    var body: some View {
+        HStack(spacing: -10) {
+            ForEach(Array(travelers.prefix(5).enumerated()), id: \.element.id) { index, traveler in
+                TripPlannerAvatarView(
+                    name: traveler.name,
+                    username: traveler.username,
+                    avatarURL: traveler.avatarURL,
+                    size: 36
+                )
+                .overlay(
+                    Circle()
+                        .stroke(Color(red: 0.97, green: 0.94, blue: 0.88), lineWidth: 2)
+                )
+                .zIndex(Double(travelers.count - index))
+            }
+
+            if travelers.count > 5 {
+                Text("+\(travelers.count - 5)")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.7))
+                    .frame(width: 36, height: 36)
+                    .background(Circle().fill(Color.white.opacity(0.86)))
+                    .overlay(Circle().stroke(Color(red: 0.97, green: 0.94, blue: 0.88), lineWidth: 2))
+                    .padding(.leading, 6)
+            }
+        }
+    }
+}
+
+private struct TripPlannerTravelerNameList: View {
+    let travelers: [TripPlannerTravelerChip]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(travelers) { traveler in
+                Text(traveler.name)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.78))
+                    .lineLimit(1)
             }
         }
     }
