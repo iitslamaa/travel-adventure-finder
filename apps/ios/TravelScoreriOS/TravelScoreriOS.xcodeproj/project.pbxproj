@@ -1375,7 +1375,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1411,7 +1411,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
