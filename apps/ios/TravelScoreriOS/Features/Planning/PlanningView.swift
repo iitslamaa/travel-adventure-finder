@@ -5388,12 +5388,17 @@ private struct TripPlannerDayPlanEditorRow: View {
         Binding(
             get: { plan.kind },
             set: { newKind in
+                let syncedChecklistItems = TripPlannerDayPlanBuilder.syncedChecklistItems(
+                    plan.checklistItems,
+                    dayKind: newKind
+                )
+
                 if newKind == .travel {
                     plan = TripPlannerDayPlan(
                         id: plan.id,
                         date: plan.date,
                         kind: .travel,
-                        checklistItems: plan.checklistItems
+                        checklistItems: syncedChecklistItems
                     )
                 } else {
                     let country = preferredCountryOption
@@ -5403,7 +5408,7 @@ private struct TripPlannerDayPlanEditorRow: View {
                         kind: .country,
                         countryId: country?.id,
                         countryName: country?.name,
-                        checklistItems: plan.checklistItems
+                        checklistItems: syncedChecklistItems
                     )
                 }
             }
@@ -5693,6 +5698,19 @@ private struct TripPlannerChecklistEditorView: View {
         overallItems.firstIndex { $0.category == .packing }
     }
 
+    private var displayedMonthPage: Date? {
+        if monthsToDisplay.contains(selectedMonthPage) {
+            return selectedMonthPage
+        }
+
+        return monthsToDisplay.first
+    }
+
+    private var displayedMonthIndex: Int? {
+        guard let displayedMonthPage else { return nil }
+        return monthsToDisplay.firstIndex(of: displayedMonthPage)
+    }
+
     var body: some View {
         ZStack {
             Theme.pageBackground("travel2")
@@ -5753,19 +5771,44 @@ private struct TripPlannerChecklistEditorView: View {
                                             .font(.system(size: 13, weight: .bold))
                                             .foregroundStyle(.black.opacity(0.72))
 
-                                        TabView(selection: $selectedMonthPage) {
-                                            ForEach(monthsToDisplay, id: \.self) { month in
+                                        if let displayedMonthPage,
+                                           let displayedMonthIndex {
+                                            VStack(alignment: .leading, spacing: 12) {
+                                                if monthsToDisplay.count > 1 {
+                                                    HStack(spacing: 12) {
+                                                        monthNavigationButton(
+                                                            systemImage: "chevron.left",
+                                                            isEnabled: displayedMonthIndex > 0
+                                                        ) {
+                                                            selectedMonthPage = monthsToDisplay[displayedMonthIndex - 1]
+                                                        }
+
+                                                        Spacer(minLength: 0)
+
+                                                        Text(TripPlannerAvailabilityCalculator.monthTitle(for: displayedMonthPage))
+                                                            .font(.system(size: 16, weight: .bold))
+                                                            .foregroundStyle(.black)
+                                                            .multilineTextAlignment(.center)
+
+                                                        Spacer(minLength: 0)
+
+                                                        monthNavigationButton(
+                                                            systemImage: "chevron.right",
+                                                            isEnabled: displayedMonthIndex < monthsToDisplay.count - 1
+                                                        ) {
+                                                            selectedMonthPage = monthsToDisplay[displayedMonthIndex + 1]
+                                                        }
+                                                    }
+                                                }
+
                                                 TripPlannerChecklistMonthCard(
-                                                    month: month,
+                                                    month: displayedMonthPage,
                                                     plans: dayPlans,
-                                                    selectedDayPlanID: $selectedDayPlanID
+                                                    selectedDayPlanID: $selectedDayPlanID,
+                                                    showsMonthTitle: monthsToDisplay.count == 1
                                                 )
-                                                .tag(month)
-                                                .padding(.bottom, 8)
                                             }
                                         }
-                                        .frame(height: 286)
-                                        .tabViewStyle(.page(indexDisplayMode: monthsToDisplay.count > 1 ? .automatic : .never))
                                     }
                                 }
 
@@ -5876,6 +5919,12 @@ private struct TripPlannerChecklistEditorView: View {
             guard selectedDayPlanID == nil else { return }
             selectedDayPlanID = dayPlans.first?.id
         }
+        .onChange(of: monthsToDisplay) { _, months in
+            guard let firstMonth = months.first else { return }
+            if !months.contains(selectedMonthPage) {
+                selectedMonthPage = firstMonth
+            }
+        }
         .onChange(of: dayPlans.map(\.id)) { _, ids in
             guard !ids.isEmpty else {
                 selectedDayPlanID = nil
@@ -5899,6 +5948,26 @@ private struct TripPlannerChecklistEditorView: View {
                 )
             }
         }
+    }
+
+    @ViewBuilder
+    private func monthNavigationButton(
+        systemImage: String,
+        isEnabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.black.opacity(isEnabled ? 0.82 : 0.28))
+                .frame(width: 36, height: 36)
+                .background(
+                    Circle()
+                        .fill(Color.white.opacity(isEnabled ? 0.84 : 0.45))
+                )
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
     }
 
     private func availableDaySuggestions(for plan: TripPlannerDayPlan) -> [TripPlannerChecklistItem] {
@@ -6216,6 +6285,7 @@ private struct TripPlannerChecklistMonthCard: View {
     let month: Date
     let plans: [TripPlannerDayPlan]
     @Binding var selectedDayPlanID: UUID?
+    var showsMonthTitle = true
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
 
@@ -6225,9 +6295,11 @@ private struct TripPlannerChecklistMonthCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(TripPlannerAvailabilityCalculator.monthTitle(for: month))
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(.black)
+            if showsMonthTitle {
+                Text(TripPlannerAvailabilityCalculator.monthTitle(for: month))
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.black)
+            }
 
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(TripPlannerAvailabilityCalculator.weekdaySymbols(), id: \.self) { symbol in
