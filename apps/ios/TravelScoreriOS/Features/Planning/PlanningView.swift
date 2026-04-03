@@ -11238,6 +11238,10 @@ private struct TripPlannerCurrencyInput: View {
     @Binding var text: String
     let placeholder: String
 
+    private var decimalSeparator: String {
+        Locale.current.decimalSeparator ?? "."
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
@@ -11253,6 +11257,12 @@ private struct TripPlannerCurrencyInput: View {
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.plain)
                     .foregroundStyle(.black)
+                    .onChange(of: text) { _, newValue in
+                        let sanitized = sanitizedCurrencyText(from: newValue)
+                        if sanitized != newValue {
+                            text = sanitized
+                        }
+                    }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
@@ -11261,6 +11271,30 @@ private struct TripPlannerCurrencyInput: View {
                     .fill(Color.white.opacity(0.78))
             )
         }
+    }
+
+    private func sanitizedCurrencyText(from rawValue: String) -> String {
+        var result = ""
+        var hasDecimalSeparator = false
+        var fractionalDigitCount = 0
+
+        for character in rawValue {
+            if character.isNumber {
+                if hasDecimalSeparator {
+                    guard fractionalDigitCount < 2 else { continue }
+                    fractionalDigitCount += 1
+                }
+                result.append(character)
+                continue
+            }
+
+            if String(character) == decimalSeparator, !hasDecimalSeparator {
+                hasDecimalSeparator = true
+                result.append(character)
+            }
+        }
+
+        return result
     }
 }
 
