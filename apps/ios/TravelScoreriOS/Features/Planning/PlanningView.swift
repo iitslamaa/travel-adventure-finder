@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import CryptoKit
 import EventKit
 import EventKitUI
 import NukeUI
@@ -683,7 +684,41 @@ struct TripPlannerFriendSnapshot: Codable, Identifiable, Hashable, Sendable {
         }
 
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmedUsername.isEmpty ? "You" : trimmedUsername
+        return trimmedUsername.isEmpty ? "Traveler" : trimmedUsername
+    }
+
+    static func currentUserFallback(userId: UUID, authUser: User?) -> TripPlannerFriendSnapshot {
+        let metadata = authUser?.userMetadata
+        func nonEmpty(_ value: String?) -> String? {
+            guard let value else { return nil }
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+
+        let username =
+            nonEmpty(metadata?["preferred_username"]?.stringValue) ??
+            nonEmpty(metadata?["username"]?.stringValue) ??
+            nonEmpty(metadata?["user_name"]?.stringValue) ??
+            nonEmpty(authUser?.email?.split(separator: "@").first.map(String.init)) ??
+            "traveler"
+
+        let displayName =
+            nonEmpty(metadata?["first_name"]?.stringValue) ??
+            nonEmpty(metadata?["given_name"]?.stringValue) ??
+            nonEmpty(metadata?["full_name"]?.stringValue) ??
+            nonEmpty(metadata?["name"]?.stringValue) ??
+            username
+
+        let avatarURL =
+            nonEmpty(metadata?["avatar_url"]?.stringValue) ??
+            nonEmpty(metadata?["picture"]?.stringValue)
+
+        return TripPlannerFriendSnapshot(
+            id: userId,
+            displayName: displayName,
+            username: username,
+            avatarURL: avatarURL
+        )
     }
 }
 
@@ -787,6 +822,7 @@ enum TripPlannerChecklistCategory: String, Codable, CaseIterable, Identifiable, 
     case reservation
     case visa
     case insurance
+    case packing
     case custom
 
     var id: String { rawValue }
@@ -799,6 +835,7 @@ enum TripPlannerChecklistCategory: String, Codable, CaseIterable, Identifiable, 
         case .reservation: return "Reservation"
         case .visa: return "Visa"
         case .insurance: return "Insurance"
+        case .packing: return "Packing list"
         case .custom: return "Custom"
         }
     }
@@ -811,6 +848,7 @@ enum TripPlannerChecklistCategory: String, Codable, CaseIterable, Identifiable, 
         case .reservation: return "fork.knife"
         case .visa: return "globe"
         case .insurance: return "cross.case.fill"
+        case .packing: return "suitcase.rolling.fill"
         case .custom: return "checklist"
         }
     }
@@ -900,9 +938,129 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
     }
 }
 
+struct TripPlannerPackingEntry: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    var title: String
+    var note: String
+
+    init(id: UUID = UUID(), title: String, note: String = "") {
+        self.id = id
+        self.title = title
+        self.note = note
+    }
+}
+
+struct TripPlannerPackingProgress: Codable, Identifiable, Hashable, Sendable {
+    let userKey: String
+    let userName: String
+    let checkedEntryIDs: [UUID]
+
+    var id: String { userKey }
+
+    init(userKey: String, userName: String, checkedEntryIDs: [UUID] = []) {
+        self.userKey = userKey
+        self.userName = userName
+        self.checkedEntryIDs = checkedEntryIDs
+    }
+
+    func updatedCheckedEntryIDs(_ ids: Set<UUID>) -> TripPlannerPackingProgress {
+        TripPlannerPackingProgress(
+            userKey: userKey,
+            userName: userName,
+            checkedEntryIDs: ids.sorted { $0.uuidString < $1.uuidString }
+        )
+    }
+}
+
+private enum TripPlannerPackingCodec {
+    private static let fieldSeparator = "||"
+
+    static func decodeEntries(from notes: String) -> [TripPlannerPackingEntry] {
+        notes
+            .split(whereSeparator: \.isNewline)
+            .compactMap { rawLine in
+                let raw = String(rawLine).trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !raw.isEmpty else { return nil }
+
+                let parts = raw.components(separatedBy: fieldSeparator)
+
+                if parts.count >= 3, let id = UUID(uuidString: parts[0]) {
+                    let title = parts[1].trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !title.isEmpty else { return nil }
+                    let note = parts.dropFirst(2).joined(separator: fieldSeparator)
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    return TripPlannerPackingEntry(id: id, title: title, note: note)
+                }
+
+                let title = parts.first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                guard !title.isEmpty else { return nil }
+                let note = parts.count > 1
+                    ? parts.dropFirst().joined(separator: fieldSeparator).trimmingCharacters(in: .whitespacesAndNewlines)
+                    : ""
+                return TripPlannerPackingEntry(
+                    id: stableLegacyID(for: raw),
+                    title: title,
+                    note: note
+                )
+            }
+    }
+
+    static func encodeEntries(_ entries: [TripPlannerPackingEntry]) -> String {
+        entries
+            .map { entry in
+                [
+                    entry.id.uuidString,
+                    entry.title.trimmingCharacters(in: .whitespacesAndNewlines),
+                    entry.note.trimmingCharacters(in: .whitespacesAndNewlines)
+                ].joined(separator: fieldSeparator)
+            }
+            .joined(separator: "\n")
+    }
+
+    static func sanitizedProgressEntries(
+        _ progressEntries: [TripPlannerPackingProgress],
+        sharedEntries: [TripPlannerPackingEntry]
+    ) -> [TripPlannerPackingProgress] {
+        let validIDs = Set(sharedEntries.map(\.id))
+        return progressEntries.map { progress in
+            let keptIDs = Set(progress.checkedEntryIDs).intersection(validIDs)
+            return progress.updatedCheckedEntryIDs(keptIDs)
+        }
+    }
+
+    private static func stableLegacyID(for raw: String) -> UUID {
+        let digest = Insecure.MD5.hash(data: Data(raw.utf8))
+        let bytes = Array(digest)
+        let uuidBytes: uuid_t = (
+            bytes[0], bytes[1], bytes[2], bytes[3],
+            bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15]
+        )
+        return UUID(uuid: uuidBytes)
+    }
+}
+
 private enum TripPlannerChecklistTemplates {
     static let accommodationTitle = "Accommodation"
+    static let transportationTitle = "Transportation"
     static let visaTitle = "Apply for visas"
+    static let packingTitle = "What to pack"
+    static let packingSuggestions = [
+        "Passport",
+        "Camera",
+        "Phone charger",
+        "Travel adapter",
+        "Medication",
+        "Comfortable shoes",
+        "Rain layer",
+        "Toiletries",
+        "Earplugs",
+        "Headphones",
+        "Sunscreen",
+        "Eye mask",
+        "Slippers"
+    ]
 
     static let daySuggestions: [TripPlannerChecklistItem] = [
         TripPlannerChecklistItem(category: .attractionTickets, title: "Book attraction tickets"),
@@ -910,13 +1068,25 @@ private enum TripPlannerChecklistTemplates {
         TripPlannerChecklistItem(category: .reservation, title: "Reserve a restaurant or experience")
     ]
 
-    static let overallSuggestions: [TripPlannerChecklistItem] = [
-        TripPlannerChecklistItem(category: .visa, title: visaTitle),
-        TripPlannerChecklistItem(category: .insurance, title: "Buy travel insurance")
-    ]
-
     static func defaultAccommodationItem() -> TripPlannerChecklistItem {
         TripPlannerChecklistItem(category: .accommodation, title: accommodationTitle)
+    }
+
+    static func defaultTransportationItem() -> TripPlannerChecklistItem {
+        TripPlannerChecklistItem(category: .transportBooking, title: transportationTitle)
+    }
+
+    static func defaultPackingItem(existing: TripPlannerChecklistItem? = nil) -> TripPlannerChecklistItem {
+        TripPlannerChecklistItem(
+            id: existing?.id ?? UUID(),
+            category: .packing,
+            title: packingTitle,
+            notes: existing?.notes ?? "",
+            isCompleted: false,
+            completedById: nil,
+            completedByName: nil,
+            completedAt: nil
+        )
     }
 }
 
@@ -1183,6 +1353,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
     let availability: [TripPlannerAvailabilityProposal]
     let dayPlans: [TripPlannerDayPlan]
     let overallChecklistItems: [TripPlannerChecklistItem]
+    let packingProgressEntries: [TripPlannerPackingProgress]
     let expenses: [TripPlannerExpense]
 
     var isGroupTrip: Bool {
@@ -1234,6 +1405,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
         case availability
         case dayPlans
         case overallChecklistItems
+        case packingProgressEntries
         case expenses
     }
 
@@ -1254,6 +1426,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
         availability: [TripPlannerAvailabilityProposal],
         dayPlans: [TripPlannerDayPlan] = [],
         overallChecklistItems: [TripPlannerChecklistItem] = [],
+        packingProgressEntries: [TripPlannerPackingProgress] = [],
         expenses: [TripPlannerExpense] = []
     ) {
         self.id = id
@@ -1272,6 +1445,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
         self.availability = availability
         self.dayPlans = dayPlans
         self.overallChecklistItems = overallChecklistItems
+        self.packingProgressEntries = packingProgressEntries
         self.expenses = expenses
     }
 
@@ -1302,6 +1476,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
         availability = try container.decodeIfPresent([TripPlannerAvailabilityProposal].self, forKey: .availability) ?? []
         dayPlans = try container.decodeIfPresent([TripPlannerDayPlan].self, forKey: .dayPlans) ?? []
         overallChecklistItems = try container.decodeIfPresent([TripPlannerChecklistItem].self, forKey: .overallChecklistItems) ?? []
+        packingProgressEntries = try container.decodeIfPresent([TripPlannerPackingProgress].self, forKey: .packingProgressEntries) ?? []
         expenses = try container.decodeIfPresent([TripPlannerExpense].self, forKey: .expenses) ?? []
     }
 
@@ -1323,6 +1498,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
             availability: availability,
             dayPlans: dayPlans,
             overallChecklistItems: overallChecklistItems,
+            packingProgressEntries: packingProgressEntries,
             expenses: expenses
         )
     }
@@ -1380,6 +1556,7 @@ private enum TripPlannerDayPlanBuilder {
         let existingByDate = Dictionary(
             uniqueKeysWithValues: existingPlans.map { (calendar.startOfDay(for: $0.date), $0) }
         )
+        var mostRecentCountry: (id: String, name: String)?
 
         return dateRange(from: startDate, to: endDate).map { date in
             if let existing = existingByDate[date] {
@@ -1388,48 +1565,63 @@ private enum TripPlannerDayPlanBuilder {
                         id: existing.id,
                         date: date,
                         kind: .travel,
-                        checklistItems: syncedChecklistItems(existing.checklistItems)
+                        checklistItems: syncedChecklistItems(existing.checklistItems, dayKind: .travel)
                     )
                 }
 
                 if let countryId = existing.countryId, validCountryIDs.contains(countryId) {
-                    return TripPlannerDayPlan(
+                    let resolvedPlan = TripPlannerDayPlan(
                         id: existing.id,
                         date: date,
                         kind: .country,
                         countryId: countryId,
                         countryName: namesByID[countryId],
-                        checklistItems: syncedChecklistItems(existing.checklistItems)
+                        checklistItems: syncedChecklistItems(existing.checklistItems, dayKind: .country)
                     )
+                    if let countryName = resolvedPlan.countryName {
+                        mostRecentCountry = (countryId, countryName)
+                    }
+                    return resolvedPlan
                 }
             }
 
-            if let firstCountry = countries.first {
+            if let inheritedCountry = mostRecentCountry ?? countries.first {
                 return TripPlannerDayPlan(
                     date: date,
                     kind: .country,
-                    countryId: firstCountry.id,
-                    countryName: CountrySelectionFormatter.localizedName(for: firstCountry.id),
-                    checklistItems: syncedChecklistItems([])
+                    countryId: inheritedCountry.id,
+                    countryName: inheritedCountry.name,
+                    checklistItems: syncedChecklistItems([], dayKind: .country)
                 )
             }
 
             return TripPlannerDayPlan(
                 date: date,
                 kind: .travel,
-                checklistItems: syncedChecklistItems([])
+                checklistItems: syncedChecklistItems([], dayKind: .travel)
             )
         }
     }
 
-    static func syncedChecklistItems(_ items: [TripPlannerChecklistItem]) -> [TripPlannerChecklistItem] {
+    static func syncedChecklistItems(
+        _ items: [TripPlannerChecklistItem],
+        dayKind: TripPlannerDayPlanKind? = nil
+    ) -> [TripPlannerChecklistItem] {
         var result = items
+        let hasTransportation = result.contains {
+            $0.category == .transportBooking || $0.title.localizedCaseInsensitiveContains(TripPlannerChecklistTemplates.transportationTitle)
+        }
         let hasAccommodation = result.contains {
             $0.category == .accommodation || $0.title.localizedCaseInsensitiveContains(TripPlannerChecklistTemplates.accommodationTitle)
         }
 
+        if dayKind == .travel, !hasTransportation {
+            result.insert(TripPlannerChecklistTemplates.defaultTransportationItem(), at: 0)
+        }
+
         if !hasAccommodation {
-            result.insert(TripPlannerChecklistTemplates.defaultAccommodationItem(), at: 0)
+            let accommodationInsertIndex = dayKind == .travel ? min(1, result.count) : 0
+            result.insert(TripPlannerChecklistTemplates.defaultAccommodationItem(), at: accommodationInsertIndex)
         }
 
         return result
@@ -1457,26 +1649,53 @@ private enum TripPlannerDayPlanBuilder {
 private enum TripPlannerChecklistBuilder {
     static func syncedOverallChecklistItems(
         existingItems: [TripPlannerChecklistItem],
-        countries: [Country]
+        countries: [Country],
+        groupVisaNeeds: [TripPlannerTravelerVisaNeed] = []
     ) -> [TripPlannerChecklistItem] {
-        var result = existingItems
+        let packingItem = TripPlannerChecklistTemplates.defaultPackingItem(
+            existing: existingItems.first(where: { $0.category == .packing })
+        )
+        let existingVisaItemsByTitle = Dictionary(
+            uniqueKeysWithValues: existingItems
+                .filter { $0.category == .visa }
+                .map { ($0.title, $0) }
+        )
 
-        let needsVisaPrep = countries.contains {
-            ["evisa", "visa_required", "entry_permit", "ban"].contains($0.visaType ?? "")
+        let requiredVisaItems: [TripPlannerChecklistItem]
+        if !groupVisaNeeds.isEmpty {
+            requiredVisaItems = groupVisaNeeds
+                .sorted { lhs, rhs in
+                    if lhs.travelerName != rhs.travelerName {
+                        return lhs.travelerName.localizedCaseInsensitiveCompare(rhs.travelerName) == .orderedAscending
+                    }
+                    return lhs.countryName.localizedCaseInsensitiveCompare(rhs.countryName) == .orderedAscending
+                }
+                .map { need in
+                    let title = "\(need.travelerName) • \(need.countryFlag) \(need.countryName)"
+                    if let existing = existingVisaItemsByTitle[title] {
+                        return existing
+                    }
+                    return TripPlannerChecklistItem(category: .visa, title: title)
+                }
+        } else {
+            let visaPrepCountries = countries
+                .filter { ["evisa", "visa_required", "entry_permit", "ban"].contains($0.visaType ?? "") }
+                .sorted { $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending }
+
+            requiredVisaItems = visaPrepCountries.map { country in
+                let title = "\(country.flagEmoji) \(country.localizedDisplayName)"
+                if let existing = existingVisaItemsByTitle[title] {
+                    return existing
+                }
+                return TripPlannerChecklistItem(category: .visa, title: title)
+            }
         }
 
-        let hasVisaItem = result.contains {
-            $0.category == .visa || $0.title.localizedCaseInsensitiveContains("visa")
+        let otherItems = existingItems.filter { item in
+            item.category != .visa && item.category != .packing
         }
 
-        if needsVisaPrep, !hasVisaItem {
-            result.insert(
-                TripPlannerChecklistItem(category: .visa, title: TripPlannerChecklistTemplates.visaTitle),
-                at: 0
-            )
-        }
-
-        return result
+        return requiredVisaItems + [packingItem] + otherItems
     }
 }
 
@@ -1762,19 +1981,65 @@ private enum TripPlannerDeleteChoice: String, Identifiable {
  
 private extension TripPlannerStore {
     func mergedTrips(local: [TripPlannerTrip], remote: [TripPlannerTrip]) -> [TripPlannerTrip] {
-        // Prefer the newest copy so shared-trip edits made by any participant
-        // converge for everyone instead of being overwritten by stale local data.
+        // Prefer the newest copy, but preserve richer participant metadata from
+        // the other version so older local caches do not hide shared travelers.
         var mergedByID = Dictionary(uniqueKeysWithValues: local.map { ($0.id, $0) })
 
         for trip in remote {
             if let existing = mergedByID[trip.id] {
-                mergedByID[trip.id] = existing.updatedAt >= trip.updatedAt ? existing : trip
+                mergedByID[trip.id] = existing.mergedForDisplay(with: trip)
             } else {
                 mergedByID[trip.id] = trip
             }
         }
 
         return mergedByID.values.sorted { $0.updatedAt > $1.updatedAt }
+    }
+}
+
+private extension TripPlannerTrip {
+    func mergedForDisplay(with other: TripPlannerTrip) -> TripPlannerTrip {
+        let preferred = updatedAt >= other.updatedAt ? self : other
+        let fallback = updatedAt >= other.updatedAt ? other : self
+
+        let mergedFriendIDs = preferred.friendIds.isEmpty ? fallback.friendIds : preferred.friendIds
+        let mergedFriendNames = preferred.friendNames.isEmpty ? fallback.friendNames : preferred.friendNames
+
+        let mergedFriends: [TripPlannerFriendSnapshot]
+        if preferred.friends.isEmpty {
+            mergedFriends = !fallback.friends.isEmpty
+                ? fallback.friends
+                : zip(mergedFriendIDs, mergedFriendNames).map { id, name in
+                    TripPlannerFriendSnapshot(
+                        id: id,
+                        displayName: name,
+                        username: name.replacingOccurrences(of: " ", with: "").lowercased(),
+                        avatarURL: nil
+                    )
+                }
+        } else {
+            mergedFriends = preferred.friends
+        }
+
+        return TripPlannerTrip(
+            id: preferred.id,
+            createdAt: preferred.createdAt,
+            updatedAt: preferred.updatedAt,
+            title: preferred.title,
+            notes: preferred.notes,
+            startDate: preferred.startDate,
+            endDate: preferred.endDate,
+            countryIds: preferred.countryIds,
+            countryNames: preferred.countryNames,
+            friendIds: mergedFriendIDs,
+            friendNames: mergedFriendNames,
+            friends: mergedFriends,
+            ownerId: preferred.ownerId ?? fallback.ownerId,
+            availability: preferred.availability,
+            dayPlans: preferred.dayPlans,
+            overallChecklistItems: preferred.overallChecklistItems,
+            expenses: preferred.expenses
+        )
     }
 }
 
@@ -3045,6 +3310,39 @@ private struct TripPlannerComposerView: View {
     }
 }
 
+private struct TripPlannerChecklistPresentation {
+    let trip: TripPlannerTrip
+    let actorId: UUID?
+    let actorName: String
+    let countries: [Country]
+    let groupVisaNeeds: [TripPlannerTravelerVisaNeed]
+    let saveAction: TripPlannerTripSaveAction
+}
+
+// Keep pushed checklist destinations on stable snapshot data and reference-stable
+// actions. Building them from live parent state plus fresh closures caused SwiftUI
+// to churn the active navigation stack and repeatedly recreate "What to pack".
+private final class TripPlannerTripSaveAction {
+    let handler: (TripPlannerTrip) -> Void
+
+    init(handler: @escaping (TripPlannerTrip) -> Void) {
+        self.handler = handler
+    }
+}
+
+private struct TripPlannerPackingDraft {
+    let item: TripPlannerChecklistItem
+    let progressEntries: [TripPlannerPackingProgress]
+}
+
+private final class TripPlannerPackingCommitAction {
+    let handler: (TripPlannerPackingDraft) -> Void
+
+    init(handler: @escaping (TripPlannerPackingDraft) -> Void) {
+        self.handler = handler
+    }
+}
+
 private struct TripPlannerDetailView: View {
     @EnvironmentObject private var sessionManager: SessionManager
 
@@ -3065,6 +3363,8 @@ private struct TripPlannerDetailView: View {
     @State private var groupVisaNeeds: [TripPlannerTravelerVisaNeed] = []
     @State private var showingDeleteOptions = false
     @State private var pendingDeleteChoice: TripPlannerDeleteChoice?
+    @State private var checklistPresentation: TripPlannerChecklistPresentation?
+    @State private var isShowingChecklistEditor = false
 
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
     private let visaStore = VisaRequirementsStore.shared
@@ -3076,11 +3376,30 @@ private struct TripPlannerDetailView: View {
         onDelete: @escaping (TripPlannerDeleteChoice) -> Void,
         onAddToCalendar: @escaping (TripPlannerTrip) -> Void
     ) {
+        let profileService = ProfileService(supabase: SupabaseManager.shared)
+        let currentUserSnapshot = Self.seededCurrentUserSnapshot(profileService: profileService)
+
+        let ownerSnapshot: TripPlannerFriendSnapshot?
+        if let ownerId = trip.ownerId,
+           ownerId != SupabaseManager.shared.currentUserId,
+           let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+            ownerSnapshot = TripPlannerFriendSnapshot(
+                id: cachedOwner.id,
+                displayName: cachedOwner.tripDisplayName,
+                username: cachedOwner.username,
+                avatarURL: cachedOwner.avatarUrl
+            )
+        } else {
+            ownerSnapshot = nil
+        }
+
         _trip = State(initialValue: trip)
         self.onSave = onSave
         self.onDelete = onDelete
         self.onAddToCalendar = onAddToCalendar
         _resolvedFriends = State(initialValue: trip.friends)
+        _currentUserSnapshot = State(initialValue: currentUserSnapshot)
+        _ownerSnapshot = State(initialValue: ownerSnapshot)
     }
 
     private var tripContentRefreshKey: String {
@@ -3098,6 +3417,26 @@ private struct TripPlannerDetailView: View {
 
     private var displayedFriends: [TripPlannerFriendSnapshot] {
         resolvedFriends.isEmpty ? trip.friends : resolvedFriends
+    }
+
+    private static func seededCurrentUserSnapshot(profileService: ProfileService) -> TripPlannerFriendSnapshot? {
+        guard let currentUserId = SupabaseManager.shared.currentUserId else {
+            return nil
+        }
+
+        if let cachedProfile = profileService.cachedProfile(userId: currentUserId) {
+            return TripPlannerFriendSnapshot(
+                id: cachedProfile.id,
+                displayName: cachedProfile.tripDisplayName,
+                username: cachedProfile.username,
+                avatarURL: cachedProfile.avatarUrl
+            )
+        }
+
+        return TripPlannerFriendSnapshot.currentUserFallback(
+            userId: currentUserId,
+            authUser: SupabaseManager.shared.client.auth.currentUser
+        )
     }
 
     private var displayedTravelers: [TripPlannerFriendSnapshot] {
@@ -3148,7 +3487,8 @@ private struct TripPlannerDetailView: View {
     private var syncedOverallChecklistItems: [TripPlannerChecklistItem] {
         TripPlannerChecklistBuilder.syncedOverallChecklistItems(
             existingItems: trip.overallChecklistItems,
-            countries: displayedCountries
+            countries: displayedCountries,
+            groupVisaNeeds: groupVisaNeeds
         )
     }
 
@@ -3183,6 +3523,127 @@ private struct TripPlannerDetailView: View {
         Array(groupVisaNeeds.prefix(3))
     }
 
+    @ViewBuilder
+    private var checklistSection: some View {
+        Button {
+            openChecklistEditor()
+        } label: {
+            TripPlannerNavigationSectionCard(
+                title: "Planning checklist",
+                subtitle: "Track bookings, reservations, and prep tasks by day"
+            ) {
+                TripPlannerChecklistPreviewSection(
+                    trip: syncedTrip,
+                    countries: displayedCountries,
+                    groupVisaNeeds: groupVisaNeeds
+                )
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var tripDetailsSection: some View {
+        TripPlannerEditableSectionCard(
+            title: String(localized: "trip_planner.detail.trip_details"),
+            subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip")
+        ) {
+            NavigationLink {
+                TripPlannerBasicsEditorView(trip: trip, onSave: saveTripChanges)
+            } label: {
+                Text("common.edit")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.black)
+            }
+            .buttonStyle(.plain)
+        } content: {
+            VStack(alignment: .leading, spacing: 12) {
+                if let rangeText = TripPlannerDateFormatter.rangeText(start: trip.startDate, end: trip.endDate) {
+                    Label(rangeText, systemImage: "calendar")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.black)
+                }
+
+                if !trip.notes.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("trip_planner.notes")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.black.opacity(0.75))
+
+                        Text(trip.notes)
+                            .font(.system(size: 16))
+                            .foregroundStyle(.black)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var travelersSection: some View {
+        TripPlannerEditableSectionCard(
+            title: String(localized: "trip_planner.whos_going.title"),
+            subtitle: displayedTravelers.isEmpty ? String(localized: "trip_planner.detail.just_you_for_now") : String(localized: "trip_planner.detail.everyone_included")
+        ) {
+            NavigationLink {
+                TripPlannerFriendsEditorView(trip: trip, onSave: saveTripChanges)
+            } label: {
+                Text("common.edit")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.black)
+            }
+            .buttonStyle(.plain)
+        } content: {
+            if displayedTravelers.isEmpty {
+                TripPlannerInfoCard(
+                    text: String(localized: "trip_planner.detail.no_friends_added"),
+                    systemImage: "person"
+                )
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    if isLoadingFriendProfiles && displayedFriends.isEmpty {
+                        ProgressView("trip_planner.detail.loading_profiles")
+                            .tint(.black)
+                    }
+
+                    ForEach(displayedTravelers) { friend in
+                        Group {
+                            if friend.id == sessionManager.userId {
+                                TripPlannerSelectedFriendCard(friend: friend)
+                            } else {
+                                NavigationLink {
+                                    TripPlannerProfileDestinationView(userId: friend.id)
+                                } label: {
+                                    TripPlannerSelectedFriendCard(friend: friend)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var countriesSection: some View {
+        TripPlannerEditableSectionCard(
+            title: String(localized: "trip_planner.countries.title"),
+            subtitle: ""
+        ) {
+            NavigationLink {
+                TripPlannerCountriesEditorView(trip: trip, onSave: saveTripChanges)
+            } label: {
+                Text("common.edit")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.black)
+            }
+            .buttonStyle(.plain)
+        } content: {
+            TripPlannerCountryNavigationGrid(countries: displayedCountries)
+        }
+    }
+
     var body: some View {
         ZStack {
             Theme.pageBackground("travel5")
@@ -3193,120 +3654,11 @@ private struct TripPlannerDetailView: View {
 
                 ScrollView {
                     VStack(spacing: 18) {
-                        TripPlannerEditableSectionCard(
-                            title: String(localized: "trip_planner.detail.trip_details"),
-                            subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip")
-                        ) {
-                            NavigationLink {
-                                TripPlannerBasicsEditorView(trip: trip, onSave: saveTripChanges)
-                            } label: {
-                                Text("common.edit")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black)
-                            }
-                            .buttonStyle(.plain)
-                        } content: {
-                            VStack(alignment: .leading, spacing: 12) {
-                                if let rangeText = TripPlannerDateFormatter.rangeText(start: trip.startDate, end: trip.endDate) {
-                                    Label(rangeText, systemImage: "calendar")
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(.black)
-                                }
+                        tripDetailsSection
+                        travelersSection
+                        countriesSection
 
-                                if !trip.notes.isEmpty {
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        Text("trip_planner.notes")
-                                            .font(.system(size: 14, weight: .bold))
-                                            .foregroundStyle(.black.opacity(0.75))
-
-                                        Text(trip.notes)
-                                            .font(.system(size: 16))
-                                            .foregroundStyle(.black)
-                                    }
-                                }
-                            }
-                        }
-
-                        TripPlannerEditableSectionCard(
-                            title: String(localized: "trip_planner.whos_going.title"),
-                            subtitle: displayedTravelers.isEmpty ? String(localized: "trip_planner.detail.just_you_for_now") : String(localized: "trip_planner.detail.everyone_included")
-                        ) {
-                            NavigationLink {
-                                TripPlannerFriendsEditorView(trip: trip, onSave: saveTripChanges)
-                            } label: {
-                                Text("common.edit")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black)
-                            }
-                            .buttonStyle(.plain)
-                        } content: {
-                            if displayedTravelers.isEmpty {
-                                TripPlannerInfoCard(
-                                    text: String(localized: "trip_planner.detail.no_friends_added"),
-                                    systemImage: "person"
-                                )
-                            } else {
-                                VStack(alignment: .leading, spacing: 10) {
-                                    if isLoadingFriendProfiles && displayedFriends.isEmpty {
-                                        ProgressView("trip_planner.detail.loading_profiles")
-                                            .tint(.black)
-                                    }
-
-                                    ForEach(displayedTravelers) { friend in
-                                        Group {
-                                            if friend.id == sessionManager.userId {
-                                                TripPlannerSelectedFriendCard(friend: friend)
-                                            } else {
-                                                NavigationLink {
-                                                    TripPlannerProfileDestinationView(userId: friend.id)
-                                                } label: {
-                                                    TripPlannerSelectedFriendCard(friend: friend)
-                                                }
-                                                .buttonStyle(.plain)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        TripPlannerEditableSectionCard(
-                            title: String(localized: "trip_planner.countries.title"),
-                            subtitle: String(localized: "trip_planner.detail.countries_subtitle")
-                        ) {
-                            NavigationLink {
-                                TripPlannerCountriesEditorView(trip: trip, onSave: saveTripChanges)
-                            } label: {
-                                Text("common.edit")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black)
-                            }
-                            .buttonStyle(.plain)
-                        } content: {
-                            TripPlannerCountryNavigationGrid(countries: displayedCountries)
-                        }
-
-                        NavigationLink {
-                            TripPlannerChecklistEditorView(
-                                trip: syncedTrip,
-                                actorId: sessionManager.userId,
-                                actorName: checklistActorName,
-                                countries: displayedCountries,
-                                onSave: saveTripChanges
-                            )
-                        } label: {
-                            TripPlannerNavigationSectionCard(
-                                title: "Planning checklist",
-                                subtitle: "Track bookings, reservations, and prep tasks by day"
-                            ) {
-                                TripPlannerChecklistPreviewSection(
-                                    trip: syncedTrip,
-                                    countries: displayedCountries,
-                                    groupVisaNeeds: groupVisaNeeds
-                                )
-                            }
-                        }
-                        .buttonStyle(.plain)
+                        checklistSection
 
                         NavigationLink {
                             TripPlannerExpensesEditorView(
@@ -3462,12 +3814,40 @@ private struct TripPlannerDetailView: View {
             await loadCountryStats()
             await loadGroupLanguageScores()
         }
+        .navigationDestination(isPresented: $isShowingChecklistEditor) {
+            if let presentation = checklistPresentation {
+                TripPlannerChecklistEditorView(
+                    trip: presentation.trip,
+                    actorId: presentation.actorId,
+                    actorName: presentation.actorName,
+                    countries: presentation.countries,
+                    groupVisaNeeds: presentation.groupVisaNeeds,
+                    saveAction: presentation.saveAction
+                )
+            }
+        }
+    }
+
+    private func openChecklistEditor() {
+        checklistPresentation = TripPlannerChecklistPresentation(
+            trip: syncedTrip,
+            actorId: sessionManager.userId,
+            actorName: checklistActorName,
+            countries: displayedCountries,
+            groupVisaNeeds: groupVisaNeeds,
+            saveAction: TripPlannerTripSaveAction(handler: saveTripChanges)
+        )
+        isShowingChecklistEditor = true
     }
 
     @MainActor
     private func loadTravelerProfiles() async {
         isLoadingFriendProfiles = true
         defer { isLoadingFriendProfiles = false }
+
+        if currentUserSnapshot == nil {
+            currentUserSnapshot = Self.seededCurrentUserSnapshot(profileService: profileService)
+        }
 
         var refreshed: [TripPlannerFriendSnapshot] = []
         var profilesByID: [UUID: Profile] = [:]
@@ -4341,7 +4721,9 @@ private struct TripPlannerAvailabilityEditorView: View {
                                                 get: { dayPlans[index] },
                                                 set: { dayPlans[index] = $0 }
                                             ),
-                                            countryOptions: countryOptions
+                                            countryOptions: countryOptions,
+                                            previousPlan: index > 0 ? dayPlans[index - 1] : nil,
+                                            nextPlan: index + 1 < dayPlans.count ? dayPlans[index + 1] : nil
                                         )
                                     }
                                 }
@@ -4856,7 +5238,9 @@ private struct TripPlannerItineraryEditorView: View {
                                 ForEach(dayPlans.indices, id: \.self) { index in
                                     TripPlannerDayPlanEditorRow(
                                         plan: binding(for: index),
-                                        countryOptions: countryOptions
+                                        countryOptions: countryOptions,
+                                        previousPlan: index > 0 ? dayPlans[index - 1] : nil,
+                                        nextPlan: index + 1 < dayPlans.count ? dayPlans[index + 1] : nil
                                     )
                                 }
                             }
@@ -4916,7 +5300,7 @@ private struct TripPlannerItineraryEditorView: View {
                     id: plan.id,
                     date: plan.date,
                     kind: .travel,
-                    checklistItems: TripPlannerDayPlanBuilder.syncedChecklistItems(plan.checklistItems)
+                    checklistItems: TripPlannerDayPlanBuilder.syncedChecklistItems(plan.checklistItems, dayKind: .travel)
                 )
             }
 
@@ -4927,7 +5311,7 @@ private struct TripPlannerItineraryEditorView: View {
                 kind: matchingCountry == nil ? .travel : .country,
                 countryId: matchingCountry?.id,
                 countryName: matchingCountry?.name,
-                checklistItems: TripPlannerDayPlanBuilder.syncedChecklistItems(plan.checklistItems)
+                checklistItems: TripPlannerDayPlanBuilder.syncedChecklistItems(plan.checklistItems, dayKind: .country)
             )
         }
     }
@@ -4936,13 +5320,11 @@ private struct TripPlannerItineraryEditorView: View {
 private struct TripPlannerDayPlanEditorRow: View {
     @Binding var plan: TripPlannerDayPlan
     let countryOptions: [(id: String, name: String)]
+    let previousPlan: TripPlannerDayPlan?
+    let nextPlan: TripPlannerDayPlan?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(AppDateFormatting.dateString(from: plan.date, dateStyle: .full))
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(.black)
-
             Picker(String(localized: "trip_planner.itinerary.type"), selection: kindBinding) {
                 Text("trip_planner.itinerary.country").tag(TripPlannerDayPlanKind.country)
                 Text("trip_planner.itinerary.travel").tag(TripPlannerDayPlanKind.travel)
@@ -4950,12 +5332,69 @@ private struct TripPlannerDayPlanEditorRow: View {
             .pickerStyle(.segmented)
 
             if plan.kind == .country {
-                Picker(String(localized: "trip_planner.itinerary.country"), selection: countryBinding) {
+                Menu {
                     ForEach(countryOptions, id: \.id) { option in
-                        Text(option.name).tag(Optional(option.id))
+                        Button {
+                            countryBinding.wrappedValue = option.id
+                        } label: {
+                            Text(countryLabel(for: option.id, name: option.name))
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Stay in")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.black.opacity(0.58))
+
+                            Text(selectedCountryLabel)
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(.black)
+                        }
+
+                        Spacer(minLength: 0)
+
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.black.opacity(0.52))
                     }
                 }
-                .pickerStyle(.menu)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.82))
+                )
+            } else {
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Travel route")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.black.opacity(0.58))
+
+                        HStack(spacing: 8) {
+                            Text(travelOriginLabel)
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(.black)
+                                .lineLimit(1)
+
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(.black.opacity(0.55))
+
+                            Text(travelDestinationLabel)
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(.black)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: "airplane")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.58))
+                }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
                 .background(
@@ -4983,7 +5422,7 @@ private struct TripPlannerDayPlanEditorRow: View {
                         checklistItems: plan.checklistItems
                     )
                 } else {
-                    let country = countryOptions.first
+                    let country = preferredCountryOption
                     plan = TripPlannerDayPlan(
                         id: plan.id,
                         date: plan.date,
@@ -4999,9 +5438,9 @@ private struct TripPlannerDayPlanEditorRow: View {
 
     private var countryBinding: Binding<String?> {
         Binding(
-            get: { plan.countryId ?? countryOptions.first?.id },
+            get: { plan.countryId ?? preferredCountryOption?.id },
             set: { newCountryID in
-                let country = countryOptions.first { $0.id == newCountryID } ?? countryOptions.first
+                let country = countryOptions.first { $0.id == newCountryID } ?? preferredCountryOption
                 plan = TripPlannerDayPlan(
                     id: plan.id,
                     date: plan.date,
@@ -5012,6 +5451,47 @@ private struct TripPlannerDayPlanEditorRow: View {
                 )
             }
         )
+    }
+
+    private var selectedCountryLabel: String {
+        let option = countryOptions.first { $0.id == (plan.countryId ?? preferredCountryOption?.id) } ?? preferredCountryOption
+        guard let option else { return "Select a country" }
+        return countryLabel(for: option.id, name: option.name)
+    }
+
+    private var preferredCountryOption: (id: String, name: String)? {
+        if let countryId = plan.countryId,
+           let matchingOption = countryOptions.first(where: { $0.id == countryId }) {
+            return matchingOption
+        }
+
+        if let previousCountryId = previousPlan?.countryId,
+           let matchingPreviousOption = countryOptions.first(where: { $0.id == previousCountryId }) {
+            return matchingPreviousOption
+        }
+
+        return countryOptions.first
+    }
+
+    private var travelOriginLabel: String {
+        travelEndpointLabel(from: previousPlan) ?? "Home"
+    }
+
+    private var travelDestinationLabel: String {
+        travelEndpointLabel(from: nextPlan) ?? "Next stop"
+    }
+
+    private func travelEndpointLabel(from plan: TripPlannerDayPlan?) -> String? {
+        guard let plan, plan.kind == .country else { return nil }
+        let option = countryOptions.first { $0.id == plan.countryId }
+        let id = option?.id ?? plan.countryId
+        let name = option?.name ?? plan.countryName
+        guard let id, let name else { return nil }
+        return countryLabel(for: id, name: name)
+    }
+
+    private func countryLabel(for id: String, name: String) -> String {
+        "\(id.flagEmoji) \(name)"
     }
 }
 
@@ -5063,7 +5543,8 @@ private struct TripPlannerChecklistPreviewSection: View {
     private var overallItems: [TripPlannerChecklistItem] {
         TripPlannerChecklistBuilder.syncedOverallChecklistItems(
             existingItems: trip.overallChecklistItems,
-            countries: countries
+            countries: countries,
+            groupVisaNeeds: groupVisaNeeds
         )
     }
 
@@ -5077,11 +5558,13 @@ private struct TripPlannerChecklistPreviewSection: View {
     }
 
     private var previewEntries: [TripPlannerChecklistPreviewEntry] {
-        let overall = overallItems.map {
+        let overall = overallItems
+            .filter { $0.category != .packing }
+            .map {
             TripPlannerChecklistPreviewEntry(
                 id: $0.id,
                 title: $0.title,
-                subtitle: "Trip-wide prep",
+                subtitle: $0.category == .visa ? "Visas" : "Trip prep",
                 isCompleted: $0.isCompleted,
                 completedByName: $0.completedByName
             )
@@ -5124,7 +5607,7 @@ private struct TripPlannerChecklistPreviewSection: View {
                     TripPlannerStatPill(
                         title: "Open items",
                         value: "\(max(previewEntries.count - completedCount, 0))",
-                        detail: overallItems.isEmpty ? "Daily prep only" : "Includes trip-wide prep"
+                        detail: overallItems.contains(where: { $0.category == .visa }) ? "Includes visas" : "Daily prep only"
                     )
                 }
             }
@@ -5139,29 +5622,41 @@ private struct TripPlannerChecklistEditorView: View {
     let actorId: UUID?
     let actorName: String
     let countries: [Country]
-    let onSave: (TripPlannerTrip) -> Void
+    let groupVisaNeeds: [TripPlannerTravelerVisaNeed]
+    let saveAction: TripPlannerTripSaveAction
 
     @State private var overallItems: [TripPlannerChecklistItem]
     @State private var dayPlans: [TripPlannerDayPlan]
     @State private var selectedMonthPage: Date
     @State private var selectedDayPlanID: UUID?
+    @State private var isShowingPackingList = false
+    @State private var packingProgressEntries: [TripPlannerPackingProgress]
+    @State private var packingDraft = TripPlannerPackingDraft(
+        item: TripPlannerChecklistTemplates.defaultPackingItem(),
+        progressEntries: []
+    )
+    @State private var packingCommitAction: TripPlannerPackingCommitAction?
 
     init(
         trip: TripPlannerTrip,
         actorId: UUID?,
         actorName: String,
         countries: [Country],
-        onSave: @escaping (TripPlannerTrip) -> Void
+        groupVisaNeeds: [TripPlannerTravelerVisaNeed],
+        saveAction: TripPlannerTripSaveAction
     ) {
         self.trip = trip
         self.actorId = actorId
         self.actorName = actorName
         self.countries = countries
-        self.onSave = onSave
+        self.groupVisaNeeds = groupVisaNeeds
+        self.saveAction = saveAction
         _overallItems = State(initialValue: TripPlannerChecklistBuilder.syncedOverallChecklistItems(
             existingItems: trip.overallChecklistItems,
-            countries: countries
+            countries: countries,
+            groupVisaNeeds: groupVisaNeeds
         ))
+        _packingProgressEntries = State(initialValue: trip.packingProgressEntries)
         _dayPlans = State(initialValue: TripPlannerDayPlanBuilder.syncedDayPlans(
             existingPlans: trip.dayPlans,
             startDate: trip.startDate,
@@ -5216,6 +5711,14 @@ private struct TripPlannerChecklistEditorView: View {
         return dayPlans.indices.first
     }
 
+    private var visaItems: [TripPlannerChecklistItem] {
+        overallItems.filter { $0.category == .visa }
+    }
+
+    private var packingItemIndex: Int? {
+        overallItems.firstIndex { $0.category == .packing }
+    }
+
     var body: some View {
         ZStack {
             Theme.pageBackground("travel2")
@@ -5227,34 +5730,40 @@ private struct TripPlannerChecklistEditorView: View {
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
-                            title: "Trip-wide prep",
-                            subtitle: "Keep visa and other pre-trip tasks in one place"
+                            title: "Overall trip",
+                            subtitle: ""
                         ) {
                             VStack(alignment: .leading, spacing: 12) {
-                                checklistSuggestionButtons(
-                                    items: availableOverallSuggestions,
-                                    addAction: addOverallSuggestion
-                                )
-
-                                if overallItems.isEmpty {
-                                    TripPlannerInfoCard(
-                                        text: "Add trip-wide prep like visas, insurance, or custom reminders.",
-                                        systemImage: "globe"
+                                NavigationLink {
+                                    TripPlannerVisaChecklistView(
+                                        overallItems: $overallItems,
+                                        actorId: actorId,
+                                        actorName: actorName
                                     )
-                                } else {
-                                    VStack(spacing: 10) {
-                                        ForEach(overallItems.indices, id: \.self) { index in
-                                            TripPlannerChecklistItemEditorRow(
-                                                item: bindingForOverallItem(at: index),
-                                                actorId: actorId,
-                                                actorName: actorName,
-                                                showsRemove: canRemoveOverallItem(overallItems[index]),
-                                                onRemove: {
-                                                    overallItems.remove(at: index)
-                                                }
-                                            )
+                                } label: {
+                                    TripPlannerNavigationSectionCard(
+                                        title: "Visas",
+                                        subtitle: visaItems.isEmpty
+                                            ? "No visa prep is needed right now"
+                                            : "\(visaItems.count) visa item\(visaItems.count == 1 ? "" : "s")"
+                                    ) {
+                                        EmptyView()
+                                    }
+                                }
+                                .buttonStyle(.plain)
+
+                                if packingItemIndex != nil {
+                                    Button {
+                                        openPackingList()
+                                    } label: {
+                                        TripPlannerNavigationSectionCard(
+                                            title: "What to pack",
+                                            subtitle: "Shared group list plus your own personal checkoffs"
+                                        ) {
+                                            EmptyView()
                                         }
                                     }
+                                    .buttonStyle(.plain)
                                 }
                             }
                         }
@@ -5296,12 +5805,9 @@ private struct TripPlannerChecklistEditorView: View {
 
                                         TripPlannerDayPlanEditorRow(
                                             plan: bindingForDayPlan(at: selectedDayIndex),
-                                            countryOptions: countryOptions
-                                        )
-
-                                        checklistSuggestionButtons(
-                                            items: availableDaySuggestions(for: plan),
-                                            addAction: { addDaySuggestion($0, to: selectedDayIndex) }
+                                            countryOptions: countryOptions,
+                                            previousPlan: previousPlan(for: selectedDayIndex),
+                                            nextPlan: nextPlan(for: selectedDayIndex)
                                         )
 
                                         VStack(spacing: 10) {
@@ -5317,12 +5823,59 @@ private struct TripPlannerChecklistEditorView: View {
                                                 )
                                             }
                                         }
+
+                                        if let accommodationSuggestion = accommodationCarryForwardSuggestion(for: selectedDayIndex) {
+                                            Button {
+                                                applyAccommodationSuggestion(accommodationSuggestion, to: selectedDayIndex)
+                                            } label: {
+                                                HStack(alignment: .center, spacing: 10) {
+                                                    Image(systemName: "arrow.turn.down.right")
+                                                        .font(.system(size: 14, weight: .bold))
+                                                        .foregroundStyle(.black.opacity(0.7))
+
+                                                    VStack(alignment: .leading, spacing: 4) {
+                                                        Text("Use last night's accommodation")
+                                                            .font(.system(size: 14, weight: .bold))
+                                                            .foregroundStyle(.black)
+                                                        Text(accommodationSuggestion.notes)
+                                                            .font(.system(size: 12))
+                                                            .foregroundStyle(.black.opacity(0.66))
+                                                            .lineLimit(2)
+                                                        if let completedByName = accommodationSuggestion.completedByName,
+                                                           accommodationSuggestion.isCompleted {
+                                                            Text("Completed by \(completedByName)")
+                                                                .font(.system(size: 12, weight: .medium))
+                                                                .foregroundStyle(.black.opacity(0.55))
+                                                        }
+                                                    }
+
+                                                    Spacer()
+
+                                                    Text("Apply")
+                                                        .font(.system(size: 13, weight: .bold))
+                                                        .foregroundStyle(.black)
+                                                }
+                                                .padding(14)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                                        .fill(Color.white.opacity(0.78))
+                                                )
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+
+                                        checklistSuggestionButtons(
+                                            items: availableDaySuggestions(for: plan),
+                                            addAction: { addDaySuggestion($0, to: selectedDayIndex) }
+                                        )
                                     }
                                 } else {
-                                    TripPlannerInfoCard(
-                                        text: "Add trip dates to start planning day-by-day details.",
-                                        systemImage: "calendar.badge.plus"
-                                    )
+                                    VStack(spacing: 10) {
+                                        TripPlannerInfoCard(
+                                            text: "Add trip dates to start planning day-by-day details.",
+                                            systemImage: "calendar.badge.plus"
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -5361,11 +5914,17 @@ private struct TripPlannerChecklistEditorView: View {
 
             selectedDayPlanID = ids.first
         }
-    }
-
-    private var availableOverallSuggestions: [TripPlannerChecklistItem] {
-        let existingKeys = Set(overallItems.map { suggestionKey(for: $0) })
-        return TripPlannerChecklistTemplates.overallSuggestions.filter { !existingKeys.contains(suggestionKey(for: $0)) }
+        .navigationDestination(isPresented: $isShowingPackingList) {
+            if let packingCommitAction {
+                TripPlannerPackingListView(
+                    item: packingDraft.item,
+                    progressEntries: packingDraft.progressEntries,
+                    actorId: actorId,
+                    actorName: actorName,
+                    commitAction: packingCommitAction
+                )
+            }
+        }
     }
 
     private func availableDaySuggestions(for plan: TripPlannerDayPlan) -> [TripPlannerChecklistItem] {
@@ -5415,17 +5974,46 @@ private struct TripPlannerChecklistEditorView: View {
         }
     }
 
-    private func bindingForOverallItem(at index: Int) -> Binding<TripPlannerChecklistItem> {
+    private func bindingForVisaItem(at index: Int) -> Binding<TripPlannerChecklistItem> {
         Binding(
-            get: { overallItems[index] },
-            set: { overallItems[index] = $0 }
+            get: { visaItems[index] },
+            set: { newValue in
+                if let overallIndex = overallItems.firstIndex(where: { $0.id == visaItems[index].id }) {
+                    overallItems[overallIndex] = newValue
+                }
+            }
+        )
+    }
+
+    private func openPackingList() {
+        guard let packingItemIndex else { return }
+        packingDraft = TripPlannerPackingDraft(
+            item: overallItems[packingItemIndex],
+            progressEntries: packingProgressEntries
+        )
+        packingCommitAction = TripPlannerPackingCommitAction(handler: commitPackingDraft)
+        isShowingPackingList = true
+    }
+
+    private func commitPackingDraft(_ draft: TripPlannerPackingDraft) {
+        let normalized = TripPlannerChecklistTemplates.defaultPackingItem(existing: draft.item)
+        guard let packingItemIndex else { return }
+        overallItems[packingItemIndex] = normalized
+        let sharedEntries = TripPlannerPackingCodec.decodeEntries(from: normalized.notes)
+        packingProgressEntries = TripPlannerPackingCodec.sanitizedProgressEntries(
+            draft.progressEntries,
+            sharedEntries: sharedEntries
         )
     }
 
     private func bindingForDayPlan(at index: Int) -> Binding<TripPlannerDayPlan> {
         Binding(
             get: { dayPlans[index] },
-            set: { dayPlans[index] = $0 }
+            set: { newValue in
+                let previousValue = dayPlans[index]
+                dayPlans[index] = newValue
+                cascadeInheritedCountryChanges(from: index, previousValue: previousValue, newValue: newValue)
+            }
         )
     }
 
@@ -5447,8 +6035,112 @@ private struct TripPlannerChecklistEditorView: View {
         )
     }
 
-    private func addOverallSuggestion(_ item: TripPlannerChecklistItem) {
-        overallItems.append(item)
+    private func previousPlan(for dayIndex: Int) -> TripPlannerDayPlan? {
+        guard dayIndex > 0 else { return nil }
+        return dayPlans[dayIndex - 1]
+    }
+
+    private func nextPlan(for dayIndex: Int) -> TripPlannerDayPlan? {
+        guard dayIndex < dayPlans.count - 1 else { return nil }
+        return dayPlans[dayIndex + 1]
+    }
+
+    private func cascadeInheritedCountryChanges(
+        from dayIndex: Int,
+        previousValue: TripPlannerDayPlan,
+        newValue: TripPlannerDayPlan
+    ) {
+        guard previousValue.kind == .country, newValue.kind == .country else { return }
+        guard previousValue.countryId != newValue.countryId else { return }
+
+        let previousCountryId = previousValue.countryId
+        let previousCountryName = previousValue.countryName
+
+        for followingIndex in dayPlans.indices where followingIndex > dayIndex {
+            let followingPlan = dayPlans[followingIndex]
+
+            if followingPlan.kind == .travel {
+                break
+            }
+
+            guard followingPlan.kind == .country else { continue }
+
+            let shouldInherit =
+                followingPlan.countryId == nil ||
+                (previousCountryId != nil && followingPlan.countryId == previousCountryId) ||
+                (followingPlan.countryId == nil && followingPlan.countryName == nil) ||
+                (previousCountryName != nil && followingPlan.countryName == previousCountryName)
+
+            guard shouldInherit else { break }
+
+            dayPlans[followingIndex] = TripPlannerDayPlan(
+                id: followingPlan.id,
+                date: followingPlan.date,
+                kind: .country,
+                countryId: newValue.countryId,
+                countryName: newValue.countryName,
+                checklistItems: followingPlan.checklistItems
+            )
+        }
+    }
+
+    private func accommodationCarryForwardSuggestion(for dayIndex: Int) -> TripPlannerChecklistItem? {
+        guard dayIndex > 0 else { return nil }
+
+        let currentPlan = dayPlans[dayIndex]
+        let previousDayPlan = dayPlans[dayIndex - 1]
+        guard currentPlan.kind == .country, previousDayPlan.kind == .country else { return nil }
+        guard currentPlan.countryId == previousDayPlan.countryId else { return nil }
+
+        let currentItems = dayPlans[dayIndex].checklistItems
+        let currentAccommodation = currentItems.first { $0.category == .accommodation }
+        let currentNotes = currentAccommodation?.notes.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard currentNotes.isEmpty else { return nil }
+
+        let previousItems = dayPlans[dayIndex - 1].checklistItems
+        guard let previousAccommodation = previousItems.first(where: {
+            $0.category == .accommodation && !$0.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }) else {
+            return nil
+        }
+
+        return previousAccommodation
+    }
+
+    private func applyAccommodationSuggestion(_ suggestion: TripPlannerChecklistItem, to dayIndex: Int) {
+        var updatedItems = dayPlans[dayIndex].checklistItems
+
+        if let existingIndex = updatedItems.firstIndex(where: { $0.category == .accommodation }) {
+            let existing = updatedItems[existingIndex]
+            updatedItems[existingIndex] = TripPlannerChecklistItem(
+                id: existing.id,
+                category: existing.category,
+                title: existing.title,
+                notes: suggestion.notes,
+                isCompleted: existing.isCompleted,
+                completedById: existing.completedById,
+                completedByName: existing.completedByName,
+                completedAt: existing.completedAt
+            )
+        } else {
+            updatedItems.insert(
+                TripPlannerChecklistItem(
+                    category: .accommodation,
+                    title: TripPlannerChecklistTemplates.accommodationTitle,
+                    notes: suggestion.notes
+                ),
+                at: 0
+            )
+        }
+
+        dayPlans[dayIndex] = TripPlannerDayPlan(
+            id: dayPlans[dayIndex].id,
+            date: dayPlans[dayIndex].date,
+            kind: dayPlans[dayIndex].kind,
+            countryId: dayPlans[dayIndex].countryId,
+            countryName: dayPlans[dayIndex].countryName,
+            checklistItems: updatedItems
+        )
     }
 
     private func addDaySuggestion(_ item: TripPlannerChecklistItem, to dayIndex: Int) {
@@ -5481,12 +6173,26 @@ private struct TripPlannerChecklistEditorView: View {
         "\(item.category.rawValue)::\(item.title.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: AppDisplayLocale.current))"
     }
 
+    private func removeVisaItem(at index: Int) {
+        let visaID = visaItems[index].id
+        overallItems.removeAll { $0.id == visaID }
+    }
+
     private func canRemoveOverallItem(_ item: TripPlannerChecklistItem) -> Bool {
         item.category != .visa
     }
 
     private func persistChecklist() {
-        onSave(
+        let syncedOverallItems = TripPlannerChecklistBuilder.syncedOverallChecklistItems(
+            existingItems: overallItems,
+            countries: countries,
+            groupVisaNeeds: groupVisaNeeds
+        )
+        let sharedPackingEntries = TripPlannerPackingCodec.decodeEntries(
+            from: syncedOverallItems.first(where: { $0.category == .packing })?.notes ?? ""
+        )
+
+        saveAction.handler(
             TripPlannerTrip(
                 id: trip.id,
                 createdAt: trip.createdAt,
@@ -5509,12 +6215,13 @@ private struct TripPlannerChecklistEditorView: View {
                         kind: plan.kind,
                         countryId: plan.countryId,
                         countryName: plan.countryName,
-                        checklistItems: TripPlannerDayPlanBuilder.syncedChecklistItems(plan.checklistItems)
+                        checklistItems: TripPlannerDayPlanBuilder.syncedChecklistItems(plan.checklistItems, dayKind: plan.kind)
                     )
                 },
-                overallChecklistItems: TripPlannerChecklistBuilder.syncedOverallChecklistItems(
-                    existingItems: overallItems,
-                    countries: countries
+                overallChecklistItems: syncedOverallItems,
+                packingProgressEntries: TripPlannerPackingCodec.sanitizedProgressEntries(
+                    packingProgressEntries,
+                    sharedEntries: sharedPackingEntries
                 ),
                 expenses: trip.expenses
             )
@@ -5570,6 +6277,265 @@ private struct TripPlannerChecklistMonthCard: View {
     }
 }
 
+private struct TripPlannerVisaChecklistView: View {
+    @Binding var overallItems: [TripPlannerChecklistItem]
+    let actorId: UUID?
+    let actorName: String
+
+    private var visaItems: [TripPlannerChecklistItem] {
+        overallItems.filter { $0.category == .visa }
+    }
+
+    var body: some View {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Theme.titleBanner("Visas")
+
+                ScrollView {
+                    VStack(spacing: 18) {
+                        TripPlannerSectionCard(
+                            title: "Visa requirements",
+                            subtitle: "Each traveler and country that still needs visa prep"
+                        ) {
+                            if visaItems.isEmpty {
+                                TripPlannerInfoCard(
+                                    text: "No visa prep is needed for this trip right now.",
+                                    systemImage: "globe"
+                                )
+                            } else {
+                                VStack(spacing: 10) {
+                                    ForEach(visaItems.indices, id: \.self) { index in
+                                        TripPlannerChecklistItemEditorRow(
+                                            item: visaBinding(at: index),
+                                            actorId: actorId,
+                                            actorName: actorName,
+                                            showsRemove: false,
+                                            onRemove: {}
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, Theme.pageHorizontalInset)
+                        .padding(.top, 18)
+                        .padding(.bottom, 32)
+                    }
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func visaBinding(at index: Int) -> Binding<TripPlannerChecklistItem> {
+        Binding(
+            get: { visaItems[index] },
+            set: { newValue in
+                if let overallIndex = overallItems.firstIndex(where: { $0.id == visaItems[index].id }) {
+                    overallItems[overallIndex] = newValue
+                }
+            }
+        )
+    }
+}
+
+private struct TripPlannerPackingListView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var item: TripPlannerChecklistItem
+    @State private var progressEntries: [TripPlannerPackingProgress]
+    let actorId: UUID?
+    let actorName: String
+    let commitAction: TripPlannerPackingCommitAction
+
+    init(
+        item: TripPlannerChecklistItem,
+        progressEntries: [TripPlannerPackingProgress],
+        actorId: UUID?,
+        actorName: String,
+        commitAction: TripPlannerPackingCommitAction
+    ) {
+        self._item = State(initialValue: item)
+        self._progressEntries = State(initialValue: progressEntries)
+        self.actorId = actorId
+        self.actorName = actorName
+        self.commitAction = commitAction
+    }
+
+    private var sharedEntries: [TripPlannerPackingEntry] {
+        TripPlannerPackingCodec.decodeEntries(from: item.notes)
+    }
+
+    private var actorKey: String {
+        actorId?.uuidString ?? "local-user"
+    }
+
+    private var actorDisplayName: String {
+        let trimmed = actorName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "You" : trimmed
+    }
+
+    private var checkedEntryIDs: Set<UUID> {
+        Set(progressEntries.first(where: { $0.userKey == actorKey })?.checkedEntryIDs ?? [])
+    }
+
+    var body: some View {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Theme.titleBanner("What to pack")
+
+                ScrollView {
+                    VStack(spacing: 18) {
+                        TripPlannerSectionCard(
+                            title: "Packing list",
+                            subtitle: "If traveling with friends, this packing list is shared so everyone can use the same reference while packing."
+                        ) {
+                            VStack(alignment: .leading, spacing: 12) {
+                                TripPlannerInfoCard(
+                                    text: "Most airports apply a 100 mL / 3.4 oz carry-on liquid limit, but rules can vary by airport, country, and airline. Check requirements before you fly, and place larger liquids in checked baggage when needed.",
+                                    systemImage: "suitcase.rolling.fill"
+                                )
+
+                                TripPlannerChecklistItemEditorRow(
+                                    item: $item,
+                                    actorId: actorId,
+                                    actorName: actorName,
+                                    showsRemove: false,
+                                    showsCompletion: false,
+                                    showsTitleField: false,
+                                    showsCategoryLabel: false,
+                                    onRemove: {}
+                                )
+                            }
+                        }
+                        
+                        TripPlannerSectionCard(
+                            title: "My packing progress",
+                            subtitle: "Only \(actorDisplayName) sees these checkmarks."
+                        ) {
+                            if sharedEntries.isEmpty {
+                                TripPlannerInfoCard(
+                                    text: "Add items to the group packing list first, then check them off here as you pack.",
+                                    systemImage: "checkmark.circle"
+                                )
+                            } else {
+                                VStack(spacing: 10) {
+                                    ForEach(sharedEntries) { entry in
+                                        TripPlannerPersonalPackingEntryRow(
+                                            entry: entry,
+                                            isChecked: checkedEntryIDs.contains(entry.id),
+                                            onToggle: {
+                                                togglePersonalEntry(entry.id)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, Theme.pageHorizontalInset)
+                    .padding(.top, 18)
+                    .padding(.bottom, 32)
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .tripPlannerNavigationChrome {
+            Button(String(localized: "common.save")) {
+                commitAndDismiss()
+            }
+            .foregroundStyle(.black)
+            .font(.system(size: 17, weight: .semibold))
+        }
+        .onDisappear {
+            commitAction.handler(sanitizedDraft())
+        }
+    }
+
+    private func commitAndDismiss() {
+        commitAction.handler(sanitizedDraft())
+        dismiss()
+    }
+
+    private func togglePersonalEntry(_ id: UUID) {
+        var updatedIDs = checkedEntryIDs
+        if updatedIDs.contains(id) {
+            updatedIDs.remove(id)
+        } else {
+            updatedIDs.insert(id)
+        }
+
+        let updatedProgress = TripPlannerPackingProgress(
+            userKey: actorKey,
+            userName: actorDisplayName,
+            checkedEntryIDs: Array(updatedIDs).sorted { $0.uuidString < $1.uuidString }
+        )
+
+        if let existingIndex = progressEntries.firstIndex(where: { $0.userKey == actorKey }) {
+            progressEntries[existingIndex] = updatedProgress
+        } else {
+            progressEntries.append(updatedProgress)
+        }
+    }
+
+    private func sanitizedDraft() -> TripPlannerPackingDraft {
+        let normalizedItem = TripPlannerChecklistTemplates.defaultPackingItem(existing: item)
+        let normalizedSharedEntries = TripPlannerPackingCodec.decodeEntries(from: normalizedItem.notes)
+        return TripPlannerPackingDraft(
+            item: normalizedItem,
+            progressEntries: TripPlannerPackingCodec.sanitizedProgressEntries(
+                progressEntries,
+                sharedEntries: normalizedSharedEntries
+            )
+        )
+    }
+}
+
+private struct TripPlannerPersonalPackingEntryRow: View {
+    let entry: TripPlannerPackingEntry
+    let isChecked: Bool
+    let onToggle: () -> Void
+
+    var body: some View {
+        Button(action: onToggle) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(isChecked ? Color(red: 0.14, green: 0.50, blue: 0.25) : .black.opacity(0.42))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(entry.title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.black)
+
+                    if !entry.note.isEmpty {
+                        Text(entry.note)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.black.opacity(0.62))
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.white.opacity(0.78))
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 private struct TripPlannerChecklistDayCell: View {
     let date: Date
     let month: Date
@@ -5590,6 +6556,13 @@ private struct TripPlannerChecklistDayCell: View {
         Calendar.current.isDate(date, equalTo: month, toGranularity: .month)
     }
 
+    private var isCompletedDay: Bool {
+        guard let planForDate else { return false }
+        let items = planForDate.checklistItems
+        guard !items.isEmpty else { return false }
+        return items.allSatisfy(\.isCompleted)
+    }
+
     var body: some View {
         Button {
             selectedDayPlanID = planForDate?.id
@@ -5597,12 +6570,12 @@ private struct TripPlannerChecklistDayCell: View {
             VStack(spacing: 4) {
                 Text(AppNumberFormatting.integerString(Calendar.current.component(.day, from: date)))
                     .font(.system(size: 13, weight: isSelected ? .bold : .semibold))
-                    .foregroundStyle(isSelected ? .white : .black)
+                    .foregroundStyle(isSelected || isCompletedDay ? .white : .black)
 
                 if let planForDate {
                     Image(systemName: planForDate.kind == .travel ? "airplane" : "bed.double.fill")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(isSelected ? .white.opacity(0.95) : .black.opacity(0.58))
+                        .foregroundStyle(isSelected || isCompletedDay ? .white.opacity(0.95) : .black.opacity(0.58))
                 } else {
                     Circle()
                         .fill(Color.clear)
@@ -5626,7 +6599,13 @@ private struct TripPlannerChecklistDayCell: View {
 
     private var backgroundColor: Color {
         if isSelected {
+            if isCompletedDay {
+                return Color(red: 0.17, green: 0.55, blue: 0.28)
+            }
             return Color.black.opacity(0.84)
+        }
+        if isCompletedDay {
+            return Color(red: 0.22, green: 0.66, blue: 0.34)
         }
         if planForDate != nil {
             return Color.white.opacity(0.88)
@@ -5636,7 +6615,13 @@ private struct TripPlannerChecklistDayCell: View {
 
     private var borderColor: Color {
         if isSelected {
+            if isCompletedDay {
+                return Color(red: 0.13, green: 0.42, blue: 0.21)
+            }
             return Color.black.opacity(0.9)
+        }
+        if isCompletedDay {
+            return Color(red: 0.13, green: 0.42, blue: 0.21).opacity(0.75)
         }
         return Color.black.opacity(planForDate != nil ? 0.08 : 0.03)
     }
@@ -5647,61 +6632,109 @@ private struct TripPlannerChecklistItemEditorRow: View {
     let actorId: UUID?
     let actorName: String
     let showsRemove: Bool
+    let showsCompletion: Bool
+    let showsTitleField: Bool
+    let showsCategoryLabel: Bool
     let onRemove: () -> Void
+
+    private var notePlaceholder: String {
+        switch item.category {
+        case .accommodation:
+            return "Add hotel name, address, confirmation number, or notes"
+        case .packing:
+            return ""
+        default:
+            return "Add notes"
+        }
+    }
+
+    init(
+        item: Binding<TripPlannerChecklistItem>,
+        actorId: UUID?,
+        actorName: String,
+        showsRemove: Bool,
+        showsCompletion: Bool = true,
+        showsTitleField: Bool = true,
+        showsCategoryLabel: Bool = true,
+        onRemove: @escaping () -> Void
+    ) {
+        self._item = item
+        self.actorId = actorId
+        self.actorName = actorName
+        self.showsRemove = showsRemove
+        self.showsCompletion = showsCompletion
+        self.showsTitleField = showsTitleField
+        self.showsCategoryLabel = showsCategoryLabel
+        self.onRemove = onRemove
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 10) {
-                Button {
-                    item = item.updatedCompletion(
-                        isCompleted: !item.isCompleted,
-                        actorId: actorId,
-                        actorName: actorName
-                    )
-                } label: {
-                    Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(item.isCompleted ? Color(red: 0.14, green: 0.50, blue: 0.25) : .black.opacity(0.42))
+                if showsCompletion {
+                    Button {
+                        item = item.updatedCompletion(
+                            isCompleted: !item.isCompleted,
+                            actorId: actorId,
+                            actorName: actorName
+                        )
+                    } label: {
+                        Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(item.isCompleted ? Color(red: 0.14, green: 0.50, blue: 0.25) : .black.opacity(0.42))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField("Task", text: Binding(
-                        get: { item.title },
-                        set: { newValue in
-                            item = TripPlannerChecklistItem(
-                                id: item.id,
-                                category: item.category,
-                                title: newValue,
-                                notes: item.notes,
-                                isCompleted: item.isCompleted,
-                                completedById: item.completedById,
-                                completedByName: item.completedByName,
-                                completedAt: item.completedAt
-                            )
-                        }
-                    ))
-                    .textInputAutocapitalization(.sentences)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.black)
+                    if showsTitleField {
+                        TextField("Task", text: Binding(
+                            get: { item.title },
+                            set: { newValue in
+                                item = TripPlannerChecklistItem(
+                                    id: item.id,
+                                    category: item.category,
+                                    title: newValue,
+                                    notes: item.notes,
+                                    isCompleted: item.isCompleted,
+                                    completedById: item.completedById,
+                                    completedByName: item.completedByName,
+                                    completedAt: item.completedAt
+                                )
+                            }
+                        ))
+                        .textInputAutocapitalization(.sentences)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.black)
 
-                    TextField("Add booking link, hotel name, reservation details, or notes", text: Binding(
-                        get: { item.notes },
-                        set: { item = item.updatedNotes($0) }
-                    ))
-                    .textInputAutocapitalization(.sentences)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.black.opacity(0.78))
-
-                    HStack(spacing: 8) {
-                        Label(item.category.title, systemImage: item.category.symbolName)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.black.opacity(0.6))
-
-                        if let completedByName = item.completedByName, item.isCompleted {
+                        if let completedByName = item.completedByName,
+                           item.isCompleted,
+                           showsCompletion {
                             Text("Completed by \(completedByName)")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.black.opacity(0.55))
+                        }
+                    }
+
+                    if item.category == .packing {
+                        TripPlannerPackingEntriesEditor(item: $item)
+                    } else {
+                        TextField(notePlaceholder, text: Binding(
+                            get: { item.notes },
+                            set: { item = item.updatedNotes($0) }
+                        ))
+                        .textInputAutocapitalization(.sentences)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.black.opacity(0.78))
+                    }
+
+                    if showsCategoryLabel {
+                        HStack(spacing: 8) {
+                            if showsCategoryLabel {
+                                Label(item.category.title, systemImage: item.category.symbolName)
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(.black.opacity(0.6))
+                            }
                         }
                     }
                 }
@@ -5727,6 +6760,137 @@ private struct TripPlannerChecklistItemEditorRow: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color.white.opacity(0.78))
         )
+    }
+}
+
+private struct TripPlannerPackingEntriesEditor: View {
+    @Binding var item: TripPlannerChecklistItem
+    @State private var entries: [TripPlannerPackingEntry]
+    @State private var customPackingItem = ""
+    @State private var customPackingNote = ""
+
+    init(item: Binding<TripPlannerChecklistItem>) {
+        self._item = item
+        self._entries = State(initialValue: TripPlannerPackingCodec.decodeEntries(from: item.wrappedValue.notes))
+    }
+
+    private var availablePackingSuggestions: [String] {
+        TripPlannerChecklistTemplates.packingSuggestions.filter { suggestion in
+            !entries.contains { $0.title.caseInsensitiveCompare(suggestion) == .orderedSame }
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if !entries.isEmpty {
+                VStack(spacing: 8) {
+                    ForEach($entries) { $entry in
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "circle.fill")
+                                    .font(.system(size: 6))
+                                    .foregroundStyle(.black.opacity(0.42))
+
+                                Text(entry.title)
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(.black.opacity(0.78))
+
+                                Spacer(minLength: 0)
+
+                                Button {
+                                    removePackingItem(id: entry.id)
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.black.opacity(0.45))
+                                }
+                                .buttonStyle(.plain)
+                            }
+
+                            TextField("Add note (optional)", text: $entry.note)
+                                .textInputAutocapitalization(.sentences)
+                                .font(.system(size: 12))
+                                .foregroundStyle(.black.opacity(0.68))
+                                .padding(.leading, 14)
+                        }
+                    }
+                }
+            }
+
+            if !availablePackingSuggestions.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(availablePackingSuggestions, id: \.self) { suggestion in
+                            Button {
+                                appendPackingItem(suggestion)
+                            } label: {
+                                Text("+ \(suggestion)")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(.black)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color.white.opacity(0.86))
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+
+            HStack(spacing: 8) {
+                VStack(spacing: 8) {
+                    TextField("Add custom item", text: $customPackingItem)
+                        .textInputAutocapitalization(.sentences)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.black.opacity(0.78))
+
+                    TextField("Add note (optional)", text: $customPackingNote)
+                        .textInputAutocapitalization(.sentences)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.black.opacity(0.68))
+                }
+
+                Button {
+                    let trimmed = customPackingItem.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !trimmed.isEmpty else { return }
+                    appendPackingItem(trimmed, note: customPackingNote)
+                    customPackingItem = ""
+                    customPackingNote = ""
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .onChange(of: entries) { _, newEntries in
+            let encoded = TripPlannerPackingCodec.encodeEntries(newEntries)
+            if item.notes != encoded {
+                item = item.updatedNotes(encoded)
+            }
+        }
+        .onChange(of: item.notes) { _, newValue in
+            let encodedEntries = TripPlannerPackingCodec.encodeEntries(entries)
+            guard newValue != encodedEntries else { return }
+            entries = TripPlannerPackingCodec.decodeEntries(from: newValue)
+        }
+    }
+
+    private func appendPackingItem(_ value: String, note: String = "") {
+        entries.append(
+            TripPlannerPackingEntry(
+                id: UUID(),
+                title: value,
+                note: note.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+        )
+    }
+
+    private func removePackingItem(id: UUID) {
+        entries.removeAll { $0.id == id }
     }
 }
 
@@ -7535,9 +8699,17 @@ private struct TripPlannerStatsPreviewSection: View {
         if groupVisaNeeds.count == 1, let need = groupVisaNeeds.first {
             return need.summaryText(tripLengthDays: tripLengthDays)
         }
-        let travelerNames = Array(NSOrderedSet(array: groupVisaNeeds.map(\.travelerName))) as? [String] ?? []
-        let joined = ListFormatter.localizedString(byJoining: travelerNames)
-        return "\(joined) have visa prep for this trip."
+        let groupedCounts = Dictionary(grouping: groupVisaNeeds, by: \.travelerName)
+            .map { travelerName, needs in
+                let countryCount = Set(needs.map(\.countryID)).count
+                let countryLabel = countryCount == 1 ? "country" : "countries"
+                return "\(travelerName): \(countryCount) \(countryLabel)"
+            }
+            .sorted { (lhs: String, rhs: String) in
+                lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
+            }
+
+        return groupedCounts.joined(separator: " • ")
     }
 
     private var summaryText: String {
@@ -8932,6 +10104,7 @@ private struct TripPlannerSavedTripCard: View {
     let currentUserSnapshot: TripPlannerFriendSnapshot?
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
+    private let profileService = ProfileService(supabase: SupabaseManager.shared)
 
     private var currentUserChip: TripPlannerTravelerChip? {
         if let currentUserSnapshot {
@@ -8948,6 +10121,15 @@ private struct TripPlannerSavedTripCard: View {
             return nil
         }
 
+        if let cachedProfile = profileService.cachedProfile(userId: currentUserId) {
+            return TripPlannerTravelerChip(
+                id: cachedProfile.id.uuidString,
+                name: String(localized: "trip_planner.you"),
+                username: cachedProfile.username,
+                avatarURL: cachedProfile.avatarUrl
+            )
+        }
+
         return TripPlannerTravelerChip(
             id: currentUserId.uuidString,
             name: String(localized: "trip_planner.you"),
@@ -8959,11 +10141,25 @@ private struct TripPlannerSavedTripCard: View {
     private var travelerChips: [TripPlannerTravelerChip] {
         var chips: [TripPlannerTravelerChip] = []
 
+        let participantSnapshots: [TripPlannerFriendSnapshot]
+        if trip.friends.isEmpty {
+            participantSnapshots = zip(trip.friendIds, trip.friendNames).map { id, name in
+                TripPlannerFriendSnapshot(
+                    id: id,
+                    displayName: name,
+                    username: name.replacingOccurrences(of: " ", with: "").lowercased(),
+                    avatarURL: nil
+                )
+            }
+        } else {
+            participantSnapshots = trip.friends
+        }
+
         if let currentUserChip {
             chips.append(currentUserChip)
         }
 
-        chips.append(contentsOf: trip.friends.map {
+        chips.append(contentsOf: participantSnapshots.map {
             TripPlannerTravelerChip(
                 id: $0.id.uuidString,
                 name: $0.displayName,
@@ -9214,16 +10410,20 @@ private struct TripPlannerEditableSectionCard<Accessory: View, Content: View>: V
     }
 
     var body: some View {
+        let hasSubtitle = !subtitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: hasSubtitle ? 4 : 0) {
                     Text(title)
                         .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(.black)
 
-                    Text(subtitle)
-                        .font(.system(size: 14))
-                        .foregroundStyle(.black.opacity(0.68))
+                    if hasSubtitle {
+                        Text(subtitle)
+                            .font(.system(size: 14))
+                            .foregroundStyle(.black.opacity(0.68))
+                    }
                 }
 
                 Spacer()
