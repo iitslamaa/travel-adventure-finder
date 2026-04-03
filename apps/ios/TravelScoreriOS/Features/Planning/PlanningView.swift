@@ -6062,23 +6062,32 @@ private struct TripPlannerChecklistEditorView: View {
         guard dayIndex > 0 else { return nil }
 
         let currentPlan = dayPlans[dayIndex]
-        let previousDayPlan = dayPlans[dayIndex - 1]
-        guard currentPlan.kind == .country, previousDayPlan.kind == .country else { return nil }
-        guard currentPlan.countryId == previousDayPlan.countryId else { return nil }
+        guard currentPlan.kind == .country else { return nil }
 
         let currentItems = dayPlans[dayIndex].checklistItems
         let currentAccommodation = currentItems.first { $0.category == .accommodation }
         let currentNotes = currentAccommodation?.notes.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard currentNotes.isEmpty else { return nil }
 
-        let previousItems = dayPlans[dayIndex - 1].checklistItems
-        guard let previousAccommodation = previousItems.first(where: {
-            $0.category == .accommodation && !$0.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }) else {
-            return nil
+        var searchIndex = dayIndex - 1
+
+        while searchIndex >= 0 {
+            let priorPlan = dayPlans[searchIndex]
+
+            if priorPlan.kind == .country, priorPlan.countryId != currentPlan.countryId {
+                return nil
+            }
+
+            if let priorAccommodation = priorPlan.checklistItems.first(where: {
+                $0.category == .accommodation && !$0.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }) {
+                return priorAccommodation
+            }
+
+            searchIndex -= 1
         }
 
-        return previousAccommodation
+        return nil
     }
 
     private func applyAccommodationSuggestion(_ suggestion: TripPlannerChecklistItem, to dayIndex: Int) {
