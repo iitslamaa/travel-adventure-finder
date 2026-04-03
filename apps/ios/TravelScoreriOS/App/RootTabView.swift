@@ -72,6 +72,11 @@ struct RootTabView: View {
     @State private var discoveryPath = NavigationPath()
     @State private var planningPath = NavigationPath()
     @State private var morePath = NavigationPath()
+    @State private var discoveryRootID = UUID()
+    @State private var planningRootID = UUID()
+    @State private var friendsRootID = UUID()
+    @State private var profileRootID = UUID()
+    @State private var moreRootID = UUID()
 
     @State private var selectedTab: Tab = .discovery
     @State private var floatingTabBarInset: CGFloat = 0
@@ -82,6 +87,7 @@ struct RootTabView: View {
         NavigationStack(path: $discoveryPath) {
             DiscoveryView()
         }
+        .id(discoveryRootID)
         .tag(Tab.discovery)
 
         // Planning
@@ -89,6 +95,7 @@ struct RootTabView: View {
             PlanningView()
                 .environmentObject(sharedTripInbox)
         }
+        .id(planningRootID)
         .tag(Tab.planning)
 
         // Friends (auth required)
@@ -109,6 +116,7 @@ struct RootTabView: View {
                 socialDestination(route, navigator: friendsSocialNav)
             }
         }
+        .id(friendsRootID)
         .tag(Tab.friends)
 
         // Profile (auth required)
@@ -130,12 +138,14 @@ struct RootTabView: View {
                 socialDestination(route, navigator: profileSocialNav)
             }
         }
+        .id(profileRootID)
         .tag(Tab.profile)
 
         // More
         NavigationStack(path: $morePath) {
             MoreView()
         }
+        .id(moreRootID)
         .tag(Tab.more)
         }
         .ignoresSafeArea()
@@ -204,6 +214,34 @@ struct RootTabView: View {
         morePath = NavigationPath()
         friendsSocialNav.reset()
         profileSocialNav.reset()
+    }
+
+    private func selectTab(_ tab: Tab) {
+        if selectedTab == tab {
+            resetPath(for: tab)
+        } else {
+            selectedTab = tab
+        }
+    }
+
+    private func resetPath(for tab: Tab) {
+        switch tab {
+        case .discovery:
+            discoveryPath = NavigationPath()
+            discoveryRootID = UUID()
+        case .planning:
+            planningPath = NavigationPath()
+            planningRootID = UUID()
+        case .friends:
+            friendsSocialNav.reset()
+            friendsRootID = UUID()
+        case .profile:
+            profileSocialNav.reset()
+            profileRootID = UUID()
+        case .more:
+            morePath = NavigationPath()
+            moreRootID = UUID()
+        }
     }
 
     private var customTabBar: some View {
@@ -311,7 +349,7 @@ struct RootTabView: View {
         let isSelected = selectedTab == tab
 
         Button {
-            selectedTab = tab
+            selectTab(tab)
         } label: {
             VStack(spacing: 4) {
                 ZStack(alignment: .topTrailing) {
