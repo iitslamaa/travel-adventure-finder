@@ -4842,10 +4842,46 @@ private struct TripPlannerCountriesEditorView: View {
         _selectedCountryIds = State(initialValue: Set(trip.countryIds))
     }
 
+    private var fallbackTripCountries: [Country] {
+        trip.countryIds.enumerated().map { index, id in
+            let savedName = trip.countryNames.indices.contains(index) ? trip.countryNames[index] : CountrySelectionFormatter.localizedName(for: id)
+            return Country(
+                iso2: id,
+                name: savedName,
+                score: nil
+            )
+        }
+    }
+
+    private var allKnownCountries: [Country] {
+        var merged: [String: Country] = Dictionary(
+            uniqueKeysWithValues: fallbackTripCountries.map { ($0.id, $0) }
+        )
+
+        for country in countries {
+            merged[country.id] = country
+        }
+
+        return Array(merged.values)
+    }
+
+    private var selectedCountries: [Country] {
+        allKnownCountries
+            .filter { selectedCountryIds.contains($0.id) }
+            .sorted { lhs, rhs in
+                let lhsIndex = trip.countryIds.firstIndex(of: lhs.id) ?? Int.max
+                let rhsIndex = trip.countryIds.firstIndex(of: rhs.id) ?? Int.max
+                if lhsIndex != rhsIndex {
+                    return lhsIndex < rhsIndex
+                }
+                return lhs.localizedDisplayName.localizedCaseInsensitiveCompare(rhs.localizedDisplayName) == .orderedAscending
+            }
+    }
+
     private var visibleCountries: [Country] {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedSearch = trimmed.normalizedSearchKey
-        let filtered = countries.filter { country in
+        let filtered = allKnownCountries.filter { country in
             guard !trimmed.isEmpty else { return true }
             return country.localizedSearchableNames.contains {
                 $0.normalizedSearchKey.contains(normalizedSearch)
@@ -4856,7 +4892,7 @@ private struct TripPlannerCountriesEditorView: View {
     }
 
     private var sharedBucketCountries: [Country] {
-        countries
+        allKnownCountries
             .filter { sharedBucketCountryIds.contains($0.id) }
             .sorted { $0.localizedDisplayName.localizedCaseInsensitiveCompare($1.localizedDisplayName) == .orderedAscending }
     }
@@ -4867,12 +4903,11 @@ private struct TripPlannerCountriesEditorView: View {
     }
 
     private var recommendedCountries: [Country] {
-        let selectedCountries = countries.filter { selectedCountryIds.contains($0.id) }
         let selectedRegions = Set(selectedCountries.compactMap(\.region))
         let selectedSubregions = Set(selectedCountries.compactMap(\.subregion))
         let selectedIDs = Set(selectedCountries.map(\.id))
 
-        return countries
+        return allKnownCountries
             .filter { !selectedIDs.contains($0.id) }
             .filter { country in
                 if selectedRegions.isEmpty && selectedSubregions.isEmpty {
@@ -4920,6 +4955,27 @@ private struct TripPlannerCountriesEditorView: View {
                                 title: String(localized: "trip_planner.countries.included_title"),
                                 subtitle: String(localized: "trip_planner.countries.included_subtitle")
                             ) {
+                                if !selectedCountries.isEmpty {
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Text(String(localized: "trip_planner.countries.included_title"))
+                                            .font(.system(size: 15, weight: .bold))
+                                            .foregroundStyle(.black)
+
+                                        TripPlannerChipGrid(
+                                            items: selectedCountries.map { country in
+                                                TripPlannerChipItem(
+                                                    id: country.id,
+                                                    title: "\(country.flagEmoji) \(country.localizedDisplayName)",
+                                                    isSelected: true
+                                                )
+                                            },
+                                            onTap: { item in
+                                                toggle(item.id)
+                                            }
+                                        )
+                                    }
+                                }
+
                                 if !sharedBucketCountries.isEmpty {
                                     VStack(alignment: .leading, spacing: 10) {
                                         HStack {
@@ -5015,9 +5071,7 @@ private struct TripPlannerCountriesEditorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
             Button(String(localized: "common.save")) {
-                let selectedCountries = countries
-                    .filter { selectedCountryIds.contains($0.id) }
-                    .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                let selectedCountries = self.selectedCountries
 
                 onSave(
                     TripPlannerTrip(
@@ -11238,6 +11292,10 @@ private struct TripPlannerCurrencyInput: View {
     @Binding var text: String
     let placeholder: String
 
+    private var decimalSeparator: String {
+        Locale.current.decimalSeparator ?? "."
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
@@ -11253,6 +11311,12 @@ private struct TripPlannerCurrencyInput: View {
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.plain)
                     .foregroundStyle(.black)
+                    .onChange(of: text) { _, newValue in
+                        let sanitized = sanitizedCurrencyText(from: newValue)
+                        if sanitized != newValue {
+                            text = sanitized
+                        }
+                    }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
@@ -11261,6 +11325,30 @@ private struct TripPlannerCurrencyInput: View {
                     .fill(Color.white.opacity(0.78))
             )
         }
+    }
+
+    private func sanitizedCurrencyText(from rawValue: String) -> String {
+        var result = ""
+        var hasDecimalSeparator = false
+        var fractionalDigitCount = 0
+
+        for character in rawValue {
+            if character.isNumber {
+                if hasDecimalSeparator {
+                    guard fractionalDigitCount < 2 else { continue }
+                    fractionalDigitCount += 1
+                }
+                result.append(character)
+                continue
+            }
+
+            if String(character) == decimalSeparator, !hasDecimalSeparator {
+                hasDecimalSeparator = true
+                result.append(character)
+            }
+        }
+
+        return result
     }
 }
 
