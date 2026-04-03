@@ -5388,12 +5388,17 @@ private struct TripPlannerDayPlanEditorRow: View {
         Binding(
             get: { plan.kind },
             set: { newKind in
+                let syncedChecklistItems = TripPlannerDayPlanBuilder.syncedChecklistItems(
+                    plan.checklistItems,
+                    dayKind: newKind
+                )
+
                 if newKind == .travel {
                     plan = TripPlannerDayPlan(
                         id: plan.id,
                         date: plan.date,
                         kind: .travel,
-                        checklistItems: plan.checklistItems
+                        checklistItems: syncedChecklistItems
                     )
                 } else {
                     let country = preferredCountryOption
@@ -5403,7 +5408,7 @@ private struct TripPlannerDayPlanEditorRow: View {
                         kind: .country,
                         countryId: country?.id,
                         countryName: country?.name,
-                        checklistItems: plan.checklistItems
+                        checklistItems: syncedChecklistItems
                     )
                 }
             }
