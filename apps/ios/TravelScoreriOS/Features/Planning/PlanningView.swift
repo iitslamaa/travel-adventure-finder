@@ -687,37 +687,12 @@ struct TripPlannerFriendSnapshot: Codable, Identifiable, Hashable, Sendable {
         return trimmedUsername.isEmpty ? "Traveler" : trimmedUsername
     }
 
-    static func currentUserFallback(userId: UUID, authUser: User?) -> TripPlannerFriendSnapshot {
-        let metadata = authUser?.userMetadata
-        func nonEmpty(_ value: String?) -> String? {
-            guard let value else { return nil }
-            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmed.isEmpty ? nil : trimmed
-        }
-
-        let username =
-            nonEmpty(metadata?["preferred_username"]?.stringValue) ??
-            nonEmpty(metadata?["username"]?.stringValue) ??
-            nonEmpty(metadata?["user_name"]?.stringValue) ??
-            nonEmpty(authUser?.email?.split(separator: "@").first.map(String.init)) ??
-            "traveler"
-
-        let displayName =
-            nonEmpty(metadata?["first_name"]?.stringValue) ??
-            nonEmpty(metadata?["given_name"]?.stringValue) ??
-            nonEmpty(metadata?["full_name"]?.stringValue) ??
-            nonEmpty(metadata?["name"]?.stringValue) ??
-            username
-
-        let avatarURL =
-            nonEmpty(metadata?["avatar_url"]?.stringValue) ??
-            nonEmpty(metadata?["picture"]?.stringValue)
-
+    static func currentUserFallback(userId: UUID) -> TripPlannerFriendSnapshot {
         return TripPlannerFriendSnapshot(
             id: userId,
-            displayName: displayName,
-            username: username,
-            avatarURL: avatarURL
+            displayName: String(localized: "trip_planner.you"),
+            username: "traveler",
+            avatarURL: nil
         )
     }
 }
@@ -3433,10 +3408,9 @@ private struct TripPlannerDetailView: View {
             )
         }
 
-        return TripPlannerFriendSnapshot.currentUserFallback(
-            userId: currentUserId,
-            authUser: SupabaseManager.shared.client.auth.currentUser
-        )
+        // Keep the planner neutral until the persisted profile arrives so
+        // auth-provider metadata never flashes over a customized profile.
+        return TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
     }
 
     private var displayedTravelers: [TripPlannerFriendSnapshot] {
@@ -6088,23 +6062,32 @@ private struct TripPlannerChecklistEditorView: View {
         guard dayIndex > 0 else { return nil }
 
         let currentPlan = dayPlans[dayIndex]
-        let previousDayPlan = dayPlans[dayIndex - 1]
-        guard currentPlan.kind == .country, previousDayPlan.kind == .country else { return nil }
-        guard currentPlan.countryId == previousDayPlan.countryId else { return nil }
+        guard currentPlan.kind == .country else { return nil }
 
         let currentItems = dayPlans[dayIndex].checklistItems
         let currentAccommodation = currentItems.first { $0.category == .accommodation }
         let currentNotes = currentAccommodation?.notes.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard currentNotes.isEmpty else { return nil }
 
-        let previousItems = dayPlans[dayIndex - 1].checklistItems
-        guard let previousAccommodation = previousItems.first(where: {
-            $0.category == .accommodation && !$0.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }) else {
-            return nil
+        var searchIndex = dayIndex - 1
+
+        while searchIndex >= 0 {
+            let priorPlan = dayPlans[searchIndex]
+
+            if priorPlan.kind == .country, priorPlan.countryId != currentPlan.countryId {
+                return nil
+            }
+
+            if let priorAccommodation = priorPlan.checklistItems.first(where: {
+                $0.category == .accommodation && !$0.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }) {
+                return priorAccommodation
+            }
+
+            searchIndex -= 1
         }
 
-        return previousAccommodation
+        return nil
     }
 
     private func applyAccommodationSuggestion(_ suggestion: TripPlannerChecklistItem, to dayIndex: Int) {
