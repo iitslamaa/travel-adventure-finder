@@ -687,37 +687,12 @@ struct TripPlannerFriendSnapshot: Codable, Identifiable, Hashable, Sendable {
         return trimmedUsername.isEmpty ? "Traveler" : trimmedUsername
     }
 
-    static func currentUserFallback(userId: UUID, authUser: User?) -> TripPlannerFriendSnapshot {
-        let metadata = authUser?.userMetadata
-        func nonEmpty(_ value: String?) -> String? {
-            guard let value else { return nil }
-            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmed.isEmpty ? nil : trimmed
-        }
-
-        let username =
-            nonEmpty(metadata?["preferred_username"]?.stringValue) ??
-            nonEmpty(metadata?["username"]?.stringValue) ??
-            nonEmpty(metadata?["user_name"]?.stringValue) ??
-            nonEmpty(authUser?.email?.split(separator: "@").first.map(String.init)) ??
-            "traveler"
-
-        let displayName =
-            nonEmpty(metadata?["first_name"]?.stringValue) ??
-            nonEmpty(metadata?["given_name"]?.stringValue) ??
-            nonEmpty(metadata?["full_name"]?.stringValue) ??
-            nonEmpty(metadata?["name"]?.stringValue) ??
-            username
-
-        let avatarURL =
-            nonEmpty(metadata?["avatar_url"]?.stringValue) ??
-            nonEmpty(metadata?["picture"]?.stringValue)
-
+    static func currentUserFallback(userId: UUID) -> TripPlannerFriendSnapshot {
         return TripPlannerFriendSnapshot(
             id: userId,
-            displayName: displayName,
-            username: username,
-            avatarURL: avatarURL
+            displayName: String(localized: "trip_planner.you"),
+            username: "traveler",
+            avatarURL: nil
         )
     }
 }
@@ -3433,10 +3408,9 @@ private struct TripPlannerDetailView: View {
             )
         }
 
-        return TripPlannerFriendSnapshot.currentUserFallback(
-            userId: currentUserId,
-            authUser: SupabaseManager.shared.client.auth.currentUser
-        )
+        // Keep the planner neutral until the persisted profile arrives so
+        // auth-provider metadata never flashes over a customized profile.
+        return TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
     }
 
     private var displayedTravelers: [TripPlannerFriendSnapshot] {
