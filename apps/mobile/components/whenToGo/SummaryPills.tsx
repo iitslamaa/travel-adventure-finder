@@ -2,57 +2,75 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 
-export default function SummaryPills({ peak, shoulder }: { peak: number; shoulder: number }) {
+export default function SummaryPills({
+  peak,
+  good,
+  shoulder,
+  rough,
+}: {
+  peak: number;
+  good: number;
+  shoulder: number;
+  rough: number;
+}) {
   const colors = useTheme();
 
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.pill,
-          { backgroundColor: colors.greenBg, borderColor: colors.greenBorder },
-        ]}
-      >
-        <Text style={{ color: colors.greenText, fontWeight: '600' }}>
-          Peak: {peak}
-        </Text>
-      </View>
+      <Pill label="Peak" value={peak} backgroundColor={colors.greenBg} borderColor={colors.greenBorder} textColor={colors.greenText} />
+      <Pill label="Good" value={good} backgroundColor={colors.greenBg} borderColor={colors.greenBorder} textColor={colors.greenText} />
+      <Pill label="Shoulder" value={shoulder} backgroundColor={colors.yellowBg} borderColor={colors.yellowBorder} textColor={colors.yellowText} />
+      <Pill label="Rough" value={rough} backgroundColor={colors.redBg} borderColor={colors.redBorder} textColor={colors.redText} />
+      <Pill label="Total" value={peak + good + shoulder + rough} backgroundColor={colors.card} borderColor={colors.border} textColor={colors.textPrimary} />
+    </View>
+  );
+}
 
-      <View
-        style={[
-          styles.pill,
-          { backgroundColor: colors.yellowBg, borderColor: colors.yellowBorder },
-        ]}
-      >
-        <Text style={{ color: colors.yellowText, fontWeight: '600' }}>
-          Shoulder: {shoulder}
-        </Text>
-      </View>
-
-      <View
-        style={[
-          styles.pill,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <Text style={{ color: colors.textPrimary, fontWeight: '600' }}>
-          Total: {peak + shoulder}
-        </Text>
-      </View>
+function Pill({
+  label,
+  value,
+  backgroundColor,
+  borderColor,
+  textColor,
+}: {
+  label: string;
+  value: number;
+  backgroundColor: string;
+  borderColor: string;
+  textColor: string;
+}) {
+  return (
+    <View style={[styles.pill, { backgroundColor, borderColor }]}>
+      <Text style={[styles.label, { color: textColor }]}>{label}</Text>
+      <Text style={[styles.value, { color: textColor }]}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "flex-end",
-    marginVertical: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: 8,
   },
   pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    marginVertical: 4,
+    minWidth: 76,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 16,
     borderWidth: 1,
+    alignItems: "center",
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  value: {
+    marginTop: 2,
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

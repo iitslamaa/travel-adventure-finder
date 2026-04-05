@@ -1,5 +1,5 @@
-import { WorldMap } from '../src/features/map/components/WorldMap';
+import { Redirect } from 'expo-router';
 
-export default function MapTest() {
-  return <WorldMap />;
+export default function MapTestRedirect() {
+  return <Redirect href="/score-map" />;
 }

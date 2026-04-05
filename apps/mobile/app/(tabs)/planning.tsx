@@ -1,141 +1,226 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
+import ScrapbookBackground from '../../components/theme/ScrapbookBackground';
+import ScrapbookCard from '../../components/theme/ScrapbookCard';
+import TitleBanner from '../../components/theme/TitleBanner';
 
 type PlanningCardProps = {
   title: string;
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
+  eyebrow: string;
   onPress: () => void;
 };
 
-function PlanningCard({ title, subtitle, icon, onPress }: PlanningCardProps) {
+function PlanningCard({ title, subtitle, icon, eyebrow, onPress }: PlanningCardProps) {
   const colors = useTheme();
 
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          opacity: pressed ? 0.9 : 1,
-        },
-      ]}
+      style={({ pressed }) => [styles.cardPressable, { opacity: pressed ? 0.9 : 1 }]}
     >
-      <View
-        style={[
-          styles.cardIconWrap,
-          { backgroundColor: colors.segmentBg, borderColor: colors.border },
-        ]}
-      >
-        <Ionicons name={icon} size={20} color={colors.textPrimary} />
-      </View>
+      <ScrapbookCard innerStyle={styles.card}>
+        <View style={styles.cardTopRow}>
+          <View style={styles.cardTitleBlock}>
+            <Text style={[styles.cardEyebrow, { color: colors.textSecondary }]}>
+              {eyebrow}
+            </Text>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+              {title}
+            </Text>
+          </View>
 
-      <View style={styles.cardBody}>
-        <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-          {title}
-        </Text>
-        <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-          {subtitle}
-        </Text>
-      </View>
+          <View
+            style={[
+              styles.cardIconWrap,
+              { backgroundColor: colors.paperAlt, borderColor: colors.border },
+            ]}
+          >
+            <Ionicons name={icon} size={18} color={colors.textPrimary} />
+          </View>
 
-      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          <View style={[styles.chevronWrap, { backgroundColor: colors.paperAlt }]}>
+            <Ionicons name="chevron-forward" size={18} color={colors.textPrimary} />
+          </View>
+        </View>
+
+        <View style={styles.cardBody}>
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+            {subtitle}
+          </Text>
+        </View>
+      </ScrapbookCard>
     </Pressable>
   );
 }
 
 export default function PlanningScreen() {
-  const colors = useTheme();
   const insets = useSafeAreaInsets();
+  const colors = useTheme();
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{
-        paddingTop: insets.top + 18,
-        paddingHorizontal: 20,
-        paddingBottom: 120,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={[styles.title, { color: colors.textPrimary }]}>Planning</Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        Keep your bucket list, visited countries, and upcoming trip ideas in one
-        place.
-      </Text>
+    <ScrapbookBackground overlay={0}>
+      <ImageBackground
+        source={require('../../assets/scrapbook/travel2.png')}
+        style={styles.pageBackground}
+        imageStyle={styles.pageBackgroundImage}
+      >
+      <View style={styles.pageWash} />
+      <ScrollView
+        style={{ flex: 1, backgroundColor: 'transparent' }}
+        contentContainerStyle={{
+          paddingTop: insets.top + 18,
+          paddingHorizontal: 20,
+          paddingBottom: 120,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <TitleBanner title="Plan" />
 
-      <View style={styles.stack}>
-        <PlanningCard
-          title="Bucket List"
-          subtitle="Countries you want to visit next."
-          icon="bookmark-outline"
-          onPress={() => router.push('/lists/bucket')}
-        />
+        <View style={styles.summaryStrip}>
+          <View style={[styles.summaryChip, { backgroundColor: colors.paperAlt, borderColor: colors.border }]}>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+              Saved lists
+            </Text>
+            <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>
+              Bucket + Visited
+            </Text>
+          </View>
 
-        <PlanningCard
-          title="Visited"
-          subtitle="The places you have already checked off."
-          icon="checkmark-circle-outline"
-          onPress={() => router.push('/lists/visited')}
-        />
+          <View style={[styles.summaryChip, { backgroundColor: colors.paperAlt, borderColor: colors.border }]}>
+            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+              Trip space
+            </Text>
+            <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>
+              Shared plans
+            </Text>
+          </View>
+        </View>
 
-        <PlanningCard
-          title="Trip Planner"
-          subtitle="Save trip ideas with dates, countries, and travel buddies."
-          icon="airplane-outline"
-          onPress={() => router.push('/trip-planner' as any)}
-        />
-      </View>
-    </ScrollView>
+        <View style={styles.stack}>
+          <PlanningCard
+            title="Bucket List"
+            subtitle="Countries you want to visit next."
+            icon="bookmark-outline"
+            eyebrow="Saved list"
+            onPress={() => router.push('/lists/bucket')}
+          />
+
+          <PlanningCard
+            title="Visited"
+            subtitle="The places you have already checked off."
+            icon="checkmark-circle-outline"
+            eyebrow="Travel history"
+            onPress={() => router.push('/lists/visited')}
+          />
+
+          <PlanningCard
+            title="Trip Planner"
+            subtitle="Save trip ideas with dates, countries, and travel buddies."
+            icon="airplane-outline"
+            eyebrow="Shared plans"
+            onPress={() => router.push('/trip-planner' as any)}
+          />
+        </View>
+      </ScrollView>
+      </ImageBackground>
+    </ScrapbookBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
+  pageBackground: {
+    flex: 1,
   },
-  subtitle: {
+  pageBackgroundImage: {
+    resizeMode: 'cover',
+  },
+  pageWash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(250,245,237,0.18)',
+  },
+  summaryStrip: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  summaryChip: {
+    flex: 1,
+    minHeight: 58,
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    justifyContent: 'center',
+  },
+  summaryLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  summaryValue: {
     fontSize: 15,
-    lineHeight: 22,
-    marginTop: 8,
-    marginBottom: 24,
+    fontWeight: '700',
   },
   stack: {
-    gap: 14,
+    gap: 22,
+    marginTop: 16,
+  },
+  cardPressable: {
+    marginHorizontal: 2,
   },
   card: {
-    borderWidth: 1,
-    borderRadius: 22,
     padding: 18,
+    minHeight: 146,
+  },
+  cardTitleBlock: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: 12,
+  },
+  cardEyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
+  cardTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 14,
   },
   cardIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
+    width: 38,
+    height: 38,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    marginRight: 10,
+  },
+  chevronWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardBody: {
-    flex: 1,
-    marginRight: 12,
+    gap: 6,
   },
   cardTitle: {
-    fontSize: 17,
+    fontSize: 21,
     fontWeight: '700',
-    marginBottom: 4,
   },
   cardSubtitle: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 22,
   },
 });

@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../../hooks/useTheme';
+import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
 
 type EngagementProfile = {
   id: string;
@@ -95,7 +96,8 @@ export default function FriendEngagementCard({
   ].filter(Boolean);
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card }]}>
+    <ScrapbookCard innerStyle={styles.card}>
+      <Text style={[styles.eyebrow, { color: colors.textMuted }]}>Social signals</Text>
       <Text style={[styles.title, { color: colors.textPrimary }]}>Friends</Text>
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         {loading
@@ -108,7 +110,15 @@ export default function FriendEngagementCard({
       </Text>
 
       {!loading ? (
-        <View style={styles.stack}>
+        <View style={[styles.stackCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.summaryBadgeRow}>
+            <View style={[styles.summaryBadge, { backgroundColor: colors.paperAlt, borderColor: colors.border }]}>
+              <Text style={[styles.summaryBadgeText, { color: colors.textPrimary }]}>
+                {totalFriends} friends
+              </Text>
+            </View>
+          </View>
+          <View style={styles.stack}>
           <FriendRow
             icon="checkmark-circle"
             title="Visited"
@@ -130,17 +140,24 @@ export default function FriendEngagementCard({
             onSelectProfile={onSelectProfile}
             colors={colors}
           />
+          </View>
         </View>
       ) : null}
-    </View>
+    </ScrapbookCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 22,
     padding: 18,
     marginBottom: 18,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
   title: {
     fontSize: 18,
@@ -152,8 +169,27 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   stack: {
-    marginTop: 16,
     gap: 14,
+  },
+  stackCard: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 14,
+  },
+  summaryBadgeRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  summaryBadge: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  summaryBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   group: {
     gap: 10,

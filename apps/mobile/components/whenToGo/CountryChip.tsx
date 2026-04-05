@@ -1,39 +1,25 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { getScoreColor } from "../../utils/seasonColor";
 
 type Props = {
-  name: string;
-  region: string;
-  score: number;
-  iso2: string;
+  item: {
+    country: {
+      name: string;
+      facts?: {
+        scoreTotal?: number;
+      };
+      scoreTotal?: number;
+    };
+  };
   onPress?: () => void;
 };
 
-export default function CountryChip({ name, region, score, onPress }: Props) {
+export default function CountryChip({ item, onPress }: Props) {
   const theme = useTheme();
+  const score = item.country.facts?.scoreTotal ?? item.country.scoreTotal ?? 0;
   const scoreColors = getScoreColor(score);
-
-  const isDarkSurface = theme.background !== '#F5F5F7';
-
-  const backgroundColor = isDarkSurface
-    ? theme.surface
-    : scoreColors.background;
-
-  const borderColor = isDarkSurface
-    ? scoreColors.text
-    : theme.border;
-
-  const nameColor = isDarkSurface
-    ? theme.textPrimary
-    : theme.textPrimary;
-
-  const regionColor = isDarkSurface
-    ? theme.textSecondary
-    : theme.textSecondary;
-
-  const scoreColor = scoreColors.text;
 
   return (
     <TouchableOpacity
@@ -42,19 +28,16 @@ export default function CountryChip({ name, region, score, onPress }: Props) {
       style={[
         styles.container,
         {
-          backgroundColor,
-          borderColor,
+          backgroundColor: scoreColors.background,
+          borderColor: scoreColors.border ?? theme.border,
         },
       ]}
     >
-      <Text style={[styles.name, { color: nameColor }]}> 
-        {name}
-      </Text>
-      <Text style={[styles.region, { color: regionColor }]}> 
-        {region}
-      </Text>
-      <Text style={[styles.score, { color: scoreColor }]}> 
-        {score}
+      <Text
+        numberOfLines={3}
+        style={[styles.name, { color: theme.textPrimary }]}
+      >
+        {item.country.name}
       </Text>
     </TouchableOpacity>
   );
@@ -62,23 +45,20 @@ export default function CountryChip({ name, region, score, onPress }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "center",
+    minHeight: 62,
+    width: "31%",
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    margin: 2,
+    paddingVertical: 14,
+    borderRadius: 14,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    marginBottom: 10,
     borderWidth: 1,
   },
   name: {
     fontWeight: "600",
-    marginRight: 6,
-  },
-  region: {
-    marginRight: 6,
     fontSize: 12,
-  },
-  score: {
-    fontWeight: "700",
+    lineHeight: 16,
+    textAlign: "left",
   },
 });

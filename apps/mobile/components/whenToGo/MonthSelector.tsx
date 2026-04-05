@@ -1,5 +1,5 @@
-import React from "react";
-import { ScrollView, TouchableOpacity, Text, StyleSheet, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { ScrollView, Pressable, Text, StyleSheet, View } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 
 const months = [
@@ -9,55 +9,58 @@ const months = [
 
 type Props = {
   selected: number;
-  onSelect: (index: number) => void;
+  onSelect: (month: number) => void;
 };
 
 export default function MonthSelector({ selected, onSelect }: Props) {
   const colors = useTheme();
+  const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    const x = Math.max(0, (selected - 1) * 72 - 120);
+    scrollRef.current?.scrollTo({ x, animated: true });
+  }, [selected]);
+
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    <ScrollView
+      ref={scrollRef}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+    >
       <View style={styles.row}>
         {months.map((m, i) => {
-          const isSelected = i === selected;
+          const monthNumber = i + 1;
+          const isSelected = monthNumber === selected;
           return (
-            <TouchableOpacity
+            <Pressable
               key={m}
               style={[
                 styles.pill,
                 {
                   backgroundColor: isSelected
-                    ? colors.primary
-                    : colors.segmentBg,
-                  borderColor: colors.border,
+                    ? "rgba(255,255,255,0.55)"
+                    : "transparent",
+                  borderColor: isSelected
+                    ? "rgba(255,255,255,0.34)"
+                    : "transparent",
                 },
               ]}
-              onPress={() => onSelect(i)}
+              onPress={() => onSelect(monthNumber)}
             >
               <Text
                 style={[
                   styles.text,
                   {
                     color: isSelected
-                      ? colors.primaryText
+                      ? colors.textPrimary
                       : colors.textPrimary,
                   },
                 ]}
               >
                 {m}
               </Text>
-              <Text
-                style={[
-                  styles.sub,
-                  {
-                    color: isSelected
-                      ? colors.primaryText
-                      : colors.textSecondary,
-                  },
-                ]}
-              >
-                {String(i+1).padStart(2,"0")}
-              </Text>
-            </TouchableOpacity>
+            </Pressable>
           );
         })}
       </View>
@@ -66,21 +69,26 @@ export default function MonthSelector({ selected, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingHorizontal: 56,
+  },
   row: {
     flexDirection: "row",
+    alignItems: "center",
   },
   pill: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    minWidth: 52,
+    height: 42,
+    paddingHorizontal: 14,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 8,
+    marginRight: 16,
+    borderWidth: 1,
   },
   text: {
-    fontWeight: "600",
-  },
-  sub: {
-    fontSize: 12,
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: 0.2,
   },
 });

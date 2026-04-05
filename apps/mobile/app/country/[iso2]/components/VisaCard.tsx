@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, Pressable, Linking, useColorScheme } from 'react-native';
-import { lightColors, darkColors } from '../../../../theme/colors';
+import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import ScorePill from '../../../../components/ScorePill';
+import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
+import { useTheme } from '../../../../hooks/useTheme';
 
 type Props = {
   score: number;
@@ -39,11 +40,11 @@ export default function VisaCard({
 }: Props) {
   const title = prettyVisaType(visaType);
 
-  const scheme = useColorScheme();
-  const theme = scheme === 'dark' ? darkColors : lightColors;
+  const theme = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.card }]}>
+    <ScrapbookCard innerStyle={styles.card}>
+      <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Passport context</Text>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Visa</Text>
         <Text style={[styles.weightText, { color: theme.textSecondary }]}>{weightLabel}</Text>
@@ -56,14 +57,22 @@ export default function VisaCard({
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>
             {title}{allowedDays ? ` · ${allowedDays} days` : ''}
           </Text>
-
-          <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>
-            {notes ?? 'Visa requirements vary by nationality. Check official government sources before booking travel.'}
+          <Text style={[styles.metricSubhead, { color: theme.textMuted }]}>
+            Passport and border snapshot
           </Text>
 
+          <View style={[styles.helperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Text style={[styles.helperLabel, { color: theme.textSecondary }]}>
+              Visa requirements
+            </Text>
+            <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>
+              {notes ?? 'Visa requirements vary by nationality. Check official government sources before booking travel.'}
+            </Text>
+          </View>
+
           {!!sourceUrl && (
-            <Pressable onPress={() => Linking.openURL(sourceUrl)} hitSlop={10}>
-              <Text style={styles.link}>View visa source</Text>
+            <Pressable onPress={() => Linking.openURL(sourceUrl)} hitSlop={10} style={[styles.linkButton, { backgroundColor: theme.paperAlt, borderColor: theme.border }]}>
+              <Text style={[styles.link, { color: theme.textPrimary }]}>View visa source</Text>
             </Pressable>
           )}
 
@@ -83,12 +92,19 @@ export default function VisaCard({
           )}
         </View>
       </View>
-    </View>
+    </ScrapbookCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 22, padding: 18, marginBottom: 18 },
+  card: { padding: 18, marginBottom: 18 },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -100,9 +116,34 @@ const styles = StyleSheet.create({
 
   metricRow: { flexDirection: 'row', gap: 16 },
 
-  metricTitle: { fontSize: 16, fontWeight: '800', marginBottom: 6 },
+  metricTitle: { fontSize: 16, fontWeight: '800', marginBottom: 2 },
+  metricSubhead: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  helperCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    marginTop: 2,
+  },
+  helperLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
   metricDescription: { fontSize: 14, lineHeight: 20 },
-  link: { marginTop: 10, fontSize: 14, color: '#2563EB', fontWeight: '800' },
+  linkButton: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  link: { fontSize: 14, fontWeight: '800' },
 
   footerRow: { marginTop: 14, flexDirection: 'row', gap: 16 },
   footerText: { fontSize: 12.5, fontWeight: '700' },

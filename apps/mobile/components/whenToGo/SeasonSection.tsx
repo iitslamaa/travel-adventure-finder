@@ -3,15 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import CountryChip from "./CountryChip";
 import CountryDetailPreviewDrawer from "./CountryDetailPreviewDrawer";
-
-type Country = {
-  name: string;
-  region: string;
-  score: number;
-  iso2: string;
-  flagEmoji?: string;
-  facts?: any;
-};
+import { WhenToGoItem } from "../../utils/whenToGoLogic";
 
 export default function SeasonSection({
   title,
@@ -21,15 +13,15 @@ export default function SeasonSection({
 }: {
   title: string;
   description: string;
-  countries: Country[];
+  countries: WhenToGoItem[];
   selectedMonth: number;
 }) {
   const colors = useTheme();
-  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<WhenToGoItem | null>(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
 
-  const handleOpen = (country: Country) => {
-    setSelectedCountry(country);
+  const handleOpen = (item: WhenToGoItem) => {
+    setSelectedCountry(item);
     setDrawerVisible(true);
   };
 
@@ -39,21 +31,34 @@ export default function SeasonSection({
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          borderBottomColor: colors.border,
+        },
+      ]}
+    >
       <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
       <Text style={[styles.description, { color: colors.textSecondary }]}>
         {description}
       </Text>
 
-      <View style={styles.chips}>
-        {countries.map((c) => (
-          <CountryChip
-            key={c.iso2}
-            {...c}
-            onPress={() => handleOpen(c)}
-          />
-        ))}
-      </View>
+      {countries.length ? (
+        <View style={styles.chips}>
+          {countries.map((c) => (
+            <CountryChip
+              key={c.id}
+              item={c}
+              onPress={() => handleOpen(c)}
+            />
+          ))}
+        </View>
+      ) : (
+        <Text style={[styles.empty, { color: colors.textMuted }]}>
+          No destinations are surfacing in this bucket for the selected month yet.
+        </Text>
+      )}
 
       <CountryDetailPreviewDrawer
         visible={drawerVisible}
@@ -67,17 +72,28 @@ export default function SeasonSection({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
   },
   title: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "700",
   },
   description: {
-    marginBottom: 8,
+    marginTop: 6,
+    marginBottom: 10,
+    fontSize: 12,
+    lineHeight: 17,
   },
   chips: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 2,
+  },
+  empty: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

@@ -20,7 +20,7 @@ function uniqueMonthList(input: unknown): number[] {
 }
 
 export function seasonalityScoreForMonth(country: Country, selectedMonth: number) {
-  const month = selectedMonth + 1;
+  const month = selectedMonth;
   const bestMonths = uniqueMonthList(country.facts?.fmSeasonalityBestMonths);
   const shoulderMonths = uniqueMonthList(country.facts?.fmSeasonalityShoulderMonths);
   const goodMonths = uniqueMonthList(country.facts?.fmSeasonalityGoodMonths);
@@ -58,7 +58,7 @@ function normalizeWeights(weights: ScoreWeights): ScoreWeights {
 export function scoreCountry(
   country: Country,
   weights: ScoreWeights = DEFAULT_SCORE_WEIGHTS,
-  selectedMonth = new Date().getMonth()
+  selectedMonth = new Date().getMonth() + 1
 ) {
   const normalized = normalizeWeights(weights);
   const signals = [
@@ -114,4 +114,3 @@ export function applyScoreToCountry(
     scoreTotal: scoreCountry(country, weights, selectedMonth),
   };
 }
-

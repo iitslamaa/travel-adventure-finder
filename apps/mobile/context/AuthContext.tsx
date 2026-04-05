@@ -8,6 +8,8 @@ export type Profile = {
   id: string;
   username: string | null;
   full_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
   onboarding_completed: boolean | null;
   avatar_url?: string | null;
   next_destination?: string | null;
@@ -15,6 +17,9 @@ export type Profile = {
   travel_style?: string[] | null;
   languages?: any[] | null;
   lived_countries?: string[] | null;
+  current_country?: string | null;
+  favorite_countries?: string[] | null;
+  friend_count?: number | null;
 };
 
 type AuthContextType = {
@@ -58,19 +63,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isGuest, setIsGuest] = useState(false);
   const [hasSeenIntro, setHasSeenIntro] = useState<boolean | null>(null);
 
-  const fetchProfile = async (userId: string) => {
-    setProfileLoading(true);
+  const buildProfileSeed = (user: Session['user']) => {
+    const metadata = user.user_metadata ?? {};
+    const email = user.email ?? '';
+    const emailPrefix = email.split('@')[0]?.trim() || '';
+    const fullName =
+      metadata.full_name ||
+      [metadata.first_name, metadata.last_name].filter(Boolean).join(' ').trim() ||
+      metadata.name ||
+      emailPrefix ||
+      'User';
+    const firstName =
+      metadata.first_name ||
+      (typeof fullName === 'string' ? fullName.split(/\s+/)[0] : null) ||
+      null;
+    const lastName =
+      metadata.last_name ||
+      (typeof fullName === 'string' ? fullName.split(/\s+/).slice(1).join(' ').trim() : '') ||
+      null;
+    const username =
+      metadata.user_name ||
+      metadata.username ||
+      emailPrefix ||
+      `user_${user.id.replace(/-/g, '').slice(0, 6)}`;
 
-    const [
-      profileRes,
-      bucketRes,
-      visitedRes,
-    ] = await Promise.all([
-      supabase
+    return {
+      id: user.id,
+      username: typeof username === 'string' ? username.toLowerCase() : null,
+      full_name: typeof fullName === 'string' ? fullName : null,
+      first_name: typeof firstName === 'string' ? firstName : null,
+      last_name: typeof lastName === 'string' && lastName.length ? lastName : null,
+      avatar_url:
+        metadata.avatar_url ||
+        metadata.picture ||
+        metadata.avatar ||
+        null,
+    };
+  };
+
+  const ensureProfileExists = async (user: Session['user']) => {
+    const seed = buildProfileSeed(user);
+
+    const { error } = await supabase.from('profiles').upsert(seed, {
+      onConflict: 'id',
+      ignoreDuplicates: false,
+    });
+
+    if (error) {
+      console.error('Failed to ensure profile row exists', error);
+    }
+  };
+
+  const fetchProfile = async (user: Session['user']) => {
+    setProfileLoading(true);
+    const userId = user.id;
+
+    let profileRes = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (!profileRes.data) {
+      await ensureProfileExists(user);
+      profileRes = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single(),
+        .maybeSingle();
+    }
+
+    const [bucketRes, visitedRes] = await Promise.all([
       supabase
         .from('user_bucket_list')
         .select('country_id')
@@ -80,6 +143,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('country_id')
         .eq('user_id', userId),
     ]);
+
+    if (profileRes.error) {
+      console.error('Failed to fetch profile', profileRes.error);
+    }
 
     if (!profileRes.error && profileRes.data) {
       const normalizedProfile = {
@@ -102,9 +169,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    const userId = session?.user?.id;
-    if (!userId) return;
-    await fetchProfile(userId);
+    const user = session?.user;
+    if (!user) return;
+    await fetchProfile(user);
   };
 
   const updateProfile = async (patch: Partial<Profile>) => {
@@ -186,7 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
 
       if (s?.user?.id) {
-        await fetchProfile(s.user.id);
+        await fetchProfile(s.user);
       }
     };
 
@@ -202,7 +269,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (s?.user?.id) {
         setIsGuest(false);
-        fetchProfile(s.user.id);
+        fetchProfile(s.user);
       } else {
         setProfile(null);
         setBucketIsoCodes([]);

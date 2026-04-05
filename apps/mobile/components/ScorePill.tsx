@@ -3,12 +3,12 @@ import { View, Text, StyleSheet } from "react-native";
 
 function getScoreColors(score: number) {
   if (score >= 80) {
-    return { bg: "#EAFBF1", border: "#6EE7B7", text: "#065F46" };
+    return { bg: "rgba(86, 131, 93, 0.14)", border: "#92AC91", text: "#436347" };
   }
   if (score >= 50) {
-    return { bg: "#FFF7E6", border: "#FBBF24", text: "#92400E" };
+    return { bg: "rgba(211, 177, 104, 0.18)", border: "#D2B17B", text: "#805B2F" };
   }
-  return { bg: "#FEECEC", border: "#F87171", text: "#7F1D1D" };
+  return { bg: "rgba(184, 112, 95, 0.16)", border: "#C79A90", text: "#7C4B43" };
 }
 
 type Props = {

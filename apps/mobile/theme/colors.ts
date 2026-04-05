@@ -3,6 +3,10 @@ export type AppColors = {
   card: string;
   surface: string;
   border: string;
+  cardBorderStrong: string;
+  paper: string;
+  paperAlt: string;
+  shadow: string;
 
   textPrimary: string;
   textSecondary: string;
@@ -31,65 +35,73 @@ export type AppColors = {
 };
 
 export const lightColors: AppColors = {
-  background: '#F5F5F7',
-  card: '#FFFFFF',
-  surface: '#F9FAFB',
-  border: '#E5E7EB',
+  background: '#EFD9BF',
+  card: 'rgba(245, 236, 222, 0.96)',
+  surface: 'rgba(255, 250, 243, 0.88)',
+  border: 'rgba(119, 92, 63, 0.16)',
+  cardBorderStrong: 'rgba(255, 248, 236, 0.72)',
+  paper: '#F6EBDD',
+  paperAlt: '#EADBC7',
+  shadow: '#3A2412',
 
-  textPrimary: '#111827',
-  textSecondary: '#6B7280',
-  textMuted: '#9CA3AF',
+  textPrimary: '#1F1710',
+  textSecondary: '#6E5A47',
+  textMuted: '#9D846C',
 
-  primary: '#065F46',
+  primary: '#6B4F33',
   primaryText: '#FFFFFF',
 
-  segmentBg: '#F2F2F7',
-  segmentActive: '#FFFFFF',
+  segmentBg: 'rgba(234, 220, 198, 0.92)',
+  segmentActive: 'rgba(255, 252, 247, 0.95)',
 
-  inputBg: '#FFFFFF',
-  tabBarBg: '#FFFFFF',
+  inputBg: '#FBF4EA',
+  tabBarBg: 'rgba(244, 236, 223, 0.98)',
 
-  greenBg: '#EAFBF1',
-  greenBorder: '#6EE7B7',
-  greenText: '#065F46',
+  greenBg: '#E4F0DE',
+  greenBorder: '#8BAA7A',
+  greenText: '#36532A',
 
-  yellowBg: '#FFF7E6',
-  yellowBorder: '#FBBF24',
-  yellowText: '#92400E',
+  yellowBg: '#F8EBCF',
+  yellowBorder: '#D5AB57',
+  yellowText: '#7B5520',
 
-  redBg: '#FEECEC',
-  redBorder: '#F87171',
-  redText: '#7F1D1D',
+  redBg: '#F4DDD7',
+  redBorder: '#C88A7C',
+  redText: '#7A3E34',
 };
 
 export const darkColors: AppColors = {
-  background: '#121212',
-  card: '#1E1E1E',
-  surface: '#232323',
-  border: '#2C2C2C',
+  background: '#EFD9BF',
+  card: 'rgba(245, 236, 222, 0.96)',
+  surface: 'rgba(255, 250, 243, 0.88)',
+  border: 'rgba(119, 92, 63, 0.16)',
+  cardBorderStrong: 'rgba(255, 248, 236, 0.72)',
+  paper: '#F6EBDD',
+  paperAlt: '#EADBC7',
+  shadow: '#3A2412',
 
-  textPrimary: '#F5F5F5',
-  textSecondary: '#B3B3B3',
-  textMuted: '#8A8A8A',
+  textPrimary: '#1F1710',
+  textSecondary: '#6E5A47',
+  textMuted: '#9D846C',
 
-  primary: '#10B981',
-  primaryText: '#121212',
+  primary: '#6B4F33',
+  primaryText: '#FFFFFF',
 
-  segmentBg: '#1E1E1E',
-  segmentActive: '#2A2A2A',
+  segmentBg: 'rgba(234, 220, 198, 0.92)',
+  segmentActive: 'rgba(255, 252, 247, 0.95)',
 
-  inputBg: '#1E1E1E',
-  tabBarBg: '#1E1E1E',
+  inputBg: '#FBF4EA',
+  tabBarBg: 'rgba(244, 236, 223, 0.98)',
 
-  greenBg: '#163D2E',
-  greenBorder: '#10B981',
-  greenText: '#A7F3D0',
+  greenBg: '#E4F0DE',
+  greenBorder: '#8BAA7A',
+  greenText: '#36532A',
 
-  yellowBg: '#4A3A10',
-  yellowBorder: '#F59E0B',
-  yellowText: '#FDE68A',
+  yellowBg: '#F8EBCF',
+  yellowBorder: '#D5AB57',
+  yellowText: '#7B5520',
 
-  redBg: '#3F1D1D',
-  redBorder: '#EF4444',
-  redText: '#FCA5A5',
+  redBg: '#F4DDD7',
+  redBorder: '#C88A7C',
+  redText: '#7A3E34',
 };
