@@ -1,6 +1,7 @@
-import { StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import ScorePill from '../../../../components/ScorePill';
-import { darkColors, lightColors } from '../../../../theme/colors';
+import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
+import { useTheme } from '../../../../hooks/useTheme';
 
 type Props = {
   score: number;
@@ -37,11 +38,11 @@ export default function LanguageCompatibilityCard({
   score,
   weightLabel = 'Your languages',
 }: Props) {
-  const scheme = useColorScheme();
-  const theme = scheme === 'dark' ? darkColors : lightColors;
+  const theme = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.card }]}>
+    <ScrapbookCard innerStyle={styles.card}>
+      <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Communication fit</Text>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>
           Language Compatibility
@@ -58,28 +59,38 @@ export default function LanguageCompatibilityCard({
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>
             {buildHeadline(score)}
           </Text>
-          <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>
-            {buildDetail(score)}
+          <Text style={[styles.metricSubhead, { color: theme.textMuted }]}>
+            Communication snapshot
           </Text>
+          <View style={[styles.helperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Text style={[styles.helperLabel, { color: theme.textSecondary }]}>
+              Your language coverage
+            </Text>
+            <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>
+              {buildDetail(score)}
+            </Text>
+          </View>
 
           <Text style={[styles.footerText, { color: theme.textMuted }]}>
             Based on the languages saved in your profile and the country language profile.
           </Text>
         </View>
       </View>
-    </View>
+    </ScrapbookCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 22,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
   headerRow: {
     flexDirection: 'row',
@@ -101,6 +112,23 @@ const styles = StyleSheet.create({
   metricTitle: {
     fontSize: 16,
     fontWeight: '800',
+    marginBottom: 2,
+  },
+  metricSubhead: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  helperCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    marginTop: 2,
+  },
+  helperLabel: {
+    fontSize: 12,
+    fontWeight: '700',
     marginBottom: 6,
   },
   metricDescription: {

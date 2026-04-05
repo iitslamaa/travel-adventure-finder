@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
-import { lightColors, darkColors } from '../../../../theme/colors';
+import { View, Text, StyleSheet } from 'react-native';
 import ScorePill from '../../../../components/ScorePill';
+import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
+import { useTheme } from '../../../../hooks/useTheme';
 
 type Props = {
   name: string;
@@ -17,52 +18,76 @@ export default function HeaderCard({
   score,
   flagEmoji,
 }: Props) {
-  const scheme = useColorScheme();
-  const theme = scheme === 'dark' ? darkColors : lightColors;
+  const theme = useTheme();
 
   const locationLine =
     subregion && region ? `${subregion}, ${region}` : (region ?? subregion ?? '');
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.card }]}> 
-      <View style={styles.left}>
-        <View style={styles.titleRow}>
-          {!!flagEmoji && <Text style={styles.flag}>{flagEmoji}</Text>}
-          <Text style={[styles.title, { color: theme.textPrimary }]}>
-            {name}
+    <ScrapbookCard innerStyle={styles.card}>
+      <Text style={[styles.sectionTag, { color: theme.textSecondary }]}>
+        Travel dossier
+      </Text>
+      <View style={styles.topRow}>
+        <View style={styles.left}>
+          <Text style={[styles.eyebrow, { color: theme.textMuted }]}>
+            Country snapshot
           </Text>
+          <View style={styles.titleRow}>
+            {!!flagEmoji && <Text style={styles.flag}>{flagEmoji}</Text>}
+            <Text style={[styles.title, { color: theme.textPrimary }]}>
+              {name}
+            </Text>
+          </View>
+
+          {!!locationLine && (
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+              {locationLine}
+            </Text>
+          )}
         </View>
 
-        {!!locationLine && (
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-            {locationLine}
+        <View style={styles.scoreWrap}>
+          <ScorePill score={Math.round(score)} size="lg" />
+          <Text style={[styles.scoreLabel, { color: theme.textMuted }]}>
+            Overall score
           </Text>
-        )}
+        </View>
       </View>
-
-      <ScorePill score={Math.round(score)} size="lg" />
-    </View>
+    </ScrapbookCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 22,
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 18,
     marginBottom: 16,
+  },
+  sectionTag: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-
-    shadowColor: '#000',
-    shadowOpacity: 0.02,
-    shadowRadius: 6,
-    elevation: 1,
+    alignItems: 'flex-start',
   },
 
   left: {
     flex: 1,
+    paddingRight: 14,
+  },
+
+  eyebrow: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginBottom: 10,
   },
 
   titleRow: {
@@ -77,12 +102,20 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
   },
 
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
+  },
+  scoreWrap: {
+    alignItems: 'center',
+  },
+  scoreLabel: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

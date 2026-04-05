@@ -18,10 +18,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useScorePreferences } from '../context/ScorePreferencesContext';
 import { useCountries } from '../hooks/useCountries';
-import { useFriends } from '../hooks/useFriends';
+import { useFriends, type FriendProfile } from '../hooks/useFriends';
 import { useTheme } from '../hooks/useTheme';
 import { supabase } from '../lib/supabase';
 import { seasonalityScoreForMonth } from '../utils/scoring';
+import ScrapbookBackground from '../components/theme/ScrapbookBackground';
+import ScrapbookCard from '../components/theme/ScrapbookCard';
+import TitleBanner from '../components/theme/TitleBanner';
 
 type AvailabilityKind = 'exact_dates' | 'flexible_month';
 
@@ -58,6 +61,13 @@ type TravelerPassportSelection = {
   passportCountryCode: string;
 };
 
+type TripFriendSnapshot = {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarURL: string | null;
+};
+
 type PlannedTrip = {
   id: string;
   title: string;
@@ -66,6 +76,7 @@ type PlannedTrip = {
   endDate: string | null;
   countryIso2s: string[];
   friendIds: string[];
+  friendSnapshots: TripFriendSnapshot[];
   availability: TripAvailabilityProposal[];
   dayPlans: TripDayPlan[];
   travelerPassports: TravelerPassportSelection[];
@@ -121,6 +132,12 @@ type PassportPreferences = {
   passportCountryCode: string | null;
 };
 
+type RemoteTripRow = {
+  user_id: string;
+  trip_id: string;
+  trip_data: any;
+};
+
 type VisaSyncRunRow = {
   version: number;
   passport_from_raw: string | null;
@@ -155,6 +172,158 @@ type AvailabilityDraft = {
 
 const STORAGE_KEY = 'travelaf-trip-plans-v1';
 
+function isUuidLike(value: string | null | undefined) {
+  return !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function createUuid() {
+  return global.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function toIsoStringOrNull(value: unknown) {
+  if (typeof value === 'string' && value.trim()) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toISOString();
+  }
+
+  return null;
+}
+
+function normalizeTripPayload(raw: any): PlannedTrip | null {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const id = typeof raw.id === 'string' ? raw.id : typeof raw.trip_id === 'string' ? raw.trip_id : null;
+  if (!id) return null;
+
+  const friendIds = Array.isArray(raw.friendIds)
+    ? raw.friendIds.map(String)
+    : Array.isArray(raw.friends)
+      ? raw.friends.map((friend: any) => String(friend?.id)).filter(Boolean)
+      : [];
+
+  const friendSnapshots: TripFriendSnapshot[] = Array.isArray(raw.friends)
+    ? raw.friends
+        .map((friend: any) => {
+          const id = String(friend?.id ?? '');
+          if (!id) return null;
+          const displayName = String(
+            friend?.displayName ??
+              friend?.participantName ??
+              friend?.full_name ??
+              friend?.fullName ??
+              friend?.name ??
+              'Friend'
+          ).trim();
+          const username = String(friend?.username ?? '').replace(/^@+/, '').trim();
+          const avatarURL =
+            typeof friend?.avatarURL === 'string'
+              ? friend.avatarURL
+              : typeof friend?.avatar_url === 'string'
+                ? friend.avatar_url
+                : null;
+
+          return {
+            id,
+            displayName: displayName || username || 'Friend',
+            username: username || displayName.replace(/\s+/g, '').toLowerCase() || 'friend',
+            avatarURL,
+          };
+        })
+        .filter((friend): friend is TripFriendSnapshot => friend !== null)
+    : friendIds.map((friendId, index) => {
+        const fallbackName =
+          Array.isArray(raw.friendNames) && typeof raw.friendNames[index] === 'string'
+            ? raw.friendNames[index]
+            : 'Friend';
+        return {
+          id: friendId,
+          displayName: fallbackName,
+          username: fallbackName.replace(/\s+/g, '').toLowerCase() || 'friend',
+          avatarURL: null,
+        };
+      });
+
+  const availability = Array.isArray(raw.availability)
+    ? raw.availability.map((proposal: any) => ({
+        id: typeof proposal?.id === 'string' ? proposal.id : createUuid(),
+        participantId: String(proposal?.participantId ?? proposal?.participant_id ?? ''),
+        participantName:
+          proposal?.participantName ??
+          proposal?.participant_name ??
+          proposal?.participantDisplayName ??
+          'Traveler',
+        kind: proposal?.kind === 'flexible_month' ? 'flexible_month' : 'exact_dates',
+        startDate: String(proposal?.startDate ?? proposal?.start_date ?? '').slice(0, 10),
+        endDate: String(proposal?.endDate ?? proposal?.end_date ?? '').slice(0, 10),
+      }))
+    : [];
+
+  const dayPlans = Array.isArray(raw.dayPlans)
+    ? raw.dayPlans.map((plan: any) => ({
+        id: typeof plan?.id === 'string' ? plan.id : createUuid(),
+        date: String(plan?.date ?? '').slice(0, 10),
+        kind: plan?.kind === 'travel' ? 'travel' : 'country',
+        countryIso2:
+          typeof plan?.countryIso2 === 'string'
+            ? plan.countryIso2
+            : typeof plan?.countryId === 'string'
+              ? plan.countryId
+              : null,
+        countryName:
+          typeof plan?.countryName === 'string'
+            ? plan.countryName
+            : typeof plan?.country_name === 'string'
+              ? plan.country_name
+              : null,
+      }))
+    : [];
+
+  const travelerPassports = Array.isArray(raw.travelerPassports)
+    ? raw.travelerPassports.map((selection: any) => ({
+        travelerId: String(selection?.travelerId ?? selection?.traveler_id ?? ''),
+        passportCountryCode: String(
+          selection?.passportCountryCode ?? selection?.passport_country_code ?? 'US'
+        ).toUpperCase(),
+      }))
+    : [];
+
+  const expenses = Array.isArray(raw.expenses)
+    ? raw.expenses.map((expense: any) => ({
+        id: typeof expense?.id === 'string' ? expense.id : createUuid(),
+        title: String(expense?.title ?? ''),
+        totalAmount: Number(expense?.totalAmount ?? expense?.amount ?? 0),
+        paidById: String(expense?.paidById ?? expense?.paid_by_id ?? ''),
+        paidByName: String(expense?.paidByName ?? expense?.paid_by_name ?? 'Traveler'),
+        splitWithIds: Array.isArray(expense?.splitWithIds)
+          ? expense.splitWithIds.map(String)
+          : Array.isArray(expense?.split_with_ids)
+            ? expense.split_with_ids.map(String)
+            : [],
+      }))
+    : [];
+
+  return {
+    id,
+    title: String(raw.title ?? ''),
+    notes: String(raw.notes ?? ''),
+    startDate: toIsoStringOrNull(raw.startDate),
+    endDate: toIsoStringOrNull(raw.endDate),
+    countryIso2s: Array.isArray(raw.countryIso2s)
+      ? raw.countryIso2s.map(String)
+      : Array.isArray(raw.countryIds)
+        ? raw.countryIds.map(String)
+        : [],
+    friendIds,
+    friendSnapshots,
+    availability: availability.filter(item => item.participantId && item.startDate && item.endDate),
+    dayPlans: dayPlans.filter(item => item.date),
+    travelerPassports: travelerPassports.filter(item => item.travelerId),
+    expenses: expenses.filter(item => item.title),
+    createdAt: toIsoStringOrNull(raw.createdAt) ?? new Date().toISOString(),
+    updatedAt: toIsoStringOrNull(raw.updatedAt) ?? toIsoStringOrNull(raw.createdAt) ?? new Date().toISOString(),
+  };
+}
+
 function emptyDraft(): TripDraft {
   return {
     id: null,
@@ -170,6 +339,48 @@ function emptyDraft(): TripDraft {
     travelerPassports: [],
     expenses: [],
   };
+}
+
+function normalizeTripFriendSnapshot(
+  value: FriendProfile | TripFriendSnapshot | null | undefined
+): TripFriendSnapshot | null {
+  if (!value?.id) return null;
+  const displayName =
+    'displayName' in value
+      ? value.displayName
+      : value.full_name || value.username || 'Friend';
+  const username = value.username || displayName.replace(/\s+/g, '').toLowerCase() || 'friend';
+  const avatarURL =
+    'avatarURL' in value ? value.avatarURL : value.avatar_url ?? null;
+
+  return {
+    id: value.id,
+    displayName: displayName || username || 'Friend',
+    username,
+    avatarURL,
+  };
+}
+
+function buildTripFriendSnapshots(
+  friendIds: string[],
+  liveSnapshotById: Map<string, TripFriendSnapshot>,
+  fallbackSnapshots: TripFriendSnapshot[] = []
+) {
+  const fallbackById = new Map(
+    fallbackSnapshots.map((snapshot) => [snapshot.id, snapshot] as const)
+  );
+
+  return friendIds.map((friendId) => {
+    return (
+      liveSnapshotById.get(friendId) ??
+      fallbackById.get(friendId) ?? {
+        id: friendId,
+        displayName: 'Friend',
+        username: 'friend',
+        avatarURL: null,
+      }
+    );
+  });
 }
 
 function emptyAvailabilityDraft(): AvailabilityDraft {
@@ -737,37 +948,59 @@ export default function TripPlannerScreen() {
   }, [session?.user?.id]);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then(value => {
-        if (!value) return;
-        const parsed = JSON.parse(value) as PlannedTrip[];
-        setTrips(
-          parsed.map(trip => ({
-            ...trip,
-            availability: Array.isArray(trip.availability) ? trip.availability : [],
-            dayPlans: Array.isArray(trip.dayPlans) ? trip.dayPlans : [],
-            travelerPassports: Array.isArray(trip.travelerPassports) ? trip.travelerPassports : [],
-            expenses: Array.isArray(trip.expenses) ? trip.expenses : [],
-          }))
-        );
-      })
-      .catch(error => {
+    const loadTrips = async () => {
+      try {
+        const localValue = await AsyncStorage.getItem(STORAGE_KEY);
+        const localTrips = localValue
+          ? (JSON.parse(localValue) as PlannedTrip[])
+              .map(normalizeTripPayload)
+              .filter((trip): trip is PlannedTrip => trip !== null)
+          : [];
+
+        if (!session?.user?.id) {
+          setTrips(localTrips);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('user_trip_plans')
+          .select('user_id,trip_id,trip_data')
+          .eq('user_id', session.user.id);
+
+        if (error) {
+          console.error('Failed to load remote trips', error);
+          setTrips(localTrips);
+          return;
+        }
+
+        const remoteTrips = ((data ?? []) as RemoteTripRow[])
+          .map(row => normalizeTripPayload(row.trip_data))
+          .filter((trip): trip is PlannedTrip => trip !== null)
+          .sort((lhs, rhs) => rhs.createdAt.localeCompare(lhs.createdAt));
+
+        const mergedTrips = remoteTrips.length ? remoteTrips : localTrips;
+        setTrips(mergedTrips);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mergedTrips));
+      } catch (error) {
         console.error('Failed to load trips', error);
-      });
-  }, []);
+      }
+    };
+
+    loadTrips();
+  }, [session?.user?.id]);
 
   const countryNameByIso2 = useMemo(
     () => new Map(countries.map(country => [country.iso2, country.name] as const)),
     [countries]
   );
 
-  const friendNameById = useMemo(
+  const friendSnapshotById = useMemo(
     () =>
       new Map(
-        friends.map(friend => [
-          friend.id,
-          friend.full_name || friend.username || 'Friend',
-        ])
+        friends
+          .map(friend => normalizeTripFriendSnapshot(friend))
+          .filter((snapshot): snapshot is TripFriendSnapshot => snapshot !== null)
+          .map(snapshot => [snapshot.id, snapshot] as const)
       ),
     [friends]
   );
@@ -798,6 +1031,16 @@ export default function TripPlannerScreen() {
     return source.slice(0, 16);
   }, [countryQuery, plannerCountries]);
 
+  const savedListSuggestions = useMemo(
+    () =>
+      plannerCountries.filter(
+        country =>
+          !draft.countryIso2s.includes(country.iso2) &&
+          (bucketIsoCodes.includes(country.iso2) || visitedIsoCodes.includes(country.iso2))
+      ),
+    [bucketIsoCodes, draft.countryIso2s, plannerCountries, visitedIsoCodes]
+  );
+
   const currentTraveler = useMemo(
     () =>
       session?.user?.id
@@ -808,6 +1051,111 @@ export default function TripPlannerScreen() {
         : null,
     [profile?.full_name, profile?.username, session?.user?.id]
   );
+
+  const draftFriendSnapshots = useMemo(() => {
+    const existingTrip = draft.id ? trips.find(trip => trip.id === draft.id) : null;
+    return buildTripFriendSnapshots(
+      draft.friendIds,
+      friendSnapshotById,
+      existingTrip?.friendSnapshots ?? []
+    );
+  }, [draft.friendIds, draft.id, friendSnapshotById, trips]);
+
+  const serializeTripForRemote = (trip: PlannedTrip) => {
+    const friendSnapshots = buildTripFriendSnapshots(
+      trip.friendIds,
+      friendSnapshotById,
+      trip.friendSnapshots
+    );
+
+    return {
+      id: trip.id,
+      createdAt: trip.createdAt,
+      updatedAt: trip.updatedAt,
+      title: trip.title,
+      notes: trip.notes,
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      countryIds: trip.countryIso2s,
+      countryNames: trip.countryIso2s.map(iso2 => countryNameByIso2.get(iso2) ?? iso2),
+      friendIds: trip.friendIds,
+      friendNames: friendSnapshots.map(friend => friend.displayName),
+      friends: friendSnapshots,
+      ownerId: session?.user?.id ?? null,
+      availability: trip.availability,
+      dayPlans: trip.dayPlans.map(plan => ({
+        ...plan,
+        countryId: plan.countryIso2,
+      })),
+      travelerPassports: trip.travelerPassports,
+      overallChecklistItems: [],
+      packingProgressEntries: [],
+      expenses: trip.expenses,
+    };
+  };
+
+  const saveTripRemote = async (trip: PlannedTrip) => {
+    const userId = session?.user?.id;
+    if (!userId || !isUuidLike(trip.id)) return;
+
+    const tripPayload = serializeTripForRemote(trip);
+    const participantIds = Array.from(new Set([userId, ...trip.friendIds])).filter(isUuidLike);
+
+    if (participantIds.length > 1) {
+      const { error } = await supabase.rpc('share_trip_plan', {
+        p_target_user_ids: participantIds,
+        p_trip_id: trip.id,
+        p_trip_payload: JSON.stringify(tripPayload),
+      });
+
+      if (error) {
+        console.error('Failed to share remote trip', error);
+      }
+      return;
+    }
+
+    await supabase.from('user_trip_plans').delete().eq('user_id', userId).eq('trip_id', trip.id);
+
+    const { error } = await supabase.from('user_trip_plans').insert({
+      user_id: userId,
+      trip_id: trip.id,
+      trip_data: tripPayload,
+    });
+
+    if (error) {
+      console.error('Failed to save remote trip', error);
+    }
+  };
+
+  const deleteTripRemote = async (trip: PlannedTrip) => {
+    const userId = session?.user?.id;
+    if (!userId || !isUuidLike(trip.id)) return;
+
+    const participantIds = Array.from(new Set([userId, ...trip.friendIds])).filter(isUuidLike);
+
+    if (participantIds.length > 1) {
+      const { error } = await supabase.rpc('delete_shared_trip_plan', {
+        p_target_user_ids: participantIds,
+        p_trip_id: trip.id,
+        p_trip_payload: JSON.stringify(serializeTripForRemote(trip)),
+      });
+
+      if (error) {
+        console.error('Failed to delete shared remote trip', error);
+      }
+      return;
+    }
+
+    const { error } = await supabase
+      .from('user_trip_plans')
+      .delete()
+      .eq('user_id', userId)
+      .eq('trip_id', trip.id);
+
+    if (error) {
+      console.error('Failed to delete remote trip', error);
+    }
+  };
 
   const defaultPassportCode = useMemo(
     () =>
@@ -823,14 +1171,12 @@ export default function TripPlannerScreen() {
   const draftTravelers = useMemo(
     () => [
       ...(currentTraveler ? [currentTraveler] : []),
-      ...friends
-        .filter(friend => draft.friendIds.includes(friend.id))
-        .map(friend => ({
-          id: friend.id,
-          name: friend.full_name || friend.username || 'Friend',
-        })),
+      ...draftFriendSnapshots.map(friend => ({
+        id: friend.id,
+        name: friend.displayName || friend.username || 'Friend',
+      })),
     ],
-    [currentTraveler, draft.friendIds, friends]
+    [currentTraveler, draftFriendSnapshots]
   );
 
   const draftOverlaps = useMemo(
@@ -937,8 +1283,9 @@ export default function TripPlannerScreen() {
   }, [activePassportCodes, visaRowsByPassport]);
 
   const persistTrips = async (nextTrips: PlannedTrip[]) => {
-    setTrips(nextTrips);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextTrips));
+    const sortedTrips = [...nextTrips].sort((lhs, rhs) => rhs.updatedAt.localeCompare(lhs.updatedAt));
+    setTrips(sortedTrips);
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(sortedTrips));
   };
 
   const resetDraftHelpers = () => {
@@ -1058,8 +1405,10 @@ export default function TripPlannerScreen() {
     if (!title) return;
 
     const now = new Date().toISOString();
+    const resolvedTripId =
+      draft.id && isUuidLike(draft.id) ? draft.id : createUuid();
     const nextTrip: PlannedTrip = {
-      id: draft.id ?? now,
+      id: resolvedTripId,
       title,
       notes: draft.notes.trim(),
       startDate:
@@ -1072,6 +1421,7 @@ export default function TripPlannerScreen() {
           : null,
       countryIso2s: draft.countryIso2s,
       friendIds: draft.friendIds,
+      friendSnapshots: draftFriendSnapshots,
       availability: draft.availability,
       dayPlans: draft.dayPlans,
       travelerPassports: draft.travelerPassports,
@@ -1085,11 +1435,16 @@ export default function TripPlannerScreen() {
       : [nextTrip, ...trips];
 
     await persistTrips(nextTrips);
+    await saveTripRemote(nextTrip);
     closeModal();
   };
 
   const deleteTrip = async (tripId: string) => {
+    const tripToDelete = trips.find(trip => trip.id === tripId) ?? null;
     await persistTrips(trips.filter(trip => trip.id !== tripId));
+    if (tripToDelete) {
+      await deleteTripRemote(tripToDelete);
+    }
   };
 
   const updateTripDateField = (field: 'startDate' | 'endDate', value: string) => {
@@ -1151,8 +1506,8 @@ export default function TripPlannerScreen() {
   const selectedCountryNames = draft.countryIso2s.map(
     iso2 => countryNameByIso2.get(iso2) ?? iso2
   );
-  const selectedFriendNames = draft.friendIds.map(
-    friendId => friendNameById.get(friendId) ?? 'Friend'
+  const selectedFriendNames = draftFriendSnapshots.map(
+    friend => friend.displayName || friend.username || 'Friend'
   );
 
   const expenseTotal = (trip: PlannedTrip | TripDraft) =>
@@ -1301,6 +1656,7 @@ export default function TripPlannerScreen() {
     visaRowsByPassport,
     draftTripDays
   );
+  const totalDraftExpenses = draft.expenses.reduce((sum, expense) => sum + expense.totalAmount, 0);
 
   const updateDayPlan = (
     dayPlanId: string,
@@ -1349,12 +1705,17 @@ export default function TripPlannerScreen() {
 
   const travelersForTrip = (trip: PlannedTrip) => {
     const currentName = currentTraveler?.name ?? profile?.full_name ?? profile?.username ?? 'You';
+    const tripFriendSnapshots = buildTripFriendSnapshots(
+      trip.friendIds,
+      friendSnapshotById,
+      trip.friendSnapshots
+    );
 
     return [
       ...(session?.user?.id ? [{ id: session.user.id, name: currentName }] : []),
-      ...trip.friendIds.map(friendId => ({
-        id: friendId,
-        name: friendNameById.get(friendId) ?? 'Friend',
+      ...tripFriendSnapshots.map(friend => ({
+        id: friend.id,
+        name: friend.displayName || friend.username || 'Friend',
       })),
     ];
   };
@@ -1397,7 +1758,7 @@ export default function TripPlannerScreen() {
 
         const calendarId = await Calendar.createCalendarAsync({
           title: 'Travel AF Trips',
-          color: '#065F46',
+          color: colors.primary,
           entityType: Calendar.EntityTypes.EVENT,
           sourceId: source.id,
           source,
@@ -1417,8 +1778,12 @@ export default function TripPlannerScreen() {
       const countrySummary = trip.countryIso2s
         .map(iso2 => countryNameByIso2.get(iso2) ?? iso2)
         .join(', ');
-      const friendSummary = trip.friendIds
-        .map(friendId => friendNameById.get(friendId) ?? 'Friend')
+      const friendSummary = buildTripFriendSnapshots(
+        trip.friendIds,
+        friendSnapshotById,
+        trip.friendSnapshots
+      )
+        .map(friend => friend.displayName || friend.username || 'Friend')
         .join(', ');
       const tripTravelers = travelersForTrip(trip);
       const overlaps = computeAvailabilityOverlaps(trip.availability, tripTravelers);
@@ -1474,7 +1839,8 @@ export default function TripPlannerScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <ScrapbookBackground>
+    <View style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView
         contentContainerStyle={{
           paddingTop: insets.top + 18,
@@ -1483,43 +1849,71 @@ export default function TripPlannerScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={[styles.backText, { color: colors.textPrimary }]}>Back</Text>
+        <Pressable
+          onPress={() => router.back()}
+          style={[styles.backButton, { backgroundColor: colors.paperAlt, borderColor: colors.border }]}
+        >
+          <Ionicons name="chevron-back" size={18} color={colors.textPrimary} />
         </Pressable>
 
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>Trip Planner</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Save trip ideas with destinations, dates, travelers, and the best
-              shared windows you can actually make work.
-            </Text>
+            <TitleBanner title="Trip Planner" />
           </View>
 
           <Pressable
             onPress={openNewTrip}
-            style={[styles.addButton, { backgroundColor: colors.primary }]}
+            style={[styles.addButton, { backgroundColor: colors.paperAlt, borderColor: colors.border }]}
           >
-            <Ionicons name="add" size={18} color={colors.primaryText} />
+            <Ionicons name="add" size={18} color={colors.textPrimary} />
           </Pressable>
         </View>
 
         {trips.length === 0 ? (
           <Pressable
             onPress={openNewTrip}
-            style={[
-              styles.emptyCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
+            style={styles.emptyCardPress}
           >
-            <Ionicons name="airplane-outline" size={28} color={colors.textPrimary} />
-            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-              Start your first trip plan
-            </Text>
-            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-              Add dates, destinations, shared availability, and expense splits before
-              anything gets booked.
-            </Text>
+            <ScrapbookCard innerStyle={styles.emptyCard}>
+              <Text style={[styles.emptyEyebrow, { color: colors.textSecondary }]}>
+                Planner workspace
+              </Text>
+              <Ionicons name="airplane-outline" size={28} color={colors.textPrimary} />
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+                Start your first trip plan
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                Keep dates, destinations, and group planning details together before anything gets booked.
+              </Text>
+              <View style={styles.emptySummaryRow}>
+                <View
+                  style={[
+                    styles.emptySummaryChip,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.emptySummaryLabel, { color: colors.textSecondary }]}>
+                    Includes
+                  </Text>
+                  <Text style={[styles.emptySummaryValue, { color: colors.textPrimary }]}>
+                    Dates + countries
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.emptySummaryChip,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.emptySummaryLabel, { color: colors.textSecondary }]}>
+                    Group tools
+                  </Text>
+                  <Text style={[styles.emptySummaryValue, { color: colors.textPrimary }]}>
+                    Availability + split costs
+                  </Text>
+                </View>
+              </View>
+            </ScrapbookCard>
           </Pressable>
         ) : (
           <View style={styles.tripStack}>
@@ -1527,8 +1921,12 @@ export default function TripPlannerScreen() {
               const countrySummary = trip.countryIso2s
                 .map(iso2 => countryNameByIso2.get(iso2) ?? iso2)
                 .join(', ');
-              const friendSummary = trip.friendIds
-                .map(friendId => friendNameById.get(friendId) ?? 'Friend')
+              const friendSummary = buildTripFriendSnapshots(
+                trip.friendIds,
+                friendSnapshotById,
+                trip.friendSnapshots
+              )
+                .map(friend => friend.displayName || friend.username || 'Friend')
                 .join(', ');
               const summary = tripSummary(trip);
               const totalExpenses = expenseTotal(trip);
@@ -1550,67 +1948,158 @@ export default function TripPlannerScreen() {
               );
 
               return (
-                <View
+                <ScrapbookCard
                   key={trip.id}
-                  style={[
-                    styles.tripCard,
-                    { backgroundColor: colors.card, borderColor: colors.border },
-                  ]}
+                  style={styles.tripCardShell}
+                  innerStyle={[styles.tripCard, { backgroundColor: `${colors.card}F4` }]}
                 >
+                  <Text style={[styles.tripCardEyebrow, { color: colors.textSecondary }]}>
+                    Saved Trip
+                  </Text>
                   <View style={styles.tripCardHeader}>
                     <View style={{ flex: 1, marginRight: 12 }}>
+                      <View style={styles.tripBadgeRow}>
+                        <View
+                          style={[
+                            styles.tripTypeBadge,
+                            { backgroundColor: colors.surface, borderColor: colors.border },
+                          ]}
+                        >
+                          <Text style={[styles.tripTypeBadgeText, { color: colors.textSecondary }]}>
+                            {trip.friendIds.length ? 'Group trip' : 'Solo trip'}
+                          </Text>
+                        </View>
+
+                        <View
+                          style={[
+                            styles.tripModeBadge,
+                            { backgroundColor: colors.surface, borderColor: colors.border },
+                          ]}
+                        >
+                          <Ionicons name="airplane" size={11} color={colors.textSecondary} />
+                          <Text style={[styles.tripModeBadgeText, { color: colors.textSecondary }]}>
+                            Planner
+                          </Text>
+                        </View>
+                      </View>
+
                       <Text style={[styles.tripTitle, { color: colors.textPrimary }]}>
                         {trip.title}
                       </Text>
-                      <Text style={[styles.tripMeta, { color: colors.textSecondary }]}>
-                        {trip.startDate
-                          ? `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`
-                          : 'Dates not set'}
-                      </Text>
+                      <View style={styles.tripMetaRow}>
+                        <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
+                        <Text style={[styles.tripMeta, { color: colors.textSecondary }]}>
+                          {trip.startDate
+                            ? `${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`
+                            : 'Dates not set'}
+                        </Text>
+                      </View>
                     </View>
 
                     <View style={styles.tripActions}>
                       <Pressable
-                        onPress={() => addTripToCalendar(trip)}
-                        disabled={!trip.startDate || !trip.endDate}
+                        onPress={() => openEditTrip(trip)}
+                        style={[
+                          styles.tripHeaderAction,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
                       >
-                        <Text
-                          style={[
-                            styles.tripActionText,
-                            {
-                              color:
-                                trip.startDate && trip.endDate
-                                  ? colors.primary
-                                  : colors.textMuted,
-                            },
-                          ]}
-                        >
-                          Calendar
-                        </Text>
-                      </Pressable>
-                      <Pressable onPress={() => openEditTrip(trip)}>
                         <Text style={[styles.tripActionText, { color: colors.primary }]}>
                           Edit
                         </Text>
                       </Pressable>
-                      <Pressable onPress={() => deleteTrip(trip.id)}>
-                        <Text style={[styles.tripActionText, { color: '#DC2626' }]}>
-                          Delete
-                        </Text>
+                      <Pressable
+                        onPress={() => deleteTrip(trip.id)}
+                        style={[
+                          styles.tripDeleteButton,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Ionicons name="trash-outline" size={14} color={colors.textPrimary} />
                       </Pressable>
                     </View>
                   </View>
 
-                  {countrySummary ? (
+                  {tripTravelers.length ? (
+                    <View style={styles.tripTravelerRow}>
+                      <View style={styles.tripAvatarStack}>
+                        {tripTravelers.slice(0, 3).map((traveler, index) => (
+                          <View
+                            key={traveler.id}
+                            style={[
+                              styles.tripAvatarCircle,
+                              {
+                                backgroundColor: colors.paperAlt,
+                                borderColor: colors.card,
+                                marginLeft: index === 0 ? 0 : -10,
+                              },
+                            ]}
+                          >
+                            <Text style={[styles.tripAvatarText, { color: colors.textPrimary }]}>
+                              {traveler.name.trim().charAt(0).toUpperCase()}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+
+                      <Text style={[styles.tripTravelerNames, { color: colors.textPrimary }]}>
+                        {tripTravelers
+                          .slice(0, 3)
+                          .map(traveler => traveler.name)
+                          .join(', ')}
+                        {tripTravelers.length > 3 ? ` +${tripTravelers.length - 3}` : ''}
+                      </Text>
+                    </View>
+                  ) : null}
+
+                  {trip.countryIso2s.length ? (
+                    <View style={styles.tripChipWrap}>
+                      {trip.countryIso2s.slice(0, 6).map(iso2 => {
+                        const country = countries.find(entry => entry.iso2 === iso2);
+                        return (
+                          <View
+                            key={iso2}
+                            style={[
+                              styles.tripCountryChip,
+                              { backgroundColor: colors.surface, borderColor: colors.border },
+                            ]}
+                          >
+                            <Text style={[styles.tripCountryChipText, { color: colors.textPrimary }]}>
+                              {country?.flagEmoji ? `${country.flagEmoji} ` : ''}
+                              {countryNameByIso2.get(iso2) ?? iso2}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : null}
+
+                  {!trip.countryIso2s.length && countrySummary ? (
                     <Text style={[styles.tripDetail, { color: colors.textPrimary }]}>
                       Countries: {countrySummary}
                     </Text>
                   ) : null}
 
-                  {friendSummary ? (
+                  {!trip.friendIds.length && friendSummary ? (
                     <Text style={[styles.tripDetail, { color: colors.textPrimary }]}>
                       Friends: {friendSummary}
                     </Text>
+                  ) : null}
+
+                  {trip.notes ? (
+                    <View
+                      style={[
+                        styles.tripNotesCard,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                        Notes
+                      </Text>
+                      <Text style={[styles.tripNotesInline, { color: colors.textSecondary }]}>
+                        {trip.notes}
+                      </Text>
+                    </View>
                   ) : null}
 
                   {availabilitySummary ? (
@@ -1758,12 +2247,35 @@ export default function TripPlannerScreen() {
                     </View>
                   ) : null}
 
-                  {trip.notes ? (
-                    <Text style={[styles.tripNotes, { color: colors.textSecondary }]}>
-                      {trip.notes}
-                    </Text>
-                  ) : null}
-                </View>
+                  <View style={styles.tripFooterRow}>
+                    <Pressable
+                      onPress={() => openEditTrip(trip)}
+                      style={[
+                        styles.tripPrimaryButton,
+                        { backgroundColor: colors.paperAlt, borderColor: colors.border },
+                      ]}
+                    >
+                      <Text style={[styles.tripPrimaryButtonText, { color: colors.textPrimary }]}>
+                        Open trip
+                      </Text>
+                    </Pressable>
+
+                    {trip.startDate && trip.endDate ? (
+                      <Pressable
+                        onPress={() => addTripToCalendar(trip)}
+                        style={[
+                          styles.tripCalendarButton,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Ionicons name="calendar-outline" size={16} color={colors.textPrimary} />
+                        <Text style={[styles.tripCalendarButtonText, { color: colors.textPrimary }]}>
+                          Calendar
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                </ScrapbookCard>
               );
             })}
           </View>
@@ -1771,7 +2283,8 @@ export default function TripPlannerScreen() {
       </ScrollView>
 
       <Modal animationType="slide" visible={modalVisible} onRequestClose={closeModal}>
-        <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <ScrapbookBackground>
+        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
           <ScrollView
             contentContainerStyle={{
               paddingTop: insets.top + 18,
@@ -1781,10 +2294,24 @@ export default function TripPlannerScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.modalHeader}>
-              <Pressable onPress={closeModal}>
+              <Pressable
+                onPress={closeModal}
+                style={[styles.modalHeaderButton, { backgroundColor: colors.paperAlt, borderColor: colors.border }]}
+              >
                 <Text style={[styles.backText, { color: colors.textPrimary }]}>Cancel</Text>
               </Pressable>
-              <Pressable onPress={saveTrip} disabled={!draft.title.trim()}>
+              <Pressable
+                onPress={saveTrip}
+                disabled={!draft.title.trim()}
+                style={[
+                  styles.modalHeaderButton,
+                  {
+                    backgroundColor: draft.title.trim() ? colors.paperAlt : colors.surface,
+                    borderColor: colors.border,
+                    opacity: draft.title.trim() ? 1 : 0.7,
+                  },
+                ]}
+              >
                 <Text
                   style={[
                     styles.saveText,
@@ -1798,9 +2325,110 @@ export default function TripPlannerScreen() {
               </Pressable>
             </View>
 
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
-              {draft.id ? 'Edit Trip' : 'New Trip'}
-            </Text>
+            <TitleBanner title={draft.id ? 'Edit Trip' : 'New Trip'} />
+
+            <ScrapbookCard
+              style={styles.composerIntroShell}
+              innerStyle={[styles.composerIntroCard, { backgroundColor: `${colors.card}F2` }]}
+            >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Trip Snapshot
+              </Text>
+              <Text style={[styles.composerIntroTitle, { color: colors.textPrimary }]}>
+                Keep the full trip in one place
+              </Text>
+
+              <View style={styles.composerStatRow}>
+                <View
+                  style={[
+                    styles.composerStatPill,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.composerStatLabel, { color: colors.textSecondary }]}>
+                    Travelers
+                  </Text>
+                  <Text style={[styles.composerStatValue, { color: colors.textPrimary }]}>
+                    {draftTravelers.length}
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    styles.composerStatPill,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.composerStatLabel, { color: colors.textSecondary }]}>
+                    Countries
+                  </Text>
+                  <Text style={[styles.composerStatValue, { color: colors.textPrimary }]}>
+                    {draft.countryIso2s.length}
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    styles.composerStatPill,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.composerStatLabel, { color: colors.textSecondary }]}>
+                    Dates
+                  </Text>
+                  <Text style={[styles.composerStatValue, { color: colors.textPrimary }]}>
+                    {draft.includeDates ? 'On' : 'Off'}
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={[
+                  styles.composerSnapshotCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <View style={styles.snapshotRow}>
+                  <View style={styles.snapshotLabelWrap}>
+                    <Ionicons name="map-outline" size={14} color={colors.textSecondary} />
+                    <Text style={[styles.snapshotLabel, { color: colors.textSecondary }]}>
+                      Route
+                    </Text>
+                  </View>
+                  <Text style={[styles.snapshotValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {selectedCountryNames.length ? selectedCountryNames.slice(0, 3).join(', ') : 'No countries yet'}
+                  </Text>
+                </View>
+                <View style={[styles.snapshotDivider, { backgroundColor: colors.border }]} />
+                <View style={styles.snapshotRow}>
+                  <View style={styles.snapshotLabelWrap}>
+                    <Ionicons name="people-outline" size={14} color={colors.textSecondary} />
+                    <Text style={[styles.snapshotLabel, { color: colors.textSecondary }]}>
+                      Travelers
+                    </Text>
+                  </View>
+                  <Text style={[styles.snapshotValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {draftTravelers.length
+                      ? draftTravelers.map(traveler => traveler.name).slice(0, 3).join(', ')
+                      : 'Just you'}
+                  </Text>
+                </View>
+                <View style={[styles.snapshotDivider, { backgroundColor: colors.border }]} />
+                <View style={styles.snapshotRow}>
+                  <View style={styles.snapshotLabelWrap}>
+                    <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
+                    <Text style={[styles.snapshotLabel, { color: colors.textSecondary }]}>
+                      Status
+                    </Text>
+                  </View>
+                  <Text style={[styles.snapshotValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {draft.includeDates && draftTripDays
+                      ? `${draftTripDays} day${draftTripDays === 1 ? '' : 's'} planned`
+                      : 'Dates still flexible'}
+                  </Text>
+                </View>
+              </View>
+            </ScrapbookCard>
 
             <View
               style={[
@@ -1808,6 +2436,9 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Trip basics
+              </Text>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Title</Text>
               <TextInput
                 value={draft.title}
@@ -1853,6 +2484,9 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Trip timing
+              </Text>
               <Pressable
                 onPress={toggleIncludeDates}
                 style={styles.switchRow}
@@ -1912,7 +2546,108 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Route planning
+              </Text>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Countries</Text>
+              <View
+                style={[
+                  styles.helperCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.helperTitle, { color: colors.textPrimary }]}>
+                  Route builder
+                </Text>
+                <Text style={[styles.helperCopy, { color: colors.textSecondary }]}>
+                  Add the places this trip will actually cover, then use itinerary and visa tools against that same route.
+                </Text>
+              </View>
+
+              <View style={styles.summaryStrip}>
+                <View
+                  style={[
+                    styles.summaryMiniCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                    Selected
+                  </Text>
+                  <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                    {draft.countryIso2s.length}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.summaryMiniCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                    Saved lists
+                  </Text>
+                  <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                    {savedListSuggestions.length}
+                  </Text>
+                </View>
+              </View>
+
+              {draft.countryIso2s.length ? (
+                <>
+                  <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
+                    Included in this trip
+                  </Text>
+                  <View style={styles.chipWrap}>
+                    {countries
+                      .filter(country => draft.countryIso2s.includes(country.iso2))
+                      .map(country => (
+                        <Pressable
+                          key={`selected-${country.iso2}`}
+                          onPress={() => toggleCountry(country.iso2)}
+                          style={[
+                            styles.chip,
+                            { backgroundColor: colors.primary, borderColor: colors.primary },
+                          ]}
+                        >
+                          <Text style={{ color: colors.primaryText, fontWeight: '700' }}>
+                            {country.flagEmoji ? `${country.flagEmoji} ` : ''}
+                            {country.name}
+                          </Text>
+                        </Pressable>
+                      ))}
+                  </View>
+                </>
+              ) : null}
+
+              {savedListSuggestions.length ? (
+                <>
+                  <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
+                    From your saved lists
+                  </Text>
+                  <View style={styles.chipWrap}>
+                    {savedListSuggestions.slice(0, 8).map(country => (
+                      <Pressable
+                        key={`saved-${country.iso2}`}
+                        onPress={() => toggleCountry(country.iso2)}
+                        style={[
+                          styles.chip,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
+                      >
+                        <Text style={{ color: colors.textPrimary, fontWeight: '600' }}>
+                          {country.flagEmoji ? `${country.flagEmoji} ` : ''}
+                          {country.name}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </>
+              ) : null}
+
+              <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
+                Search countries
+              </Text>
               <TextInput
                 value={countryQuery}
                 onChangeText={setCountryQuery}
@@ -1928,61 +2663,55 @@ export default function TripPlannerScreen() {
                 ]}
               />
 
-              {selectedCountryNames.length ? (
-                <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
-                  Selected: {selectedCountryNames.join(', ')}
-                </Text>
-              ) : null}
-
-              {draft.countryIso2s.length ? (
-                <View style={styles.statRow}>
-                  {countries
-                    .filter(country => draft.countryIso2s.includes(country.iso2))
-                    .slice(0, 3)
-                    .map(country => (
-                      <View
-                        key={country.iso2}
-                        style={[
-                          styles.statPill,
-                          { backgroundColor: colors.surface, borderColor: colors.border },
-                        ]}
-                      >
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-                          {country.flagEmoji ? `${country.flagEmoji} ` : ''}
-                          {country.iso2}
-                        </Text>
-                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-                          {country.scoreTotal ?? 0}
-                        </Text>
-                      </View>
-                    ))}
-                </View>
-              ) : null}
-
-              <View style={styles.chipWrap}>
+              <View style={styles.pickerList}>
                 {filteredCountries.map(country => {
                   const selected = draft.countryIso2s.includes(country.iso2);
+                  const inSavedList =
+                    bucketIsoCodes.includes(country.iso2) || visitedIsoCodes.includes(country.iso2);
+
                   return (
                     <Pressable
                       key={country.iso2}
                       onPress={() => toggleCountry(country.iso2)}
                       style={[
-                        styles.chip,
+                        styles.pickerRow,
                         {
-                          backgroundColor: selected ? colors.primary : colors.surface,
+                          backgroundColor: selected ? colors.paperAlt : colors.surface,
                           borderColor: selected ? colors.primary : colors.border,
                         },
                       ]}
                     >
-                      <Text
-                        style={{
-                          color: selected ? colors.primaryText : colors.textPrimary,
-                          fontWeight: '600',
-                        }}
+                      <View style={styles.pickerRowMain}>
+                        <Text style={[styles.flag, { color: colors.textPrimary }]}>
+                          {country.flagEmoji ?? '•'}
+                        </Text>
+
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.countryName, { color: colors.textPrimary }]}>
+                            {country.name}
+                          </Text>
+                          <Text style={[styles.pickerMeta, { color: colors.textSecondary }]}>
+                            {country.iso2}
+                            {inSavedList ? ' · saved in your lists' : ''}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.pickerCheck,
+                          {
+                            backgroundColor: selected ? colors.primary : colors.card,
+                            borderColor: selected ? colors.primary : colors.border,
+                          },
+                        ]}
                       >
-                        {country.flagEmoji ? `${country.flagEmoji} ` : ''}
-                        {country.name}
-                      </Text>
+                        <Ionicons
+                          name={selected ? 'checkmark' : 'add'}
+                          size={16}
+                          color={selected ? colors.primaryText : colors.textPrimary}
+                        />
+                      </View>
                     </Pressable>
                   );
                 })}
@@ -2079,11 +2808,57 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Day planning
+              </Text>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Itinerary</Text>
+              <View
+                style={[
+                  styles.helperCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.helperTitle, { color: colors.textPrimary }]}>
+                  Day-by-day route
+                </Text>
+                <Text style={[styles.helperCopy, { color: colors.textSecondary }]}>
+                  Shape each day as a country stop or a travel day so the trip timeline stays readable.
+                </Text>
+              </View>
+              {draft.includeDates ? (
+                <View style={styles.summaryStrip}>
+                  <View
+                    style={[
+                      styles.summaryMiniCard,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                    ]}
+                  >
+                    <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                      Days
+                    </Text>
+                    <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                      {draft.dayPlans.length}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.summaryMiniCard,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                    ]}
+                  >
+                    <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                      Stops
+                    </Text>
+                    <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                      {new Set(draft.dayPlans.map(plan => plan.countryIso2).filter(Boolean)).size}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
               {draft.includeDates && draft.dayPlans.length ? (
                 <>
-                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
-                    Shape each day as a country stop or a travel day.
+                  <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
+                    Current route
                   </Text>
 
                   <View style={styles.expenseList}>
@@ -2187,7 +2962,23 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Travel crew
+              </Text>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Friends</Text>
+              <View
+                style={[
+                  styles.helperCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.helperTitle, { color: colors.textPrimary }]}>
+                  Travel crew
+                </Text>
+                <Text style={[styles.helperCopy, { color: colors.textSecondary }]}>
+                  Pick the friends joining this trip so dates, visas, and expenses all stay attached to the same group.
+                </Text>
+              </View>
 
               {friends.length === 0 ? (
                 <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
@@ -2195,6 +2986,34 @@ export default function TripPlannerScreen() {
                 </Text>
               ) : (
                 <>
+                  <View style={styles.summaryStrip}>
+                    <View
+                      style={[
+                        styles.summaryMiniCard,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                        Invited
+                      </Text>
+                      <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                        {draft.friendIds.length}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.summaryMiniCard,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                        Total travelers
+                      </Text>
+                      <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                        {draftTravelers.length}
+                      </Text>
+                    </View>
+                  </View>
                   {selectedFriendNames.length ? (
                     <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
                       Selected: {selectedFriendNames.join(', ')}
@@ -2239,12 +3058,66 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Group timing
+              </Text>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                 Availability
               </Text>
-              <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
-                Add exact dates or flexible months for each traveler to spot real overlap.
-              </Text>
+              <View
+                style={[
+                  styles.helperCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.helperTitle, { color: colors.textPrimary }]}>
+                  How this works
+                </Text>
+                <Text style={[styles.helperCopy, { color: colors.textSecondary }]}>
+                  Add exact dates or flexible months for each traveler to find a real shared window.
+                </Text>
+              </View>
+              <View style={styles.summaryStrip}>
+                <View
+                  style={[
+                    styles.summaryMiniCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                    Travelers
+                  </Text>
+                  <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                    {draftTravelers.length}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.summaryMiniCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                    Proposals
+                  </Text>
+                  <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                    {draft.availability.length}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.summaryMiniCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                    Shared windows
+                  </Text>
+                  <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                    {draftOverlaps.length}
+                  </Text>
+                </View>
+              </View>
 
               {draftTravelers.length === 0 ? (
                 <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
@@ -2252,7 +3125,7 @@ export default function TripPlannerScreen() {
                 </Text>
               ) : (
                 <>
-                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
                     Traveler
                   </Text>
                   <View style={styles.chipWrap}>
@@ -2288,7 +3161,7 @@ export default function TripPlannerScreen() {
                     })}
                   </View>
 
-                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
                     Availability type
                   </Text>
                   <View style={styles.inlineRow}>
@@ -2436,7 +3309,11 @@ export default function TripPlannerScreen() {
                   ) : null}
 
                   {draft.availability.length ? (
-                    <View style={styles.availabilityList}>
+                    <>
+                      <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
+                        Current proposals
+                      </Text>
+                      <View style={styles.availabilityList}>
                       {draftTravelers.map(traveler => {
                         const travelerProposals = draft.availability.filter(
                           proposal => proposal.participantId === traveler.id
@@ -2485,7 +3362,7 @@ export default function TripPlannerScreen() {
                                     }))
                                   }
                                 >
-                                  <Text style={[styles.tripActionText, { color: '#DC2626' }]}>
+                                  <Text style={[styles.tripActionText, { color: colors.redText }]}>
                                     Remove
                                   </Text>
                                 </Pressable>
@@ -2494,7 +3371,8 @@ export default function TripPlannerScreen() {
                           </View>
                         );
                       })}
-                    </View>
+                      </View>
+                    </>
                   ) : null}
                 </>
               )}
@@ -2506,13 +3384,53 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Border prep
+              </Text>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
                 Visa Summary
               </Text>
-              <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
-                Uses the app&apos;s current default passport assumption until traveler-specific
-                passport preferences exist in mobile.
-              </Text>
+              <View
+                style={[
+                  styles.helperCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.helperTitle, { color: colors.textPrimary }]}>
+                  Visa requirements
+                </Text>
+                <Text style={[styles.helperCopy, { color: colors.textSecondary }]}>
+                  Check each traveler and country combination that may still need visa prep before booking.
+                </Text>
+              </View>
+              <View style={styles.summaryStrip}>
+                <View
+                  style={[
+                    styles.summaryMiniCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                    Travelers
+                  </Text>
+                  <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                    {draftTravelers.length}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.summaryMiniCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                    Flagged
+                  </Text>
+                  <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                    {draftVisaSummaries.length}
+                  </Text>
+                </View>
+              </View>
               <View
                 style={[
                   styles.infoPanel,
@@ -2569,8 +3487,91 @@ export default function TripPlannerScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Group budget
+              </Text>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Expenses</Text>
+              <View
+                style={[
+                  styles.helperCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.helperTitle, { color: colors.textPrimary }]}>
+                  Expense split
+                </Text>
+                <Text style={[styles.helperCopy, { color: colors.textSecondary }]}>
+                  Log who paid and who should share the cost so the group total stays easy to track.
+                </Text>
+              </View>
+              <View style={styles.summaryStrip}>
+                <View
+                  style={[
+                    styles.summaryMiniCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                    Total
+                  </Text>
+                  <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                    ${totalDraftExpenses.toFixed(0)}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.summaryMiniCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
+                  <Text style={[styles.summaryMiniLabel, { color: colors.textSecondary }]}>
+                    Entries
+                  </Text>
+                  <Text style={[styles.summaryMiniValue, { color: colors.textPrimary }]}>
+                    {draft.expenses.length}
+                  </Text>
+                </View>
+              </View>
 
+              {draft.expenses.length ? (
+                <>
+                  <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
+                    Logged expenses
+                  </Text>
+                  <View style={styles.statRow}>
+                    <View
+                      style={[
+                        styles.statPill,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                        Total
+                      </Text>
+                      <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                        ${draft.expenses.reduce((sum, expense) => sum + expense.totalAmount, 0).toFixed(0)}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.statPill,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                        Entries
+                      </Text>
+                      <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                        {draft.expenses.length}
+                      </Text>
+                    </View>
+                  </View>
+                </>
+              ) : null}
+
+              <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
+                Add a new expense
+              </Text>
               <TextInput
                 value={expenseDraftTitle}
                 onChangeText={setExpenseDraftTitle}
@@ -2605,7 +3606,7 @@ export default function TripPlannerScreen() {
 
               {draftTravelers.length ? (
                 <>
-                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
                     Who paid?
                   </Text>
                   <View style={styles.chipWrap}>
@@ -2636,7 +3637,7 @@ export default function TripPlannerScreen() {
                     })}
                   </View>
 
-                  <Text style={[styles.selectionSummary, { color: colors.textSecondary }]}>
+                  <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
                     Split with
                   </Text>
                   <View style={styles.chipWrap}>
@@ -2683,44 +3684,54 @@ export default function TripPlannerScreen() {
               </Pressable>
 
               {draft.expenses.length ? (
-                <View style={styles.expenseList}>
-                  {draft.expenses.map(expense => (
-                    <View
-                      key={expense.id}
-                      style={[
-                        styles.expenseItem,
-                        { backgroundColor: colors.surface, borderColor: colors.border },
-                      ]}
-                    >
-                      <View style={{ flex: 1, marginRight: 12 }}>
-                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
-                          {expense.title}
-                        </Text>
-                        <Text style={[styles.tripNotes, { color: colors.textSecondary }]}>
-                          ${expense.totalAmount.toFixed(2)} paid by {expense.paidByName}
-                        </Text>
-                      </View>
-                      <Pressable
-                        onPress={() =>
-                          setDraft(current => ({
-                            ...current,
-                            expenses: current.expenses.filter(item => item.id !== expense.id),
-                          }))
-                        }
+                <>
+                  <Text style={[styles.subsectionTitle, { color: colors.textPrimary }]}>
+                    Current expenses
+                  </Text>
+                  <View style={styles.expenseList}>
+                    {draft.expenses.map(expense => (
+                      <View
+                        key={expense.id}
+                        style={[
+                          styles.expenseItem,
+                          { backgroundColor: colors.surface, borderColor: colors.border },
+                        ]}
                       >
-                        <Text style={[styles.tripActionText, { color: '#DC2626' }]}>
-                          Remove
-                        </Text>
-                      </Pressable>
-                    </View>
-                  ))}
-                </View>
+                        <View style={{ flex: 1, marginRight: 12 }}>
+                          <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
+                            {expense.title}
+                          </Text>
+                          <Text style={[styles.tripNotes, { color: colors.textSecondary }]}>
+                            ${expense.totalAmount.toFixed(2)} paid by {expense.paidByName}
+                          </Text>
+                          <Text style={[styles.infoSubtext, { color: colors.textSecondary }]}>
+                            Split with {expense.splitWithIds.length || 1} traveler{expense.splitWithIds.length === 1 ? '' : 's'}
+                          </Text>
+                        </View>
+                        <Pressable
+                          onPress={() =>
+                            setDraft(current => ({
+                              ...current,
+                              expenses: current.expenses.filter(item => item.id !== expense.id),
+                            }))
+                          }
+                        >
+                          <Text style={[styles.tripActionText, { color: colors.redText }]}>
+                            Remove
+                          </Text>
+                        </Pressable>
+                      </View>
+                    ))}
+                  </View>
+                </>
               ) : null}
             </View>
           </ScrollView>
         </View>
+        </ScrapbookBackground>
       </Modal>
     </View>
+    </ScrapbookBackground>
   );
 }
 
@@ -2728,6 +3739,13 @@ const styles = StyleSheet.create({
   backButton: {
     alignSelf: 'flex-start',
     marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   backText: {
     fontSize: 15,
@@ -2755,11 +3773,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
+    borderWidth: 1,
   },
   emptyCard: {
     borderWidth: 1,
     borderRadius: 22,
     padding: 22,
+  },
+  emptyEyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    marginBottom: 10,
   },
   emptyTitle: {
     fontSize: 18,
@@ -2771,13 +3797,47 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 8,
   },
+  emptySummaryRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 16,
+  },
+  emptySummaryChip: {
+    flex: 1,
+    minWidth: 132,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  emptySummaryLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  emptySummaryValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
   tripStack: {
     gap: 14,
   },
+  tripCardShell: {
+    width: '100%',
+  },
   tripCard: {
-    borderWidth: 1,
-    borderRadius: 22,
     padding: 18,
+  },
+  tripCardEyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    marginBottom: 10,
   },
   tripCardHeader: {
     flexDirection: 'row',
@@ -2785,20 +3845,119 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
   },
+  tripBadgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
+  },
+  tripTypeBadge: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  tripTypeBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  tripModeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  tripModeBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
   tripTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 24,
+    fontWeight: '800',
+    lineHeight: 28,
+  },
+  tripMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
   },
   tripMeta: {
     fontSize: 13,
-    marginTop: 4,
+    fontWeight: '600',
+  },
+  tripTravelerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 2,
+  },
+  tripAvatarStack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  tripAvatarCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tripAvatarText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  tripTravelerNames: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  tripChipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  tripCountryChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  tripCountryChipText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   tripActions: {
     flexDirection: 'row',
-    gap: 14,
+    gap: 8,
+    alignItems: 'center',
+  },
+  tripHeaderAction: {
+    minHeight: 36,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tripDeleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tripActionText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   tripDetail: {
@@ -2810,6 +3969,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: 10,
+  },
+  tripNotesCard: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  tripNotesInline: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  tripFooterRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  tripPrimaryButton: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tripPrimaryButtonText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tripCalendarButton: {
+    minHeight: 46,
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  tripCalendarButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   expenseCard: {
     marginTop: 12,
@@ -2847,6 +4048,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 18,
   },
+  modalHeaderButton: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minWidth: 82,
+    alignItems: 'center',
+  },
   saveText: {
     fontSize: 15,
     fontWeight: '700',
@@ -2860,41 +4069,177 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 20,
   },
-  sectionCard: {
-    borderWidth: 1,
-    borderRadius: 22,
-    padding: 18,
+  composerIntroShell: {
     marginBottom: 14,
   },
-  sectionTitle: {
-    fontSize: 16,
+  composerIntroCard: {
+    padding: 18,
+  },
+  composerIntroTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  composerIntroCopy: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
+  },
+  composerStatRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 14,
+  },
+  composerStatPill: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minWidth: 86,
+  },
+  composerStatLabel: {
+    fontSize: 11,
     fontWeight: '700',
+    marginBottom: 4,
+  },
+  composerStatValue: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  composerSnapshotCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 14,
+  },
+  snapshotRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 10,
+  },
+  snapshotLabelWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    flexShrink: 1,
+  },
+  snapshotLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  snapshotValue: {
+    flex: 1,
+    textAlign: 'right',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  snapshotDivider: {
+    height: StyleSheet.hairlineWidth,
+  },
+  sectionCard: {
+    borderWidth: 1,
+    borderRadius: 28,
+    padding: 20,
+    marginBottom: 16,
+    backgroundColor: 'rgba(248, 241, 231, 0.94)',
+    shadowColor: '#8d7559',
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 9 },
+    elevation: 5,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  sectionEyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  subsectionTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  helperCard: {
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginTop: 12,
+    shadowColor: '#8d7559',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  helperTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  helperCopy: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 6,
+  },
+  summaryStrip: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+    marginBottom: 2,
+  },
+  summaryMiniCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 12,
+  },
+  summaryMiniLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  summaryMiniValue: {
+    fontSize: 16,
+    fontWeight: '800',
   },
   sectionTopGap: {
     marginTop: 14,
   },
   textInput: {
     borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: 18,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
     fontSize: 15,
     marginTop: 10,
+    backgroundColor: 'rgba(255,250,244,0.84)',
   },
   notesInput: {
     minHeight: 110,
     borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: 18,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
     fontSize: 15,
     lineHeight: 21,
     marginTop: 10,
+    backgroundColor: 'rgba(255,250,244,0.84)',
   },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minHeight: 40,
   },
   dateRow: {
     flexDirection: 'row',
@@ -2904,8 +4249,9 @@ const styles = StyleSheet.create({
   dateButton: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 18,
+    padding: 15,
+    backgroundColor: 'rgba(255,248,241,0.84)',
   },
   dateLabel: {
     fontSize: 13,
@@ -2927,11 +4273,50 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 12,
   },
+  pickerList: {
+    gap: 10,
+    marginTop: 14,
+  },
+  pickerRow: {
+    minHeight: 72,
+    borderWidth: 1,
+    borderRadius: 22,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pickerRowMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 12,
+  },
+  pickerMeta: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 4,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  pickerCheck: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   chip: {
     borderWidth: 1,
     borderRadius: 999,
-    paddingHorizontal: 12,
+    paddingHorizontal: 13,
     paddingVertical: 10,
+    shadowColor: '#8d7559',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
   inlineRow: {
     flexDirection: 'row',
@@ -2944,13 +4329,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
+    minWidth: 126,
+    alignItems: 'center',
   },
   addExpenseButton: {
-    minHeight: 44,
-    borderRadius: 16,
+    minHeight: 46,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 14,
+    shadowColor: '#8d7559',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
   },
   expenseList: {
     gap: 10,
@@ -2958,15 +4349,15 @@ const styles = StyleSheet.create({
   },
   expenseItem: {
     borderWidth: 1,
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: 18,
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
   },
   itineraryCard: {
     borderWidth: 1,
     borderRadius: 18,
-    padding: 12,
+    padding: 14,
   },
   infoPanel: {
     borderWidth: 1,
@@ -2991,7 +4382,7 @@ const styles = StyleSheet.create({
   availabilityGroup: {
     borderWidth: 1,
     borderRadius: 18,
-    padding: 12,
+    padding: 14,
   },
   availabilityRow: {
     flexDirection: 'row',

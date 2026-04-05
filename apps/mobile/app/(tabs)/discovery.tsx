@@ -1,8 +1,10 @@
-import { View, Pressable, Text, StyleSheet } from 'react-native';
+import { View, Pressable, Text, StyleSheet, ImageBackground, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
+import ScrapbookBackground from '../../components/theme/ScrapbookBackground';
+import TitleBanner from '../../components/theme/TitleBanner';
 
 type DiscoveryCardProps = {
   title: string;
@@ -17,34 +19,43 @@ function DiscoveryCard({ title, subtitle, icon, onPress }: DiscoveryCardProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          opacity: pressed ? 0.92 : 1,
-        },
-      ]}
+      style={({ pressed }) => [styles.cardPressable, pressed && styles.cardPressed]}
     >
-      <View
-        style={[
-          styles.cardIconWrap,
-          { backgroundColor: colors.segmentBg, borderColor: colors.border },
-        ]}
+      <ImageBackground
+        source={require('../../assets/scrapbook/button-image.png')}
+        imageStyle={styles.cardImage}
+        style={styles.cardImageWrap}
       >
-        <Ionicons name={icon} size={20} color={colors.textPrimary} />
-      </View>
+        <View style={styles.cardTint} />
+        <View
+          style={[
+            styles.card,
+            {
+              borderColor: colors.cardBorderStrong,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.cardIconWrap,
+              { backgroundColor: 'rgba(255,250,244,0.8)', borderColor: colors.border },
+            ]}
+          >
+            <Ionicons name={icon} size={20} color={colors.textPrimary} />
+          </View>
 
-      <View style={styles.cardBody}>
-        <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-          {title}
-        </Text>
-        <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-          {subtitle}
-        </Text>
-      </View>
+          <View style={styles.cardBody}>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+              {title}
+            </Text>
+            <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
+              {subtitle}
+            </Text>
+          </View>
 
-      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </View>
+      </ImageBackground>
     </Pressable>
   );
 }
@@ -54,88 +65,97 @@ export default function DiscoveryScreen() {
   const colors = useTheme();
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.background,
-          paddingTop: insets.top + 18,
-          paddingBottom: insets.bottom + 24,
-        },
-      ]}
-    >
-      <View style={styles.headerRow}>
-        <View style={{ flex: 1, marginRight: 12 }}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>
-            Discovery
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Explore countries, seasonality, and the score map from one place.
-          </Text>
-        </View>
-
-        <Pressable
-          onPress={() => router.push('/weights' as any)}
+    <ScrapbookBackground>
+      <View style={styles.screen}>
+        <View
           style={[
-            styles.settingsButton,
+            styles.weightsButtonWrap,
             {
-              backgroundColor: colors.card,
-              borderColor: colors.border,
+              top: insets.top + 12,
             },
           ]}
         >
-          <Ionicons
-            name="options-outline"
-            size={20}
-            color={colors.textPrimary}
-          />
-        </Pressable>
+          <Pressable
+            onPress={() => router.push('/weights' as any)}
+            style={[
+              styles.settingsButton,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Ionicons
+              name="options-outline"
+              size={20}
+              color={colors.textPrimary}
+            />
+          </Pressable>
+        </View>
+
+        <ScrollView
+          style={[
+            styles.container,
+            {
+              paddingTop: insets.top + 10,
+              paddingBottom: insets.bottom + 24,
+            },
+          ]}
+          contentContainerStyle={styles.content}
+        >
+          <View style={styles.headerWrap}>
+            <TitleBanner title="Discover" />
+          </View>
+
+          <View style={styles.stack}>
+            <DiscoveryCard
+              title="Countries"
+              subtitle="Browse and rank every destination."
+              icon="globe-outline"
+              onPress={() => router.push('/(tabs)/countries')}
+            />
+
+            <DiscoveryCard
+              title="When to Go"
+              subtitle="Explore peak and shoulder seasons by month."
+              icon="calendar-outline"
+              onPress={() => router.push('/(tabs)/when-to-go')}
+            />
+
+            <DiscoveryCard
+              title="Score Map"
+              subtitle="Compare destinations on the world map."
+              icon="map-outline"
+              onPress={() => router.push('/score-map')}
+            />
+          </View>
+        </ScrollView>
       </View>
-
-      <View style={styles.stack}>
-        <DiscoveryCard
-          title="Countries"
-          subtitle="Browse and rank every destination."
-          icon="globe-outline"
-          onPress={() => router.push('/countries' as any)}
-        />
-
-        <DiscoveryCard
-          title="When to Go"
-          subtitle="Explore peak and shoulder seasons by month."
-          icon="calendar-outline"
-          onPress={() => router.push('/(tabs)/when-to-go')}
-        />
-
-        <DiscoveryCard
-          title="Score Map"
-          subtitle="Compare destinations on the world map."
-          icon="map-outline"
-          onPress={() => router.push('/score-map')}
-        />
-      </View>
-    </View>
+    </ScrapbookBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
+  },
+  content: {
     paddingHorizontal: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
+  weightsButtonWrap: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 3,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  headerWrap: {
+    marginBottom: 20,
   },
   subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 8,
-    marginBottom: 24,
+    display: 'none',
   },
   settingsButton: {
     width: 44,
@@ -144,17 +164,36 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
   },
   stack: {
-    gap: 14,
+    gap: 20,
+  },
+  cardPressable: {
+    borderRadius: 26,
+  },
+  cardPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.995 }],
+  },
+  cardImageWrap: {
+    minHeight: 102,
+    justifyContent: 'center',
+  },
+  cardImage: {
+    borderRadius: 26,
+  },
+  cardTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(250, 244, 235, 0.18)',
+    borderRadius: 26,
   },
   card: {
     borderWidth: 1,
-    borderRadius: 22,
+    borderRadius: 26,
     padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 102,
   },
   cardIconWrap: {
     width: 46,

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, useColorScheme } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import { Video, ResizeMode } from 'expo-av';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -12,7 +12,6 @@ import * as WebBrowser from 'expo-web-browser';
 WebBrowser.maybeCompleteAuthSession();
 
 function RootLayoutInner() {
-  const scheme = useColorScheme();
   const colors = useTheme();
 
   const { session, isGuest, loading } = useAuth();
@@ -30,14 +29,14 @@ function RootLayoutInner() {
       edges={['top', 'left', 'right']}
     >
       <StatusBar
-        style={scheme === 'dark' ? 'light' : 'dark'}
+        style="dark"
         backgroundColor={colors.background}
       />
 
       {showAuthBackground && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <Video
-            source={require('../assets/auth_loop.mp4')}
+            source={require('../assets/intro-video.mp4')}
             style={StyleSheet.absoluteFill}
             resizeMode={ResizeMode.COVER}
             shouldPlay
@@ -59,7 +58,11 @@ function RootLayoutInner() {
               : colors.background,
           },
         }}
-      />
+      >
+        <Stack.Screen name="login/index" options={{ animation: 'fade' }} />
+        <Stack.Screen name="login/email" options={{ animation: 'slide_from_right', animationDuration: 260 }} />
+        <Stack.Screen name="verify" options={{ animation: 'slide_from_right', animationDuration: 260 }} />
+      </Stack>
     </SafeAreaView>
   );
 }
@@ -82,6 +85,6 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(23,15,10,0.24)',
   },
 });

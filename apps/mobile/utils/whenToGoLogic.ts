@@ -1,10 +1,8 @@
 import { Country } from '../types/Country';
 
 export type WhenToGoItem = {
-  iso2: string;
-  name: string;
-  region: string;
-  score: number;
+  id: string;
+  country: Country;
 };
 
 function normalizeMonth(m: number) {
@@ -30,10 +28,12 @@ function getShoulderMonths(bestMonths: number[]) {
 
 export function getWhenToGoBuckets(
   countries: Country[],
-  selectedMonth0: number
+  selectedMonth: number
 ) {
   const peak: WhenToGoItem[] = [];
+  const good: WhenToGoItem[] = [];
   const shoulder: WhenToGoItem[] = [];
+  const rough: WhenToGoItem[] = [];
 
   countries.forEach(c => {
     const bestMonths: number[] =
@@ -44,6 +44,7 @@ export function getWhenToGoBuckets(
     const normalizedBest = bestMonths.map(normalizeMonth);
     const shoulderMonths = getShoulderMonths(bestMonths);
 
+    const selectedMonth0 = normalizeMonth(selectedMonth);
     const isPeak = normalizedBest.includes(selectedMonth0);
     const isShoulder =
       shoulderMonths.has(selectedMonth0) &&
@@ -51,24 +52,29 @@ export function getWhenToGoBuckets(
 
     if (isPeak) {
       peak.push({
-        iso2: c.iso2,
-        name: c.name,
-        region: c.region ?? '',
-        score: c.facts?.scoreTotal ?? 0,
+        id: c.iso2,
+        country: c,
       });
     } else if (isShoulder) {
       shoulder.push({
-        iso2: c.iso2,
-        name: c.name,
-        region: c.region ?? '',
-        score: c.facts?.scoreTotal ?? 0,
+        id: c.iso2,
+        country: c,
+      });
+    } else {
+      const overallScore = c.facts?.scoreTotal ?? 0;
+      const target = overallScore >= 65 ? good : rough;
+      target.push({
+        id: c.iso2,
+        country: c,
       });
     }
   });
 
   // Sort by real scoreTotal descending
-  peak.sort((a, b) => b.score - a.score);
-  shoulder.sort((a, b) => b.score - a.score);
+  peak.sort((a, b) => (b.country.facts?.scoreTotal ?? 0) - (a.country.facts?.scoreTotal ?? 0));
+  good.sort((a, b) => (b.country.facts?.scoreTotal ?? 0) - (a.country.facts?.scoreTotal ?? 0));
+  shoulder.sort((a, b) => (b.country.facts?.scoreTotal ?? 0) - (a.country.facts?.scoreTotal ?? 0));
+  rough.sort((a, b) => (b.country.facts?.scoreTotal ?? 0) - (a.country.facts?.scoreTotal ?? 0));
 
-  return { peak, shoulder };
+  return { peak, good, shoulder, rough };
 }

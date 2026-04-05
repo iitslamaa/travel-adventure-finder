@@ -121,7 +121,7 @@ export function ScorePreferencesProvider({
 }) {
   const { session } = useAuth();
   const [weights, setWeights] = useState<ScoreWeights>(DEFAULT_SCORE_WEIGHTS);
-  const [selectedMonth, setSelectedMonthState] = useState(new Date().getMonth());
+  const [selectedMonth, setSelectedMonthState] = useState(new Date().getMonth() + 1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -153,7 +153,7 @@ export function ScorePreferencesProvider({
           }
 
           if (typeof parsed.selectedMonth === 'number') {
-            setSelectedMonthState(Math.min(Math.max(parsed.selectedMonth, 0), 11));
+            setSelectedMonthState(Math.min(Math.max(parsed.selectedMonth, 1), 12));
           }
         }
 
@@ -215,7 +215,7 @@ export function ScorePreferencesProvider({
       selectedMonth: number;
     }) => {
       const normalized = normalizeWeights(draftWeights);
-      const clampedMonth = Math.min(Math.max(draftMonth, 0), 11);
+      const clampedMonth = Math.min(Math.max(draftMonth, 1), 12);
 
       setWeights(normalized);
       setSelectedMonthState(clampedMonth);
@@ -249,8 +249,10 @@ export function ScorePreferencesProvider({
   }, [savePreferences, selectedMonth]);
 
   const setSelectedMonth = useCallback((month: number) => {
-    setSelectedMonthState(Math.min(Math.max(month, 0), 11));
-  }, []);
+    const clampedMonth = Math.min(Math.max(month, 1), 12);
+    setSelectedMonthState(clampedMonth);
+    void persistLocal(weights, clampedMonth);
+  }, [persistLocal, weights]);
 
   const value = useMemo(
     () => ({
@@ -278,4 +280,3 @@ export function useScorePreferences() {
   }
   return context;
 }
-

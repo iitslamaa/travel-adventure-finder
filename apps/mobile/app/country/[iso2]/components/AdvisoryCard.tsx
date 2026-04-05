@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, Pressable, Linking, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { useMemo, useState } from 'react';
-import { lightColors, darkColors } from '../../../../theme/colors';
 import ScorePill from '../../../../components/ScorePill';
+import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
+import { useTheme } from '../../../../hooks/useTheme';
 
 type Props = {
   score: number;
@@ -26,8 +27,7 @@ export default function AdvisoryCard({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
 
-  const scheme = useColorScheme();
-  const theme = scheme === 'dark' ? darkColors : lightColors;
+  const theme = useTheme();
 
   const { preview, canExpand } = useMemo(() => {
     const clean = (summary ?? '').trim();
@@ -39,7 +39,8 @@ export default function AdvisoryCard({
   const body = expanded ? summary : preview;
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.card }]}>
+    <ScrapbookCard innerStyle={styles.card}>
+      <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Safety and entry</Text>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Travel advisory</Text>
         <Text style={[styles.weightText, { color: theme.textSecondary }]}>{weightLabel}</Text>
@@ -50,14 +51,26 @@ export default function AdvisoryCard({
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>Level {level}</Text>
+          <Text style={[styles.metricSubhead, { color: theme.textMuted }]}>
+            Safety advisory snapshot
+          </Text>
 
-          {!!summary && (
-            <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{body}</Text>
-          )}
+          <View style={[styles.helperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Text style={[styles.helperLabel, { color: theme.textSecondary }]}>
+              Advisory snapshot
+            </Text>
+
+            {!!summary && (
+              <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{body}</Text>
+            )}
+          </View>
 
           {canExpand && (
-            <Pressable onPress={() => setExpanded(v => !v)}>
-              <Text style={styles.showMore}>
+            <Pressable
+              onPress={() => setExpanded(v => !v)}
+              style={[styles.inlineButton, { backgroundColor: theme.paperAlt, borderColor: theme.border }]}
+            >
+              <Text style={[styles.showMore, { color: theme.textPrimary }]}>
                 {expanded ? 'Show less' : 'Show more'}
               </Text>
             </Pressable>
@@ -68,8 +81,11 @@ export default function AdvisoryCard({
           )}
 
           {!!url && (
-            <Pressable onPress={() => Linking.openURL(url)}>
-              <Text style={styles.link}>View official advisory</Text>
+            <Pressable
+              onPress={() => Linking.openURL(url)}
+              style={[styles.inlineButton, { backgroundColor: theme.paperAlt, borderColor: theme.border }]}
+            >
+              <Text style={[styles.link, { color: theme.textPrimary }]}>View official advisory</Text>
             </Pressable>
           )}
 
@@ -85,19 +101,21 @@ export default function AdvisoryCard({
           )}
         </View>
       </View>
-    </View>
+    </ScrapbookCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 22,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
 
   headerRow: {
@@ -124,6 +142,23 @@ const styles = StyleSheet.create({
   metricTitle: {
     fontSize: 16,
     fontWeight: '800',
+    marginBottom: 2,
+  },
+  metricSubhead: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  helperCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    marginTop: 2,
+  },
+  helperLabel: {
+    fontSize: 12,
+    fontWeight: '700',
     marginBottom: 6,
   },
 
@@ -133,10 +168,16 @@ const styles = StyleSheet.create({
   },
 
   showMore: {
-    marginTop: 8,
     fontSize: 14,
-    color: '#2563EB',
     fontWeight: '700',
+  },
+  inlineButton: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
 
   metaText: {
@@ -146,9 +187,7 @@ const styles = StyleSheet.create({
   },
 
   link: {
-    marginTop: 8,
     fontSize: 14,
-    color: '#2563EB',
     fontWeight: '800',
   },
 

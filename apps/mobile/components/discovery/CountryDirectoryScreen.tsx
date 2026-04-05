@@ -4,10 +4,8 @@ import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -18,6 +16,9 @@ import { useCountries } from '../../hooks/useCountries';
 import { useTheme } from '../../hooks/useTheme';
 import { normalizeForSearch } from '../../utils/search';
 import CountryRow from '../CountryRow';
+import ScrapbookBackground from '../theme/ScrapbookBackground';
+import ScrapbookCard from '../theme/ScrapbookCard';
+import TitleBanner from '../theme/TitleBanner';
 
 export default function CountryDirectoryScreen() {
   const { countries, loading } = useCountries();
@@ -26,7 +27,6 @@ export default function CountryDirectoryScreen() {
   const [sortBy, setSortBy] = useState<'name' | 'score'>('score');
   const [ascending, setAscending] = useState(false);
   const [search, setSearch] = useState('');
-  const [searchActive, setSearchActive] = useState(false);
   const { toggleBucket, toggleVisited, isBucketed, isVisited } = useAuth();
 
   const filteredCountries = useMemo(() => {
@@ -70,186 +70,227 @@ export default function CountryDirectoryScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <ScrapbookBackground>
+      <View style={styles.screen}>
       {loading ? (
-        <ActivityIndicator
-          style={{ marginTop: 40 }}
-          size="large"
-          color={colors.primary}
-        />
+        <View style={[styles.loadingWrap, { paddingTop: insets.top + 16 }]}>
+          <TitleBanner title="Countries" />
+          <ScrapbookCard
+            style={styles.loadingCardShell}
+            innerStyle={styles.loadingCard}
+          >
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+              Loading the country directory...
+            </Text>
+          </ScrapbookCard>
+        </View>
       ) : (
-        <FlatList
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingBottom: 140,
-          }}
-          data={filteredCountries}
-          extraData={`${sortBy}-${ascending}-${search}`}
-          keyExtractor={item => item.iso2}
-          stickyHeaderIndices={[0]}
-          ListHeaderComponent={
-            <View
-              style={{
-                paddingTop: insets.top + 12,
-                paddingBottom: 20,
-                borderBottomWidth: 1,
-                backgroundColor: colors.background,
-                borderBottomColor: colors.border,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingHorizontal: 16,
-                }}
-              >
+        <View style={[styles.contentWrap, { paddingTop: insets.top + 8 }]}>
+          <TitleBanner title="Countries" />
+
+          <View
+            style={[
+              styles.directoryShell,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <FlatList
+              contentContainerStyle={styles.listContent}
+              data={filteredCountries}
+              extraData={`${sortBy}-${ascending}-${search}`}
+              keyExtractor={item => item.iso2}
+              stickyHeaderIndices={[0]}
+              showsVerticalScrollIndicator={false}
+              ListHeaderComponent={
                 <View
                   style={{
-                    flexDirection: 'row',
-                    backgroundColor: colors.segmentBg,
-                    borderRadius: 24,
-                    flex: 1,
-                    padding: 4,
-                    marginRight: 12,
+                    paddingTop: 12,
+                    paddingBottom: 12,
+                    backgroundColor: colors.card,
                   }}
                 >
-                  <Pressable
-                    onPress={() => toggleSort('name')}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 14,
-                      alignItems: 'center',
-                      borderRadius: 20,
-                      backgroundColor:
-                        sortBy === 'name' ? colors.segmentActive : 'transparent',
-                    }}
+                  <View
+                    style={[
+                      styles.searchShell,
+                      {
+                        backgroundColor: colors.segmentBg,
+                        borderColor: colors.border,
+                      },
+                    ]}
                   >
-                    <Text
-                      style={{
-                        fontWeight: sortBy === 'name' ? '600' : '500',
-                        color: colors.textPrimary,
-                      }}
-                    >
-                      Name {sortBy === 'name' ? (ascending ? '↓' : '↑') : ''}
-                    </Text>
-                  </Pressable>
+                    <Ionicons name="search" size={18} color={colors.textMuted} />
+                    <TextInput
+                      placeholder="Search by country or code"
+                      placeholderTextColor={colors.textMuted}
+                      value={search}
+                      onChangeText={setSearch}
+                      style={[styles.searchInput, { color: colors.textPrimary }]}
+                    />
+                    {!!search && (
+                      <Pressable
+                        onPress={() => setSearch('')}
+                        style={styles.clearButton}
+                      >
+                        <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+                      </Pressable>
+                    )}
+                  </View>
 
-                  <Pressable
-                    onPress={() => toggleSort('score')}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 14,
-                      alignItems: 'center',
-                      borderRadius: 20,
-                      backgroundColor:
-                        sortBy === 'score' ? colors.segmentActive : 'transparent',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontWeight: sortBy === 'score' ? '600' : '500',
-                        color: colors.textPrimary,
-                      }}
+                  <View style={styles.controlsRow}>
+                    <View
+                      style={[
+                        styles.segmented,
+                        {
+                          backgroundColor: colors.segmentBg,
+                        },
+                      ]}
                     >
-                      Score {sortBy === 'score' ? (ascending ? '↓' : '↑') : ''}
-                    </Text>
-                  </Pressable>
+                      <Pressable
+                        onPress={() => toggleSort('name')}
+                        style={[
+                          styles.segmentButton,
+                          {
+                            backgroundColor:
+                              sortBy === 'name' ? colors.segmentActive : 'transparent',
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.segmentText,
+                            { color: colors.textPrimary },
+                          ]}
+                        >
+                          Name {sortBy === 'name' ? (ascending ? '↓' : '↑') : ''}
+                        </Text>
+                      </Pressable>
+
+                      <Pressable
+                        onPress={() => toggleSort('score')}
+                        style={[
+                          styles.segmentButton,
+                          {
+                            backgroundColor:
+                              sortBy === 'score' ? colors.segmentActive : 'transparent',
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.segmentText,
+                            { color: colors.textPrimary },
+                          ]}
+                        >
+                          Score {sortBy === 'score' ? (ascending ? '↓' : '↑') : ''}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
                 </View>
-
-                <Pressable
-                  onPress={() => router.push('/score-map')}
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor: colors.segmentBg,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Ionicons
-                    name="map-outline"
-                    size={20}
-                    color={colors.textPrimary}
-                  />
-                </Pressable>
-              </View>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <CountryRow
-              country={item}
-              onPress={() =>
-                router.push({
-                  pathname: '/country/[iso2]',
-                  params: {
-                    iso2: item.iso2,
-                    name: item.name,
-                  },
-                })
               }
-              isBucketed={isBucketed(item.iso2)}
-              onToggleBucket={() => toggleBucket(item.iso2)}
-              isVisited={isVisited(item.iso2)}
-              onToggleVisited={() => toggleVisited(item.iso2)}
+              renderItem={({ item }) => (
+                <CountryRow
+                  country={item}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/country/[iso2]',
+                      params: {
+                        iso2: item.iso2,
+                        name: item.name,
+                      },
+                    })
+                  }
+                  isBucketed={isBucketed(item.iso2)}
+                  onToggleBucket={() => toggleBucket(item.iso2)}
+                  isVisited={isVisited(item.iso2)}
+                  onToggleVisited={() => toggleVisited(item.iso2)}
+                />
+              )}
             />
-          )}
-        />
-      )}
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View
-          style={{
-            position: 'absolute',
-            bottom: insets.bottom + 16,
-            width: '100%',
-            maxWidth: 720,
-            alignSelf: 'center',
-            paddingHorizontal: 16,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: colors.segmentBg,
-              borderRadius: 26,
-              paddingHorizontal: 18,
-              paddingVertical: 14,
-              shadowColor: '#000',
-              shadowOpacity: 0.15,
-              shadowRadius: 14,
-              elevation: 8,
-            }}
-          >
-            <TextInput
-              placeholder="Search destinations by country or code"
-              placeholderTextColor={colors.textMuted}
-              value={search}
-              onFocus={() => setSearchActive(true)}
-              onChangeText={setSearch}
-              style={{ flex: 1, color: colors.textPrimary }}
-            />
-
-            {searchActive ? (
-              <Pressable
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setSearchActive(false);
-                }}
-              >
-                <Text style={{ fontSize: 18, color: colors.textPrimary }}>↓</Text>
-              </Pressable>
-            ) : null}
           </View>
         </View>
-      </KeyboardAvoidingView>
-    </View>
+      )}
+      </View>
+    </ScrapbookBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  loadingWrap: {
+    paddingHorizontal: 16,
+  },
+  loadingCardShell: {
+    marginTop: 18,
+  },
+  loadingCard: {
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  contentWrap: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 112,
+  },
+  directoryShell: {
+    flex: 1,
+    marginTop: 8,
+    borderRadius: 26,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  listContent: {
+    paddingHorizontal: 12,
+    paddingBottom: 28,
+  },
+  searchShell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    marginLeft: 8,
+  },
+  clearButton: {
+    marginLeft: 6,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  segmented: {
+    flex: 1,
+    borderRadius: 18,
+    padding: 4,
+    flexDirection: 'row',
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 11,
+    alignItems: 'center',
+    borderRadius: 14,
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});

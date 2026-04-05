@@ -13,10 +13,14 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { supabase } from '../lib/supabase';
+import ScrapbookBackground from '../components/theme/ScrapbookBackground';
+import ScrapbookCard from '../components/theme/ScrapbookCard';
+import TitleBanner from '../components/theme/TitleBanner';
 
 export default function FeedbackScreen() {
   const colors = useTheme();
@@ -63,37 +67,46 @@ export default function FeedbackScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={{ flex: 1, backgroundColor: 'transparent' }}
     >
+      <ScrapbookBackground>
       <ScrollView
         contentContainerStyle={{
-          paddingTop: insets.top + 18,
+          paddingTop: insets.top + 12,
           paddingHorizontal: 20,
-          paddingBottom: insets.bottom + 32,
+          paddingBottom: insets.bottom + 120,
         }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={[styles.backText, { color: colors.textPrimary }]}>
-            Back
-          </Text>
-        </Pressable>
+        <TitleBanner title="Feedback" />
 
-        <Text style={[styles.title, { color: colors.textPrimary }]}>Feedback</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Share bugs, ideas, or anything that would make the mobile app feel as
-          polished as the Swift version.
-        </Text>
+        <ScrapbookCard innerStyle={styles.introCard}>
+          <View style={styles.introRow}>
+            <Image
+              source={require('../assets/scrapbook/profile-header.png')}
+              style={styles.introImage}
+              contentFit="cover"
+            />
+            <Text style={[styles.introHeadline, { color: colors.textPrimary }]}>
+              I read every note and use them to keep shaping the app.
+            </Text>
+          </View>
 
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors.card, borderColor: colors.border },
-          ]}
-        >
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-            Message
-          </Text>
+          <View style={styles.introCopy}>
+            <Text style={[styles.introBody, { color: colors.textSecondary }]}>
+              If something feels off, clunky, or unfinished, I want to hear it.
+            </Text>
+            <Text style={[styles.introBody, { color: colors.textSecondary }]}>
+              Bugs, wishlist ideas, confusing flows, and design feedback are all useful.
+            </Text>
+            <Text style={[styles.introBodyStrong, { color: colors.textPrimary }]}>
+              The more specific you are, the faster I can improve it.
+            </Text>
+          </View>
+        </ScrapbookCard>
+
+        <ScrapbookCard innerStyle={styles.card}>
           <TextInput
             multiline
             value={message}
@@ -123,7 +136,8 @@ export default function FeedbackScreen() {
             style={[
               styles.submitButton,
               {
-                backgroundColor: canSubmit ? colors.primary : colors.border,
+                backgroundColor: canSubmit ? colors.primary : 'rgba(128, 128, 128, 0.3)',
+                borderColor: canSubmit ? colors.primary : 'rgba(128, 128, 128, 0.3)',
               },
             ]}
           >
@@ -137,40 +151,57 @@ export default function FeedbackScreen() {
               </Text>
             )}
           </Pressable>
-        </View>
+        </ScrapbookCard>
       </ScrollView>
+      </ScrapbookBackground>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 16,
+    display: 'none',
   },
   backText: {
-    fontSize: 15,
-    fontWeight: '600',
+    display: 'none',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  card: {
-    borderWidth: 1,
+  introCard: {
     borderRadius: 22,
     padding: 18,
+    marginBottom: 20,
   },
-  cardTitle: {
-    fontSize: 17,
+  introRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 14,
+  },
+  introImage: {
+    width: 92,
+    height: 92,
+    borderRadius: 22,
+  },
+  introHeadline: {
+    flex: 1,
+    fontSize: 21,
+    lineHeight: 28,
+    fontWeight: '600',
+  },
+  introCopy: {
+    gap: 10,
+  },
+  introBody: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  introBodyStrong: {
+    fontSize: 15,
+    lineHeight: 22,
     fontWeight: '700',
-    marginBottom: 12,
+  },
+  card: {
+    borderRadius: 22,
+    padding: 18,
   },
   input: {
     minHeight: 180,
@@ -186,12 +217,13 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   submitButton: {
-    minHeight: 48,
-    borderRadius: 16,
+    minHeight: 52,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 16,
     paddingHorizontal: 16,
+    borderWidth: 1,
   },
   submitText: {
     fontSize: 15,

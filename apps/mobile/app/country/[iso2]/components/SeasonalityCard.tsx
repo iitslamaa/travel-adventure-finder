@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
-import { lightColors, darkColors } from '../../../../theme/colors';
+import { View, Text, StyleSheet } from 'react-native';
 import ScorePill from '../../../../components/ScorePill';
+import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
+import { useTheme } from '../../../../hooks/useTheme';
 
 type Props = {
   score: number;
@@ -34,11 +35,11 @@ export default function SeasonalityCard({
   const safeMonths = Array.isArray(bestMonths) ? bestMonths : [];
   const labels = safeMonths.map(toMonthLabel);
 
-  const scheme = useColorScheme();
-  const theme = scheme === 'dark' ? darkColors : lightColors;
+  const theme = useTheme();
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.card }]}>
+    <ScrapbookCard innerStyle={styles.card}>
+      <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Timing and weather</Text>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Seasonality</Text>
         <Text style={[styles.weightText, { color: theme.textSecondary }]}>{weightLabel}</Text>
@@ -51,16 +52,24 @@ export default function SeasonalityCard({
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>
             {score >= 80 ? 'Peak time to go ✅' : 'Shoulder season'}
           </Text>
-          {!!description && (
-            <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{description}</Text>
-          )}
+          <Text style={[styles.metricSubhead, { color: theme.textMuted }]}>
+            Seasonal travel snapshot
+          </Text>
+          <View style={[styles.helperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Text style={[styles.helperLabel, { color: theme.textSecondary }]}>
+              Monthly conditions
+            </Text>
+            {!!description && (
+              <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{description}</Text>
+            )}
+          </View>
 
           {labels.length > 0 && (
             <>
               <Text style={[styles.bestLabel, { color: theme.textMuted }]}>Best months:</Text>
               <View style={styles.chips}>
                 {labels.map(m => (
-                  <View key={m} style={[styles.chip, { backgroundColor: scheme === 'dark' ? '#334155' : '#F3F4F6' }]}>
+                  <View key={m} style={[styles.chip, { backgroundColor: theme.paperAlt, borderColor: theme.border }]}>
                     <Text style={[styles.chipText, { color: theme.textPrimary }]}>{m}</Text>
                   </View>
                 ))}
@@ -84,19 +93,21 @@ export default function SeasonalityCard({
           )}
         </View>
       </View>
-    </View>
+    </ScrapbookCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 22,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
 
   headerRow: {
@@ -123,6 +134,23 @@ const styles = StyleSheet.create({
   metricTitle: {
     fontSize: 16,
     fontWeight: '800',
+    marginBottom: 2,
+  },
+  metricSubhead: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  helperCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    marginTop: 2,
+  },
+  helperLabel: {
+    fontSize: 12,
+    fontWeight: '700',
     marginBottom: 6,
   },
 
@@ -148,6 +176,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 999,
+    borderWidth: 1,
   },
 
   chipText: {
