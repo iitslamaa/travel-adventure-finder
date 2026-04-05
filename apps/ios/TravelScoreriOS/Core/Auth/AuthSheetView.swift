@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AuthSheetView: View {
     @EnvironmentObject private var sessionManager: SessionManager
+    @StateObject private var authViewModel = AuthViewModel()
 
     var body: some View {
         NavigationStack {
@@ -33,6 +34,7 @@ struct AuthSheetView: View {
 
                 // Auth flow (Apple / Google / Email)
                 EmailAuthView()
+                    .environmentObject(authViewModel)
 
                 Spacer(minLength: 0)
             }

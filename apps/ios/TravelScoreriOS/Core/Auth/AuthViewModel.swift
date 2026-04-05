@@ -18,6 +18,7 @@ final class AuthViewModel: ObservableObject {
     @Published var otp: String = ""
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
+    @Published private(set) var isHandlingOAuthInBrowserSession = false
 
     // MARK: - Dependencies
     private let supabase = SupabaseManager.shared
@@ -103,27 +104,33 @@ final class AuthViewModel: ObservableObject {
     func signInWithGoogle() async {
         isLoading = true
         errorMessage = nil
+        isHandlingOAuthInBrowserSession = true
 
         do {
-            guard let redirectURL = URL(string: "travelscorer://login-callback") else {
+            guard let redirectURL = URL(string: "travelaf://auth/callback") else {
                 throw URLError(.badURL)
             }
 
-            // Supabase iOS SDK handles opening the OAuth URL internally
-            try await supabase.client.auth.signInWithOAuth(
+            _ = try await supabase.client.auth.signInWithOAuth(
                 provider: .google,
-                redirectTo: redirectURL
+                redirectTo: redirectURL,
+                launchFlow: { @MainActor url in
+                    try await self.oauthPresenter.start(
+                        url: url,
+                        callbackScheme: redirectURL.scheme ?? "travelaf"
+                    )
+                }
             )
 
-            // After redirect completes, session will be available
             _ = try await supabase.client.auth.session
             try await ensureProfileExists()
-
+            isHandlingOAuthInBrowserSession = false
+            isLoading = false
         } catch {
+            isHandlingOAuthInBrowserSession = false
             errorMessage = error.localizedDescription
+            isLoading = false
         }
-
-        isLoading = false
     }
 
     // MARK: - Profile Management
@@ -136,6 +143,13 @@ final class AuthViewModel: ObservableObject {
     // MARK: - OAuth Callback Helper
 
     func handleOAuthCallback(_ url: URL) async {
+        // Google sign-in already completes the PKCE exchange inside signInWithOAuth(...)
+        // when using the explicit browser launch flow. Re-processing the callback here
+        // causes a second code exchange attempt with a consumed verifier.
+        if isHandlingOAuthInBrowserSession {
+            return
+        }
+
         do {
             try await supabase.client.auth.session(from: url)
             _ = try await supabase.client.auth.session
@@ -143,5 +157,7 @@ final class AuthViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+
+        isLoading = false
     }
 }

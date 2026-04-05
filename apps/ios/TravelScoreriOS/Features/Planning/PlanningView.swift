@@ -10,6 +10,7 @@ import Combine
 import CryptoKit
 import EventKit
 import EventKitUI
+import UIKit
 import NukeUI
 import Supabase
 import PostgREST
@@ -834,6 +835,10 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
     let category: TripPlannerChecklistCategory
     let title: String
     let notes: String
+    let expenseSourceItemId: UUID?
+    let linkedExpenseId: UUID?
+    let linkedExpenseAmount: Double?
+    let linkedExpenseDate: Date?
     let isCompleted: Bool
     let completedById: String?
     let completedByName: String?
@@ -844,6 +849,10 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
         category: TripPlannerChecklistCategory,
         title: String,
         notes: String = "",
+        expenseSourceItemId: UUID? = nil,
+        linkedExpenseId: UUID? = nil,
+        linkedExpenseAmount: Double? = nil,
+        linkedExpenseDate: Date? = nil,
         isCompleted: Bool = false,
         completedById: String? = nil,
         completedByName: String? = nil,
@@ -853,6 +862,10 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
         self.category = category
         self.title = title
         self.notes = notes
+        self.expenseSourceItemId = expenseSourceItemId
+        self.linkedExpenseId = linkedExpenseId
+        self.linkedExpenseAmount = linkedExpenseAmount
+        self.linkedExpenseDate = linkedExpenseDate
         self.isCompleted = isCompleted
         self.completedById = completedById
         self.completedByName = completedByName
@@ -864,6 +877,10 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
         case category
         case title
         case notes
+        case expenseSourceItemId
+        case linkedExpenseId
+        case linkedExpenseAmount
+        case linkedExpenseDate
         case isCompleted
         case completedById
         case completedByName
@@ -876,6 +893,10 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
         category = try container.decodeIfPresent(TripPlannerChecklistCategory.self, forKey: .category) ?? .custom
         title = try container.decode(String.self, forKey: .title)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
+        expenseSourceItemId = try container.decodeIfPresent(UUID.self, forKey: .expenseSourceItemId)
+        linkedExpenseId = try container.decodeIfPresent(UUID.self, forKey: .linkedExpenseId)
+        linkedExpenseAmount = try container.decodeIfPresent(Double.self, forKey: .linkedExpenseAmount)
+        linkedExpenseDate = try container.decodeFlexibleDateIfPresent(forKey: .linkedExpenseDate)
         isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted) ?? false
         completedById = try container.decodeIfPresent(String.self, forKey: .completedById)
         completedByName = try container.decodeIfPresent(String.self, forKey: .completedByName)
@@ -892,6 +913,10 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
             category: category,
             title: title,
             notes: notes,
+            expenseSourceItemId: expenseSourceItemId,
+            linkedExpenseId: linkedExpenseId,
+            linkedExpenseAmount: linkedExpenseAmount,
+            linkedExpenseDate: linkedExpenseDate,
             isCompleted: isCompleted,
             completedById: isCompleted ? actorId?.uuidString : nil,
             completedByName: isCompleted ? actorName : nil,
@@ -905,10 +930,95 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
             category: category,
             title: title,
             notes: notes,
+            expenseSourceItemId: expenseSourceItemId,
+            linkedExpenseId: linkedExpenseId,
+            linkedExpenseAmount: linkedExpenseAmount,
+            linkedExpenseDate: linkedExpenseDate,
             isCompleted: isCompleted,
             completedById: completedById,
             completedByName: completedByName,
             completedAt: completedAt
+        )
+    }
+
+    func updatedTitle(_ title: String) -> TripPlannerChecklistItem {
+        TripPlannerChecklistItem(
+            id: id,
+            category: category,
+            title: title,
+            notes: notes,
+            expenseSourceItemId: expenseSourceItemId,
+            linkedExpenseId: linkedExpenseId,
+            linkedExpenseAmount: linkedExpenseAmount,
+            linkedExpenseDate: linkedExpenseDate,
+            isCompleted: isCompleted,
+            completedById: completedById,
+            completedByName: completedByName,
+            completedAt: completedAt
+        )
+    }
+
+    func updatedExpenseLink(
+        expenseId: UUID?,
+        amount: Double?,
+        date: Date?
+    ) -> TripPlannerChecklistItem {
+        updatedExpenseSync(
+            sourceItemId: expenseSourceItemId,
+            expenseId: expenseId,
+            amount: amount,
+            date: date
+        )
+    }
+
+    func updatedExpenseSync(
+        sourceItemId: UUID?,
+        expenseId: UUID?,
+        amount: Double?,
+        date: Date?
+    ) -> TripPlannerChecklistItem {
+        TripPlannerChecklistItem(
+            id: id,
+            category: category,
+            title: title,
+            notes: notes,
+            expenseSourceItemId: sourceItemId,
+            linkedExpenseId: expenseId,
+            linkedExpenseAmount: amount,
+            linkedExpenseDate: date,
+            isCompleted: isCompleted,
+            completedById: completedById,
+            completedByName: completedByName,
+            completedAt: completedAt
+        )
+    }
+
+    var supportsExpenseTracking: Bool {
+        switch category {
+        case .visa, .packing:
+            return false
+        case .accommodation, .attractionTickets, .transportBooking, .reservation, .insurance, .custom:
+            return true
+        }
+    }
+
+    var expenseSyncKey: UUID {
+        expenseSourceItemId ?? id
+    }
+
+    var hasLinkedExpenseDetails: Bool {
+        linkedExpenseAmount != nil || linkedExpenseId != nil
+    }
+
+    func duplicatedForNewChecklistEntry() -> TripPlannerChecklistItem {
+        TripPlannerChecklistItem(
+            category: category,
+            title: title,
+            notes: notes,
+            isCompleted: false,
+            completedById: nil,
+            completedByName: nil,
+            completedAt: nil
         )
     }
 }
@@ -1232,6 +1342,7 @@ struct TripPlannerExpenseShare: Codable, Identifiable, Hashable, Sendable {
 
 struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
+    let linkedChecklistItemId: UUID?
     let category: TripPlannerExpenseCategory
     let customCategoryName: String?
     let title: String
@@ -1247,6 +1358,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
 
     init(
         id: UUID = UUID(),
+        linkedChecklistItemId: UUID? = nil,
         category: TripPlannerExpenseCategory = .other,
         customCategoryName: String? = nil,
         title: String,
@@ -1261,6 +1373,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
         shares: [TripPlannerExpenseShare]
     ) {
         self.id = id
+        self.linkedChecklistItemId = linkedChecklistItemId
         self.category = category
         let trimmedCustomCategory = customCategoryName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         self.customCategoryName = trimmedCustomCategory.isEmpty ? nil : trimmedCustomCategory
@@ -1278,6 +1391,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case id
+        case linkedChecklistItemId
         case category
         case customCategoryName
         case title
@@ -1295,6 +1409,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
+        linkedChecklistItemId = try container.decodeIfPresent(UUID.self, forKey: .linkedChecklistItemId)
         category = try container.decodeIfPresent(TripPlannerExpenseCategory.self, forKey: .category) ?? .other
         let rawCustomCategoryName = try container.decodeIfPresent(String.self, forKey: .customCategoryName) ?? ""
         customCategoryName = rawCustomCategoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : rawCustomCategoryName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -2013,8 +2128,434 @@ private extension TripPlannerTrip {
             availability: preferred.availability,
             dayPlans: preferred.dayPlans,
             overallChecklistItems: preferred.overallChecklistItems,
+            packingProgressEntries: preferred.packingProgressEntries.isEmpty ? fallback.packingProgressEntries : preferred.packingProgressEntries,
             expenses: preferred.expenses
         )
+    }
+}
+
+private extension TripPlannerChecklistCategory {
+    var defaultExpenseCategory: TripPlannerExpenseCategory {
+        switch self {
+        case .accommodation:
+            return .accommodation
+        case .transportBooking:
+            return .transportation
+        case .attractionTickets:
+            return .activities
+        case .reservation:
+            return .food
+        case .visa, .insurance, .packing, .custom:
+            return .other
+        }
+    }
+}
+
+private extension TripPlannerTrip {
+    func preservingMissingState(from existing: TripPlannerTrip) -> TripPlannerTrip {
+        TripPlannerTrip(
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            title: title,
+            notes: notes,
+            startDate: startDate,
+            endDate: endDate,
+            countryIds: countryIds,
+            countryNames: countryNames,
+            friendIds: friendIds,
+            friendNames: friendNames,
+            friends: friends,
+            ownerId: ownerId ?? existing.ownerId,
+            availability: availability,
+            dayPlans: dayPlans,
+            overallChecklistItems: overallChecklistItems,
+            packingProgressEntries: packingProgressEntries.isEmpty ? existing.packingProgressEntries : packingProgressEntries,
+            expenses: expenses
+        )
+    }
+
+    func applyingExpenseEditsToLinkedChecklistItems(_ updatedExpenses: [TripPlannerExpense]) -> TripPlannerTrip {
+        let expensesByChecklistID = Dictionary<UUID, TripPlannerExpense>(
+            uniqueKeysWithValues: updatedExpenses.compactMap { expense -> (UUID, TripPlannerExpense)? in
+                guard let linkedChecklistItemId = expense.linkedChecklistItemId else { return nil }
+                return (linkedChecklistItemId, expense)
+            }
+        )
+
+        let updatedDayPlans = dayPlans.map { plan in
+            let updatedItems = plan.checklistItems.map { item in
+                guard item.supportsExpenseTracking else { return item }
+
+                if let expense = expensesByChecklistID[item.expenseSyncKey] {
+                    return item
+                        .updatedTitle(expense.title)
+                        .updatedExpenseSync(
+                            sourceItemId: item.expenseSourceItemId,
+                            expenseId: expense.id,
+                            amount: expense.totalAmount,
+                            date: expense.date
+                        )
+                }
+
+                if item.hasLinkedExpenseDetails {
+                    return item.updatedExpenseSync(
+                        sourceItemId: item.expenseSourceItemId,
+                        expenseId: nil,
+                        amount: nil,
+                        date: nil
+                    )
+                }
+
+                return item
+            }
+
+            return TripPlannerDayPlan(
+                id: plan.id,
+                date: plan.date,
+                kind: plan.kind,
+                countryId: plan.countryId,
+                countryName: plan.countryName,
+                checklistItems: updatedItems
+            )
+        }
+
+        return TripPlannerTrip(
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            title: title,
+            notes: notes,
+            startDate: startDate,
+            endDate: endDate,
+            countryIds: countryIds,
+            countryNames: countryNames,
+            friendIds: friendIds,
+            friendNames: friendNames,
+            friends: friends,
+            ownerId: ownerId,
+            availability: availability,
+            dayPlans: updatedDayPlans,
+            overallChecklistItems: overallChecklistItems,
+            packingProgressEntries: packingProgressEntries,
+            expenses: updatedExpenses
+        )
+    }
+
+    func normalizedForPersistence(currentUser: TripPlannerFriendSnapshot?) -> TripPlannerTrip {
+        let participantSnapshots = plannerExpenseParticipants(preferredCurrentUser: currentUser)
+        let manualExpenses = expenses.filter { $0.linkedChecklistItemId == nil }
+        let existingLinkedExpenses = Dictionary<UUID, TripPlannerExpense>(
+            uniqueKeysWithValues: expenses.compactMap { expense -> (UUID, TripPlannerExpense)? in
+                guard let linkedChecklistItemId = expense.linkedChecklistItemId else { return nil }
+                return (linkedChecklistItemId, expense)
+            }
+        )
+        let sortedPlans = dayPlans.sorted { $0.date < $1.date }
+
+        struct SharedExpenseDraft {
+            let item: TripPlannerChecklistItem
+            let amount: Double
+            let date: Date
+        }
+
+        var sharedExpenseDrafts: [UUID: SharedExpenseDraft] = [:]
+
+        for plan in sortedPlans {
+            for item in plan.checklistItems where item.supportsExpenseTracking {
+                let trimmedTitle = item.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard let amount = item.linkedExpenseAmount, amount > 0.009, !trimmedTitle.isEmpty else {
+                    continue
+                }
+
+                sharedExpenseDrafts[item.expenseSyncKey] = SharedExpenseDraft(
+                    item: item,
+                    amount: amount,
+                    date: item.linkedExpenseDate ?? plan.date
+                )
+            }
+        }
+
+        var linkedExpenses: [TripPlannerExpense] = []
+        var emittedExpenseKeys = Set<UUID>()
+
+        let updatedDayPlans = dayPlans.map { plan in
+            let updatedItems = plan.checklistItems.map { item -> TripPlannerChecklistItem in
+                guard item.supportsExpenseTracking else { return item }
+
+                let expenseKey = item.expenseSyncKey
+                guard let draft = sharedExpenseDrafts[expenseKey] else {
+                    if item.hasLinkedExpenseDetails {
+                        return item.updatedExpenseSync(
+                            sourceItemId: item.expenseSourceItemId,
+                            expenseId: nil,
+                            amount: nil,
+                            date: nil
+                        )
+                    }
+                    return item
+                }
+
+                let existingExpense = existingLinkedExpenses[expenseKey]
+                let resolvedExpense = syncedLinkedExpense(
+                    for: draft.item,
+                    syncKey: expenseKey,
+                    existing: existingExpense,
+                    amount: draft.amount,
+                    date: draft.date,
+                    participantSnapshots: participantSnapshots,
+                    currentUser: currentUser
+                )
+
+                if emittedExpenseKeys.insert(expenseKey).inserted {
+                    linkedExpenses.append(resolvedExpense)
+                }
+
+                return item
+                    .updatedTitle(resolvedExpense.title)
+                    .updatedExpenseSync(
+                        sourceItemId: item.expenseSourceItemId,
+                        expenseId: resolvedExpense.id,
+                        amount: resolvedExpense.totalAmount,
+                        date: item.linkedExpenseDate ?? resolvedExpense.date
+                    )
+            }
+
+            return TripPlannerDayPlan(
+                id: plan.id,
+                date: plan.date,
+                kind: plan.kind,
+                countryId: plan.countryId,
+                countryName: plan.countryName,
+                checklistItems: updatedItems
+            )
+        }
+
+        return TripPlannerTrip(
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            title: title,
+            notes: notes,
+            startDate: startDate,
+            endDate: endDate,
+            countryIds: countryIds,
+            countryNames: countryNames,
+            friendIds: friendIds,
+            friendNames: friendNames,
+            friends: friends,
+            ownerId: ownerId,
+            availability: availability,
+            dayPlans: updatedDayPlans,
+            overallChecklistItems: overallChecklistItems,
+            packingProgressEntries: packingProgressEntries,
+            expenses: TripPlannerExpensesEditorView.sortedExpenses(manualExpenses + linkedExpenses)
+        )
+    }
+
+    private func plannerExpenseParticipants(preferredCurrentUser: TripPlannerFriendSnapshot?) -> [TripPlannerFriendSnapshot] {
+        var ordered: [TripPlannerFriendSnapshot] = []
+        var seen = Set<UUID>()
+
+        if let preferredCurrentUser, seen.insert(preferredCurrentUser.id).inserted {
+            ordered.append(preferredCurrentUser)
+        } else if let currentUserId = SupabaseManager.shared.currentUserId, seen.insert(currentUserId).inserted {
+            ordered.append(.currentUserFallback(userId: currentUserId))
+        }
+
+        for friend in friends where seen.insert(friend.id).inserted {
+            ordered.append(friend)
+        }
+
+        return ordered
+    }
+
+    private func syncedLinkedExpense(
+        for item: TripPlannerChecklistItem,
+        syncKey: UUID,
+        existing: TripPlannerExpense?,
+        amount: Double,
+        date: Date,
+        participantSnapshots: [TripPlannerFriendSnapshot],
+        currentUser: TripPlannerFriendSnapshot?
+    ) -> TripPlannerExpense {
+        let category = existing?.category ?? item.category.defaultExpenseCategory
+        let payer = preferredPayer(
+            existing: existing,
+            participantSnapshots: participantSnapshots,
+            currentUser: currentUser
+        )
+
+        let participantIDs: [String]
+        if let existing {
+            participantIDs = existing.participantIds
+        } else {
+            let defaultIDs = defaultParticipantIDs(for: category, payerId: payer.id.uuidString, participantSnapshots: participantSnapshots)
+            participantIDs = defaultIDs.isEmpty ? [payer.id.uuidString] : defaultIDs
+        }
+
+        let participantNamesByID = Dictionary(
+            uniqueKeysWithValues: participantSnapshots.map {
+                ($0.id.uuidString, $0.displayName)
+            }
+        )
+        let selectedNames = participantIDs.compactMap { participantNamesByID[$0] }
+        let existingShareStates = Dictionary(
+            uniqueKeysWithValues: (existing?.shares ?? []).map {
+                ($0.participantId, $0)
+            }
+        )
+        let shares = syncedShares(
+            amount: amount,
+            payerId: payer.id.uuidString,
+            participantIDs: participantIDs,
+            participantSnapshots: participantSnapshots,
+            existingShareStates: existingShareStates
+        )
+
+        return TripPlannerExpense(
+            id: existing?.id ?? item.linkedExpenseId ?? UUID(),
+            linkedChecklistItemId: syncKey,
+            category: category,
+            customCategoryName: existing?.customCategoryName,
+            title: item.title.trimmingCharacters(in: .whitespacesAndNewlines),
+            totalAmount: amount,
+            paidById: existing?.paidById ?? payer.id.uuidString,
+            paidByName: existing?.paidByName ?? payer.displayName,
+            paidByUsername: existing?.paidByUsername ?? payer.username,
+            splitMode: existing?.splitMode ?? category.suggestedSplitMode,
+            date: date,
+            participantIds: participantIDs,
+            participantNames: selectedNames,
+            shares: shares
+        )
+    }
+
+    private func preferredPayer(
+        existing: TripPlannerExpense?,
+        participantSnapshots: [TripPlannerFriendSnapshot],
+        currentUser: TripPlannerFriendSnapshot?
+    ) -> TripPlannerFriendSnapshot {
+        if
+            let existing,
+            let match = participantSnapshots.first(where: { $0.id.uuidString == existing.paidById })
+        {
+            return match
+        }
+
+        if let currentUser {
+            return currentUser
+        }
+
+        if let first = participantSnapshots.first {
+            return first
+        }
+
+        let fallbackId = ownerId ?? SupabaseManager.shared.currentUserId ?? UUID()
+        return .currentUserFallback(userId: fallbackId)
+    }
+
+    private func defaultParticipantIDs(
+        for category: TripPlannerExpenseCategory,
+        payerId: String,
+        participantSnapshots: [TripPlannerFriendSnapshot]
+    ) -> [String] {
+        switch category.suggestedSplitMode {
+        case .everyone:
+            return participantSnapshots.map { $0.id.uuidString }
+        case .selectedPeople:
+            return [payerId]
+        }
+    }
+
+    private func syncedShares(
+        amount: Double,
+        payerId: String,
+        participantIDs: [String],
+        participantSnapshots: [TripPlannerFriendSnapshot],
+        existingShareStates: [String: TripPlannerExpenseShare]
+    ) -> [TripPlannerExpenseShare] {
+        let beneficiaryIDs = participantIDs.filter { $0 != payerId }
+        let shareAmount = beneficiaryIDs.isEmpty ? 0 : amount / Double(beneficiaryIDs.count)
+        let snapshotsByID = Dictionary(
+            uniqueKeysWithValues: participantSnapshots.map { ($0.id.uuidString, $0) }
+        )
+
+        return beneficiaryIDs.map { participantId in
+            let snapshot = snapshotsByID[participantId]
+            let existingShare = existingShareStates[participantId]
+            return TripPlannerExpenseShare(
+                id: existingShare?.id ?? UUID(),
+                participantId: participantId,
+                participantName: snapshot?.displayName ?? existingShare?.participantName ?? "Traveler",
+                participantUsername: snapshot?.username ?? existingShare?.participantUsername,
+                amountOwed: shareAmount,
+                isPaid: existingShare?.isPaid ?? false,
+                paymentMethod: existingShare?.paymentMethod
+            )
+        }
+    }
+}
+
+private extension String {
+    var detectedURLs: [URL] {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return []
+        }
+
+        let range = NSRange(startIndex..., in: self)
+        var urls: [URL] = []
+        var seen = Set<String>()
+
+        detector.enumerateMatches(in: self, options: [], range: range) { match, _, _ in
+            guard let url = match?.url else { return }
+            let absolute = url.absoluteString
+            guard seen.insert(absolute).inserted else { return }
+            urls.append(url)
+        }
+
+        return urls
+    }
+}
+
+private struct TripPlannerDetectedLinkList: View {
+    let text: String
+
+    private var urls: [URL] {
+        text.detectedURLs
+    }
+
+    var body: some View {
+        if !urls.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(urls, id: \.absoluteString) { url in
+                    Link(destination: url) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "link")
+                                .font(.system(size: 12, weight: .bold))
+                            Text(linkLabel(for: url))
+                                .font(.system(size: 12, weight: .semibold))
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(Color(red: 0.13, green: 0.34, blue: 0.60))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(Color.white.opacity(0.9))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func linkLabel(for url: URL) -> String {
+        if let host = url.host, !host.isEmpty {
+            return "\(host)\(url.path.isEmpty ? "" : url.path)"
+        }
+        return url.absoluteString
     }
 }
 
@@ -3243,6 +3784,7 @@ private struct TripPlannerComposerView: View {
                 countries: selectedCountries.map { ($0.id, $0.name) }
             ),
             overallChecklistItems: existingTrip?.overallChecklistItems ?? [],
+            packingProgressEntries: existingTrip?.packingProgressEntries ?? [],
             expenses: existingTrip?.expenses ?? []
         )
 
@@ -3386,8 +3928,11 @@ private struct TripPlannerDetailView: View {
     }
 
     private func saveTripChanges(_ updatedTrip: TripPlannerTrip) {
-        trip = updatedTrip
-        onSave(updatedTrip)
+        let normalizedTrip = updatedTrip
+            .preservingMissingState(from: trip)
+            .normalizedForPersistence(currentUser: currentUserSnapshot)
+        trip = normalizedTrip
+        onSave(normalizedTrip)
     }
 
     private var displayedFriends: [TripPlannerFriendSnapshot] {
@@ -3489,6 +4034,7 @@ private struct TripPlannerDetailView: View {
                 countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
             ),
             overallChecklistItems: syncedOverallChecklistItems,
+            packingProgressEntries: trip.packingProgressEntries,
             expenses: trip.expenses
         )
     }
@@ -3547,6 +4093,8 @@ private struct TripPlannerDetailView: View {
                         Text(trip.notes)
                             .font(.system(size: 16))
                             .foregroundStyle(.black)
+
+                        TripPlannerDetectedLinkList(text: trip.notes)
                     }
                 }
             }
@@ -4139,6 +4687,7 @@ private struct TripPlannerBasicsEditorView: View {
                             countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
                         ),
                         overallChecklistItems: trip.overallChecklistItems,
+                        packingProgressEntries: trip.packingProgressEntries,
                         expenses: trip.expenses
                     )
                 )
@@ -4306,6 +4855,7 @@ private struct TripPlannerFriendsEditorView: View {
                         availability: preservedAvailability(with: selectedFriends.map(friendSnapshot)),
                         dayPlans: trip.dayPlans,
                         overallChecklistItems: trip.overallChecklistItems,
+                        packingProgressEntries: trip.packingProgressEntries,
                         expenses: trip.expenses
                     )
                 )
@@ -4737,6 +5287,7 @@ private struct TripPlannerAvailabilityEditorView: View {
                             countries: countryOptions
                         ),
                         overallChecklistItems: trip.overallChecklistItems,
+                        packingProgressEntries: trip.packingProgressEntries,
                         expenses: trip.expenses
                     )
                 )
@@ -5095,6 +5646,7 @@ private struct TripPlannerCountriesEditorView: View {
                             countries: selectedCountries.map { ($0.id, $0.name) }
                         ),
                         overallChecklistItems: trip.overallChecklistItems,
+                        packingProgressEntries: trip.packingProgressEntries,
                         expenses: trip.expenses
                     )
                 )
@@ -5302,6 +5854,7 @@ private struct TripPlannerItineraryEditorView: View {
                         availability: trip.availability,
                         dayPlans: normalizedDayPlans(),
                         overallChecklistItems: trip.overallChecklistItems,
+                        packingProgressEntries: trip.packingProgressEntries,
                         expenses: trip.expenses
                     )
                 )
@@ -5511,7 +6064,7 @@ private struct TripPlannerDayPlanEditorRow: View {
     }
 
     private var travelDestinationLabel: String {
-        travelEndpointLabel(from: nextPlan) ?? "Next stop"
+        travelEndpointLabel(from: nextPlan) ?? "Home"
     }
 
     private func travelEndpointLabel(from plan: TripPlannerDayPlan?) -> String? {
@@ -5649,8 +6202,6 @@ private struct TripPlannerChecklistPreviewSection: View {
 }
 
 private struct TripPlannerChecklistEditorView: View {
-    @Environment(\.dismiss) private var dismiss
-
     let trip: TripPlannerTrip
     let actorId: UUID?
     let actorName: String
@@ -5669,6 +6220,9 @@ private struct TripPlannerChecklistEditorView: View {
         progressEntries: []
     )
     @State private var packingCommitAction: TripPlannerPackingCommitAction?
+    @State private var lastSavedSnapshot: TripPlannerChecklistDraftSnapshot
+    @State private var saveFeedbackNonce = 0
+    @State private var showSaveSuccess = false
 
     init(
         trip: TripPlannerTrip,
@@ -5690,17 +6244,22 @@ private struct TripPlannerChecklistEditorView: View {
             groupVisaNeeds: groupVisaNeeds
         ))
         _packingProgressEntries = State(initialValue: trip.packingProgressEntries)
-        _dayPlans = State(initialValue: TripPlannerDayPlanBuilder.syncedDayPlans(
+        let initialPlans = Self.sanitizedChecklistItemIDs(
+            in: TripPlannerDayPlanBuilder.syncedDayPlans(
             existingPlans: trip.dayPlans,
             startDate: trip.startDate,
             endDate: trip.endDate,
             countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
-        ))
-        let initialPlans = TripPlannerDayPlanBuilder.syncedDayPlans(
-            existingPlans: trip.dayPlans,
-            startDate: trip.startDate,
-            endDate: trip.endDate,
-            countries: zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
+            )
+        )
+        _dayPlans = State(initialValue: initialPlans)
+        let initialOverallItems = TripPlannerChecklistBuilder.syncedOverallChecklistItems(
+            existingItems: trip.overallChecklistItems,
+            countries: countries,
+            groupVisaNeeds: groupVisaNeeds
+        )
+        let initialSharedPackingEntries = TripPlannerPackingCodec.decodeEntries(
+            from: initialOverallItems.first(where: { $0.category == .packing })?.notes ?? ""
         )
         let initialSelectedDate = initialPlans.first?.date
             ?? trip.startDate
@@ -5709,6 +6268,25 @@ private struct TripPlannerChecklistEditorView: View {
             initialValue: TripPlannerAvailabilityCalculator.startOfMonth(for: initialSelectedDate)
         )
         _selectedDayPlanID = State(initialValue: initialPlans.first?.id)
+        _lastSavedSnapshot = State(
+            initialValue: TripPlannerChecklistDraftSnapshot(
+                overallItems: initialOverallItems,
+                dayPlans: initialPlans.map { plan in
+                    TripPlannerDayPlan(
+                        id: plan.id,
+                        date: plan.date,
+                        kind: plan.kind,
+                        countryId: plan.countryId,
+                        countryName: plan.countryName,
+                        checklistItems: TripPlannerDayPlanBuilder.syncedChecklistItems(plan.checklistItems, dayKind: plan.kind)
+                    )
+                },
+                packingProgressEntries: TripPlannerPackingCodec.sanitizedProgressEntries(
+                    trip.packingProgressEntries,
+                    sharedEntries: initialSharedPackingEntries
+                )
+            )
+        )
     }
 
     private var countryOptions: [(id: String, name: String)] {
@@ -5750,6 +6328,39 @@ private struct TripPlannerChecklistEditorView: View {
 
     private var packingItemIndex: Int? {
         overallItems.firstIndex { $0.category == .packing }
+    }
+
+    private var currentDraftSnapshot: TripPlannerChecklistDraftSnapshot {
+        let syncedOverallItems = TripPlannerChecklistBuilder.syncedOverallChecklistItems(
+            existingItems: overallItems,
+            countries: countries,
+            groupVisaNeeds: groupVisaNeeds
+        )
+        let sharedPackingEntries = TripPlannerPackingCodec.decodeEntries(
+            from: syncedOverallItems.first(where: { $0.category == .packing })?.notes ?? ""
+        )
+
+        return TripPlannerChecklistDraftSnapshot(
+            overallItems: syncedOverallItems,
+            dayPlans: Self.sanitizedChecklistItemIDs(in: dayPlans.map { plan in
+                TripPlannerDayPlan(
+                    id: plan.id,
+                    date: plan.date,
+                    kind: plan.kind,
+                    countryId: plan.countryId,
+                    countryName: plan.countryName,
+                    checklistItems: TripPlannerDayPlanBuilder.syncedChecklistItems(plan.checklistItems, dayKind: plan.kind)
+                )
+            }),
+            packingProgressEntries: TripPlannerPackingCodec.sanitizedProgressEntries(
+                packingProgressEntries,
+                sharedEntries: sharedPackingEntries
+            )
+        )
+    }
+
+    private var hasUnsavedChanges: Bool {
+        currentDraftSnapshot != lastSavedSnapshot
     }
 
     private var displayedMonthPage: Date? {
@@ -5885,9 +6496,11 @@ private struct TripPlannerChecklistEditorView: View {
                                             ForEach(plan.checklistItems.indices, id: \.self) { itemIndex in
                                                 TripPlannerChecklistItemEditorRow(
                                                     item: bindingForDayItem(dayIndex: selectedDayIndex, itemIndex: itemIndex),
+                                                    planDate: plan.date,
+                                                    saveFeedbackNonce: saveFeedbackNonce,
                                                     actorId: actorId,
                                                     actorName: actorName,
-                                                    showsRemove: dayPlans[selectedDayIndex].checklistItems[itemIndex].category != .accommodation,
+                                                    showsRemove: true,
                                                     onRemove: {
                                                         removeDayItem(at: itemIndex, from: selectedDayIndex)
                                                     }
@@ -5964,10 +6577,36 @@ private struct TripPlannerChecklistEditorView: View {
         .tripPlannerNavigationChrome {
             Button(String(localized: "common.save")) {
                 persistChecklist()
-                dismiss()
             }
-            .foregroundStyle(.black)
-            .font(.system(size: 17, weight: .semibold))
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(hasUnsavedChanges ? Theme.accent : Color.gray.opacity(0.55))
+            )
+            .buttonStyle(.plain)
+            .disabled(!hasUnsavedChanges)
+            .opacity(hasUnsavedChanges ? 1 : 0.5)
+        }
+        .overlay(alignment: .top) {
+            if showSaveSuccess {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text("Planning checklist saved")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Color.white.opacity(0.96))
+                .clipShape(Capsule())
+                .shadow(radius: 8)
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .zIndex(1)
+            }
         }
         .onAppear {
             guard selectedDayPlanID == nil else { return }
@@ -6128,6 +6767,8 @@ private struct TripPlannerChecklistEditorView: View {
                     countryName: dayPlans[dayIndex].countryName,
                     checklistItems: updatedItems
                 )
+
+                synchronizeLinkedAccommodationItems(using: newValue)
             }
         )
     }
@@ -6181,6 +6822,55 @@ private struct TripPlannerChecklistEditorView: View {
         }
     }
 
+    private func synchronizeLinkedAccommodationItems(using updatedItem: TripPlannerChecklistItem) {
+        guard updatedItem.category == .accommodation else { return }
+
+        let syncKey = updatedItem.expenseSyncKey
+
+        for dayIndex in dayPlans.indices {
+            var didUpdateDay = false
+            var updatedItems = dayPlans[dayIndex].checklistItems
+
+            for itemIndex in updatedItems.indices {
+                let existingItem = updatedItems[itemIndex]
+                guard existingItem.category == .accommodation else { continue }
+                guard existingItem.expenseSyncKey == syncKey else { continue }
+
+                let targetSourceItemId: UUID? = existingItem.id == syncKey ? nil : syncKey
+                let synchronizedItem = TripPlannerChecklistItem(
+                    id: existingItem.id,
+                    category: existingItem.category,
+                    title: updatedItem.title,
+                    notes: updatedItem.notes,
+                    expenseSourceItemId: targetSourceItemId,
+                    linkedExpenseId: updatedItem.linkedExpenseId,
+                    linkedExpenseAmount: updatedItem.linkedExpenseAmount,
+                    linkedExpenseDate: updatedItem.linkedExpenseDate,
+                    isCompleted: updatedItem.isCompleted,
+                    completedById: updatedItem.completedById,
+                    completedByName: updatedItem.completedByName,
+                    completedAt: updatedItem.completedAt
+                )
+
+                if synchronizedItem != existingItem {
+                    updatedItems[itemIndex] = synchronizedItem
+                    didUpdateDay = true
+                }
+            }
+
+            if didUpdateDay {
+                dayPlans[dayIndex] = TripPlannerDayPlan(
+                    id: dayPlans[dayIndex].id,
+                    date: dayPlans[dayIndex].date,
+                    kind: dayPlans[dayIndex].kind,
+                    countryId: dayPlans[dayIndex].countryId,
+                    countryName: dayPlans[dayIndex].countryName,
+                    checklistItems: updatedItems
+                )
+            }
+        }
+    }
+
     private func accommodationCarryForwardSuggestion(for dayIndex: Int) -> TripPlannerChecklistItem? {
         guard dayIndex > 0 else { return nil }
 
@@ -6215,14 +6905,19 @@ private struct TripPlannerChecklistEditorView: View {
 
     private func applyAccommodationSuggestion(_ suggestion: TripPlannerChecklistItem, to dayIndex: Int) {
         var updatedItems = dayPlans[dayIndex].checklistItems
+        let sharedExpenseSourceId = suggestion.expenseSourceItemId ?? suggestion.id
 
         if let existingIndex = updatedItems.firstIndex(where: { $0.category == .accommodation }) {
             let existing = updatedItems[existingIndex]
             updatedItems[existingIndex] = TripPlannerChecklistItem(
                 id: existing.id,
                 category: existing.category,
-                title: existing.title,
+                title: suggestion.title,
                 notes: suggestion.notes,
+                expenseSourceItemId: sharedExpenseSourceId,
+                linkedExpenseId: suggestion.linkedExpenseId,
+                linkedExpenseAmount: suggestion.linkedExpenseAmount,
+                linkedExpenseDate: suggestion.linkedExpenseDate,
                 isCompleted: existing.isCompleted,
                 completedById: existing.completedById,
                 completedByName: existing.completedByName,
@@ -6232,8 +6927,12 @@ private struct TripPlannerChecklistEditorView: View {
             updatedItems.insert(
                 TripPlannerChecklistItem(
                     category: .accommodation,
-                    title: TripPlannerChecklistTemplates.accommodationTitle,
-                    notes: suggestion.notes
+                    title: suggestion.title,
+                    notes: suggestion.notes,
+                    expenseSourceItemId: sharedExpenseSourceId,
+                    linkedExpenseId: suggestion.linkedExpenseId,
+                    linkedExpenseAmount: suggestion.linkedExpenseAmount,
+                    linkedExpenseDate: suggestion.linkedExpenseDate
                 ),
                 at: 0
             )
@@ -6251,7 +6950,7 @@ private struct TripPlannerChecklistEditorView: View {
 
     private func addDaySuggestion(_ item: TripPlannerChecklistItem, to dayIndex: Int) {
         var updatedItems = dayPlans[dayIndex].checklistItems
-        updatedItems.append(item)
+        updatedItems.append(item.duplicatedForNewChecklistEntry())
         dayPlans[dayIndex] = TripPlannerDayPlan(
             id: dayPlans[dayIndex].id,
             date: dayPlans[dayIndex].date,
@@ -6289,14 +6988,7 @@ private struct TripPlannerChecklistEditorView: View {
     }
 
     private func persistChecklist() {
-        let syncedOverallItems = TripPlannerChecklistBuilder.syncedOverallChecklistItems(
-            existingItems: overallItems,
-            countries: countries,
-            groupVisaNeeds: groupVisaNeeds
-        )
-        let sharedPackingEntries = TripPlannerPackingCodec.decodeEntries(
-            from: syncedOverallItems.first(where: { $0.category == .packing })?.notes ?? ""
-        )
+        let snapshot = currentDraftSnapshot
 
         saveAction.handler(
             TripPlannerTrip(
@@ -6314,25 +7006,71 @@ private struct TripPlannerChecklistEditorView: View {
                 friends: trip.friends,
                 ownerId: trip.ownerId,
                 availability: trip.availability,
-                dayPlans: dayPlans.map { plan in
-                    TripPlannerDayPlan(
-                        id: plan.id,
-                        date: plan.date,
-                        kind: plan.kind,
-                        countryId: plan.countryId,
-                        countryName: plan.countryName,
-                        checklistItems: TripPlannerDayPlanBuilder.syncedChecklistItems(plan.checklistItems, dayKind: plan.kind)
-                    )
-                },
-                overallChecklistItems: syncedOverallItems,
-                packingProgressEntries: TripPlannerPackingCodec.sanitizedProgressEntries(
-                    packingProgressEntries,
-                    sharedEntries: sharedPackingEntries
-                ),
+                dayPlans: snapshot.dayPlans,
+                overallChecklistItems: snapshot.overallItems,
+                packingProgressEntries: snapshot.packingProgressEntries,
                 expenses: trip.expenses
             )
         )
+
+        lastSavedSnapshot = snapshot
+        saveFeedbackNonce += 1
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+            showSaveSuccess = true
+        }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                showSaveSuccess = false
+            }
+        }
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
+
+    private static func sanitizedChecklistItemIDs(in plans: [TripPlannerDayPlan]) -> [TripPlannerDayPlan] {
+        var seen = Set<UUID>()
+
+        return plans.map { plan in
+            var updatedItems: [TripPlannerChecklistItem] = []
+
+            for item in plan.checklistItems {
+                if seen.insert(item.id).inserted {
+                    updatedItems.append(item)
+                } else {
+                    updatedItems.append(
+                        TripPlannerChecklistItem(
+                            category: item.category,
+                            title: item.title,
+                            notes: item.notes,
+                            expenseSourceItemId: item.expenseSourceItemId,
+                            linkedExpenseId: item.linkedExpenseId,
+                            linkedExpenseAmount: item.linkedExpenseAmount,
+                            linkedExpenseDate: item.linkedExpenseDate,
+                            isCompleted: item.isCompleted,
+                            completedById: item.completedById,
+                            completedByName: item.completedByName,
+                            completedAt: item.completedAt
+                        )
+                    )
+                }
+            }
+
+            return TripPlannerDayPlan(
+                id: plan.id,
+                date: plan.date,
+                kind: plan.kind,
+                countryId: plan.countryId,
+                countryName: plan.countryName,
+                checklistItems: updatedItems
+            )
+        }
+    }
+}
+
+private struct TripPlannerChecklistDraftSnapshot: Equatable {
+    let overallItems: [TripPlannerChecklistItem]
+    let dayPlans: [TripPlannerDayPlan]
+    let packingProgressEntries: [TripPlannerPackingProgress]
 }
 
 private struct TripPlannerChecklistMonthCard: View {
@@ -6419,6 +7157,8 @@ private struct TripPlannerVisaChecklistView: View {
                                     ForEach(visaItems.indices, id: \.self) { index in
                                         TripPlannerChecklistItemEditorRow(
                                             item: visaBinding(at: index),
+                                            planDate: Date(),
+                                            saveFeedbackNonce: 0,
                                             actorId: actorId,
                                             actorName: actorName,
                                             showsRemove: false,
@@ -6514,6 +7254,8 @@ private struct TripPlannerPackingListView: View {
 
                                 TripPlannerChecklistItemEditorRow(
                                     item: $item,
+                                    planDate: Date(),
+                                    saveFeedbackNonce: 0,
                                     actorId: actorId,
                                     actorName: actorName,
                                     showsRemove: false,
@@ -6738,6 +7480,8 @@ private struct TripPlannerChecklistDayCell: View {
 
 private struct TripPlannerChecklistItemEditorRow: View {
     @Binding var item: TripPlannerChecklistItem
+    let planDate: Date
+    let saveFeedbackNonce: Int
     let actorId: UUID?
     let actorName: String
     let showsRemove: Bool
@@ -6745,6 +7489,8 @@ private struct TripPlannerChecklistItemEditorRow: View {
     let showsTitleField: Bool
     let showsCategoryLabel: Bool
     let onRemove: () -> Void
+
+    @State private var linkedExpenseAmountText = ""
 
     private var notePlaceholder: String {
         switch item.category {
@@ -6757,8 +7503,43 @@ private struct TripPlannerChecklistItemEditorRow: View {
         }
     }
 
+    private var titlePlaceholder: String {
+        switch item.category {
+        case .accommodation:
+            return "Accommodation"
+        case .attractionTickets:
+            return "Book attraction tickets"
+        case .transportBooking:
+            return "Book transport in advance"
+        case .reservation:
+            return "Reserve a restaurant or experience"
+        case .visa:
+            return "Apply for visas"
+        case .insurance:
+            return "Add insurance details"
+        case .packing:
+            return "What to pack"
+        case .custom:
+            return "Add checklist item"
+        }
+    }
+
+    private var titleBinding: Binding<String> {
+        Binding(
+            get: {
+                let trimmed = item.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                return trimmed == titlePlaceholder ? "" : item.title
+            },
+            set: { newValue in
+                item = item.updatedTitle(newValue)
+            }
+        )
+    }
+
     init(
         item: Binding<TripPlannerChecklistItem>,
+        planDate: Date,
+        saveFeedbackNonce: Int,
         actorId: UUID?,
         actorName: String,
         showsRemove: Bool,
@@ -6768,6 +7549,8 @@ private struct TripPlannerChecklistItemEditorRow: View {
         onRemove: @escaping () -> Void
     ) {
         self._item = item
+        self.planDate = planDate
+        self.saveFeedbackNonce = saveFeedbackNonce
         self.actorId = actorId
         self.actorName = actorName
         self.showsRemove = showsRemove
@@ -6797,21 +7580,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     if showsTitleField {
-                        TextField("Task", text: Binding(
-                            get: { item.title },
-                            set: { newValue in
-                                item = TripPlannerChecklistItem(
-                                    id: item.id,
-                                    category: item.category,
-                                    title: newValue,
-                                    notes: item.notes,
-                                    isCompleted: item.isCompleted,
-                                    completedById: item.completedById,
-                                    completedByName: item.completedByName,
-                                    completedAt: item.completedAt
-                                )
-                            }
-                        ))
+                        TextField(titlePlaceholder, text: titleBinding)
                         .textInputAutocapitalization(.sentences)
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.black)
@@ -6835,6 +7604,44 @@ private struct TripPlannerChecklistItemEditorRow: View {
                         .textInputAutocapitalization(.sentences)
                         .font(.system(size: 13))
                         .foregroundStyle(.black.opacity(0.78))
+
+                        if !item.notes.detectedURLs.isEmpty {
+                            TripPlannerDetectedLinkList(text: item.notes)
+                        }
+                    }
+
+                    if item.supportsExpenseTracking {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Add a cost here and it will automatically appear in expenses.")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.black.opacity(0.58))
+
+                            HStack(alignment: .top, spacing: 10) {
+                                TripPlannerCurrencyInput(
+                                    title: "Cost",
+                                    text: Binding(
+                                        get: { linkedExpenseAmountText },
+                                        set: { newValue in
+                                            linkedExpenseAmountText = newValue
+                                            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                            let amount = Double(trimmed)
+                                            item = item.updatedExpenseLink(
+                                                expenseId: item.linkedExpenseId,
+                                                amount: amount,
+                                                date: amount == nil ? nil : planDate
+                                            )
+                                        }
+                                    ),
+                                    placeholder: "0.00"
+                                )
+                            }
+
+                            if item.hasLinkedExpenseDetails {
+                                Label("Automatically synced to expenses", systemImage: "checkmark.circle.fill")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(.black.opacity(0.75))
+                            }
+                        }
                     }
 
                     if showsCategoryLabel {
@@ -6869,6 +7676,21 @@ private struct TripPlannerChecklistItemEditorRow: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color.white.opacity(0.78))
         )
+        .onAppear {
+            linkedExpenseAmountText = item.linkedExpenseAmount.map(Self.editableCurrencyText(for:)) ?? ""
+        }
+        .onChange(of: saveFeedbackNonce) { _, _ in
+            linkedExpenseAmountText = item.linkedExpenseAmount.map(Self.editableCurrencyText(for:)) ?? ""
+        }
+    }
+
+    private static func editableCurrencyText(for amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = AppDisplayLocale.current
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: amount)) ?? String(amount)
     }
 }
 
@@ -7326,7 +8148,7 @@ private struct TripPlannerExpensesEditorView: View {
                         Image(systemName: "plus")
                             .font(.system(size: 13, weight: .bold))
 
-                        Text("trip_planner.expenses.new")
+                        Text("+")
                             .font(.system(size: 15, weight: .bold))
                     }
                     .foregroundStyle(.black)
@@ -7355,29 +8177,31 @@ private struct TripPlannerExpensesEditorView: View {
     private func persistExpenses() {
         let sortedExpenses = Self.sortedExpenses(expenses)
         expenses = sortedExpenses
+        let tripWithChecklistUpdates = trip.applyingExpenseEditsToLinkedChecklistItems(sortedExpenses)
         onSave(
             TripPlannerTrip(
-                id: trip.id,
-                createdAt: trip.createdAt,
-                title: trip.title,
-                notes: trip.notes,
-                startDate: trip.startDate,
-                endDate: trip.endDate,
-                countryIds: trip.countryIds,
-                countryNames: trip.countryNames,
-                friendIds: trip.friendIds,
-                friendNames: trip.friendNames,
-                friends: trip.friends,
-                ownerId: trip.ownerId,
-                availability: trip.availability,
-                dayPlans: trip.dayPlans,
-                overallChecklistItems: trip.overallChecklistItems,
+                id: tripWithChecklistUpdates.id,
+                createdAt: tripWithChecklistUpdates.createdAt,
+                title: tripWithChecklistUpdates.title,
+                notes: tripWithChecklistUpdates.notes,
+                startDate: tripWithChecklistUpdates.startDate,
+                endDate: tripWithChecklistUpdates.endDate,
+                countryIds: tripWithChecklistUpdates.countryIds,
+                countryNames: tripWithChecklistUpdates.countryNames,
+                friendIds: tripWithChecklistUpdates.friendIds,
+                friendNames: tripWithChecklistUpdates.friendNames,
+                friends: tripWithChecklistUpdates.friends,
+                ownerId: tripWithChecklistUpdates.ownerId,
+                availability: tripWithChecklistUpdates.availability,
+                dayPlans: tripWithChecklistUpdates.dayPlans,
+                overallChecklistItems: tripWithChecklistUpdates.overallChecklistItems,
+                packingProgressEntries: tripWithChecklistUpdates.packingProgressEntries,
                 expenses: sortedExpenses
             )
         )
     }
 
-    private static func sortedExpenses(_ expenses: [TripPlannerExpense]) -> [TripPlannerExpense] {
+    static func sortedExpenses(_ expenses: [TripPlannerExpense]) -> [TripPlannerExpense] {
         expenses.sorted { lhs, rhs in
             if lhs.isSettled != rhs.isSettled {
                 return !lhs.isSettled && rhs.isSettled
@@ -7461,6 +8285,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
     @State private var customCategoryName = ""
     @State private var selectedPayerId: String = ""
     @State private var splitMode: TripPlannerExpenseSplitMode = .everyone
+    @State private var expenseDate = Date()
     @State private var selectedParticipantIds: Set<String> = []
     @State private var shareStates: [String: TripPlannerExpenseShareDraftState] = [:]
     @State private var isShowingCustomCategoryPrompt = false
@@ -7486,6 +8311,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
             _customCategoryName = State(initialValue: existingExpense.customCategoryName ?? "")
             _selectedPayerId = State(initialValue: existingExpense.paidById)
             _splitMode = State(initialValue: existingExpense.splitMode)
+            _expenseDate = State(initialValue: existingExpense.date)
             _selectedParticipantIds = State(initialValue: Set(existingExpense.participantIds))
             _shareStates = State(
                 initialValue: Dictionary(
@@ -7503,6 +8329,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
             _customCategoryName = State(initialValue: "")
             _selectedPayerId = State(initialValue: "")
             _splitMode = State(initialValue: TripPlannerExpenseCategory.other.suggestedSplitMode)
+            _expenseDate = State(initialValue: Date())
             _selectedParticipantIds = State(initialValue: [])
             _shareStates = State(initialValue: [:])
         }
@@ -7682,6 +8509,13 @@ private struct TripPlannerExpenseComposerOverlay: View {
                                 .buttonStyle(.plain)
                             }
                         }
+
+                        DatePicker(
+                            "Date",
+                            selection: $expenseDate,
+                            displayedComponents: .date
+                        )
+                        .tint(.black)
 
                         HStack(alignment: .center, spacing: 12) {
                             Text("trip_planner.expenses.paid_by")
@@ -7885,6 +8719,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
         onSaveExpense(
             TripPlannerExpense(
                 id: existingExpense?.id ?? UUID(),
+                linkedChecklistItemId: existingExpense?.linkedChecklistItemId,
                 category: category,
                 customCategoryName: customCategoryName,
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -7893,7 +8728,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
                 paidByName: payer.name,
                 paidByUsername: payer.username,
                 splitMode: splitMode,
-                date: existingExpense?.date ?? Date(),
+                date: expenseDate,
                 participantIds: beneficiaries.map(\.id),
                 participantNames: beneficiaries.map(\.name),
                 shares: draftShares
@@ -7955,6 +8790,10 @@ private struct TripPlannerExpenseRow: View {
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.black)
                         .lineLimit(1)
+
+                    Text(AppDateFormatting.dateString(from: expense.date, dateStyle: .medium))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.58))
 
                     HStack(spacing: 8) {
                         if let payer = participants.first(where: { $0.id == expense.paidById }) {
@@ -8020,6 +8859,12 @@ private struct TripPlannerExpenseRow: View {
                         .foregroundStyle(.black.opacity(0.66))
                         .lineLimit(1)
                 }
+            }
+
+            if expense.linkedChecklistItemId != nil {
+                Label("Linked to planning checklist", systemImage: "arrow.triangle.branch")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.62))
             }
         }
         .padding(14)
@@ -8926,6 +9771,7 @@ private struct TripPlannerStatsSection: View {
     let passportLabel: String
     let groupLanguageScoresByCountry: [String: Int]
     let groupVisaNeeds: [TripPlannerTravelerVisaNeed]
+    @State private var isShowingEstimatedCostBreakdown = false
 
     private var selectedMonth: Int {
         guard let startDate else { return preferredMonth }
@@ -8992,12 +9838,67 @@ private struct TripPlannerStatsSection: View {
     }
 
     private var estimatedTripCostPerPerson: Int? {
-        let weightedSpend = weightedCountryDays.compactMap(estimatedDailySpendPerTraveler)
-        if !weightedSpend.isEmpty {
-            return Int(weightedSpend.reduce(0, +).rounded())
+        let breakdownTotal = estimatedCostBreakdown.reduce(0) { $0 + $1.amount }
+        if breakdownTotal > 0.009 {
+            return Int(breakdownTotal.rounded())
         }
         guard let averageDailySpend, let tripLengthDays else { return nil }
         return averageDailySpend * tripLengthDays
+    }
+
+    private var estimatedCostBreakdown: [TripPlannerCostBreakdownLine] {
+        let itineraryBreakdown = itineraryCostBreakdown
+        if !itineraryBreakdown.isEmpty {
+            return itineraryBreakdown
+        }
+
+        guard let tripLengthDays, !countries.isEmpty else { return [] }
+
+        let averageAccommodation = countries.compactMap(accommodationCostPerNight).averageOrZero * Double(tripLengthDays)
+        let averageFood = countries.compactMap(\.dailySpendFoodUsd).averageOrZero * Double(tripLengthDays)
+        let averageActivities = countries.compactMap(\.dailySpendActivitiesUsd).averageOrZero * Double(tripLengthDays)
+        let averageOther = countries.compactMap(otherDailyCost).averageOrZero * Double(tripLengthDays)
+
+        return [
+            TripPlannerCostBreakdownLine(title: "Accommodation", amount: averageAccommodation, detail: "Nightly stays across the full trip"),
+            TripPlannerCostBreakdownLine(title: "Food", amount: averageFood, detail: "Average daily food spend"),
+            TripPlannerCostBreakdownLine(title: "Activities", amount: averageActivities, detail: "Average daily activities spend"),
+            TripPlannerCostBreakdownLine(title: "Other", amount: averageOther, detail: "Local transport and other daily costs")
+        ]
+        .filter { $0.amount > 0.009 }
+    }
+
+    private var itineraryCostBreakdown: [TripPlannerCostBreakdownLine] {
+        guard !normalizedDayPlans.isEmpty else { return [] }
+
+        var accommodation = 0.0
+        var food = 0.0
+        var activities = 0.0
+        var other = 0.0
+
+        for index in normalizedDayPlans.indices {
+            let plan = normalizedDayPlans[index]
+
+            if let overnightCountry = overnightCountry(for: index) {
+                accommodation += accommodationCostPerNight(for: overnightCountry)
+            }
+
+            if plan.kind == .country,
+               let countryId = plan.countryId,
+               let country = countryByID[countryId] {
+                food += country.dailySpendFoodUsd ?? 0
+                activities += country.dailySpendActivitiesUsd ?? 0
+                other += otherDailyCost(for: country)
+            }
+        }
+
+        return [
+            TripPlannerCostBreakdownLine(title: "Accommodation", amount: accommodation, detail: "Includes arrival-night stays on travel days"),
+            TripPlannerCostBreakdownLine(title: "Food", amount: food, detail: "Country days only"),
+            TripPlannerCostBreakdownLine(title: "Activities", amount: activities, detail: "Country days only"),
+            TripPlannerCostBreakdownLine(title: "Other", amount: other, detail: "Local transport and uncategorized daily costs")
+        ]
+        .filter { $0.amount > 0.009 }
     }
 
     private var visaPrepCountries: [Country] {
@@ -9153,6 +10054,11 @@ private struct TripPlannerStatsSection: View {
                         )
                     }
                 }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Color.white.opacity(0.92))
+                )
             }
 
             if !categoryAverages.isEmpty {
@@ -9173,19 +10079,35 @@ private struct TripPlannerStatsSection: View {
                         }
                     }
                 }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Color.white.opacity(0.92))
+                )
             }
 
             HStack(spacing: 10) {
                 TripPlannerStatPill(
                     title: String(localized: "trip_planner.stats.estimated_total_per_person"),
                     value: estimatedTripCostPerPerson.map { "$\($0) USD" } ?? String(localized: "trip_planner.stats.add_trip_dates"),
-                    detail: "\(estimatedCostDetail) · USD"
+                    detail: "\(estimatedCostDetail) · USD",
+                    accessorySystemImage: estimatedCostBreakdown.isEmpty ? nil : (isShowingEstimatedCostBreakdown ? "chevron.up" : "chevron.down"),
+                    action: estimatedCostBreakdown.isEmpty ? nil : {
+                        isShowingEstimatedCostBreakdown.toggle()
+                    }
                 )
 
                 TripPlannerStatPill(
                     title: String(localized: "trip_planner.stats.typical_daily_spend"),
                     value: averageDailySpend.map { "$\($0) USD" } ?? String(localized: "trip_planner.stats.na"),
                     detail: "\(dailySpendDetail) · USD"
+                )
+            }
+
+            if isShowingEstimatedCostBreakdown, !estimatedCostBreakdown.isEmpty {
+                TripPlannerEstimatedCostBreakdownCard(
+                    breakdown: estimatedCostBreakdown,
+                    totalAmount: Double(estimatedTripCostPerPerson ?? 0)
                 )
             }
 
@@ -9206,7 +10128,7 @@ private struct TripPlannerStatsSection: View {
         guard let tripLengthDays else {
             return String(localized: "trip_planner.stats.estimate_when_dates_set")
         }
-        return String(format: String(localized: "trip_planner.stats.trip_length_estimate_format"), locale: AppDisplayLocale.current, tripLengthDays)
+        return "Includes \(tripLengthDays) day\(tripLengthDays == 1 ? "" : "s"), travel dates, and arrival-night stays"
     }
 
     private var dailySpendDetail: String {
@@ -9266,25 +10188,58 @@ private struct TripPlannerStatsSection: View {
     }
 
     private func estimatedDailySpendPerTraveler(for country: Country) -> Double? {
-        let hotel = country.dailySpendHotelUsd ?? 0
+        let hotel = accommodationCostPerNight(for: country)
         let food = country.dailySpendFoodUsd ?? 0
         let activities = country.dailySpendActivitiesUsd ?? 0
         let total = country.dailySpendTotalUsd
         let uncategorized = max((total ?? 0) - hotel - food - activities, 0)
 
-        if isGroupTrip, travelerCount > 1 {
-            let groupAdjusted = (hotel / Double(travelerCount)) + food + activities + uncategorized
-            if groupAdjusted > 0 {
-                return groupAdjusted
-            }
-        }
-
         if let total, total > 0 {
-            return total
+            let adjustedTotal = food + activities + uncategorized + hotel
+            return adjustedTotal > 0 ? adjustedTotal : total
         }
 
         let componentTotal = hotel + food + activities
         return componentTotal > 0 ? componentTotal : nil
+    }
+
+    private func accommodationCostPerNight(for country: Country) -> Double {
+        guard let hotel = country.dailySpendHotelUsd, hotel > 0 else { return 0 }
+        if isGroupTrip, travelerCount > 1 {
+            return hotel / Double(travelerCount)
+        }
+        return hotel
+    }
+
+    private func otherDailyCost(for country: Country) -> Double {
+        let hotel = accommodationCostPerNight(for: country)
+        let food = country.dailySpendFoodUsd ?? 0
+        let activities = country.dailySpendActivitiesUsd ?? 0
+        let total = country.dailySpendTotalUsd ?? 0
+        return max(total - hotel - food - activities, 0)
+    }
+
+    private func overnightCountry(for index: Int) -> Country? {
+        guard normalizedDayPlans.indices.contains(index) else { return nil }
+
+        let plan = normalizedDayPlans[index]
+        if plan.kind == .country,
+           let countryId = plan.countryId,
+           let country = countryByID[countryId] {
+            return country
+        }
+
+        for followingIndex in normalizedDayPlans.indices where followingIndex > index {
+            let followingPlan = normalizedDayPlans[followingIndex]
+            guard followingPlan.kind == .country,
+                  let countryId = followingPlan.countryId,
+                  let country = countryByID[countryId] else {
+                continue
+            }
+            return country
+        }
+
+        return nil
     }
 
     private var overstayWarningText: String {
@@ -9664,6 +10619,74 @@ private struct TripPlannerCategoryAverageCard: View {
     }
 }
 
+private struct TripPlannerCostBreakdownLine: Identifiable {
+    let title: String
+    let amount: Double
+    let detail: String
+
+    var id: String { title }
+}
+
+private struct TripPlannerEstimatedCostBreakdownCard: View {
+    let breakdown: [TripPlannerCostBreakdownLine]
+    let totalAmount: Double
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Estimated cost breakdown")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.black)
+
+            ForEach(breakdown) { line in
+                HStack(alignment: .top, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(line.title)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.black)
+
+                        Text(line.detail)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.black.opacity(0.62))
+                    }
+
+                    Spacer()
+
+                    Text(currency(line.amount))
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.black)
+                }
+            }
+
+            Divider()
+
+            HStack {
+                Text("Estimated total")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.black)
+
+                Spacer()
+
+                Text(currency(totalAmount))
+                    .font(.system(size: 14, weight: .black))
+                    .foregroundStyle(.black)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color.white.opacity(0.92))
+        )
+    }
+
+    private func currency(_ amount: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.locale = AppDisplayLocale.current
+        return formatter.string(from: NSNumber(value: amount)) ?? "$\(AppNumberFormatting.integerString(Int(amount)))"
+    }
+}
+
 private struct TripPlannerCountryLanguageProfile: Decodable {
     let countryISO2: String
     let languages: [TripPlannerCountryLanguageCoverage]
@@ -9743,12 +10766,37 @@ private struct TripPlannerStatPill: View {
     let title: String
     let value: String
     let detail: String
+    var accessorySystemImage: String? = nil
+    var action: (() -> Void)? = nil
 
     var body: some View {
+        Group {
+            if let action {
+                Button(action: action) {
+                    content
+                }
+                .buttonStyle(.plain)
+            } else {
+                content
+            }
+        }
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(.black.opacity(0.62))
+            HStack(alignment: .top, spacing: 8) {
+                Text(title)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.62))
+
+                Spacer(minLength: 0)
+
+                if let accessorySystemImage {
+                    Image(systemName: accessorySystemImage)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.46))
+                }
+            }
 
             Text(value)
                 .font(.system(size: 21, weight: .bold))
@@ -9764,6 +10812,13 @@ private struct TripPlannerStatPill: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color.white.opacity(0.9))
         )
+    }
+}
+
+private extension Array where Element == Double {
+    var averageOrZero: Double {
+        guard !isEmpty else { return 0 }
+        return reduce(0, +) / Double(count)
     }
 }
 
@@ -11297,12 +12352,12 @@ private struct TripPlannerCurrencyInput: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        HStack(spacing: 12) {
             Text(title)
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.black.opacity(0.72))
 
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 Text("$")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.black)
@@ -11310,7 +12365,9 @@ private struct TripPlannerCurrencyInput: View {
                 TextField(placeholder, text: $text)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.plain)
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .onChange(of: text) { _, newValue in
                         let sanitized = sanitizedCurrencyText(from: newValue)
                         if sanitized != newValue {
@@ -11324,6 +12381,7 @@ private struct TripPlannerCurrencyInput: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.white.opacity(0.78))
             )
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

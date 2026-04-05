@@ -13,6 +13,7 @@ struct AppRootView: View {
     private let instanceId = UUID()
     @EnvironmentObject private var sessionManager: SessionManager
     @StateObject private var profileVMHolder = ProfileVMHolder()
+    @StateObject private var authViewModel = AuthViewModel()
     
     var body: some View {
         ZStack {
@@ -24,6 +25,7 @@ struct AppRootView: View {
                 ProgressView()
             } else if sessionManager.isAuthSuppressed {
                 AuthLandingView()
+                    .environmentObject(authViewModel)
                     .onAppear {
                     }
                 
@@ -36,6 +38,7 @@ struct AppRootView: View {
                 }
             } else {
                 AuthLandingView()
+                    .environmentObject(authViewModel)
                     .onAppear {
                         profileVMHolder.clear()
                     }
@@ -56,6 +59,15 @@ struct AppRootView: View {
         .font(TAFTypography.body())
         .foregroundStyle(.black)
         .tint(.black)
+        .onOpenURL { url in
+            let scheme = url.scheme?.lowercased()
+            guard scheme == "travelaf" || scheme == "travelscorer" else { return }
+
+            Task {
+                await authViewModel.handleOAuthCallback(url)
+                await sessionManager.forceRefreshAuthState(source: "oauth-callback")
+            }
+        }
     }
 
     private var authConfigurationKey: String {

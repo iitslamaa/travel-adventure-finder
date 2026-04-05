@@ -63,6 +63,7 @@
 			<string>com.iitslamaa.TravelScoreriOS</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>travelaf</string>
 				<string>travelscorer</string>
 			</array>
 		</dict>

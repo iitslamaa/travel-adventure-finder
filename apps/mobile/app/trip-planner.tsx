@@ -129,7 +129,6 @@ type TripVisaSummary = {
 
 type PassportPreferences = {
   nationalityCountryCodes: string[];
-  passportCountryCode: string | null;
 };
 
 type RemoteTripRow = {
@@ -918,7 +917,6 @@ export default function TripPlannerScreen() {
   );
   const [savedPassportPreferences, setSavedPassportPreferences] = useState<PassportPreferences>({
     nationalityCountryCodes: [],
-    passportCountryCode: null,
   });
   const [visaRowsByPassport, setVisaRowsByPassport] = useState<Record<string, VisaRequirementRow[]>>(
     {}
@@ -930,7 +928,7 @@ export default function TripPlannerScreen() {
 
     supabase
       .from('user_passport_preferences')
-      .select('nationality_country_codes,passport_country_code')
+      .select('nationality_country_codes')
       .eq('user_id', userId)
       .limit(1)
       .maybeSingle()
@@ -942,7 +940,6 @@ export default function TripPlannerScreen() {
 
         setSavedPassportPreferences({
           nationalityCountryCodes: data?.nationality_country_codes ?? [],
-          passportCountryCode: data?.passport_country_code ?? null,
         });
       });
   }, [session?.user?.id]);
@@ -1159,13 +1156,9 @@ export default function TripPlannerScreen() {
 
   const defaultPassportCode = useMemo(
     () =>
-      savedPassportPreferences.passportCountryCode ||
       savedPassportPreferences.nationalityCountryCodes[0] ||
       'US',
-    [
-      savedPassportPreferences.nationalityCountryCodes,
-      savedPassportPreferences.passportCountryCode,
-    ]
+    [savedPassportPreferences.nationalityCountryCodes]
   );
 
   const draftTravelers = useMemo(

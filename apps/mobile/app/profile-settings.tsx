@@ -355,7 +355,7 @@ export default function ProfileSettingsScreen() {
           .upsert({
             user_id: profile.id,
             nationality_country_codes: draftPassportNationalities,
-            passport_country_code: draftPassportNationalities[0] ?? null,
+            passport_country_code: null,
           });
 
         if (passportError) {
@@ -436,9 +436,6 @@ export default function ProfileSettingsScreen() {
 
   const livedCountriesLabel = joinFlagPreview(draftLivedCountries);
   const languageCountLabel = draftLanguages.length ? `${draftLanguages.length} saved` : 'None';
-  const defaultPassportLabel = draftPassportNationalities[0]
-    ? `${flagFor(draftPassportNationalities[0])} ${localizedCountryName(draftPassportNationalities[0])}`
-    : 'Not set';
 
   const selectorTitle =
     selectorOpen === 'mode'
@@ -482,7 +479,7 @@ export default function ProfileSettingsScreen() {
               : selectorOpen === 'languages'
                 ? 'Add languages one by one, then choose how comfortable you are using each one.'
                 : selectorOpen === 'passports'
-                  ? 'Select every passport you hold. The first one becomes your default visa passport.'
+                  ? 'Select every passport you hold for travel planning and visa guidance.'
                   : selectorOpen === 'lived'
                     ? 'Keep the flags that represent where you have lived.'
                     : '';
@@ -773,11 +770,6 @@ export default function ProfileSettingsScreen() {
             label="Passports"
             value={passportsLabel}
             onPress={() => setSelectorOpen('passports')}
-          />
-          <Divider color={borderColor} />
-          <Row
-            label="Default passport"
-            value={defaultPassportLabel}
           />
         </ScrapbookCard>
 
