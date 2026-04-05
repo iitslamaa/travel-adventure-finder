@@ -6493,7 +6493,7 @@ private struct TripPlannerChecklistEditorView: View {
                                         )
 
                                         VStack(spacing: 10) {
-                                            ForEach(plan.checklistItems.indices, id: \.self) { itemIndex in
+                                            ForEach(Array(plan.checklistItems.enumerated()), id: \.element.id) { itemIndex, _ in
                                                 TripPlannerChecklistItemEditorRow(
                                                     item: bindingForDayItem(dayIndex: selectedDayIndex, itemIndex: itemIndex),
                                                     planDate: plan.date,
@@ -7677,6 +7677,9 @@ private struct TripPlannerChecklistItemEditorRow: View {
                 .fill(Color.white.opacity(0.78))
         )
         .onAppear {
+            linkedExpenseAmountText = item.linkedExpenseAmount.map(Self.editableCurrencyText(for:)) ?? ""
+        }
+        .onChange(of: item.id) { _, _ in
             linkedExpenseAmountText = item.linkedExpenseAmount.map(Self.editableCurrencyText(for:)) ?? ""
         }
         .onChange(of: saveFeedbackNonce) { _, _ in
@@ -10018,49 +10021,6 @@ private struct TripPlannerStatsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            if !countries.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(isGroupTrip ? String(localized: "trip_planner.stats.group_snapshot") : String(localized: "trip_planner.stats.trip_snapshot"))
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.black)
-
-                    Text(snapshotSummary)
-                        .font(.system(size: 14))
-                        .foregroundStyle(.black.opacity(0.68))
-
-                    LazyVGrid(
-                        columns: [
-                            GridItem(.flexible(), spacing: 10, alignment: .top),
-                            GridItem(.flexible(), spacing: 10, alignment: .top)
-                        ],
-                        spacing: 10
-                    ) {
-                        TripPlannerScoreHighlightCard(
-                            title: String(localized: "trip_planner.stats.average_overall"),
-                            subtitle: String(format: String(localized: "trip_planner.stats.across_stops_format"), locale: AppDisplayLocale.current, countries.count),
-                            score: averageOverallScore
-                        )
-
-                        TripPlannerScoreHighlightCard(
-                            title: String(localized: "trip_planner.stats.average_advisory"),
-                            subtitle: String(localized: "trip_planner.stats.average_advisory_subtitle"),
-                            score: averageAdvisoryScore
-                        )
-
-                        TripPlannerScoreHighlightCard(
-                            title: String(localized: "trip_planner.stats.average_seasonality"),
-                            subtitle: monthSummaryText,
-                            score: averageSeasonalityScore
-                        )
-                    }
-                }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(Color.white.opacity(0.92))
-                )
-            }
-
             if !categoryAverages.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("trip_planner.stats.score_breakdown")
@@ -10172,14 +10132,6 @@ private struct TripPlannerStatsSection: View {
         let formatter = DateFormatter()
         formatter.locale = AppDisplayLocale.current
         return String(format: String(localized: "trip_planner.stats.month_timing_format"), locale: AppDisplayLocale.current, formatter.monthSymbols[selectedMonth - 1])
-    }
-
-    private var snapshotSummary: String {
-        if isGroupTrip {
-            return String(format: String(localized: "trip_planner.stats.group_snapshot_summary_format"), locale: AppDisplayLocale.current, travelerCount, countries.count)
-        }
-
-        return String(format: String(localized: "trip_planner.stats.selected_countries_summary_format"), locale: AppDisplayLocale.current, countries.count)
     }
 
     private func average(of values: [Int]) -> Int? {
