@@ -45,7 +45,7 @@ struct TranslucentAuthButton<Content: View>: View {
 // MARK: - Email Auth Flow
 
 struct EmailAuthView: View {
-    @StateObject private var vm = AuthViewModel()
+    @EnvironmentObject private var vm: AuthViewModel
     @EnvironmentObject private var sessionManager: SessionManager
 
     @State private var step: Step = .enterEmail

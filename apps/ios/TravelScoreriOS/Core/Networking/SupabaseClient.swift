@@ -33,6 +33,7 @@ final class SupabaseManager {
             supabaseKey: anonKey,
             options: SupabaseClientOptions(
                 auth: .init(
+                    redirectToURL: URL(string: "travelaf://auth/callback"),
                     emitLocalSessionAsInitialSession: true
                 )
             )
