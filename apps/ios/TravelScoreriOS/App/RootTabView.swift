@@ -61,6 +61,7 @@ struct RootTabView: View {
     }
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
+    @EnvironmentObject private var currencyPreferenceStore: CurrencyPreferenceStore
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var countries: [Country] = []
@@ -182,7 +183,9 @@ struct RootTabView: View {
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             Task {
-                await sharedTripInbox.refresh()
+                async let inboxRefresh: Void = sharedTripInbox.refresh()
+                async let rateRefresh: Void = currencyPreferenceStore.refreshRatesIfNeeded()
+                _ = await (inboxRefresh, rateRefresh)
             }
         }
         .toolbarBackground(.hidden, for: .navigationBar)
@@ -204,6 +207,9 @@ struct RootTabView: View {
                     print("❌ Failed to fetch countries:", error)
                 }
             }
+        }
+        .task {
+            await currencyPreferenceStore.refreshRatesIfNeeded()
         }
     }
     

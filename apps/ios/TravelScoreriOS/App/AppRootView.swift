@@ -12,6 +12,7 @@ import Combine
 struct AppRootView: View {
     private let instanceId = UUID()
     @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var currencyPreferenceStore: CurrencyPreferenceStore
     @StateObject private var profileVMHolder = ProfileVMHolder()
     @StateObject private var authViewModel = AuthViewModel()
     
@@ -55,6 +56,11 @@ struct AppRootView: View {
             } else {
                 profileVMHolder.clear()
             }
+        }
+        .task(id: profileVMHolder.profileVM?.profile?.defaultCurrencyCode) {
+            currencyPreferenceStore.synchronizeProfileCurrency(
+                profileVMHolder.profileVM?.profile?.defaultCurrencyCode
+            )
         }
         .font(TAFTypography.body())
         .foregroundStyle(.black)

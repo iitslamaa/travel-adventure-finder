@@ -9,6 +9,8 @@ import Foundation
 import SwiftUI
 
 struct CountryAffordabilityCard: View {
+    @EnvironmentObject private var currencyPreferenceStore: CurrencyPreferenceStore
+
     let country: Country
     let weightPercentage: Int
 
@@ -77,19 +79,19 @@ struct CountryAffordabilityCard: View {
             // Optional daily spend breakdown (if available)
             VStack(alignment: .leading, spacing: 4) {
                 if let total = country.dailySpendTotalUsd {
-                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.daily_total_format"), locale: AppDisplayLocale.current, total)))
+                    Text("Typical daily total: \(currencyPreferenceStore.formatFromUSD(total, maximumFractionDigits: 0))")
                 }
 
                 if let hotel = country.dailySpendHotelUsd {
-                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.hotel_per_night_format"), locale: AppDisplayLocale.current, hotel)))
+                    Text("Hotel (per night): \(currencyPreferenceStore.formatFromUSD(hotel, maximumFractionDigits: 0))")
                 }
 
                 if let food = country.dailySpendFoodUsd {
-                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.food_per_day_format"), locale: AppDisplayLocale.current, food)))
+                    Text("Food (per day): \(currencyPreferenceStore.formatFromUSD(food, maximumFractionDigits: 0))")
                 }
 
                 if let activities = country.dailySpendActivitiesUsd {
-                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.activities_per_day_format"), locale: AppDisplayLocale.current, activities)))
+                    Text("Activities (per day): \(currencyPreferenceStore.formatFromUSD(activities, maximumFractionDigits: 0))")
                 }
             }
             .font(.footnote)

@@ -1246,13 +1246,22 @@ struct Country: Identifiable, Hashable {
 
     private func formattedUSD(_ amount: Double?, locale: Locale) -> String? {
         guard let amount else { return nil }
-        let formatter = NumberFormatter()
-        formatter.locale = locale
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        formatter.maximumFractionDigits = 0
-        formatter.minimumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount))
+        let currencyCode = CurrencyPreferenceStore.persistedDefaultCurrencyCode()
+        let snapshot = CurrencyPreferenceStore.persistedExchangeRateSnapshot()
+        let converted = CurrencyConversion.convert(
+            amount,
+            from: "USD",
+            to: currencyCode,
+            snapshot: snapshot
+        ) ?? amount
+
+        return AppCurrencyFormatter.string(
+            amount: converted,
+            currencyCode: currencyCode,
+            locale: locale,
+            maximumFractionDigits: 0,
+            minimumFractionDigits: 0
+        )
     }
 
     private enum AffordabilityTier {

@@ -32,6 +32,7 @@ struct ProfileUpdate: Encodable {
     let travelStyle: [String]?
     let travelMode: [String]?
     let nextDestination: String?
+    let defaultCurrencyCode: String?
     let currentCountry: String?
     let favoriteCountries: [String]?
     let onboardingCompleted: Bool?
@@ -47,6 +48,7 @@ struct ProfileUpdate: Encodable {
         case travelStyle = "travel_style"
         case travelMode = "travel_mode"
         case nextDestination = "next_destination"
+        case defaultCurrencyCode = "default_currency_code"
         case currentCountry = "current_country"
         case favoriteCountries = "favorite_countries"
         case onboardingCompleted = "onboarding_completed"
@@ -71,6 +73,7 @@ private struct LegacyProfileUpdate: Encodable {
     let travelStyle: [String]?
     let travelMode: [String]?
     let nextDestination: String?
+    let defaultCurrencyCode: String?
     let currentCountry: String?
     let favoriteCountries: [String]?
     let onboardingCompleted: Bool?
@@ -84,6 +87,7 @@ private struct LegacyProfileUpdate: Encodable {
         case travelStyle = "travel_style"
         case travelMode = "travel_mode"
         case nextDestination = "next_destination"
+        case defaultCurrencyCode = "default_currency_code"
         case currentCountry = "current_country"
         case favoriteCountries = "favorite_countries"
         case onboardingCompleted = "onboarding_completed"
@@ -407,6 +411,7 @@ final class ProfileService {
             travelStyle: nil,
             travelMode: nil,
             nextDestination: nil,
+            defaultCurrencyCode: nil,
             currentCountry: nil,
             favoriteCountries: nil,
             onboardingCompleted: nil
@@ -550,7 +555,11 @@ final class ProfileService {
 
         let message = postgrestError.message.lowercased()
         return message.contains("profiles")
-            && (message.contains("first_name") || message.contains("last_name"))
+            && (
+                message.contains("first_name")
+                || message.contains("last_name")
+                || message.contains("default_currency_code")
+            )
     }
 
     private static func legacyProfileUpdate(from payload: ProfileUpdate) -> LegacyProfileUpdate {
@@ -563,6 +572,7 @@ final class ProfileService {
             travelStyle: payload.travelStyle,
             travelMode: payload.travelMode,
             nextDestination: payload.nextDestination,
+            defaultCurrencyCode: nil,
             currentCountry: payload.currentCountry,
             favoriteCountries: payload.favoriteCountries,
             onboardingCompleted: payload.onboardingCompleted
