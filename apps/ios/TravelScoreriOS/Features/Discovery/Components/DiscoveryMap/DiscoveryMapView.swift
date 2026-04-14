@@ -8,29 +8,18 @@ import SwiftUI
 struct DiscoveryMapView: View {
     
     let countries: [Country]
-    
-    @EnvironmentObject private var weightsStore: ScoreWeightsStore
-    
+
     @State private var selectedCountryISO: String? = nil
     @State private var isLoadingMap: Bool = true
     @State private var shouldMountMap: Bool = false
     @State private var isVisible: Bool = false
-
-    private var displayedCountries: [Country] {
-        countries.map {
-            $0.applyingOverallScore(
-                using: weightsStore.weights,
-                selectedMonth: weightsStore.selectedMonth
-            )
-        }
-    }
     
     var body: some View {
         ZStack(alignment: .bottom) {
             
             if shouldMountMap {
                 DiscoveryMapRepresentable(
-                    countries: displayedCountries,
+                    countries: countries,
                     highlightedISOs: [],
                     selectedCountryISO: $selectedCountryISO,
                     isLoading: $isLoadingMap
@@ -84,7 +73,8 @@ struct DiscoveryMapView: View {
     }
     
     private func matchedCountry(for iso: String) -> Country? {
-        displayedCountries.first { $0.iso2.uppercased() == iso.uppercased() }
-        ?? displayedCountries.first { $0.name == iso }
+        let normalizedISO = iso.uppercased()
+        return countries.first { $0.iso2.uppercased() == normalizedISO }
+            ?? countries.first { $0.name == iso }
     }
 }
