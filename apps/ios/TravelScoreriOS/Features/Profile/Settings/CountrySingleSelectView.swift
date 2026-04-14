@@ -35,8 +35,9 @@ struct CountrySingleSelectView: View {
     }
 
     private let countries: [(code: String, name: String)] =
-        Locale.isoRegionCodes
-            .compactMap { code -> (String, String)? in
+        Locale.Region.isoRegions
+            .compactMap { region -> (String, String)? in
+                let code = region.identifier
                 let name = Locale.current.localizedString(forRegionCode: code)
                 return name.map { (code, $0) }
             }

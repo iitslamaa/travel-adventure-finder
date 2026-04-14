@@ -13009,7 +13009,7 @@ private enum TripPlannerAvailabilityCalculator {
         return slots
     }
 
-    private static func merge(_ intervals: [DateInterval]) -> [DateInterval] {
+    nonisolated private static func merge(_ intervals: [DateInterval]) -> [DateInterval] {
         let sorted = intervals.sorted { $0.start < $1.start }
         var result: [DateInterval] = []
 
@@ -13044,7 +13044,7 @@ private enum TripPlannerAvailabilityCalculator {
         return DateInterval(start: start, end: end)
     }
 
-    private static func merge(_ overlaps: [TripPlannerAvailabilityOverlap]) -> [TripPlannerAvailabilityOverlap] {
+    nonisolated private static func merge(_ overlaps: [TripPlannerAvailabilityOverlap]) -> [TripPlannerAvailabilityOverlap] {
         var result: [TripPlannerAvailabilityOverlap] = []
 
         for overlap in overlaps.sorted(by: { $0.startDate < $1.startDate }) {

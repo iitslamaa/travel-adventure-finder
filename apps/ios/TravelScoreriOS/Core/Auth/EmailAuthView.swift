@@ -316,7 +316,7 @@ struct EmailAuthView: View {
             Spacer()
         }
         .padding()
-        .onChange(of: sessionManager.isAuthenticated) { isAuthed in
+        .onChange(of: sessionManager.isAuthenticated) { _, isAuthed in
             if isAuthed {
                 dismissKeyboard()
             }
