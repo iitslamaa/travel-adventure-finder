@@ -2405,6 +2405,26 @@ private extension TripPlannerTrip {
             ordered.append(friend)
         }
 
+        if let ownerId = ownerId,
+           ownerId != SupabaseManager.shared.currentUserId,
+           !friends.contains(where: { $0.id == ownerId }),
+           seen.insert(ownerId).inserted {
+            let profileService = ProfileService(supabase: SupabaseManager.shared)
+
+            if let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+                ordered.append(
+                    TripPlannerFriendSnapshot(
+                        id: cachedOwner.id,
+                        displayName: cachedOwner.tripDisplayName,
+                        username: cachedOwner.username,
+                        avatarURL: cachedOwner.avatarUrl
+                    )
+                )
+            } else {
+                ordered.append(.currentUserFallback(userId: ownerId))
+            }
+        }
+
         return ordered
     }
 
@@ -3061,6 +3081,7 @@ struct TripPlannerView: View {
             event.startDate = Calendar.current.startOfDay(for: startDate)
             event.endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: endDate)) ?? endDate
 
+            let travelerNames = calendarTravelerDisplayNames(for: trip)
             let noteParts = [
                 trip.notes.isEmpty ? nil : trip.notes,
                 trip.countryNames.isEmpty ? nil : String(
@@ -3068,10 +3089,10 @@ struct TripPlannerView: View {
                     locale: AppDisplayLocale.current,
                     trip.countryNames.joined(separator: ", ")
                 ),
-                trip.travelerDisplayNames.isEmpty ? nil : String(
+                travelerNames.isEmpty ? nil : String(
                     format: String(localized: "trip_planner.calendar_notes_friends"),
                     locale: AppDisplayLocale.current,
-                    trip.travelerDisplayNames.joined(separator: ", ")
+                    travelerNames.joined(separator: ", ")
                 )
             ].compactMap { $0 }
             event.notes = noteParts.joined(separator: "\n")
@@ -3081,6 +3102,26 @@ struct TripPlannerView: View {
             calendarError = error.localizedDescription.isEmpty
                 ? String(localized: "trip_planner.calendar_error_generic")
                 : error.localizedDescription
+        }
+    }
+
+    private func calendarTravelerDisplayNames(for trip: TripPlannerTrip) -> [String] {
+        var names = trip.travelerDisplayNames
+
+        if let ownerId = trip.ownerId,
+           ownerId != sessionManager.userId,
+           !trip.friends.contains(where: { $0.id == ownerId }),
+           let cachedOwner = ProfileService(supabase: SupabaseManager.shared).cachedProfile(userId: ownerId) {
+            names.insert(cachedOwner.tripDisplayName, at: 0)
+        }
+
+        var seen = Set<String>()
+        return names.filter { rawName in
+            let normalized = rawName
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: AppDisplayLocale.current)
+            guard !normalized.isEmpty else { return false }
+            return seen.insert(normalized).inserted
         }
     }
 }
@@ -4001,8 +4042,12 @@ private struct TripPlannerDetailView: View {
         } : resolvedCountries
     }
 
+    private var isDisplayedGroupTrip: Bool {
+        displayedTravelers.count > 1
+    }
+
     private var effectiveScoreWeights: ScoreWeights {
-        trip.isGroupTrip ? .default : scoreWeightsStore.weights
+        isDisplayedGroupTrip ? .default : scoreWeightsStore.weights
     }
 
     private var checklistActorName: String {
@@ -4085,7 +4130,7 @@ private struct TripPlannerDetailView: View {
     private var tripDetailsSection: some View {
         TripPlannerEditableSectionCard(
             title: String(localized: "trip_planner.detail.trip_details"),
-            subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip")
+            subtitle: isDisplayedGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip")
         ) {
             NavigationLink {
                 TripPlannerBasicsEditorView(trip: trip, onSave: saveTripChanges)
@@ -4218,7 +4263,7 @@ private struct TripPlannerDetailView: View {
                 tripDayPlans: syncedTrip.dayPlans,
                 weights: effectiveScoreWeights,
                 preferredMonth: scoreWeightsStore.selectedMonth,
-                isGroupTrip: trip.isGroupTrip,
+                isGroupTrip: isDisplayedGroupTrip,
                 travelerCount: displayedTravelers.count,
                 currencyCode: effectivePlannerCurrencyCode,
                 passportLabel: tripPassportLabel,
@@ -4237,7 +4282,7 @@ private struct TripPlannerDetailView: View {
                     tripDayPlans: syncedTrip.dayPlans,
                     weights: effectiveScoreWeights,
                     preferredMonth: scoreWeightsStore.selectedMonth,
-                    isGroupTrip: trip.isGroupTrip,
+                    isGroupTrip: isDisplayedGroupTrip,
                     travelerCount: displayedTravelers.count,
                     currencyCode: effectivePlannerCurrencyCode,
                     groupVisaNeeds: limitedVisaNeeds
@@ -4254,7 +4299,7 @@ private struct TripPlannerDetailView: View {
         } label: {
             TripPlannerNavigationSectionCard(
                 title: String(localized: "trip_planner.availability.title"),
-                subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.availability_group_subtitle") : String(localized: "trip_planner.detail.availability_solo_subtitle")
+                subtitle: isDisplayedGroupTrip ? String(localized: "trip_planner.detail.availability_group_subtitle") : String(localized: "trip_planner.detail.availability_solo_subtitle")
             ) {
                 TripPlannerAvailabilityPreviewSection(trip: syncedTrip)
             }
@@ -11594,6 +11639,10 @@ private struct TripPlannerSavedTripCard: View {
     let onAddToCalendar: () -> Void
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
 
+    private var isDisplayedGroupTrip: Bool {
+        travelerChips.count > 1
+    }
+
     private var ownerChip: TripPlannerTravelerChip? {
         guard let ownerId = trip.ownerId,
               ownerId != sessionManager.userId,
@@ -11716,7 +11765,7 @@ private struct TripPlannerSavedTripCard: View {
                         .lineLimit(2)
                         .minimumScaleFactor(0.8)
 
-                    Text(trip.isGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip"))
+                    Text(isDisplayedGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip"))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.black.opacity(0.62))
                 }
