@@ -146,11 +146,19 @@ struct ExchangeRateSnapshot: Codable, Equatable {
 }
 
 enum AppCurrencyCatalog {
-    static let supportedCodes: [String] = [
-        "USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "HKD", "INR",
-        "MXN", "NZD", "SGD", "THB", "TRY", "ZAR", "BRL", "DKK", "NOK", "SEK",
-        "PLN", "CZK", "HUF", "RON", "ILS", "IDR", "KRW", "MYR", "PHP"
-    ]
+    static let supportedCodes: [String] = {
+        var codes = Set(Locale.commonISOCurrencyCodes.map { $0.uppercased() })
+        codes.insert("USD")
+
+        return codes.sorted {
+            let lhs = displayName(for: $0)
+            let rhs = displayName(for: $1)
+            if lhs != rhs {
+                return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
+            }
+            return $0 < $1
+        }
+    }()
 
     static func isSupported(_ code: String) -> Bool {
         supportedCodes.contains(code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased())
@@ -165,47 +173,33 @@ enum AppCurrencyCatalog {
 
     static func displayName(for code: String) -> String {
         let normalized = code.uppercased()
-        let fallbackNames: [String: String] = [
-            "USD": "US Dollar",
-            "EUR": "Euro",
-            "GBP": "British Pound",
-            "JPY": "Japanese Yen",
-            "CAD": "Canadian Dollar",
-            "AUD": "Australian Dollar",
-            "CHF": "Swiss Franc",
-            "CNY": "Chinese Yuan",
-            "HKD": "Hong Kong Dollar",
-            "INR": "Indian Rupee",
-            "MXN": "Mexican Peso",
-            "NZD": "New Zealand Dollar",
-            "SGD": "Singapore Dollar",
-            "THB": "Thai Baht",
-            "TRY": "Turkish Lira",
-            "ZAR": "South African Rand",
-            "BRL": "Brazilian Real",
-            "DKK": "Danish Krone",
-            "NOK": "Norwegian Krone",
-            "SEK": "Swedish Krona",
-            "PLN": "Polish Zloty",
-            "CZK": "Czech Koruna",
-            "HUF": "Hungarian Forint",
-            "RON": "Romanian Leu",
-            "ILS": "Israeli Shekel",
-            "IDR": "Indonesian Rupiah",
-            "KRW": "South Korean Won",
-            "MYR": "Malaysian Ringgit",
-            "PHP": "Philippine Peso"
-        ]
-
-        return fallbackNames[normalized] ?? normalized
+        return AppDisplayLocale.current.localizedString(forCurrencyCode: normalized)
+            ?? Locale(identifier: "en_US_POSIX").localizedString(forCurrencyCode: normalized)
+            ?? normalized
     }
 
     static func symbol(for code: String, locale: Locale = AppDisplayLocale.current) -> String {
+        let normalized = code.uppercased()
+        if let nativeSymbol = nativeSymbolMap[normalized] {
+            return nativeSymbol
+        }
+
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.locale = locale
-        formatter.currencyCode = code.uppercased()
+        formatter.currencyCode = normalized
         return formatter.currencySymbol
+    }
+
+    static func officialSymbolAssetName(for code: String) -> String? {
+        switch code.uppercased() {
+        case "AED":
+            return "currency-symbol-aed"
+        case "SAR":
+            return "currency-symbol-sar"
+        default:
+            return nil
+        }
     }
 
     static var fallbackDefaultCode: String {
@@ -218,6 +212,190 @@ enum AppCurrencyCatalog {
 
         return "USD"
     }
+
+    private static let nativeSymbolOverrides: [String: String] = [
+        "AED": "د.إ",
+        "AFN": "؋",
+        "ALL": "L",
+        "AMD": "֏",
+        "AOA": "Kz",
+        "ARS": "$",
+        "AUD": "$",
+        "AWG": "ƒ",
+        "AZN": "₼",
+        "BAM": "KM",
+        "BBD": "$",
+        "BDT": "৳",
+        "BGN": "лв",
+        "BHD": ".د.ب",
+        "BIF": "FBu",
+        "BMD": "$",
+        "BND": "$",
+        "BOB": "Bs",
+        "BRL": "R$",
+        "BSD": "$",
+        "BTN": "Nu.",
+        "BWP": "P",
+        "BYN": "Br",
+        "BZD": "$",
+        "CAD": "$",
+        "CDF": "FC",
+        "CHF": "CHF",
+        "CLP": "$",
+        "CNY": "¥",
+        "COP": "$",
+        "CRC": "₡",
+        "CUP": "$",
+        "CVE": "$",
+        "CZK": "Kč",
+        "DJF": "Fdj",
+        "DKK": "kr",
+        "DOP": "RD$",
+        "DZD": "د.ج",
+        "EGP": "ج.م",
+        "ERN": "Nfk",
+        "ETB": "Br",
+        "EUR": "€",
+        "FJD": "$",
+        "FKP": "£",
+        "GBP": "£",
+        "GEL": "₾",
+        "GHS": "GH₵",
+        "GIP": "£",
+        "GMD": "D",
+        "GNF": "FG",
+        "GTQ": "Q",
+        "GYD": "$",
+        "HKD": "$",
+        "HNL": "L",
+        "HTG": "G",
+        "HUF": "Ft",
+        "IDR": "Rp",
+        "ILS": "₪",
+        "INR": "₹",
+        "IQD": "ع.د",
+        "IRR": "﷼",
+        "ISK": "kr",
+        "JMD": "$",
+        "JOD": "د.أ",
+        "JPY": "¥",
+        "KES": "KSh",
+        "KGS": "с",
+        "KHR": "៛",
+        "KMF": "CF",
+        "KRW": "₩",
+        "KWD": "د.ك",
+        "KYD": "$",
+        "KZT": "₸",
+        "LAK": "₭",
+        "LBP": "ل.ل",
+        "LKR": "Rs",
+        "LRD": "$",
+        "LSL": "L",
+        "LYD": "ل.د",
+        "MAD": "د.م.",
+        "MDL": "L",
+        "MGA": "Ar",
+        "MKD": "ден",
+        "MMK": "K",
+        "MNT": "₮",
+        "MOP": "MOP$",
+        "MRU": "UM",
+        "MUR": "₨",
+        "MVR": "Rf",
+        "MWK": "MK",
+        "MXN": "$",
+        "MYR": "RM",
+        "MZN": "MT",
+        "NAD": "$",
+        "NGN": "₦",
+        "NIO": "C$",
+        "NOK": "kr",
+        "NPR": "रू",
+        "NZD": "$",
+        "OMR": "ر.ع.",
+        "PAB": "B/.",
+        "PEN": "S/",
+        "PGK": "K",
+        "PHP": "₱",
+        "PKR": "₨",
+        "PLN": "zł",
+        "PYG": "₲",
+        "QAR": "ر.ق",
+        "RON": "lei",
+        "RSD": "дин.",
+        "RUB": "₽",
+        "RWF": "FRw",
+        "SAR": "ر.س",
+        "SBD": "$",
+        "SCR": "₨",
+        "SDG": "ج.س.",
+        "SEK": "kr",
+        "SGD": "$",
+        "SHP": "£",
+        "SLE": "Le",
+        "SOS": "Sh",
+        "SRD": "$",
+        "SSP": "£",
+        "STN": "Db",
+        "SYP": "£",
+        "SZL": "E",
+        "THB": "฿",
+        "TJS": "ЅМ",
+        "TMT": "m",
+        "TND": "د.ت",
+        "TOP": "T$",
+        "TRY": "₺",
+        "TTD": "TT$",
+        "TWD": "$",
+        "TZS": "Sh",
+        "UAH": "₴",
+        "UGX": "Sh",
+        "USD": "$",
+        "UYU": "$",
+        "UZS": "so'm",
+        "VES": "Bs.",
+        "VND": "₫",
+        "VUV": "VT",
+        "WST": "WS$",
+        "XAF": "FCFA",
+        "XCD": "$",
+        "XOF": "CFA",
+        "XPF": "₣",
+        "YER": "﷼",
+        "ZAR": "R",
+        "ZMW": "ZK"
+    ]
+
+    private static let nativeSymbolMap: [String: String] = {
+        var resolved = nativeSymbolOverrides
+
+        for code in supportedCodes where resolved[code] == nil {
+            if let inferred = inferredNativeSymbol(for: code) {
+                resolved[code] = inferred
+            }
+        }
+
+        return resolved
+    }()
+
+    private static func inferredNativeSymbol(for code: String) -> String? {
+        let normalized = code.uppercased()
+
+        for identifier in Locale.availableIdentifiers {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.locale = Locale(identifier: identifier)
+            formatter.currencyCode = normalized
+
+            guard formatter.currencyCode?.uppercased() == normalized else { continue }
+            let symbol = formatter.currencySymbol.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !symbol.isEmpty, symbol != normalized, symbol != "¤" else { continue }
+            return symbol
+        }
+
+        return nil
+    }
 }
 
 private enum CurrencyStorageKeys {
@@ -226,6 +404,20 @@ private enum CurrencyStorageKeys {
 }
 
 enum AppCurrencyFormatter {
+    static func numberText(
+        amount: Double,
+        locale: Locale = AppDisplayLocale.current,
+        maximumFractionDigits: Int = 2,
+        minimumFractionDigits: Int = 0
+    ) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = locale
+        formatter.maximumFractionDigits = maximumFractionDigits
+        formatter.minimumFractionDigits = minimumFractionDigits
+        return formatter.string(from: NSNumber(value: amount)) ?? String(amount)
+    }
+
     static func string(
         amount: Double,
         currencyCode: String,
@@ -233,14 +425,15 @@ enum AppCurrencyFormatter {
         maximumFractionDigits: Int = 2,
         minimumFractionDigits: Int = 0
     ) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.locale = locale
-        formatter.currencyCode = currencyCode.uppercased()
-        formatter.maximumFractionDigits = maximumFractionDigits
-        formatter.minimumFractionDigits = minimumFractionDigits
-        return formatter.string(from: NSNumber(value: amount))
-            ?? "\(AppCurrencyCatalog.symbol(for: currencyCode, locale: locale))\(amount)"
+        let numberText = numberText(
+            amount: amount,
+            locale: locale,
+            maximumFractionDigits: maximumFractionDigits,
+            minimumFractionDigits: minimumFractionDigits
+        )
+        let symbol = AppCurrencyCatalog.symbol(for: currencyCode, locale: locale)
+
+        return "\u{2068}\(symbol)\u{00A0}\(numberText)\u{2069}"
     }
 
     static func editableText(
@@ -253,6 +446,48 @@ enum AppCurrencyFormatter {
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         return formatter.string(from: NSNumber(value: amount)) ?? String(amount)
+    }
+}
+
+struct AppCurrencyAmountLabel: View {
+    let amount: Double
+    let currencyCode: String
+    var font: Font = .body
+    var fontSize: CGFloat = 17
+    var color: Color = .primary
+    var maximumFractionDigits: Int = 2
+    var minimumFractionDigits: Int = 0
+    var locale: Locale = AppDisplayLocale.current
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if let assetName = AppCurrencyCatalog.officialSymbolAssetName(for: currencyCode) {
+                Image(assetName)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: max(fontSize * 0.9, 12))
+                    .foregroundStyle(color)
+                    .accessibilityHidden(true)
+            } else {
+                Text(AppCurrencyCatalog.symbol(for: currencyCode, locale: locale))
+                    .font(.system(size: fontSize, weight: .semibold))
+                    .foregroundStyle(color)
+            }
+
+            Text(
+                AppCurrencyFormatter.numberText(
+                    amount: amount,
+                    locale: locale,
+                    maximumFractionDigits: maximumFractionDigits,
+                    minimumFractionDigits: minimumFractionDigits
+                )
+            )
+            .font(font)
+            .foregroundStyle(color)
+        }
+        .fixedSize(horizontal: true, vertical: false)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -301,58 +536,45 @@ enum CurrencyConversion {
     }
 }
 
-private final class ECBExchangeRateXMLParserDelegate: NSObject, XMLParserDelegate {
-    private(set) var publishedAt: Date?
-    private(set) var rates: [String: Double] = [:]
+private struct PublicExchangeRatePayload: Decodable {
+    let result: String
+    let baseCode: String
+    let timeLastUpdateUnix: TimeInterval?
+    let rates: [String: Double]
 
-    func parser(
-        _ parser: XMLParser,
-        didStartElement elementName: String,
-        namespaceURI: String?,
-        qualifiedName qName: String?,
-        attributes attributeDict: [String: String] = [:]
-    ) {
-        if let dateString = attributeDict["time"] {
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            formatter.dateFormat = "yyyy-MM-dd"
-            publishedAt = formatter.date(from: dateString)
-            return
-        }
-
-        guard let currencyCode = attributeDict["currency"]?.uppercased(),
-              let rateString = attributeDict["rate"],
-              let rate = Double(rateString),
-              AppCurrencyCatalog.isSupported(currencyCode) else {
-            return
-        }
-
-        rates[currencyCode] = rate
+    enum CodingKeys: String, CodingKey {
+        case result
+        case baseCode = "base_code"
+        case timeLastUpdateUnix = "time_last_update_unix"
+        case rates
     }
 }
 
-private final class ECBExchangeRateService {
-    private let feedURL = URL(string: "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")!
+private final class PublicExchangeRateService {
+    private let feedURL = URL(string: "https://open.er-api.com/v6/latest/USD")!
 
     func fetchLatestRates() async throws -> ExchangeRateSnapshot {
         let (data, _) = try await URLSession.shared.data(from: feedURL)
-        let delegate = ECBExchangeRateXMLParserDelegate()
-        let parser = XMLParser(data: data)
-        parser.delegate = delegate
+        let payload = try JSONDecoder().decode(PublicExchangeRatePayload.self, from: data)
 
-        guard parser.parse() else {
+        guard payload.result.lowercased() == "success", !payload.rates.isEmpty else {
             throw NSError(
                 domain: "CurrencyExchange",
                 code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Unable to parse ECB exchange-rate feed."]
+                userInfo: [NSLocalizedDescriptionKey: "Unable to parse public exchange-rate feed."]
             )
         }
 
+        var rates = payload.rates.reduce(into: [String: Double]()) { partialResult, entry in
+            partialResult[entry.key.uppercased()] = entry.value
+        }
+        rates["USD"] = 1
+
         return ExchangeRateSnapshot(
-            baseCurrencyCode: "EUR",
-            publishedAt: delegate.publishedAt,
+            baseCurrencyCode: payload.baseCode.uppercased(),
+            publishedAt: payload.timeLastUpdateUnix.map { Date(timeIntervalSince1970: $0) },
             fetchedAt: Date(),
-            rates: delegate.rates
+            rates: rates
         )
     }
 }
@@ -363,7 +585,7 @@ final class CurrencyPreferenceStore: ObservableObject {
     @Published private(set) var exchangeRateSnapshot: ExchangeRateSnapshot?
     @Published private(set) var isRefreshingRates = false
 
-    private let exchangeRateService = ECBExchangeRateService()
+    private let exchangeRateService = PublicExchangeRateService()
     private let userDefaults: UserDefaults
 
     init(userDefaults: UserDefaults = .standard) {
@@ -467,10 +689,10 @@ final class CurrencyPreferenceStore: ObservableObject {
         )
 
         if let publishedAt = exchangeRateSnapshot?.publishedAt {
-            return "ECB rate: 1 \(sourceCurrencyCode.uppercased()) = \(rateText) • \(AppDateFormatting.dateString(from: publishedAt, dateStyle: .medium))"
+            return "Live rate: 1 \(sourceCurrencyCode.uppercased()) = \(rateText) • \(AppDateFormatting.dateString(from: publishedAt, dateStyle: .medium))"
         }
 
-        return "ECB rate: 1 \(sourceCurrencyCode.uppercased()) = \(rateText)"
+        return "Live rate: 1 \(sourceCurrencyCode.uppercased()) = \(rateText)"
     }
 
     private var shouldRefreshRates: Bool {

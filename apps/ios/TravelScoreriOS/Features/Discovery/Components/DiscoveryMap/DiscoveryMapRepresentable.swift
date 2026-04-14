@@ -8,7 +8,6 @@ import MapKit
 
 struct DiscoveryMapRepresentable: UIViewRepresentable {
     
-    private let instanceId = UUID()
     private static var cachedSimplified: [MKOverlay]?
     private static var cachedFull: [MKOverlay]?
     private static var isLoadingFullDataset: Bool = false
@@ -75,6 +74,11 @@ struct DiscoveryMapRepresentable: UIViewRepresentable {
                 let fullPolygons = WorldGeoJSONLoader.loadPolygons(selectedIso: iso)
 
                 DispatchQueue.main.async {
+                    guard context.coordinator.mapView === uiView, uiView.delegate != nil else {
+                        Self.isLoadingFullDataset = false
+                        return
+                    }
+
                     Self.cachedFull = fullPolygons
                     Self.isLoadingFullDataset = false
 
@@ -90,6 +94,8 @@ struct DiscoveryMapRepresentable: UIViewRepresentable {
         }
 
         if let full = Self.cachedFull, !Self.didInstallFullDataset {
+            guard uiView.delegate != nil else { return }
+
             UIView.performWithoutAnimation {
                 uiView.removeOverlays(uiView.overlays)
                 uiView.addOverlays(full)
@@ -215,9 +221,13 @@ struct DiscoveryMapRepresentable: UIViewRepresentable {
     }
     
     static func dismantleUIView(_ uiView: MKMapView, coordinator: DiscoveryMapCoordinator) {
+        coordinator.mapView = nil
+        coordinator.onSelectionChange = nil
         uiView.delegate = nil
         uiView.removeOverlays(uiView.overlays)
         uiView.gestureRecognizers?.forEach { uiView.removeGestureRecognizer($0) }
+        Self.didInstallFullDataset = false
+        Self.isLoadingFullDataset = false
     }
     
     func makeCoordinator() -> DiscoveryMapCoordinator {
@@ -253,6 +263,7 @@ private extension DiscoveryMapRepresentable {
             let polygons = WorldGeoJSONLoader.loadPolygons(selectedIso: nil)
 
             DispatchQueue.main.async {
+                guard mapView.delegate != nil else { return }
                 Self.cachedSimplified = polygons
                 mapView.addOverlays(polygons)
                 withAnimation(.easeInOut(duration: 0.3)) {

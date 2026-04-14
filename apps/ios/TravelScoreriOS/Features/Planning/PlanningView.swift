@@ -838,6 +838,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
     let expenseSourceItemId: UUID?
     let linkedExpenseId: UUID?
     let linkedExpenseAmount: Double?
+    let linkedExpenseCurrencyCode: String?
     let linkedExpenseDate: Date?
     let isCompleted: Bool
     let completedById: String?
@@ -852,6 +853,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
         expenseSourceItemId: UUID? = nil,
         linkedExpenseId: UUID? = nil,
         linkedExpenseAmount: Double? = nil,
+        linkedExpenseCurrencyCode: String? = nil,
         linkedExpenseDate: Date? = nil,
         isCompleted: Bool = false,
         completedById: String? = nil,
@@ -865,6 +867,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
         self.expenseSourceItemId = expenseSourceItemId
         self.linkedExpenseId = linkedExpenseId
         self.linkedExpenseAmount = linkedExpenseAmount
+        self.linkedExpenseCurrencyCode = AppCurrencyCatalog.normalizedCode(linkedExpenseCurrencyCode)
         self.linkedExpenseDate = linkedExpenseDate
         self.isCompleted = isCompleted
         self.completedById = completedById
@@ -880,6 +883,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
         case expenseSourceItemId
         case linkedExpenseId
         case linkedExpenseAmount
+        case linkedExpenseCurrencyCode
         case linkedExpenseDate
         case isCompleted
         case completedById
@@ -896,6 +900,9 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
         expenseSourceItemId = try container.decodeIfPresent(UUID.self, forKey: .expenseSourceItemId)
         linkedExpenseId = try container.decodeIfPresent(UUID.self, forKey: .linkedExpenseId)
         linkedExpenseAmount = try container.decodeIfPresent(Double.self, forKey: .linkedExpenseAmount)
+        linkedExpenseCurrencyCode = AppCurrencyCatalog.normalizedCode(
+            try container.decodeIfPresent(String.self, forKey: .linkedExpenseCurrencyCode)
+        )
         linkedExpenseDate = try container.decodeFlexibleDateIfPresent(forKey: .linkedExpenseDate)
         isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted) ?? false
         completedById = try container.decodeIfPresent(String.self, forKey: .completedById)
@@ -916,6 +923,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
             expenseSourceItemId: expenseSourceItemId,
             linkedExpenseId: linkedExpenseId,
             linkedExpenseAmount: linkedExpenseAmount,
+            linkedExpenseCurrencyCode: linkedExpenseCurrencyCode,
             linkedExpenseDate: linkedExpenseDate,
             isCompleted: isCompleted,
             completedById: isCompleted ? actorId?.uuidString : nil,
@@ -933,6 +941,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
             expenseSourceItemId: expenseSourceItemId,
             linkedExpenseId: linkedExpenseId,
             linkedExpenseAmount: linkedExpenseAmount,
+            linkedExpenseCurrencyCode: linkedExpenseCurrencyCode,
             linkedExpenseDate: linkedExpenseDate,
             isCompleted: isCompleted,
             completedById: completedById,
@@ -950,6 +959,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
             expenseSourceItemId: expenseSourceItemId,
             linkedExpenseId: linkedExpenseId,
             linkedExpenseAmount: linkedExpenseAmount,
+            linkedExpenseCurrencyCode: linkedExpenseCurrencyCode,
             linkedExpenseDate: linkedExpenseDate,
             isCompleted: isCompleted,
             completedById: completedById,
@@ -961,12 +971,14 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
     func updatedExpenseLink(
         expenseId: UUID?,
         amount: Double?,
+        currencyCode: String?,
         date: Date?
     ) -> TripPlannerChecklistItem {
         updatedExpenseSync(
             sourceItemId: expenseSourceItemId,
             expenseId: expenseId,
             amount: amount,
+            currencyCode: currencyCode,
             date: date
         )
     }
@@ -975,6 +987,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
         sourceItemId: UUID?,
         expenseId: UUID?,
         amount: Double?,
+        currencyCode: String?,
         date: Date?
     ) -> TripPlannerChecklistItem {
         TripPlannerChecklistItem(
@@ -985,6 +998,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
             expenseSourceItemId: sourceItemId,
             linkedExpenseId: expenseId,
             linkedExpenseAmount: amount,
+            linkedExpenseCurrencyCode: currencyCode,
             linkedExpenseDate: date,
             isCompleted: isCompleted,
             completedById: completedById,
@@ -1015,6 +1029,7 @@ struct TripPlannerChecklistItem: Codable, Identifiable, Hashable, Sendable {
             category: category,
             title: title,
             notes: notes,
+            linkedExpenseCurrencyCode: linkedExpenseCurrencyCode,
             isCompleted: false,
             completedById: nil,
             completedByName: nil,
@@ -1345,6 +1360,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
     let linkedChecklistItemId: UUID?
     let category: TripPlannerExpenseCategory
     let customCategoryName: String?
+    let entryCurrencyCode: String?
     let title: String
     let totalAmount: Double
     let paidById: String
@@ -1361,6 +1377,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
         linkedChecklistItemId: UUID? = nil,
         category: TripPlannerExpenseCategory = .other,
         customCategoryName: String? = nil,
+        entryCurrencyCode: String? = nil,
         title: String,
         totalAmount: Double,
         paidById: String,
@@ -1377,6 +1394,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
         self.category = category
         let trimmedCustomCategory = customCategoryName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         self.customCategoryName = trimmedCustomCategory.isEmpty ? nil : trimmedCustomCategory
+        self.entryCurrencyCode = AppCurrencyCatalog.normalizedCode(entryCurrencyCode)
         self.title = title
         self.totalAmount = totalAmount
         self.paidById = paidById
@@ -1394,6 +1412,7 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
         case linkedChecklistItemId
         case category
         case customCategoryName
+        case entryCurrencyCode
         case title
         case totalAmount
         case paidById
@@ -1413,6 +1432,9 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
         category = try container.decodeIfPresent(TripPlannerExpenseCategory.self, forKey: .category) ?? .other
         let rawCustomCategoryName = try container.decodeIfPresent(String.self, forKey: .customCategoryName) ?? ""
         customCategoryName = rawCustomCategoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : rawCustomCategoryName.trimmingCharacters(in: .whitespacesAndNewlines)
+        entryCurrencyCode = AppCurrencyCatalog.normalizedCode(
+            try container.decodeIfPresent(String.self, forKey: .entryCurrencyCode)
+        )
         title = try container.decode(String.self, forKey: .title)
         totalAmount = try container.decode(Double.self, forKey: .totalAmount)
         paidById = try container.decode(String.self, forKey: .paidById)
@@ -2204,6 +2226,7 @@ private extension TripPlannerTrip {
                             sourceItemId: item.expenseSourceItemId,
                             expenseId: expense.id,
                             amount: expense.totalAmount,
+                            currencyCode: expense.entryCurrencyCode ?? item.linkedExpenseCurrencyCode,
                             date: expense.date
                         )
                 }
@@ -2213,6 +2236,7 @@ private extension TripPlannerTrip {
                         sourceItemId: item.expenseSourceItemId,
                         expenseId: nil,
                         amount: nil,
+                        currencyCode: item.linkedExpenseCurrencyCode,
                         date: nil
                     )
                 }
@@ -2301,6 +2325,7 @@ private extension TripPlannerTrip {
                             sourceItemId: item.expenseSourceItemId,
                             expenseId: nil,
                             amount: nil,
+                            currencyCode: item.linkedExpenseCurrencyCode,
                             date: nil
                         )
                     }
@@ -2328,6 +2353,7 @@ private extension TripPlannerTrip {
                         sourceItemId: item.expenseSourceItemId,
                         expenseId: resolvedExpense.id,
                         amount: resolvedExpense.totalAmount,
+                        currencyCode: resolvedExpense.entryCurrencyCode ?? item.linkedExpenseCurrencyCode,
                         date: item.linkedExpenseDate ?? resolvedExpense.date
                     )
             }
@@ -2430,6 +2456,7 @@ private extension TripPlannerTrip {
             linkedChecklistItemId: syncKey,
             category: category,
             customCategoryName: existing?.customCategoryName,
+            entryCurrencyCode: item.linkedExpenseCurrencyCode ?? existing?.entryCurrencyCode,
             title: item.title.trimmingCharacters(in: .whitespacesAndNewlines),
             totalAmount: amount,
             paidById: existing?.paidById ?? payer.id.uuidString,
@@ -4069,7 +4096,7 @@ private struct TripPlannerDetailView: View {
         } label: {
             TripPlannerNavigationSectionCard(
                 title: "Planning checklist",
-                subtitle: "Track bookings, reservations, and prep tasks by day"
+                subtitle: ""
             ) {
                 TripPlannerChecklistPreviewSection(
                     trip: syncedTrip,
@@ -4103,42 +4130,6 @@ private struct TripPlannerDetailView: View {
                         .foregroundStyle(.black)
                 }
 
-                Menu {
-                    ForEach(AppCurrencyCatalog.supportedCodes, id: \.self) { code in
-                        Button("\(AppCurrencyCatalog.displayName(for: code)) (\(code))") {
-                            updatePlannerCurrency(code)
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 10) {
-                        Label("Trip currency", systemImage: "coloncurrencysign.circle")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.black.opacity(0.72))
-
-                        Spacer()
-
-                        Text("\(AppCurrencyCatalog.displayName(for: effectivePlannerCurrencyCode)) (\(effectivePlannerCurrencyCode))")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.black)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.white.opacity(0.82))
-                    )
-                }
-                .buttonStyle(.plain)
-
-                if let rateDescription = currencyPreferenceStore.exchangeRateDescription(
-                    to: effectivePlannerCurrencyCode
-                ), effectivePlannerCurrencyCode != "USD" {
-                    Text(rateDescription)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.black.opacity(0.56))
-                }
-
                 if !trip.notes.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("trip_planner.notes")
@@ -4159,8 +4150,8 @@ private struct TripPlannerDetailView: View {
     @ViewBuilder
     private var travelersSection: some View {
         TripPlannerEditableSectionCard(
-            title: String(localized: "trip_planner.whos_going.title"),
-            subtitle: displayedTravelers.isEmpty ? String(localized: "trip_planner.detail.just_you_for_now") : String(localized: "trip_planner.detail.everyone_included")
+            title: "Who's going",
+            subtitle: displayedTravelers.isEmpty ? String(localized: "trip_planner.detail.just_you_for_now") : ""
         ) {
             NavigationLink {
                 TripPlannerFriendsEditorView(trip: trip, onSave: saveTripChanges)
@@ -4233,7 +4224,7 @@ private struct TripPlannerDetailView: View {
         } label: {
             TripPlannerNavigationSectionCard(
                 title: String(localized: "trip_planner.expenses.title"),
-                subtitle: String(localized: "trip_planner.expenses.subtitle")
+                subtitle: ""
             ) {
                 TripPlannerExpensesPreviewSection(
                     expenses: trip.expenses,
@@ -4264,7 +4255,7 @@ private struct TripPlannerDetailView: View {
         } label: {
             TripPlannerNavigationSectionCard(
                 title: String(localized: "trip_planner.detail.trip_stats"),
-                subtitle: String(localized: "trip_planner.detail.trip_stats_subtitle")
+                subtitle: ""
             ) {
                 TripPlannerStatsPreviewSection(
                     countries: displayedCountries,
@@ -4432,33 +4423,6 @@ private struct TripPlannerDetailView: View {
             saveAction: TripPlannerTripSaveAction(handler: saveTripChanges)
         )
         isShowingChecklistEditor = true
-    }
-
-    @MainActor
-    private func updatePlannerCurrency(_ currencyCode: String) {
-        saveTripChanges(
-            TripPlannerTrip(
-                id: trip.id,
-                createdAt: trip.createdAt,
-                updatedAt: trip.updatedAt,
-                title: trip.title,
-                notes: trip.notes,
-                startDate: trip.startDate,
-                endDate: trip.endDate,
-                countryIds: trip.countryIds,
-                countryNames: trip.countryNames,
-                friendIds: trip.friendIds,
-                friendNames: trip.friendNames,
-                friends: trip.friends,
-                ownerId: trip.ownerId,
-                plannerCurrencyCode: currencyCode,
-                availability: trip.availability,
-                dayPlans: trip.dayPlans,
-                overallChecklistItems: trip.overallChecklistItems,
-                packingProgressEntries: trip.packingProgressEntries,
-                expenses: trip.expenses
-            )
-        )
     }
 
     @MainActor
@@ -6958,6 +6922,7 @@ private struct TripPlannerChecklistEditorView: View {
                     expenseSourceItemId: targetSourceItemId,
                     linkedExpenseId: updatedItem.linkedExpenseId,
                     linkedExpenseAmount: updatedItem.linkedExpenseAmount,
+                    linkedExpenseCurrencyCode: updatedItem.linkedExpenseCurrencyCode,
                     linkedExpenseDate: updatedItem.linkedExpenseDate,
                     isCompleted: updatedItem.isCompleted,
                     completedById: updatedItem.completedById,
@@ -7030,6 +6995,7 @@ private struct TripPlannerChecklistEditorView: View {
                 expenseSourceItemId: sharedExpenseSourceId,
                 linkedExpenseId: suggestion.linkedExpenseId,
                 linkedExpenseAmount: suggestion.linkedExpenseAmount,
+                linkedExpenseCurrencyCode: suggestion.linkedExpenseCurrencyCode,
                 linkedExpenseDate: suggestion.linkedExpenseDate,
                 isCompleted: existing.isCompleted,
                 completedById: existing.completedById,
@@ -7045,6 +7011,7 @@ private struct TripPlannerChecklistEditorView: View {
                     expenseSourceItemId: sharedExpenseSourceId,
                     linkedExpenseId: suggestion.linkedExpenseId,
                     linkedExpenseAmount: suggestion.linkedExpenseAmount,
+                    linkedExpenseCurrencyCode: suggestion.linkedExpenseCurrencyCode,
                     linkedExpenseDate: suggestion.linkedExpenseDate
                 ),
                 at: 0
@@ -7159,6 +7126,7 @@ private struct TripPlannerChecklistEditorView: View {
                             expenseSourceItemId: item.expenseSourceItemId,
                             linkedExpenseId: item.linkedExpenseId,
                             linkedExpenseAmount: item.linkedExpenseAmount,
+                            linkedExpenseCurrencyCode: item.linkedExpenseCurrencyCode,
                             linkedExpenseDate: item.linkedExpenseDate,
                             isCompleted: item.isCompleted,
                             completedById: item.completedById,
@@ -7614,6 +7582,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
     let onRemove: () -> Void
 
     @State private var linkedExpenseAmountText = ""
+    @State private var linkedExpenseCurrencyCode = ""
 
     private var notePlaceholder: String {
         switch item.category {
@@ -7744,7 +7713,8 @@ private struct TripPlannerChecklistItemEditorRow: View {
                             HStack(alignment: .top, spacing: 10) {
                                 TripPlannerCurrencyInput(
                                     title: "Cost",
-                                    currencyCode: currencyCode,
+                                    currencyCode: linkedExpenseCurrencyCode,
+                                    currencySelection: $linkedExpenseCurrencyCode,
                                     text: Binding(
                                         get: { linkedExpenseAmountText },
                                         set: { newValue in
@@ -7756,10 +7726,11 @@ private struct TripPlannerChecklistItemEditorRow: View {
                                                 amount: amount.map {
                                                     TripPlannerCurrencyDisplay.amountToUSD(
                                                         $0,
-                                                        currencyCode: currencyCode,
+                                                        currencyCode: linkedExpenseCurrencyCode,
                                                         snapshot: currencyPreferenceStore.exchangeRateSnapshot
                                                     )
                                                 },
+                                                currencyCode: linkedExpenseCurrencyCode,
                                                 date: amount == nil ? nil : planDate
                                             )
                                         }
@@ -7809,28 +7780,49 @@ private struct TripPlannerChecklistItemEditorRow: View {
                 .fill(Color.white.opacity(0.78))
         )
         .onAppear {
+            linkedExpenseCurrencyCode = item.linkedExpenseCurrencyCode ?? currencyCode
             linkedExpenseAmountText = item.linkedExpenseAmount.map {
                 TripPlannerCurrencyDisplay.editableTextFromUSD(
                     $0,
-                    currencyCode: currencyCode,
+                    currencyCode: linkedExpenseCurrencyCode,
                     snapshot: currencyPreferenceStore.exchangeRateSnapshot
                 )
             } ?? ""
         }
         .onChange(of: item.id) { _, _ in
+            linkedExpenseCurrencyCode = item.linkedExpenseCurrencyCode ?? currencyCode
             linkedExpenseAmountText = item.linkedExpenseAmount.map {
                 TripPlannerCurrencyDisplay.editableTextFromUSD(
                     $0,
-                    currencyCode: currencyCode,
+                    currencyCode: linkedExpenseCurrencyCode,
                     snapshot: currencyPreferenceStore.exchangeRateSnapshot
                 )
             } ?? ""
         }
         .onChange(of: saveFeedbackNonce) { _, _ in
+            linkedExpenseCurrencyCode = item.linkedExpenseCurrencyCode ?? currencyCode
             linkedExpenseAmountText = item.linkedExpenseAmount.map {
                 TripPlannerCurrencyDisplay.editableTextFromUSD(
                     $0,
-                    currencyCode: currencyCode,
+                    currencyCode: linkedExpenseCurrencyCode,
+                    snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                )
+            } ?? ""
+        }
+        .onChange(of: linkedExpenseCurrencyCode) { _, newCode in
+            let normalizedCode = AppCurrencyCatalog.normalizedCode(newCode) ?? currencyCode
+            linkedExpenseCurrencyCode = normalizedCode
+            item = item.updatedExpenseLink(
+                expenseId: item.linkedExpenseId,
+                amount: item.linkedExpenseAmount,
+                currencyCode: normalizedCode,
+                date: item.linkedExpenseDate
+            )
+
+            linkedExpenseAmountText = item.linkedExpenseAmount.map {
+                TripPlannerCurrencyDisplay.editableTextFromUSD(
+                    $0,
+                    currencyCode: normalizedCode,
                     snapshot: currencyPreferenceStore.exchangeRateSnapshot
                 )
             } ?? ""
@@ -8022,23 +8014,32 @@ private struct TripPlannerExpensesPreviewSection: View {
         HStack(alignment: .top, spacing: 10) {
             TripPlannerStatPill(
                 title: String(localized: "trip_planner.expenses.stats.total_logged"),
-                value: currency(totalSpent),
                 detail: "\(expenses.count) expenses"
-            )
+            ) {
+                amountValue(totalSpent)
+            }
 
             TripPlannerStatPill(
                 title: String(localized: "trip_planner.expenses.stats.still_owed"),
-                value: currency(outstandingTotal),
                 detail: outstandingTotal > 0 ? "Tap to view balances" : "Tap to manage expenses"
-            )
+            ) {
+                amountValue(outstandingTotal)
+            }
         }
     }
 
-    private func currency(_ amount: Double) -> String {
-        TripPlannerCurrencyDisplay.stringFromUSD(
-            amount,
+    @ViewBuilder
+    private func amountValue(_ amount: Double) -> some View {
+        AppCurrencyAmountLabel(
+            amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                amount,
+                currencyCode: currencyCode,
+                snapshot: currencyPreferenceStore.exchangeRateSnapshot
+            ),
             currencyCode: currencyCode,
-            snapshot: currencyPreferenceStore.exchangeRateSnapshot
+            font: .system(size: 21, weight: .bold),
+            fontSize: 21,
+            color: .black
         )
     }
 }
@@ -8063,19 +8064,21 @@ private struct TripPlannerExpensesSection: View {
             HStack(spacing: 10) {
                 TripPlannerStatPill(
                     title: String(localized: "trip_planner.expenses.stats.total_logged"),
-                    value: currency(totalSpent),
                     detail: String(
                         format: String(localized: "trip_planner.expenses.stats.expense_count"),
                         locale: AppDisplayLocale.current,
                         expenses.count
                     )
-                )
+                ) {
+                    amountValue(totalSpent)
+                }
 
                 TripPlannerStatPill(
                     title: String(localized: "trip_planner.expenses.stats.still_owed"),
-                    value: currency(outstandingTotal),
                     detail: outstandingTotal > 0 ? String(localized: "trip_planner.expenses.stats.unpaid_balances") : String(localized: "trip_planner.expenses.stats.everyone_settled")
-                )
+                ) {
+                    amountValue(outstandingTotal)
+                }
             }
 
             if expenses.isEmpty {
@@ -8109,11 +8112,18 @@ private struct TripPlannerExpensesSection: View {
         }
     }
 
-    private func currency(_ amount: Double) -> String {
-        TripPlannerCurrencyDisplay.stringFromUSD(
-            amount,
+    @ViewBuilder
+    private func amountValue(_ amount: Double) -> some View {
+        AppCurrencyAmountLabel(
+            amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                amount,
+                currencyCode: currencyCode,
+                snapshot: currencyPreferenceStore.exchangeRateSnapshot
+            ),
             currencyCode: currencyCode,
-            snapshot: currencyPreferenceStore.exchangeRateSnapshot
+            font: .system(size: 21, weight: .bold),
+            fontSize: 21,
+            color: .black
         )
     }
 }
@@ -8407,9 +8417,17 @@ private struct TripPlannerExpenseBalanceCard: View {
 
             Spacer()
 
-            Text(currency(abs(balance.amount)))
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(balanceColor)
+            AppCurrencyAmountLabel(
+                amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                    abs(balance.amount),
+                    currencyCode: currencyCode,
+                    snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                ),
+                currencyCode: currencyCode,
+                font: .system(size: 24, weight: .bold),
+                fontSize: 24,
+                color: balanceColor
+            )
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -8436,14 +8454,6 @@ private struct TripPlannerExpenseBalanceCard: View {
         if balance.owes { return Color(red: 0.99, green: 0.91, blue: 0.91) }
         return Color.white.opacity(0.74)
     }
-
-    private func currency(_ amount: Double) -> String {
-        TripPlannerCurrencyDisplay.stringFromUSD(
-            amount,
-            currencyCode: currencyCode,
-            snapshot: currencyPreferenceStore.exchangeRateSnapshot
-        )
-    }
 }
 
 private struct TripPlannerExpenseComposerOverlay: View {
@@ -8458,6 +8468,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
 
     @State private var title = ""
     @State private var amountText = ""
+    @State private var entryCurrencyCode: String
     @State private var category: TripPlannerExpenseCategory = .other
     @State private var customCategoryName = ""
     @State private var selectedPayerId: String = ""
@@ -8484,13 +8495,14 @@ private struct TripPlannerExpenseComposerOverlay: View {
         self.onDeleteExpense = onDeleteExpense
         self.onSaveExpense = onSaveExpense
         _title = State(initialValue: existingExpense?.title ?? "")
+        _entryCurrencyCode = State(initialValue: existingExpense?.entryCurrencyCode ?? currencyCode)
         if let existingExpense {
             _amountText = State(
                 initialValue: existingExpense.totalAmount == 0
                     ? ""
                     : TripPlannerCurrencyDisplay.editableTextFromUSD(
                         existingExpense.totalAmount,
-                        currencyCode: currencyCode,
+                        currencyCode: existingExpense.entryCurrencyCode ?? currencyCode,
                         snapshot: CurrencyPreferenceStore.persistedExchangeRateSnapshot()
                     )
             )
@@ -8628,35 +8640,50 @@ private struct TripPlannerExpenseComposerOverlay: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
-                        HStack(alignment: .center, spacing: 10) {
-                            Text(displayTitle)
-                                .font(.system(size: 24, weight: .black, design: .rounded))
-                                .foregroundStyle(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .black.opacity(0.42) : .black)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.leading)
-
-                            Spacer(minLength: 0)
-
+                        HStack(alignment: .top, spacing: 12) {
                             Button {
                                 isShowingTitlePrompt = true
                             } label: {
-                                Image(systemName: "pencil")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black.opacity(0.72))
-                                    .frame(width: 32, height: 32)
-                                    .background(Circle().fill(Color.white.opacity(0.84)))
+                                HStack(spacing: 8) {
+                                    Text(displayTitle)
+                                        .font(.system(size: 24, weight: .black, design: .rounded))
+                                        .foregroundStyle(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .black.opacity(0.42) : .black)
+                                        .lineLimit(2)
+                                        .multilineTextAlignment(.leading)
+
+                                    Image(systemName: "pencil")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(.black.opacity(0.55))
+                                }
                             }
                             .buttonStyle(.plain)
+
+                            Spacer(minLength: 0)
+
+                            DatePicker(
+                                "",
+                                selection: $expenseDate,
+                                displayedComponents: .date
+                            )
+                            .labelsHidden()
+                            .datePickerStyle(.compact)
+                            .tint(.black)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(Color.white.opacity(0.84))
+                            )
                         }
 
-                        HStack(alignment: .top, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 12) {
                             TripPlannerCurrencyInput(
-                                title: "Amount (\(currencyCode))",
-                                currencyCode: currencyCode,
+                                title: "Amount",
+                                currencyCode: entryCurrencyCode,
+                                currencySelection: $entryCurrencyCode,
                                 text: $amountText,
                                 placeholder: "0.00"
                             )
-                            .frame(maxWidth: 170)
 
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("Category")
@@ -8697,13 +8724,6 @@ private struct TripPlannerExpenseComposerOverlay: View {
                                 .buttonStyle(.plain)
                             }
                         }
-
-                        DatePicker(
-                            "Date",
-                            selection: $expenseDate,
-                            displayedComponents: .date
-                        )
-                        .tint(.black)
 
                         HStack(alignment: .center, spacing: 12) {
                             Text("trip_planner.expenses.paid_by")
@@ -8857,6 +8877,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
             }
         }
         .onAppear {
+            entryCurrencyCode = AppCurrencyCatalog.normalizedCode(entryCurrencyCode) ?? currencyCode
             if selectedPayerId.isEmpty {
                 selectedPayerId = participants.first?.id ?? ""
             }
@@ -8893,6 +8914,20 @@ private struct TripPlannerExpenseComposerOverlay: View {
         .onChange(of: amountText) { _, _ in
             normalizeShareStates()
         }
+        .onChange(of: entryCurrencyCode) { _, newCode in
+            let normalizedCode = AppCurrencyCatalog.normalizedCode(newCode) ?? currencyCode
+            entryCurrencyCode = normalizedCode
+
+            if let existingExpense {
+                amountText = existingExpense.totalAmount == 0
+                    ? ""
+                    : TripPlannerCurrencyDisplay.editableTextFromUSD(
+                        existingExpense.totalAmount,
+                        currencyCode: normalizedCode,
+                        snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                    )
+            }
+        }
     }
 
     private func saveExpense() {
@@ -8906,7 +8941,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
         let beneficiaries = selectedBeneficiaries
         let amountInUSD = TripPlannerCurrencyDisplay.amountToUSD(
             amount,
-            currencyCode: currencyCode,
+            currencyCode: entryCurrencyCode,
             snapshot: currencyPreferenceStore.exchangeRateSnapshot
         )
         let convertedShares = draftShares.map { share in
@@ -8917,7 +8952,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
                 participantUsername: share.participantUsername,
                 amountOwed: TripPlannerCurrencyDisplay.amountToUSD(
                     share.amountOwed,
-                    currencyCode: currencyCode,
+                    currencyCode: entryCurrencyCode,
                     snapshot: currencyPreferenceStore.exchangeRateSnapshot
                 ),
                 isPaid: share.isPaid,
@@ -8931,6 +8966,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
                 linkedChecklistItemId: existingExpense?.linkedChecklistItemId,
                 category: category,
                 customCategoryName: customCategoryName,
+                entryCurrencyCode: entryCurrencyCode,
                 title: title.trimmingCharacters(in: .whitespacesAndNewlines),
                 totalAmount: amountInUSD,
                 paidById: payer.id,
@@ -8993,9 +9029,17 @@ private struct TripPlannerExpenseRow: View {
                             .padding(.vertical, 5)
                             .background(Capsule().fill(expense.categoryBackgroundTint))
 
-                        Text(currency(expense.totalAmount))
-                            .font(.system(size: 14, weight: .black))
-                            .foregroundStyle(.black)
+                        AppCurrencyAmountLabel(
+                            amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                                expense.totalAmount,
+                                currencyCode: currencyCode,
+                                snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                            ),
+                            currencyCode: currencyCode,
+                            font: .system(size: 14, weight: .black),
+                            fontSize: 14,
+                            color: .black
+                        )
                     }
 
                     Text(expense.title)
@@ -9108,13 +9152,6 @@ private struct TripPlannerExpenseRow: View {
         return names.joined(separator: ", ")
     }
 
-    private func currency(_ amount: Double) -> String {
-        TripPlannerCurrencyDisplay.stringFromUSD(
-            amount,
-            currencyCode: currencyCode,
-            snapshot: currencyPreferenceStore.exchangeRateSnapshot
-        )
-    }
 }
 
 private struct TripPlannerExpenseInlineParticipantBadge: View {
@@ -9203,16 +9240,37 @@ private struct TripPlannerExpenseCategoryBreakdownView: View {
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(item.tintColor)
 
-                        Text(currency(item.amount))
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.black.opacity(0.58))
+                        AppCurrencyAmountLabel(
+                            amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                                item.amount,
+                                currencyCode: currencyCode,
+                                snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                            ),
+                            currencyCode: currencyCode,
+                            font: .system(size: 12, weight: .semibold),
+                            fontSize: 12,
+                            color: .black.opacity(0.58)
+                        )
                     }
                 }
             }
 
-            Text("Total tracked: \(currency(totalSpent))")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.black.opacity(0.56))
+            HStack(spacing: 4) {
+                Text("Total tracked:")
+                AppCurrencyAmountLabel(
+                    amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                        totalSpent,
+                        currencyCode: currencyCode,
+                        snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                    ),
+                    currencyCode: currencyCode,
+                    font: .system(size: 12, weight: .semibold),
+                    fontSize: 12,
+                    color: .black.opacity(0.56)
+                )
+            }
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.black.opacity(0.56))
         }
     }
 
@@ -9235,13 +9293,6 @@ private struct TripPlannerExpenseCategoryBreakdownView: View {
         return max(6, totalWidth * item.percentage)
     }
 
-    private func currency(_ amount: Double) -> String {
-        TripPlannerCurrencyDisplay.stringFromUSD(
-            amount,
-            currencyCode: currencyCode,
-            snapshot: currencyPreferenceStore.exchangeRateSnapshot
-        )
-    }
 }
 
 private struct TripPlannerCustomExpenseCategoryPrompt: View {
@@ -9540,9 +9591,13 @@ private struct TripPlannerExpenseShareEditorRow: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(share.isPaid ? Color(red: 0.14, green: 0.47, blue: 0.25) : .black)
 
-                Text(currency(share.amountOwed))
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(share.isPaid ? Color(red: 0.14, green: 0.47, blue: 0.25).opacity(0.78) : .black.opacity(0.64))
+                AppCurrencyAmountLabel(
+                    amount: share.amountOwed,
+                    currencyCode: currencyCode,
+                    font: .system(size: 13, weight: .semibold),
+                    fontSize: 13,
+                    color: share.isPaid ? Color(red: 0.14, green: 0.47, blue: 0.25).opacity(0.78) : .black.opacity(0.64)
+                )
             }
 
             Spacer()
@@ -9563,12 +9618,6 @@ private struct TripPlannerExpenseShareEditorRow: View {
         )
     }
 
-    private func currency(_ amount: Double) -> String {
-        AppCurrencyFormatter.string(
-            amount: amount,
-            currencyCode: currencyCode
-        )
-    }
 }
 
 private struct TripPlannerExpensePaidStatusControl: View {
@@ -9693,8 +9742,7 @@ private extension TripPlannerTrip {
     }
 
     var effectivePlannerCurrencyCode: String {
-        AppCurrencyCatalog.normalizedCode(plannerCurrencyCode)
-            ?? CurrencyPreferenceStore.persistedDefaultCurrencyCode()
+        CurrencyPreferenceStore.persistedDefaultCurrencyCode()
     }
 
     var availabilityParticipants: [TripPlannerAvailabilityParticipant] {
@@ -9866,11 +9914,11 @@ private struct TripPlannerStatsPreviewSection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 14) {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("Overall trip Score")
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.black.opacity(0.62))
 
                     if let tripScore {
@@ -9878,26 +9926,25 @@ private struct TripPlannerStatsPreviewSection: View {
                             .fixedSize(horizontal: true, vertical: true)
                     } else {
                         Text("trip_planner.stats.na")
-                            .font(.system(size: 24, weight: .bold))
+                            .font(.system(size: 26, weight: .bold))
                             .foregroundStyle(.black)
                     }
 
-                    Text(summaryText)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.black.opacity(0.68))
-                        .fixedSize(horizontal: false, vertical: true)
+                    if !summaryText.isEmpty {
+                        Text(summaryText)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.black.opacity(0.68))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
                 Spacer(minLength: 0)
 
-                VStack(alignment: .trailing, spacing: 8) {
-                    Text(costText)
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(.black)
-                        .multilineTextAlignment(.trailing)
+                VStack(alignment: .trailing, spacing: 6) {
+                    costTextView
 
                     Text(isGroupTrip ? "Hotel share is split across travelers" : "Per-person estimate")
-                        .font(.system(size: 12))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.black.opacity(0.56))
                         .multilineTextAlignment(.trailing)
                 }
@@ -9911,7 +9958,7 @@ private struct TripPlannerStatsPreviewSection: View {
                         .padding(.top, 2)
 
                     Text(visaSummaryText)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.black.opacity(0.7))
                 }
             }
@@ -9946,19 +9993,30 @@ private struct TripPlannerStatsPreviewSection: View {
         if isGroupTrip {
             return "Group trips use equal weighting across advisory, seasonality, visa, budget, and language."
         }
-        return "Open the breakdown for category averages and country-by-country scores."
+        return ""
     }
 
-    private var costText: String {
+    @ViewBuilder
+    private var costTextView: some View {
         if let estimatedTripCostPerPerson {
-            return TripPlannerCurrencyDisplay.stringFromUSD(
-                Double(estimatedTripCostPerPerson),
+            AppCurrencyAmountLabel(
+                amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                    Double(estimatedTripCostPerPerson),
+                    currencyCode: currencyCode,
+                    snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                ),
                 currencyCode: currencyCode,
-                snapshot: currencyPreferenceStore.exchangeRateSnapshot,
+                font: .system(size: 18, weight: .bold),
+                fontSize: 18,
+                color: .black,
                 maximumFractionDigits: 0
             )
+        } else {
+            Text("Add dates")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.black)
+                .multilineTextAlignment(.trailing)
         }
-        return "Add dates"
     }
 
     private func estimatedDailySpendPerTraveler(for country: Country) -> Double? {
@@ -10332,33 +10390,55 @@ private struct TripPlannerStatsSection: View {
             HStack(spacing: 10) {
                 TripPlannerStatPill(
                     title: String(localized: "trip_planner.stats.estimated_total_per_person"),
-                    value: estimatedTripCostPerPerson.map {
-                        TripPlannerCurrencyDisplay.stringFromUSD(
-                            Double($0),
-                            currencyCode: currencyCode,
-                            snapshot: currencyPreferenceStore.exchangeRateSnapshot,
-                            maximumFractionDigits: 0
-                        )
-                    } ?? String(localized: "trip_planner.stats.add_trip_dates"),
                     detail: estimatedCostDetail,
                     accessorySystemImage: estimatedCostBreakdown.isEmpty ? nil : (isShowingEstimatedCostBreakdown ? "chevron.up" : "chevron.down"),
                     action: estimatedCostBreakdown.isEmpty ? nil : {
                         isShowingEstimatedCostBreakdown.toggle()
                     }
-                )
+                ) {
+                    if let estimatedTripCostPerPerson {
+                        AppCurrencyAmountLabel(
+                            amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                                Double(estimatedTripCostPerPerson),
+                                currencyCode: currencyCode,
+                                snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                            ),
+                            currencyCode: currencyCode,
+                            font: .system(size: 21, weight: .bold),
+                            fontSize: 21,
+                            color: .black,
+                            maximumFractionDigits: 0
+                        )
+                    } else {
+                        Text(String(localized: "trip_planner.stats.add_trip_dates"))
+                            .font(.system(size: 21, weight: .bold))
+                            .foregroundStyle(.black)
+                    }
+                }
 
                 TripPlannerStatPill(
                     title: String(localized: "trip_planner.stats.typical_daily_spend"),
-                    value: averageDailySpend.map {
-                        TripPlannerCurrencyDisplay.stringFromUSD(
-                            Double($0),
+                    detail: dailySpendDetail
+                ) {
+                    if let averageDailySpend {
+                        AppCurrencyAmountLabel(
+                            amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                                Double(averageDailySpend),
+                                currencyCode: currencyCode,
+                                snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                            ),
                             currencyCode: currencyCode,
-                            snapshot: currencyPreferenceStore.exchangeRateSnapshot,
+                            font: .system(size: 21, weight: .bold),
+                            fontSize: 21,
+                            color: .black,
                             maximumFractionDigits: 0
                         )
-                    } ?? String(localized: "trip_planner.stats.na"),
-                    detail: dailySpendDetail
-                )
+                    } else {
+                        Text(String(localized: "trip_planner.stats.na"))
+                            .font(.system(size: 21, weight: .bold))
+                            .foregroundStyle(.black)
+                    }
+                }
             }
 
             if isShowingEstimatedCostBreakdown, !estimatedCostBreakdown.isEmpty {
@@ -10904,9 +10984,17 @@ private struct TripPlannerEstimatedCostBreakdownCard: View {
 
                     Spacer()
 
-                    Text(currency(line.amount))
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(.black)
+                    AppCurrencyAmountLabel(
+                        amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                            line.amount,
+                            currencyCode: currencyCode,
+                            snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                        ),
+                        currencyCode: currencyCode,
+                        font: .system(size: 13, weight: .bold),
+                        fontSize: 13,
+                        color: .black
+                    )
                 }
             }
 
@@ -10919,9 +11007,17 @@ private struct TripPlannerEstimatedCostBreakdownCard: View {
 
                 Spacer()
 
-                Text(currency(totalAmount))
-                    .font(.system(size: 14, weight: .black))
-                    .foregroundStyle(.black)
+                AppCurrencyAmountLabel(
+                    amount: TripPlannerCurrencyDisplay.amountFromUSD(
+                        totalAmount,
+                        currencyCode: currencyCode,
+                        snapshot: currencyPreferenceStore.exchangeRateSnapshot
+                    ),
+                    currencyCode: currencyCode,
+                    font: .system(size: 14, weight: .black),
+                    fontSize: 14,
+                    color: .black
+                )
             }
         }
         .padding(16)
@@ -10931,13 +11027,6 @@ private struct TripPlannerEstimatedCostBreakdownCard: View {
         )
     }
 
-    private func currency(_ amount: Double) -> String {
-        TripPlannerCurrencyDisplay.stringFromUSD(
-            amount,
-            currencyCode: currencyCode,
-            snapshot: currencyPreferenceStore.exchangeRateSnapshot
-        )
-    }
 }
 
 private struct TripPlannerCountryLanguageProfile: Decodable {
@@ -11017,10 +11106,41 @@ private enum TripPlannerGroupLanguageCompatibilityScorer {
 
 private struct TripPlannerStatPill: View {
     let title: String
-    let value: String
     let detail: String
+    private let valueText: String?
+    private let valueView: AnyView?
     var accessorySystemImage: String? = nil
     var action: (() -> Void)? = nil
+
+    init(
+        title: String,
+        value: String,
+        detail: String,
+        accessorySystemImage: String? = nil,
+        action: (() -> Void)? = nil
+    ) {
+        self.title = title
+        self.detail = detail
+        self.valueText = value
+        self.valueView = nil
+        self.accessorySystemImage = accessorySystemImage
+        self.action = action
+    }
+
+    init<V: View>(
+        title: String,
+        detail: String,
+        accessorySystemImage: String? = nil,
+        action: (() -> Void)? = nil,
+        @ViewBuilder valueView: () -> V
+    ) {
+        self.title = title
+        self.detail = detail
+        self.valueText = nil
+        self.valueView = AnyView(valueView())
+        self.accessorySystemImage = accessorySystemImage
+        self.action = action
+    }
 
     var body: some View {
         Group {
@@ -11051,9 +11171,13 @@ private struct TripPlannerStatPill: View {
                 }
             }
 
-            Text(value)
-                .font(.system(size: 21, weight: .bold))
-                .foregroundStyle(.black)
+            if let valueView {
+                valueView
+            } else if let valueText {
+                Text(valueText)
+                    .font(.system(size: 21, weight: .bold))
+                    .foregroundStyle(.black)
+            }
 
             Text(detail)
                 .font(.system(size: 12))
@@ -12598,6 +12722,7 @@ private struct TripPlannerTextInput: View {
 private struct TripPlannerCurrencyInput: View {
     let title: String
     let currencyCode: String
+    var currencySelection: Binding<String>? = nil
     @Binding var text: String
     let placeholder: String
 
@@ -12612,9 +12737,29 @@ private struct TripPlannerCurrencyInput: View {
                 .foregroundStyle(.black.opacity(0.72))
 
             HStack(spacing: 8) {
-                Text(AppCurrencyCatalog.symbol(for: currencyCode))
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.black)
+                if let currencySelection {
+                    Menu {
+                        ForEach(AppCurrencyCatalog.supportedCodes, id: \.self) { code in
+                            Button("\(AppCurrencyCatalog.displayName(for: code)) (\(code))") {
+                                currencySelection.wrappedValue = code
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 10, weight: .bold))
+                            Text(AppCurrencyCatalog.symbol(for: currencyCode))
+                                .font(.system(size: 18, weight: .semibold))
+                        }
+                        .foregroundStyle(.black)
+                        .padding(.trailing, 4)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Text(AppCurrencyCatalog.symbol(for: currencyCode))
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.black)
+                }
 
                 TextField(placeholder, text: $text)
                     .keyboardType(.decimalPad)

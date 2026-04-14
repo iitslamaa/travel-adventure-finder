@@ -79,19 +79,19 @@ struct CountryAffordabilityCard: View {
             // Optional daily spend breakdown (if available)
             VStack(alignment: .leading, spacing: 4) {
                 if let total = country.dailySpendTotalUsd {
-                    Text("Typical daily total: \(currencyPreferenceStore.formatFromUSD(total, maximumFractionDigits: 0))")
+                    affordabilityLine(title: "Typical daily total:", amountUSD: total)
                 }
 
                 if let hotel = country.dailySpendHotelUsd {
-                    Text("Hotel (per night): \(currencyPreferenceStore.formatFromUSD(hotel, maximumFractionDigits: 0))")
+                    affordabilityLine(title: "Hotel (per night):", amountUSD: hotel)
                 }
 
                 if let food = country.dailySpendFoodUsd {
-                    Text("Food (per day): \(currencyPreferenceStore.formatFromUSD(food, maximumFractionDigits: 0))")
+                    affordabilityLine(title: "Food (per day):", amountUSD: food)
                 }
 
                 if let activities = country.dailySpendActivitiesUsd {
-                    Text("Activities (per day): \(currencyPreferenceStore.formatFromUSD(activities, maximumFractionDigits: 0))")
+                    affordabilityLine(title: "Activities (per day):", amountUSD: activities)
                 }
             }
             .font(.footnote)
@@ -116,5 +116,23 @@ struct CountryAffordabilityCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    @ViewBuilder
+    private func affordabilityLine(title: String, amountUSD: Double) -> some View {
+        let targetCode = currencyPreferenceStore.defaultCurrencyCode
+        let converted = currencyPreferenceStore.convertedAmountFromUSD(amountUSD, to: targetCode)
+
+        HStack(spacing: 4) {
+            Text(title)
+            AppCurrencyAmountLabel(
+                amount: converted,
+                currencyCode: targetCode,
+                font: .footnote,
+                fontSize: 12,
+                color: .secondary,
+                maximumFractionDigits: 0
+            )
+        }
     }
 }
