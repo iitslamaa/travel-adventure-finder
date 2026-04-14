@@ -26,7 +26,6 @@ struct CountryDetailView: View {
     @StateObject private var visaStore = VisaRequirementsStore.shared
     @State private var scrollAnchor: String? = nil
     @State private var countryLanguageProfile: CountryLanguageProfile?
-    @State private var isPreparingContent: Bool = true
     @State private var isResolvingVisaContext: Bool = false
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
@@ -161,15 +160,9 @@ struct CountryDetailView: View {
             country = cached
         }
 
-        if let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 0)?
+        if let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 10 * 60)?
             .first(where: { $0.iso2.uppercased() == iso2 }) {
             country = refreshed
-            return
-        }
-
-        if let fetched = try? await CountryAPI.fetchCountries()
-            .first(where: { $0.iso2.uppercased() == iso2 }) {
-            country = fetched
         }
     }
 
@@ -183,106 +176,94 @@ struct CountryDetailView: View {
     }
     
     var body: some View {
-        Group {
-            if isPreparingContent {
-                VStack {
-                    Spacer()
-                    ProgressView()
-                        .scaleEffect(1.1)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                GeometryReader { geometry in
-                    ScrollViewReader { proxy in
-                        ScrollView {
-                            VStack(spacing: 28) {
+        GeometryReader { geometry in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 28) {
 
-                                // Header polaroid style
-                                CountryHeaderCard(country: displayedCountry)
-                                    .padding()
-                                    .background(
-                                        Theme.countryDetailCardBackground(corner: 20)
-                                    )
-                                    .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+                        // Header polaroid style
+                        CountryHeaderCard(country: displayedCountry)
+                            .padding()
+                            .background(
+                                Theme.countryDetailCardBackground(corner: 20)
+                            )
+                            .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
 
-                                scrapbookSection {
-                                    CountryOverviewCard(country: displayedCountry)
-                                }
+                        scrapbookSection {
+                            CountryOverviewCard(country: displayedCountry)
+                        }
 
-                                if sessionManager.isAuthenticated {
-                                    scrapbookSection {
-                                        CountryFriendEngagementPreviewCard(
-                                            country: displayedCountry,
-                                            engagement: engagementVM.engagement,
-                                            isLoading: engagementVM.isLoading,
-                                            onOpen: {
-                                                activeSheet = .engagement
-                                            }
-                                        )
+                        if sessionManager.isAuthenticated {
+                            scrapbookSection {
+                                CountryFriendEngagementPreviewCard(
+                                    country: displayedCountry,
+                                    engagement: engagementVM.engagement,
+                                    isLoading: engagementVM.isLoading,
+                                    onOpen: {
+                                        activeSheet = .engagement
                                     }
-                                }
-
-                                // Advisory card stack
-                                scrapbookSection {
-                                    CountryAdvisoryCard(
-                                        country: displayedCountry,
-                                        weightPercentage: weightsStore.advisoryPercentage
-                                    )
-                                }
-
-                                // Seasonality card stack
-                                scrapbookSection {
-                                    CountrySeasonalityCard(
-                                        country: displayedCountry,
-                                        weightPercentage: weightsStore.seasonalityPercentage
-                                    )
-                                }
-
-                                // Visa card stack
-                                scrapbookSection {
-                                    CountryVisaCard(
-                                        country: displayedCountry,
-                                        weightPercentage: weightsStore.visaPercentage,
-                                        isLoading: isResolvingVisaContext,
-                                        passportLabel: visaPassportLabel,
-                                        recommendedPassportLabel: recommendedPassportLabel,
-                                        equalBestPassportLabels: equalBestPassportLabels,
-                                        showPassportRecommendation: shouldShowPassportRecommendation,
-                                        showsPassportSetupPrompt: shouldPromptForPassportSetup,
-                                        onOpenPassportSettings: {
-                                            guard let userId = sessionManager.userId else { return }
-                                            activeSheet = .passportSettings(userId)
-                                        }
-                                    )
-                                }
-
-                                // Affordability card stack
-                                if displayedCountry.affordabilityScore != nil {
-                                    scrapbookSection {
-                                        CountryAffordabilityCard(
-                                            country: displayedCountry,
-                                            weightPercentage: weightsStore.affordabilityPercentage
-                                        )
-                                    }
-                                }
-
-                                if let languageCompatibility {
-                                    scrapbookSection {
-                                        CountryLanguageCompatibilityCard(
-                                            result: languageCompatibility,
-                                            weightPercentage: weightsStore.languagePercentage
-                                        )
-                                    }
-                                }
+                                )
                             }
-                            .id("countryDetailTop")
-                            .padding(.top, 24)
-                            .padding(.horizontal)
-                            .safeAreaPadding(.bottom)
-                            .frame(width: geometry.size.width, alignment: .top)
+                        }
+
+                        // Advisory card stack
+                        scrapbookSection {
+                            CountryAdvisoryCard(
+                                country: displayedCountry,
+                                weightPercentage: weightsStore.advisoryPercentage
+                            )
+                        }
+
+                        // Seasonality card stack
+                        scrapbookSection {
+                            CountrySeasonalityCard(
+                                country: displayedCountry,
+                                weightPercentage: weightsStore.seasonalityPercentage
+                            )
+                        }
+
+                        // Visa card stack
+                        scrapbookSection {
+                            CountryVisaCard(
+                                country: displayedCountry,
+                                weightPercentage: weightsStore.visaPercentage,
+                                isLoading: isResolvingVisaContext,
+                                passportLabel: visaPassportLabel,
+                                recommendedPassportLabel: recommendedPassportLabel,
+                                equalBestPassportLabels: equalBestPassportLabels,
+                                showPassportRecommendation: shouldShowPassportRecommendation,
+                                showsPassportSetupPrompt: shouldPromptForPassportSetup,
+                                onOpenPassportSettings: {
+                                    guard let userId = sessionManager.userId else { return }
+                                    activeSheet = .passportSettings(userId)
+                                }
+                            )
+                        }
+
+                        // Affordability card stack
+                        if displayedCountry.affordabilityScore != nil {
+                            scrapbookSection {
+                                CountryAffordabilityCard(
+                                    country: displayedCountry,
+                                    weightPercentage: weightsStore.affordabilityPercentage
+                                )
+                            }
+                        }
+
+                        if let languageCompatibility {
+                            scrapbookSection {
+                                CountryLanguageCompatibilityCard(
+                                    result: languageCompatibility,
+                                    weightPercentage: weightsStore.languagePercentage
+                                )
+                            }
                         }
                     }
+                    .id("countryDetailTop")
+                    .padding(.top, 24)
+                    .padding(.horizontal)
+                    .safeAreaPadding(.bottom)
+                    .frame(width: geometry.size.width, alignment: .top)
                 }
             }
         }
@@ -328,31 +309,27 @@ struct CountryDetailView: View {
             .padding(.trailing, 18)
         }
         .task(id: country.iso2.uppercased()) {
-            isPreparingContent = true
             let shouldResolveVisaContext = shouldResolveVisaContextBeforeDisplay
             isResolvingVisaContext = shouldResolveVisaContext
 
-            Task {
-                await engagementVM.load(
-                    countryCode: country.iso2,
-                    currentUserId: sessionManager.userId,
-                    isAuthenticated: sessionManager.isAuthenticated
-                )
+            async let engagementLoad: Void = engagementVM.load(
+                countryCode: country.iso2,
+                currentUserId: sessionManager.userId,
+                isAuthenticated: sessionManager.isAuthenticated
+            )
+            async let languageProfileLoad: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.profile(for: country.iso2)
+
+            countryLanguageProfile = await languageProfileLoad
+
+            if shouldResolveVisaContext {
+                await profileVM.loadIfNeeded()
             }
 
-            async let profileLoad: Void = {
-                guard shouldResolveVisaContext else { return }
-                await profileVM.loadIfNeeded()
-            }()
-            async let countryRefresh: Void = refreshCountryIfAvailable()
-            async let languageProfileRefresh: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
-
-            _ = await countryRefresh
-            _ = await profileLoad
+            await refreshCountryIfAvailable()
             await refreshVisaPresentation()
             isResolvingVisaContext = false
-            countryLanguageProfile = await languageProfileRefresh
-            isPreparingContent = false
+
+            _ = await engagementLoad
         }
         .onChange(of: profileVM.passportPreferences) { _, _ in
             Task {
