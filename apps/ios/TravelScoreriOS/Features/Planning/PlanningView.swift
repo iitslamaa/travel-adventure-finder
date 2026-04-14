@@ -11594,6 +11594,30 @@ private struct TripPlannerSavedTripCard: View {
     let onAddToCalendar: () -> Void
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
 
+    private var ownerChip: TripPlannerTravelerChip? {
+        guard let ownerId = trip.ownerId,
+              ownerId != sessionManager.userId,
+              !trip.friends.contains(where: { $0.id == ownerId }) else {
+            return nil
+        }
+
+        if let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+            return TripPlannerTravelerChip(
+                id: cachedOwner.id.uuidString,
+                name: cachedOwner.tripDisplayName,
+                username: cachedOwner.username,
+                avatarURL: cachedOwner.avatarUrl
+            )
+        }
+
+        return TripPlannerTravelerChip(
+            id: ownerId.uuidString,
+            name: String(localized: "trip_planner.shared"),
+            username: "",
+            avatarURL: nil
+        )
+    }
+
     private var currentUserChip: TripPlannerTravelerChip? {
         if let currentUserSnapshot {
             return TripPlannerTravelerChip(
@@ -11645,6 +11669,10 @@ private struct TripPlannerSavedTripCard: View {
 
         if let currentUserChip {
             chips.append(currentUserChip)
+        }
+
+        if let ownerChip {
+            chips.append(ownerChip)
         }
 
         chips.append(contentsOf: participantSnapshots.map {
