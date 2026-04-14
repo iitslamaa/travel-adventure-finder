@@ -183,7 +183,7 @@ private enum VisaRowMatcher {
     }
 
     static func matchRow(for country: Country, in rows: [VisaRequirementRow]) -> VisaRequirementRow? {
-        let candidates = Set(([country.name] + aliases(forISO2: country.iso2)).map(normalize))
+        let candidates = Set(([country.name] + aliases(forISO2: country.iso2)).map { normalize($0) })
         let containsCandidates = candidates.filter { candidate in
             candidate.count >= 4 && candidate.range(of: "^[a-z]{2,3}$", options: .regularExpression) == nil
         }

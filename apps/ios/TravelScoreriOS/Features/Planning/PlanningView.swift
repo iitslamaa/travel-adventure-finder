@@ -396,6 +396,14 @@ struct PlanningCard: View {
     }
 }
 
+private let tripPlannerUsernameSearchDebounceNanoseconds: UInt64 = 300_000_000
+
+private func tripPlannerNormalizedUsernameQuery(_ rawValue: String) -> String {
+    rawValue
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .replacingOccurrences(of: "@", with: "")
+}
+
 private struct TripPlannerNavigationChrome<Trailing: View>: ViewModifier {
     @Environment(\.dismiss) private var dismiss
 
@@ -3118,6 +3126,7 @@ private struct TripPlannerComposerView: View {
     @State private var usernameSearchText = ""
     @State private var searchedUsers: [Profile] = []
     @State private var isSearchingUsers = false
+    @State private var usernameSearchTask: Task<Void, Never>?
 
     private let friendService = FriendService()
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
@@ -3610,15 +3619,18 @@ private struct TripPlannerComposerView: View {
         }
         .onChange(of: includeFriends) { _, enabled in
             if !enabled {
+                usernameSearchTask?.cancel()
                 selectedFriendIds.removeAll()
                 usernameSearchText = ""
                 searchedUsers = []
+                isSearchingUsers = false
             }
         }
         .onChange(of: usernameSearchText) { _, _ in
-            Task {
-                await searchUsersByUsername()
-            }
+            scheduleUsernameSearch()
+        }
+        .onDisappear {
+            usernameSearchTask?.cancel()
         }
     }
 
@@ -3725,13 +3737,28 @@ private struct TripPlannerComposerView: View {
     }
 
     @MainActor
-    private func searchUsersByUsername() async {
-        let query = usernameSearchText
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "@", with: "")
+    private func scheduleUsernameSearch() {
+        usernameSearchTask?.cancel()
 
+        let query = tripPlannerNormalizedUsernameQuery(usernameSearchText)
         guard includeFriends, !query.isEmpty else {
             searchedUsers = []
+            isSearchingUsers = false
+            return
+        }
+
+        usernameSearchTask = Task {
+            try? await Task.sleep(nanoseconds: tripPlannerUsernameSearchDebounceNanoseconds)
+            guard !Task.isCancelled else { return }
+            await searchUsersByUsername(query: query)
+        }
+    }
+
+    @MainActor
+    private func searchUsersByUsername(query: String) async {
+        guard includeFriends, !query.isEmpty else {
+            searchedUsers = []
+            isSearchingUsers = false
             return
         }
 
@@ -3743,16 +3770,19 @@ private struct TripPlannerComposerView: View {
             TripPlannerDebugLog.message(
                 "Username search '\(query)' returned \(results.count) results for actor=\(TripPlannerDebugLog.userLabel(sessionManager.userId))"
             )
+            guard tripPlannerNormalizedUsernameQuery(usernameSearchText) == query else { return }
             searchedUsers = results.filter { profile in
                 profile.id != sessionManager.userId
             }
         } catch {
+            guard tripPlannerNormalizedUsernameQuery(usernameSearchText) == query else { return }
             TripPlannerDebugLog.message("Username search '\(query)' failed")
             searchedUsers = []
         }
     }
 
     private func addSearchedUser(_ profile: Profile) {
+        usernameSearchTask?.cancel()
         if !friends.contains(where: { $0.id == profile.id }) {
             friends.append(profile)
         }
@@ -4800,6 +4830,7 @@ private struct TripPlannerFriendsEditorView: View {
     @State private var usernameSearchText = ""
     @State private var searchedUsers: [Profile] = []
     @State private var isSearchingUsers = false
+    @State private var usernameSearchTask: Task<Void, Never>?
 
     private let friendService = FriendService()
     private let supabase = SupabaseManager.shared
@@ -4933,9 +4964,10 @@ private struct TripPlannerFriendsEditorView: View {
             await loadFriends()
         }
         .onChange(of: usernameSearchText) { _, _ in
-            Task {
-                await searchUsersByUsername()
-            }
+            scheduleUsernameSearch()
+        }
+        .onDisappear {
+            usernameSearchTask?.cancel()
         }
     }
 
@@ -4968,13 +5000,28 @@ private struct TripPlannerFriendsEditorView: View {
     }
 
     @MainActor
-    private func searchUsersByUsername() async {
-        let query = usernameSearchText
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "@", with: "")
+    private func scheduleUsernameSearch() {
+        usernameSearchTask?.cancel()
 
+        let query = tripPlannerNormalizedUsernameQuery(usernameSearchText)
         guard !query.isEmpty else {
             searchedUsers = []
+            isSearchingUsers = false
+            return
+        }
+
+        usernameSearchTask = Task {
+            try? await Task.sleep(nanoseconds: tripPlannerUsernameSearchDebounceNanoseconds)
+            guard !Task.isCancelled else { return }
+            await searchUsersByUsername(query: query)
+        }
+    }
+
+    @MainActor
+    private func searchUsersByUsername(query: String) async {
+        guard !query.isEmpty else {
+            searchedUsers = []
+            isSearchingUsers = false
             return
         }
 
@@ -4983,15 +5030,18 @@ private struct TripPlannerFriendsEditorView: View {
 
         do {
             let results = try await supabase.searchUsers(byUsername: query)
+            guard tripPlannerNormalizedUsernameQuery(usernameSearchText) == query else { return }
             searchedUsers = results.filter { profile in
                 profile.id != sessionManager.userId
             }
         } catch {
+            guard tripPlannerNormalizedUsernameQuery(usernameSearchText) == query else { return }
             searchedUsers = []
         }
     }
 
     private func addSearchedUser(_ profile: Profile) {
+        usernameSearchTask?.cancel()
         friends = mergedProfiles(friends + [profile])
         selectedFriendIds.insert(profile.id)
         usernameSearchText = ""
