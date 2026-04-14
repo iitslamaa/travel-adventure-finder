@@ -1884,15 +1884,12 @@ final class TripPlannerStore: ObservableObject {
     private let supabase = SupabaseManager.shared
     private let syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
     private var cancellables = Set<AnyCancellable>()
+    private var hasRequestedInitialRefresh = false
 
     init() {
         loadLocal()
         observeAuthState()
         observeTripUpdates()
-
-        Task {
-            await refreshFromRemoteIfNeeded(migrateLocalTrips: true)
-        }
     }
 
     func add(_ trip: TripPlannerTrip) {
@@ -1974,7 +1971,9 @@ final class TripPlannerStore: ObservableObject {
 
     private func handleAuthStateChange() async {
         loadLocal()
+        hasRequestedInitialRefresh = false
         await refreshFromRemoteIfNeeded(migrateLocalTrips: true)
+        hasRequestedInitialRefresh = true
     }
 
     private var localSaveKey: String {
@@ -2719,6 +2718,17 @@ private struct TripPlannerDetectedLinkList: View {
 }
 
 extension TripPlannerStore {
+    @MainActor
+    func loadInitialTripsIfNeeded() async {
+        guard !hasRequestedInitialRefresh else {
+            TripPlannerDebugLog.message("Initial planner trip refresh skipped because it already ran")
+            return
+        }
+
+        hasRequestedInitialRefresh = true
+        await refreshFromRemoteIfNeeded(migrateLocalTrips: true)
+    }
+
     func refresh() async {
         await refreshFromRemoteIfNeeded(migrateLocalTrips: false)
     }
@@ -3110,10 +3120,9 @@ struct TripPlannerView: View {
             TripPlannerDebugLog.message(
                 "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
             )
-            async let inboxRefresh: Void = sharedTripInbox.refresh()
             async let snapshotRefresh: Void = loadCurrentUserSnapshot()
-            async let tripRefresh: Void = store.refresh()
-            _ = await (inboxRefresh, snapshotRefresh, tripRefresh)
+            async let tripRefresh: Void = store.loadInitialTripsIfNeeded()
+            _ = await (snapshotRefresh, tripRefresh)
             await preloadTripOwnerProfiles()
             TripPlannerDebugLog.message(
                 "Planner screen task finished duration=\(TripPlannerDebugLog.durationText(since: loadStart)) trips=\(store.trips.count)"
