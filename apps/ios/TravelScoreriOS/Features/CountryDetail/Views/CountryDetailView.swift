@@ -532,10 +532,18 @@ private struct CountryFriendEngagementService {
     ) async throws -> CountryFriendEngagement {
         let fetchStart = Date().timeIntervalSinceReferenceDate
         let normalizedCountryCode = countryCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        let friends = try await friendService.fetchFriends(for: currentUserId)
-        CountryDetailDebugLog.message(
-            "Engagement friends fetched country=\(normalizedCountryCode) count=\(friends.count) duration=\(CountryDetailDebugLog.durationText(since: fetchStart))"
-        )
+        let friends: [Profile]
+        if let cachedFriends = friendService.cachedFriends(for: currentUserId) {
+            friends = cachedFriends
+            CountryDetailDebugLog.message(
+                "Engagement friends cache hit country=\(normalizedCountryCode) count=\(friends.count) duration=\(CountryDetailDebugLog.durationText(since: fetchStart))"
+            )
+        } else {
+            friends = try await friendService.fetchFriends(for: currentUserId)
+            CountryDetailDebugLog.message(
+                "Engagement friends fetched country=\(normalizedCountryCode) count=\(friends.count) duration=\(CountryDetailDebugLog.durationText(since: fetchStart))"
+            )
+        }
 
         guard !friends.isEmpty else {
             return .empty
