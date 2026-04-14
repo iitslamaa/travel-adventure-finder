@@ -2911,6 +2911,7 @@ struct TripPlannerView: View {
                     async let inboxRefresh: Void = sharedTripInbox.refresh()
                     async let snapshotRefresh: Void = loadCurrentUserSnapshot()
                     _ = await (tripRefresh, inboxRefresh, snapshotRefresh)
+                    await preloadTripOwnerProfiles()
                 }
             }
         }
@@ -3005,7 +3006,9 @@ struct TripPlannerView: View {
         .task {
             async let inboxRefresh: Void = sharedTripInbox.refresh()
             async let snapshotRefresh: Void = loadCurrentUserSnapshot()
-            _ = await (inboxRefresh, snapshotRefresh)
+            async let tripRefresh: Void = store.refresh()
+            _ = await (inboxRefresh, snapshotRefresh, tripRefresh)
+            await preloadTripOwnerProfiles()
         }
     }
 
@@ -3033,6 +3036,31 @@ struct TripPlannerView: View {
                 username: profile.username,
                 avatarURL: profile.avatarUrl
             )
+        }
+    }
+
+    @MainActor
+    private func preloadTripOwnerProfiles() async {
+        let ownerIds = Set(
+            store.trips.compactMap { trip -> UUID? in
+                guard let ownerId = trip.ownerId,
+                      ownerId != sessionManager.userId,
+                      !trip.friends.contains(where: { $0.id == ownerId }),
+                      profileService.cachedProfile(userId: ownerId) == nil else {
+                    return nil
+                }
+                return ownerId
+            }
+        )
+
+        guard !ownerIds.isEmpty else { return }
+
+        await withTaskGroup(of: Void.self) { group in
+            for ownerId in ownerIds {
+                group.addTask {
+                    _ = try? await profileService.fetchMyProfile(userId: ownerId)
+                }
+            }
         }
     }
 
