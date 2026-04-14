@@ -16,19 +16,44 @@ import Supabase
 import PostgREST
 
 private enum TripPlannerDebugLog {
-    static func message(_ text: String) {
+    nonisolated static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🧭 [TripPlanner] \(timestamp) \(text)")
+#endif
     }
 
-    static func userLabel(_ userId: UUID?) -> String {
+    nonisolated static func userLabel(_ userId: UUID?) -> String {
         userId?.uuidString ?? "nil-user"
     }
 
-    static func tripLabel(_ trip: TripPlannerTrip) -> String {
+    nonisolated static func tripLabel(_ trip: TripPlannerTrip) -> String {
         "\(trip.title) [\(trip.id.uuidString)]"
     }
 
-    static func participantLabels(for ids: [UUID]) -> String {
+    nonisolated static func participantLabels(for ids: [UUID]) -> String {
         ids.map(\.uuidString).joined(separator: ", ")
+    }
+
+    nonisolated static func durationText(since startTime: TimeInterval) -> String {
+        String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)
+    }
+
+    nonisolated static func tripCardState(
+        trip: TripPlannerTrip,
+        ownerSnapshot: TripPlannerFriendSnapshot?,
+        travelerCount: Int
+    ) -> String {
+        let ownerState: String
+        if let ownerSnapshot {
+            ownerState = "owner=\(ownerSnapshot.displayName)"
+        } else if trip.ownerId != nil {
+            ownerState = "owner=missing"
+        } else {
+            ownerState = "owner=none"
+        }
+
+        return "\(tripLabel(trip)) \(ownerState) travelers=\(travelerCount) countries=\(trip.countryIds.count)"
     }
 }
 
@@ -3081,16 +3106,24 @@ struct TripPlannerView: View {
             Text(choice.confirmationMessage)
         }
         .task {
+            let loadStart = Date().timeIntervalSinceReferenceDate
+            TripPlannerDebugLog.message(
+                "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
+            )
             async let inboxRefresh: Void = sharedTripInbox.refresh()
             async let snapshotRefresh: Void = loadCurrentUserSnapshot()
             async let tripRefresh: Void = store.refresh()
             _ = await (inboxRefresh, snapshotRefresh, tripRefresh)
             await preloadTripOwnerProfiles()
+            TripPlannerDebugLog.message(
+                "Planner screen task finished duration=\(TripPlannerDebugLog.durationText(since: loadStart)) trips=\(store.trips.count)"
+            )
         }
     }
 
     @MainActor
     private func loadCurrentUserSnapshot() async {
+        let loadStart = Date().timeIntervalSinceReferenceDate
         guard let userId = sessionManager.userId else {
             currentUserSnapshot = nil
             return
@@ -3103,6 +3136,9 @@ struct TripPlannerView: View {
                 username: cachedProfile.username,
                 avatarURL: cachedProfile.avatarUrl
             )
+            TripPlannerDebugLog.message(
+                "Current user snapshot loaded from cache duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
             return
         }
 
@@ -3113,11 +3149,19 @@ struct TripPlannerView: View {
                 username: profile.username,
                 avatarURL: profile.avatarUrl
             )
+            TripPlannerDebugLog.message(
+                "Current user snapshot fetched duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
+        } else {
+            TripPlannerDebugLog.message(
+                "Current user snapshot missing after fetch duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
         }
     }
 
     @MainActor
     private func preloadTripOwnerProfiles() async {
+        let preloadStart = Date().timeIntervalSinceReferenceDate
         let ownerTargets = store.trips.compactMap { trip -> (tripId: UUID, ownerId: UUID, embeddedSnapshot: TripPlannerFriendSnapshot?)? in
             guard let ownerId = trip.ownerId,
                   ownerId != sessionManager.userId,
@@ -3126,6 +3170,10 @@ struct TripPlannerView: View {
             }
             return (trip.id, ownerId, trip.effectiveOwnerSnapshot)
         }
+
+        TripPlannerDebugLog.message(
+            "Owner preload started totalTrips=\(store.trips.count) ownerTargets=\(ownerTargets.count)"
+        )
 
         var nextSnapshots: [UUID: TripPlannerFriendSnapshot] = [:]
         var uncachedTargets: [(tripId: UUID, ownerId: UUID)] = []
@@ -3149,11 +3197,21 @@ struct TripPlannerView: View {
 
         ownerSnapshotsByTripID = nextSnapshots
 
-        guard !uncachedTargets.isEmpty else { return }
+        guard !uncachedTargets.isEmpty else {
+            TripPlannerDebugLog.message(
+                "Owner preload finished without remote fetch duration=\(TripPlannerDebugLog.durationText(since: preloadStart)) resolved=\(nextSnapshots.count)"
+            )
+            return
+        }
+
+        TripPlannerDebugLog.message(
+            "Owner preload fetching remotely uncachedTargets=\(uncachedTargets.count) cachedResolved=\(nextSnapshots.count)"
+        )
 
         await withTaskGroup(of: (UUID, TripPlannerFriendSnapshot?).self) { group in
             for target in uncachedTargets {
                 group.addTask {
+                    let fetchStart = Date().timeIntervalSinceReferenceDate
                     let fetchedOwner = try? await profileService.fetchMyProfile(userId: target.ownerId)
                     let snapshot: TripPlannerFriendSnapshot?
                     if let fetchedOwner {
@@ -3165,8 +3223,14 @@ struct TripPlannerView: View {
                                 avatarURL: fetchedOwner.avatarUrl
                             )
                         }
+                        TripPlannerDebugLog.message(
+                            "Owner profile fetched trip=\(target.tripId.uuidString) owner=\(fetchedOwner.username) duration=\(TripPlannerDebugLog.durationText(since: fetchStart))"
+                        )
                     } else {
                         snapshot = nil
+                        TripPlannerDebugLog.message(
+                            "Owner profile fetch failed trip=\(target.tripId.uuidString) ownerId=\(target.ownerId.uuidString) duration=\(TripPlannerDebugLog.durationText(since: fetchStart))"
+                        )
                     }
                     return (target.tripId, snapshot)
                 }
@@ -3178,6 +3242,10 @@ struct TripPlannerView: View {
                 store.cacheOwnerSnapshot(snapshot, forTripID: tripId)
             }
         }
+
+        TripPlannerDebugLog.message(
+            "Owner preload finished duration=\(TripPlannerDebugLog.durationText(since: preloadStart)) resolved=\(ownerSnapshotsByTripID.count)"
+        )
     }
 
     @ViewBuilder
@@ -11795,6 +11863,7 @@ private struct TripPlannerOverlapCard: View {
 
 private struct TripPlannerSavedTripCard: View {
     @EnvironmentObject private var sessionManager: SessionManager
+    @State private var hasLoggedInitialAppearance = false
     let trip: TripPlannerTrip
     let isNewSharedTrip: Bool
     let currentUserSnapshot: TripPlannerFriendSnapshot?
@@ -11995,6 +12064,13 @@ private struct TripPlannerSavedTripCard: View {
                 )
         )
         .shadow(color: .black.opacity(0.1), radius: 10, y: 6)
+        .onAppear {
+            guard !hasLoggedInitialAppearance else { return }
+            hasLoggedInitialAppearance = true
+            TripPlannerDebugLog.message(
+                "Saved trip card appeared \(TripPlannerDebugLog.tripCardState(trip: trip, ownerSnapshot: ownerSnapshot ?? trip.effectiveOwnerSnapshot, travelerCount: travelerChips.count))"
+            )
+        }
     }
 }
 
@@ -12516,6 +12592,8 @@ private struct TripPlannerAvatarView: View {
     let avatarURL: String?
     let size: CGFloat
     @State private var hasLoggedAvatarFailure = false
+    @State private var hasLoggedAvatarSuccess = false
+    @State private var avatarLoadStart = Date().timeIntervalSinceReferenceDate
 
     private var initials: String {
         let source = name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? username : name
@@ -12532,12 +12610,21 @@ private struct TripPlannerAvatarView: View {
                         image
                             .resizable()
                             .scaledToFill()
+                            .onAppear {
+                                guard !hasLoggedAvatarSuccess else { return }
+                                hasLoggedAvatarSuccess = true
+                                TripPlannerDebugLog.message(
+                                    "Avatar loaded username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL)"
+                                )
+                            }
                     } else {
                         fallbackAvatar
                             .onAppear {
                                 guard !hasLoggedAvatarFailure, state.error != nil else { return }
                                 hasLoggedAvatarFailure = true
-                                print("⚠️ [TripPlannerAvatarView] avatar load failed url=\(avatarURL) error=\(String(describing: state.error))")
+                                TripPlannerDebugLog.message(
+                                    "Avatar failed username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL) error=\(String(describing: state.error))"
+                                )
                             }
                     }
                 }
@@ -12551,6 +12638,14 @@ private struct TripPlannerAvatarView: View {
             Circle()
                 .stroke(.white.opacity(0.5), lineWidth: 1)
         )
+        .onAppear {
+            avatarLoadStart = Date().timeIntervalSinceReferenceDate
+            if let avatarURL, !avatarURL.isEmpty {
+                TripPlannerDebugLog.message("Avatar request started username=@\(username) url=\(avatarURL)")
+            } else {
+                TripPlannerDebugLog.message("Avatar fallback used username=@\(username) reason=missing_url")
+            }
+        }
     }
 
     private var fallbackAvatar: some View {
