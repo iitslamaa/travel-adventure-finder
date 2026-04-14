@@ -2835,6 +2835,7 @@ struct TripPlannerView: View {
     @State private var pendingDeleteTrip: TripPlannerTrip?
     @State private var pendingDeleteChoice: TripPlannerDeleteChoice?
     @State private var currentUserSnapshot: TripPlannerFriendSnapshot?
+    @State private var ownerSnapshotsByTripID: [UUID: TripPlannerFriendSnapshot] = [:]
 
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
 
@@ -2886,6 +2887,7 @@ struct TripPlannerView: View {
                                             trip: trip,
                                             isNewSharedTrip: pendingSharedTripIDs.contains(trip.id),
                                             currentUserSnapshot: currentUserSnapshot,
+                                            ownerSnapshot: ownerSnapshotsByTripID[trip.id],
                                             onDelete: {
                                                 pendingDeleteTrip = trip
                                             },
@@ -3041,27 +3043,36 @@ struct TripPlannerView: View {
 
     @MainActor
     private func preloadTripOwnerProfiles() async {
-        let ownerIds = Set(
-            store.trips.compactMap { trip -> UUID? in
-                guard let ownerId = trip.ownerId,
-                      ownerId != sessionManager.userId,
-                      !trip.friends.contains(where: { $0.id == ownerId }),
-                      profileService.cachedProfile(userId: ownerId) == nil else {
-                    return nil
-                }
-                return ownerId
+        var nextSnapshots: [UUID: TripPlannerFriendSnapshot] = [:]
+
+        for trip in store.trips {
+            guard let ownerId = trip.ownerId,
+                  ownerId != sessionManager.userId,
+                  !trip.friends.contains(where: { $0.id == ownerId }) else {
+                continue
             }
-        )
 
-        guard !ownerIds.isEmpty else { return }
+            if let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+                nextSnapshots[trip.id] = TripPlannerFriendSnapshot(
+                    id: cachedOwner.id,
+                    displayName: cachedOwner.tripDisplayName,
+                    username: cachedOwner.username,
+                    avatarURL: cachedOwner.avatarUrl
+                )
+                continue
+            }
 
-        await withTaskGroup(of: Void.self) { group in
-            for ownerId in ownerIds {
-                group.addTask {
-                    _ = try? await profileService.fetchMyProfile(userId: ownerId)
-                }
+            if let fetchedOwner = try? await profileService.fetchMyProfile(userId: ownerId) {
+                nextSnapshots[trip.id] = TripPlannerFriendSnapshot(
+                    id: fetchedOwner.id,
+                    displayName: fetchedOwner.tripDisplayName,
+                    username: fetchedOwner.username,
+                    avatarURL: fetchedOwner.avatarUrl
+                )
             }
         }
+
+        ownerSnapshotsByTripID = nextSnapshots
     }
 
     @ViewBuilder
@@ -11663,10 +11674,10 @@ private struct TripPlannerSavedTripCard: View {
     let trip: TripPlannerTrip
     let isNewSharedTrip: Bool
     let currentUserSnapshot: TripPlannerFriendSnapshot?
+    let ownerSnapshot: TripPlannerFriendSnapshot?
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
-    @State private var resolvedOwnerProfile: Profile?
 
     private var isDisplayedGroupTrip: Bool {
         travelerChips.count > 1
@@ -11680,12 +11691,12 @@ private struct TripPlannerSavedTripCard: View {
             return nil
         }
 
-        if let cachedOwner = resolvedOwnerProfile ?? profileService.cachedProfile(userId: ownerId) {
+        if let ownerSnapshot {
             return TripPlannerTravelerChip(
-                id: cachedOwner.id.uuidString,
-                name: cachedOwner.tripDisplayName,
-                username: cachedOwner.username,
-                avatarURL: cachedOwner.avatarUrl
+                id: ownerSnapshot.id.uuidString,
+                name: ownerSnapshot.displayName,
+                username: ownerSnapshot.username,
+                avatarURL: ownerSnapshot.avatarURL
             )
         }
 
@@ -12380,6 +12391,7 @@ private struct TripPlannerAvatarView: View {
     let username: String
     let avatarURL: String?
     let size: CGFloat
+    @State private var hasLoggedAvatarFailure = false
 
     private var initials: String {
         let source = name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? username : name
@@ -12398,6 +12410,11 @@ private struct TripPlannerAvatarView: View {
                             .scaledToFill()
                     } else {
                         fallbackAvatar
+                            .onAppear {
+                                guard !hasLoggedAvatarFailure, state.error != nil else { return }
+                                hasLoggedAvatarFailure = true
+                                print("⚠️ [TripPlannerAvatarView] avatar load failed url=\(avatarURL) error=\(String(describing: state.error))")
+                            }
                     }
                 }
             } else {
