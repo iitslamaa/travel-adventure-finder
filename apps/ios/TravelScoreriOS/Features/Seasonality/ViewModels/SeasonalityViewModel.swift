@@ -47,8 +47,8 @@ final class SeasonalityViewModel: ObservableObject {
 
 
     init(
-        service: SeasonalityService = SeasonalityService(),
-        metadataResolver: CountryMetadataResolver = CountryMetadataResolver(),
+        service: SeasonalityService,
+        metadataResolver: CountryMetadataResolver,
         initialMonth: Int = Calendar.current.component(.month, from: Date())
     ) {
         self.service = service
@@ -59,6 +59,14 @@ final class SeasonalityViewModel: ObservableObject {
         self.selectedCountry = nil
         self.isLoading = false
         self.loadError = nil
+    }
+
+    convenience init(initialMonth: Int = Calendar.current.component(.month, from: Date())) {
+        self.init(
+            service: SeasonalityService(),
+            metadataResolver: CountryMetadataResolver(),
+            initialMonth: initialMonth
+        )
     }
 
     func loadInitial() {

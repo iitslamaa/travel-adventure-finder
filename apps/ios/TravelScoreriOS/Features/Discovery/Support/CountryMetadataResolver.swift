@@ -52,23 +52,9 @@ final class CountryMetadataResolver {
                 let dailyTotal = c.dailySpendTotalUsd
                 let affordabilityScore = affordabilityFromDailySpend(totalUsd: dailyTotal)
 
-                let visaEase: Double? = {
-                    if let v = c.visaEaseScore as? Double { return v }
-                    if let v = c.visaEaseScore as? Int { return Double(v) }
-                    return nil
-                }()
-
-                let seasonality: Double? = {
-                    if let v = c.seasonalityScore as? Double { return v }
-                    if let v = c.seasonalityScore as? Int { return Double(v) }
-                    return nil
-                }()
-
-                let scoreDouble: Double? = {
-                    if let s = c.score as? Double { return s }
-                    if let s = c.score as? Int { return Double(s) }
-                    return nil
-                }()
+                let visaEase = c.visaEaseScore.map(Double.init)
+                let seasonality = c.seasonalityScore.map(Double.init)
+                let scoreDouble = c.score.map(Double.init)
 
                 map[iso] = CountryMeta(
                     name: c.name,

@@ -43,10 +43,11 @@ final class SupabaseManager {
     func startAuthListener() async {
         guard !hasStartedAuthListener else { return }
         hasStartedAuthListener = true
+        let authStateSubject = self.authStateSubject
 
-        await client.auth.onAuthStateChange { [weak self] _, _ in
+        await client.auth.onAuthStateChange { _, _ in
             Task { @MainActor in
-                self?.authStateSubject.send(())
+                authStateSubject.send(())
             }
         }
     }

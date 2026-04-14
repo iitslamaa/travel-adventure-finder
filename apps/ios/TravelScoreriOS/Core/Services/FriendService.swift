@@ -16,21 +16,20 @@ private struct FriendRow: Decodable {
 final class FriendService {
     private static var friendsCache: [UUID: [Profile]] = [:]
 
-    private let instanceId = UUID()
-
     private let supabase: SupabaseManager
 
-    init(supabase: SupabaseManager = .shared) {
+    init(supabase: SupabaseManager) {
         self.supabase = supabase
+    }
+
+    convenience init() {
+        self.init(supabase: .shared)
     }
 
     // MARK: - Friends
 
 
     func fetchFriends(for userId: UUID) async throws -> [Profile] {
-        let requestId = UUID()
-        let start = Date()
-        
         // These queries are independent, so fetch both directions in parallel.
         async let sentResponse: PostgrestResponse<[FriendRow]> = supabase.client
             .from("friends")
@@ -65,9 +64,7 @@ final class FriendService {
             .select("*")
             .in("id", values: uniqueFriendIds)
             .execute()
-        
 
-        let elapsed = Date().timeIntervalSince(start)
         let profilesById = Dictionary(uniqueKeysWithValues: profilesResponse.value.map { ($0.id, $0) })
         let orderedProfiles = uniqueFriendIds.compactMap { profilesById[$0] }
 
@@ -80,10 +77,6 @@ final class FriendService {
     }
 
     func isFriend(currentUserId: UUID, otherUserId: UUID) async throws -> Bool {
-        let requestId = UUID()
-        let start = Date()
-        
-
         let filter = "and(user_id.eq.\(currentUserId.uuidString),friend_id.eq.\(otherUserId.uuidString)),and(user_id.eq.\(otherUserId.uuidString),friend_id.eq.\(currentUserId.uuidString))"
 
         let response = try await supabase.client
@@ -92,10 +85,6 @@ final class FriendService {
             .or(filter)
             .limit(1)
             .execute()
-
-        let elapsed = Date().timeIntervalSince(start)
-        
-        
         return (response.count ?? 0) > 0
     }
 
@@ -112,10 +101,6 @@ final class FriendService {
     }
 
     func fetchMutualFriends(currentUserId: UUID, otherUserId: UUID) async throws -> [Profile] {
-        let requestId = UUID()
-        let start = Date()
-        
-
         async let currentFriends = fetchFriends(for: currentUserId)
         async let otherFriends = fetchFriends(for: otherUserId)
 
@@ -124,10 +109,6 @@ final class FriendService {
 
         let currentSet = Set(current.map { $0.id })
         let mutual = other.filter { currentSet.contains($0.id) }
-
-        let elapsed = Date().timeIntervalSince(start)
-        
-        
         return mutual.sorted { $0.username < $1.username }
     }
 
@@ -152,10 +133,6 @@ final class FriendService {
     }
 
     func incomingRequestCount(for myUserId: UUID) async throws -> Int {
-        let requestId = UUID()
-        let start = Date()
-        
-
         struct RequestIDRow: Decodable { let id: UUID }
 
         let response: PostgrestResponse<[RequestIDRow]> = try await supabase.client
@@ -165,10 +142,6 @@ final class FriendService {
             .eq("status", value: "pending")
             .limit(1000)
             .execute()
-
-        let elapsed = Date().timeIntervalSince(start)
-        
-        
         return response.value.count
     }
 
@@ -238,7 +211,6 @@ final class FriendService {
 
     func sendFriendRequest(from myUserId: UUID, to otherUserId: UUID) async throws {
         let requestId = UUID()
-        let start = Date()
         
 
         guard myUserId != otherUserId else {
@@ -281,11 +253,7 @@ final class FriendService {
                 .insert(payload)
                 .execute()
 
-            let elapsed = Date().timeIntervalSince(start)
-            
-
         } catch {
-            let elapsed = Date().timeIntervalSince(start)
             print("❌ [\(requestId)] sendFriendRequest FAILED — raw:", error)
             print("❌ [\(requestId)] sendFriendRequest FAILED — description:", error.localizedDescription)
             if let pg = error as? PostgrestError {
@@ -298,7 +266,6 @@ final class FriendService {
 
     func cancelRequest(from myUserId: UUID, to otherUserId: UUID) async throws {
         let requestId = UUID()
-        let start = Date()
         
 
         do {
@@ -310,11 +277,7 @@ final class FriendService {
                 .eq("status", value: "pending")
                 .execute()
 
-            let elapsed = Date().timeIntervalSince(start)
-            
-
         } catch {
-            let elapsed = Date().timeIntervalSince(start)
             print("❌ [\(requestId)] cancelRequest FAILED — raw:", error)
             print("❌ [\(requestId)] cancelRequest FAILED — description:", error.localizedDescription)
             if let pg = error as? PostgrestError {
@@ -357,10 +320,6 @@ final class FriendService {
             .eq("sender_id", value: otherUserId)
             .eq("receiver_id", value: myUserId)
             .execute()
-    }
-
-    deinit {
-        
     }
 }
 
