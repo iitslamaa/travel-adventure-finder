@@ -404,6 +404,73 @@ private func tripPlannerNormalizedUsernameQuery(_ rawValue: String) -> String {
         .replacingOccurrences(of: "@", with: "")
 }
 
+@MainActor
+private final class TripPlannerUsernameSearchController: ObservableObject {
+    @Published var query = ""
+    @Published private(set) var results: [Profile] = []
+    @Published private(set) var isSearching = false
+
+    private let supabase: SupabaseManager
+    private var searchTask: Task<Void, Never>?
+
+    init(supabase: SupabaseManager) {
+        self.supabase = supabase
+    }
+
+    convenience init() {
+        self.init(supabase: .shared)
+    }
+
+    func scheduleSearch(enabled: Bool = true, excluding excludedUserID: UUID?) {
+        searchTask?.cancel()
+
+        let normalizedQuery = tripPlannerNormalizedUsernameQuery(query)
+        guard enabled, !normalizedQuery.isEmpty else {
+            results = []
+            isSearching = false
+            return
+        }
+
+        searchTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: tripPlannerUsernameSearchDebounceNanoseconds)
+            guard !Task.isCancelled else { return }
+            await self?.runSearch(query: normalizedQuery, excluding: excludedUserID)
+        }
+    }
+
+    func reset() {
+        searchTask?.cancel()
+        query = ""
+        results = []
+        isSearching = false
+    }
+
+    func cancel() {
+        searchTask?.cancel()
+        isSearching = false
+    }
+
+    private func runSearch(query: String, excluding excludedUserID: UUID?) async {
+        guard !query.isEmpty else {
+            results = []
+            isSearching = false
+            return
+        }
+
+        isSearching = true
+        defer { isSearching = false }
+
+        do {
+            let found = try await supabase.searchUsers(byUsername: query)
+            guard tripPlannerNormalizedUsernameQuery(self.query) == query else { return }
+            results = found.filter { $0.id != excludedUserID }
+        } catch {
+            guard tripPlannerNormalizedUsernameQuery(self.query) == query else { return }
+            results = []
+        }
+    }
+}
+
 private struct TripPlannerNavigationChrome<Trailing: View>: ViewModifier {
     @Environment(\.dismiss) private var dismiss
 
@@ -3123,14 +3190,11 @@ private struct TripPlannerComposerView: View {
     @State private var friendsError: String?
     @State private var showingAllFriends = false
     @State private var showingBucketCountries = false
-    @State private var usernameSearchText = ""
-    @State private var searchedUsers: [Profile] = []
-    @State private var isSearchingUsers = false
-    @State private var usernameSearchTask: Task<Void, Never>?
+    @StateObject private var usernameSearch = TripPlannerUsernameSearchController()
 
     private let friendService = FriendService()
-    private let profileService = ProfileService(supabase: SupabaseManager.shared)
     private let supabase = SupabaseManager.shared
+    private let profileService = ProfileService(supabase: SupabaseManager.shared)
 
     init(
         existingTrip: TripPlannerTrip? = nil,
@@ -3430,16 +3494,16 @@ private struct TripPlannerComposerView: View {
 
                                         TripPlannerTextInput(
                                             title: "Add by username",
-                                            text: $usernameSearchText,
+                                            text: $usernameSearch.query,
                                             placeholder: "@username"
                                         )
 
-                                        if isSearchingUsers {
+                                        if usernameSearch.isSearching {
                                             ProgressView()
                                                 .tint(.black)
-                                        } else if !searchedUsers.isEmpty {
+                                        } else if !usernameSearch.results.isEmpty {
                                             LazyVStack(spacing: 10) {
-                                                ForEach(searchedUsers) { profile in
+                                                ForEach(usernameSearch.results) { profile in
                                                     Button {
                                                         addSearchedUser(profile)
                                                     } label: {
@@ -3619,18 +3683,18 @@ private struct TripPlannerComposerView: View {
         }
         .onChange(of: includeFriends) { _, enabled in
             if !enabled {
-                usernameSearchTask?.cancel()
                 selectedFriendIds.removeAll()
-                usernameSearchText = ""
-                searchedUsers = []
-                isSearchingUsers = false
+                usernameSearch.reset()
             }
         }
-        .onChange(of: usernameSearchText) { _, _ in
-            scheduleUsernameSearch()
+        .onChange(of: usernameSearch.query) { _, _ in
+            usernameSearch.scheduleSearch(
+                enabled: includeFriends,
+                excluding: sessionManager.userId
+            )
         }
         .onDisappear {
-            usernameSearchTask?.cancel()
+            usernameSearch.cancel()
         }
     }
 
@@ -3737,58 +3801,12 @@ private struct TripPlannerComposerView: View {
     }
 
     @MainActor
-    private func scheduleUsernameSearch() {
-        usernameSearchTask?.cancel()
-
-        let query = tripPlannerNormalizedUsernameQuery(usernameSearchText)
-        guard includeFriends, !query.isEmpty else {
-            searchedUsers = []
-            isSearchingUsers = false
-            return
-        }
-
-        usernameSearchTask = Task {
-            try? await Task.sleep(nanoseconds: tripPlannerUsernameSearchDebounceNanoseconds)
-            guard !Task.isCancelled else { return }
-            await searchUsersByUsername(query: query)
-        }
-    }
-
-    @MainActor
-    private func searchUsersByUsername(query: String) async {
-        guard includeFriends, !query.isEmpty else {
-            searchedUsers = []
-            isSearchingUsers = false
-            return
-        }
-
-        isSearchingUsers = true
-        defer { isSearchingUsers = false }
-
-        do {
-            let results = try await supabase.searchUsers(byUsername: query)
-            TripPlannerDebugLog.message(
-                "Username search '\(query)' returned \(results.count) results for actor=\(TripPlannerDebugLog.userLabel(sessionManager.userId))"
-            )
-            guard tripPlannerNormalizedUsernameQuery(usernameSearchText) == query else { return }
-            searchedUsers = results.filter { profile in
-                profile.id != sessionManager.userId
-            }
-        } catch {
-            guard tripPlannerNormalizedUsernameQuery(usernameSearchText) == query else { return }
-            TripPlannerDebugLog.message("Username search '\(query)' failed")
-            searchedUsers = []
-        }
-    }
-
     private func addSearchedUser(_ profile: Profile) {
-        usernameSearchTask?.cancel()
         if !friends.contains(where: { $0.id == profile.id }) {
             friends.append(profile)
         }
         selectedFriendIds.insert(profile.id)
-        usernameSearchText = ""
-        searchedUsers = []
+        usernameSearch.reset()
         TripPlannerDebugLog.message(
             "Added searched user @\(profile.username) [\(profile.id.uuidString)] to draft trip for actor=\(TripPlannerDebugLog.userLabel(sessionManager.userId))"
         )
@@ -4827,10 +4845,7 @@ private struct TripPlannerFriendsEditorView: View {
     @State private var selectedFriendIds: Set<UUID>
     @State private var isLoading = true
     @State private var errorMessage: String?
-    @State private var usernameSearchText = ""
-    @State private var searchedUsers: [Profile] = []
-    @State private var isSearchingUsers = false
-    @State private var usernameSearchTask: Task<Void, Never>?
+    @StateObject private var usernameSearch = TripPlannerUsernameSearchController()
 
     private let friendService = FriendService()
     private let supabase = SupabaseManager.shared
@@ -4892,16 +4907,16 @@ private struct TripPlannerFriendsEditorView: View {
 
                                 TripPlannerTextInput(
                                     title: "Add by username",
-                                    text: $usernameSearchText,
+                                    text: $usernameSearch.query,
                                     placeholder: "@username"
                                 )
 
-                                if isSearchingUsers {
+                                if usernameSearch.isSearching {
                                     ProgressView()
                                         .tint(.black)
-                                } else if !searchedUsers.isEmpty {
+                                } else if !usernameSearch.results.isEmpty {
                                     LazyVStack(spacing: 10) {
-                                        ForEach(searchedUsers) { profile in
+                                        ForEach(usernameSearch.results) { profile in
                                             Button {
                                                 addSearchedUser(profile)
                                             } label: {
@@ -4963,11 +4978,11 @@ private struct TripPlannerFriendsEditorView: View {
         .task {
             await loadFriends()
         }
-        .onChange(of: usernameSearchText) { _, _ in
-            scheduleUsernameSearch()
+        .onChange(of: usernameSearch.query) { _, _ in
+            usernameSearch.scheduleSearch(excluding: sessionManager.userId)
         }
         .onDisappear {
-            usernameSearchTask?.cancel()
+            usernameSearch.cancel()
         }
     }
 
@@ -4999,53 +5014,10 @@ private struct TripPlannerFriendsEditorView: View {
         }
     }
 
-    @MainActor
-    private func scheduleUsernameSearch() {
-        usernameSearchTask?.cancel()
-
-        let query = tripPlannerNormalizedUsernameQuery(usernameSearchText)
-        guard !query.isEmpty else {
-            searchedUsers = []
-            isSearchingUsers = false
-            return
-        }
-
-        usernameSearchTask = Task {
-            try? await Task.sleep(nanoseconds: tripPlannerUsernameSearchDebounceNanoseconds)
-            guard !Task.isCancelled else { return }
-            await searchUsersByUsername(query: query)
-        }
-    }
-
-    @MainActor
-    private func searchUsersByUsername(query: String) async {
-        guard !query.isEmpty else {
-            searchedUsers = []
-            isSearchingUsers = false
-            return
-        }
-
-        isSearchingUsers = true
-        defer { isSearchingUsers = false }
-
-        do {
-            let results = try await supabase.searchUsers(byUsername: query)
-            guard tripPlannerNormalizedUsernameQuery(usernameSearchText) == query else { return }
-            searchedUsers = results.filter { profile in
-                profile.id != sessionManager.userId
-            }
-        } catch {
-            guard tripPlannerNormalizedUsernameQuery(usernameSearchText) == query else { return }
-            searchedUsers = []
-        }
-    }
-
     private func addSearchedUser(_ profile: Profile) {
-        usernameSearchTask?.cancel()
         friends = mergedProfiles(friends + [profile])
         selectedFriendIds.insert(profile.id)
-        usernameSearchText = ""
-        searchedUsers = []
+        usernameSearch.reset()
     }
 
     private func fetchProfiles(for ids: [UUID]) async throws -> [Profile] {
