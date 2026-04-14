@@ -16,6 +16,19 @@ import CryptoKit
 import Translation
 #endif
 
+private enum CountryDetailDebugLog {
+    nonisolated static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🌍 [CountryDetail] \(timestamp) \(text)")
+#endif
+    }
+
+    nonisolated static func durationText(since startTime: TimeInterval) -> String {
+        String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)
+    }
+}
+
 struct CountryDetailView: View {
     @State var country: Country
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
@@ -154,24 +167,37 @@ struct CountryDetailView: View {
 
     @MainActor
     private func refreshCountryIfAvailable() async {
+        let refreshStart = Date().timeIntervalSinceReferenceDate
         let iso2 = country.iso2.uppercased()
+        var loadedFromCache = false
+        var loadedFromRefresh = false
 
         if let cached = CountryAPI.loadCachedCountries()?.first(where: { $0.iso2.uppercased() == iso2 }) {
             country = cached
+            loadedFromCache = true
         }
 
         if let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 10 * 60)?
             .first(where: { $0.iso2.uppercased() == iso2 }) {
             country = refreshed
+            loadedFromRefresh = true
         }
+
+        CountryDetailDebugLog.message(
+            "Country refresh iso2=\(iso2) cacheHit=\(loadedFromCache) refreshed=\(loadedFromRefresh) duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
+        )
     }
 
     @MainActor
     private func refreshVisaPresentation() async {
+        let refreshStart = Date().timeIntervalSinceReferenceDate
         country = await visaStore.hydrate(
             country: country,
             passportCountryCodes: profileVM.passportNationalities,
             fallbackPassportCountryCode: passportFallbackCountryCode
+        )
+        CountryDetailDebugLog.message(
+            "Visa presentation hydrated iso2=\(country.iso2.uppercased()) passports=\(profileVM.passportNationalities.count) duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
         )
     }
     
@@ -309,8 +335,13 @@ struct CountryDetailView: View {
             .padding(.trailing, 18)
         }
         .task(id: country.iso2.uppercased()) {
+            let loadStart = Date().timeIntervalSinceReferenceDate
+            let iso2 = country.iso2.uppercased()
             let shouldResolveVisaContext = shouldResolveVisaContextBeforeDisplay
             isResolvingVisaContext = shouldResolveVisaContext
+            CountryDetailDebugLog.message(
+                "Screen load started iso2=\(iso2) shouldResolveVisaContext=\(shouldResolveVisaContext) authenticated=\(sessionManager.isAuthenticated)"
+            )
 
             async let engagementLoad: Void = engagementVM.load(
                 countryCode: country.iso2,
@@ -323,6 +354,9 @@ struct CountryDetailView: View {
 
             if shouldResolveVisaContext {
                 await profileVM.loadIfNeeded()
+                CountryDetailDebugLog.message(
+                    "Profile VM load finished iso2=\(iso2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
             }
 
             await refreshCountryIfAvailable()
@@ -330,6 +364,9 @@ struct CountryDetailView: View {
             isResolvingVisaContext = false
 
             _ = await engagementLoad
+            CountryDetailDebugLog.message(
+                "Screen load finished iso2=\(iso2) languageProfileLoaded=\(countryLanguageProfile != nil) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
         }
         .onChange(of: profileVM.passportPreferences) { _, _ in
             Task {
@@ -445,9 +482,13 @@ private final class CountryFriendEngagementViewModel: ObservableObject {
     private let service = CountryFriendEngagementService()
 
     func load(countryCode: String, currentUserId: UUID?, isAuthenticated: Bool) async {
+        let loadStart = Date().timeIntervalSinceReferenceDate
         guard isAuthenticated, let currentUserId else {
             engagement = .empty
             isLoading = false
+            CountryDetailDebugLog.message(
+                "Friend engagement skipped country=\(countryCode.uppercased()) authenticated=\(isAuthenticated) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
             return
         }
 
@@ -458,9 +499,15 @@ private final class CountryFriendEngagementViewModel: ObservableObject {
                 for: countryCode,
                 currentUserId: currentUserId
             )
+            CountryDetailDebugLog.message(
+                "Friend engagement loaded country=\(countryCode.uppercased()) totalFriends=\(engagement.totalFriends) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
         } catch {
             print("❌ failed to load country friend engagement:", error)
             engagement = .empty
+            CountryDetailDebugLog.message(
+                "Friend engagement failed country=\(countryCode.uppercased()) duration=\(CountryDetailDebugLog.durationText(since: loadStart)) error=\(error.localizedDescription)"
+            )
         }
 
         isLoading = false
@@ -483,8 +530,12 @@ private struct CountryFriendEngagementService {
         for countryCode: String,
         currentUserId: UUID
     ) async throws -> CountryFriendEngagement {
+        let fetchStart = Date().timeIntervalSinceReferenceDate
         let normalizedCountryCode = countryCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         let friends = try await friendService.fetchFriends(for: currentUserId)
+        CountryDetailDebugLog.message(
+            "Engagement friends fetched country=\(normalizedCountryCode) count=\(friends.count) duration=\(CountryDetailDebugLog.durationText(since: fetchStart))"
+        )
 
         guard !friends.isEmpty else {
             return .empty
@@ -1039,13 +1090,20 @@ private actor CountryLanguageProfileStore {
     private var missingISO2: Set<String> = []
 
     func profile(for iso2: String) async throws -> CountryLanguageProfile? {
+        let loadStart = Date().timeIntervalSinceReferenceDate
         let normalizedISO2 = iso2.uppercased()
 
         if let cached = cache[normalizedISO2] {
+            CountryDetailDebugLog.message(
+                "Language profile cache hit iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
             return cached
         }
 
         if missingISO2.contains(normalizedISO2) {
+            CountryDetailDebugLog.message(
+                "Language profile known-missing iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
             return nil
         }
 
@@ -1058,10 +1116,16 @@ private actor CountryLanguageProfileStore {
 
         guard let profile = response.value.first else {
             missingISO2.insert(normalizedISO2)
+            CountryDetailDebugLog.message(
+                "Language profile missing from remote iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
             return nil
         }
 
         cache[normalizedISO2] = profile
+        CountryDetailDebugLog.message(
+            "Language profile fetched iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
         return profile
     }
 
