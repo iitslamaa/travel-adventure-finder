@@ -3043,36 +3043,56 @@ struct TripPlannerView: View {
 
     @MainActor
     private func preloadTripOwnerProfiles() async {
-        var nextSnapshots: [UUID: TripPlannerFriendSnapshot] = [:]
-
-        for trip in store.trips {
+        let ownerTargets = store.trips.compactMap { trip -> (tripId: UUID, ownerId: UUID)? in
             guard let ownerId = trip.ownerId,
                   ownerId != sessionManager.userId,
                   !trip.friends.contains(where: { $0.id == ownerId }) else {
-                continue
+                return nil
             }
+            return (trip.id, ownerId)
+        }
 
-            if let cachedOwner = profileService.cachedProfile(userId: ownerId) {
-                nextSnapshots[trip.id] = TripPlannerFriendSnapshot(
+        var nextSnapshots: [UUID: TripPlannerFriendSnapshot] = [:]
+        var uncachedTargets: [(tripId: UUID, ownerId: UUID)] = []
+
+        for target in ownerTargets {
+            if let cachedOwner = profileService.cachedProfile(userId: target.ownerId) {
+                nextSnapshots[target.tripId] = TripPlannerFriendSnapshot(
                     id: cachedOwner.id,
                     displayName: cachedOwner.tripDisplayName,
                     username: cachedOwner.username,
                     avatarURL: cachedOwner.avatarUrl
                 )
-                continue
-            }
-
-            if let fetchedOwner = try? await profileService.fetchMyProfile(userId: ownerId) {
-                nextSnapshots[trip.id] = TripPlannerFriendSnapshot(
-                    id: fetchedOwner.id,
-                    displayName: fetchedOwner.tripDisplayName,
-                    username: fetchedOwner.username,
-                    avatarURL: fetchedOwner.avatarUrl
-                )
+            } else {
+                uncachedTargets.append(target)
             }
         }
 
         ownerSnapshotsByTripID = nextSnapshots
+
+        guard !uncachedTargets.isEmpty else { return }
+
+        await withTaskGroup(of: (UUID, TripPlannerFriendSnapshot?).self) { group in
+            for target in uncachedTargets {
+                group.addTask {
+                    let fetchedOwner = try? await profileService.fetchMyProfile(userId: target.ownerId)
+                    let snapshot = fetchedOwner.map {
+                        TripPlannerFriendSnapshot(
+                            id: $0.id,
+                            displayName: $0.tripDisplayName,
+                            username: $0.username,
+                            avatarURL: $0.avatarUrl
+                        )
+                    }
+                    return (target.tripId, snapshot)
+                }
+            }
+
+            for await (tripId, snapshot) in group {
+                guard let snapshot else { continue }
+                ownerSnapshotsByTripID[tripId] = snapshot
+            }
+        }
     }
 
     @ViewBuilder
