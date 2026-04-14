@@ -9,6 +9,8 @@ import Foundation
 import SwiftUI
 
 struct CountryAffordabilityCard: View {
+    @EnvironmentObject private var currencyPreferenceStore: CurrencyPreferenceStore
+
     let country: Country
     let weightPercentage: Int
 
@@ -77,19 +79,19 @@ struct CountryAffordabilityCard: View {
             // Optional daily spend breakdown (if available)
             VStack(alignment: .leading, spacing: 4) {
                 if let total = country.dailySpendTotalUsd {
-                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.daily_total_format"), locale: AppDisplayLocale.current, total)))
+                    affordabilityLine(title: "Typical daily total:", amountUSD: total)
                 }
 
                 if let hotel = country.dailySpendHotelUsd {
-                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.hotel_per_night_format"), locale: AppDisplayLocale.current, hotel)))
+                    affordabilityLine(title: "Hotel (per night):", amountUSD: hotel)
                 }
 
                 if let food = country.dailySpendFoodUsd {
-                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.food_per_day_format"), locale: AppDisplayLocale.current, food)))
+                    affordabilityLine(title: "Food (per day):", amountUSD: food)
                 }
 
                 if let activities = country.dailySpendActivitiesUsd {
-                    Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.affordability.activities_per_day_format"), locale: AppDisplayLocale.current, activities)))
+                    affordabilityLine(title: "Activities (per day):", amountUSD: activities)
                 }
             }
             .font(.footnote)
@@ -114,5 +116,23 @@ struct CountryAffordabilityCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    @ViewBuilder
+    private func affordabilityLine(title: String, amountUSD: Double) -> some View {
+        let targetCode = currencyPreferenceStore.defaultCurrencyCode
+        let converted = currencyPreferenceStore.convertedAmountFromUSD(amountUSD, to: targetCode)
+
+        HStack(spacing: 4) {
+            Text(title)
+            AppCurrencyAmountLabel(
+                amount: converted,
+                currencyCode: targetCode,
+                font: .footnote,
+                fontSize: 12,
+                color: .secondary,
+                maximumFractionDigits: 0
+            )
+        }
     }
 }

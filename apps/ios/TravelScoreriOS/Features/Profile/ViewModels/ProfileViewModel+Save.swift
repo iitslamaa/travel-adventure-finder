@@ -18,6 +18,7 @@ extension ProfileViewModel {
         firstName: String,
         lastName: String,
         username: String,
+        defaultCurrencyCode: String?,
         homeCountries: [String]?,
         passportNationalities: [String],
         visaPassportCountryCode: String?,
@@ -45,6 +46,7 @@ extension ProfileViewModel {
             else { return nil }
             return currentCountry
         }()
+        let normalizedDefaultCurrencyCode = AppCurrencyCatalog.normalizedCode(defaultCurrencyCode)
 
         let normalizedFavoriteCountries = favoriteCountries?.sorted()
         let normalizedPassportNationalities = passportNationalities
@@ -84,6 +86,7 @@ extension ProfileViewModel {
             travelStyle: travelStyle.map { [$0] },
             travelMode: travelMode.map { [$0] },
             nextDestination: nextDestination,
+            defaultCurrencyCode: normalizedDefaultCurrencyCode,
             currentCountry: normalizedCurrentCountry,
             favoriteCountries: normalizedFavoriteCountries,
             onboardingCompleted: true
@@ -121,6 +124,7 @@ extension ProfileViewModel {
             current.travelStyle = travelStyle.map { [$0] } ?? current.travelStyle
             current.travelMode = travelMode.map { [$0] } ?? current.travelMode
             current.nextDestination = nextDestination
+            current.defaultCurrencyCode = normalizedDefaultCurrencyCode
             current.currentCountry = normalizedCurrentCountry
             current.favoriteCountries = normalizedFavoriteCountries ?? current.favoriteCountries
 

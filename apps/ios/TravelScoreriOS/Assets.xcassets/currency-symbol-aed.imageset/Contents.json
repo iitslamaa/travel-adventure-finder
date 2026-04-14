@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "uae_dirham_symbol.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

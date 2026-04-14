@@ -7,6 +7,7 @@ struct ProfileSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var profileVM: ProfileViewModel
     @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var currencyPreferenceStore: CurrencyPreferenceStore
 
     private let viewedUserId: UUID
 
@@ -28,6 +29,7 @@ struct ProfileSettingsView: View {
 
     @State private var travelMode: TravelMode? = nil
     @State private var travelStyle: TravelStyle? = nil
+    @State private var defaultCurrencyCode: String = CurrencyPreferenceStore.persistedDefaultCurrencyCode()
     @State private var passportNationalities: Set<String> = []
     @State private var visaPassportCountryCode: String? = nil
 
@@ -51,6 +53,7 @@ struct ProfileSettingsView: View {
         case addLanguage
         case travelMode
         case travelStyle
+        case defaultCurrency
         case passportNationalities
 
         var id: Int { hashValue }
@@ -86,6 +89,8 @@ struct ProfileSettingsView: View {
         let originalHomeCountries = Set(profile.livedCountries)
         let originalTravelMode = profile.travelMode.first.flatMap { TravelMode(rawValue: $0) }
         let originalTravelStyle = profile.travelStyle.first.flatMap { TravelStyle(rawValue: $0) }
+        let originalDefaultCurrencyCode = AppCurrencyCatalog.normalizedCode(profile.defaultCurrencyCode)
+            ?? CurrencyPreferenceStore.persistedDefaultCurrencyCode()
         let originalNextDestination = profile.nextDestination
         let originalCurrentCountry = profile.currentCountry
         let originalFavoriteCountries = profile.favoriteCountries ?? []
@@ -102,6 +107,7 @@ struct ProfileSettingsView: View {
             || homeCountries != originalHomeCountries
             || travelMode != originalTravelMode
             || travelStyle != originalTravelStyle
+            || defaultCurrencyCode != originalDefaultCurrencyCode
             || nextDestination != originalNextDestination
             || currentCountry != originalCurrentCountry
             || favoriteCountries.sorted() != originalFavoriteCountries.sorted()
@@ -146,6 +152,8 @@ struct ProfileSettingsView: View {
                             homeCountries = Set(profile.livedCountries)
                             travelMode = profile.travelMode.first.flatMap { TravelMode(rawValue: $0) }
                             travelStyle = profile.travelStyle.first.flatMap { TravelStyle(rawValue: $0) }
+                            defaultCurrencyCode = AppCurrencyCatalog.normalizedCode(profile.defaultCurrencyCode)
+                                ?? currencyPreferenceStore.defaultCurrencyCode
                             nextDestination = profile.nextDestination
                             passportNationalities = Set(profileVM.passportNationalities)
                             visaPassportCountryCode = profileVM.visaPassportCountryCode ?? profileVM.passportNationalities.sorted().first
@@ -190,6 +198,7 @@ struct ProfileSettingsView: View {
                             firstName: firstName,
                             lastName: lastName,
                             username: username,
+                            defaultCurrencyCode: defaultCurrencyCode,
                             homeCountries: homeCountries,
                             passportNationalities: passportNationalities,
                             visaPassportCountryCode: visaPassportCountryCode,
@@ -211,6 +220,7 @@ struct ProfileSettingsView: View {
 
                         switch result {
                         case .success:
+                            currencyPreferenceStore.setDefaultCurrency(defaultCurrencyCode)
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
                                 showSaveSuccess = true
                             }
@@ -326,6 +336,39 @@ struct ProfileSettingsView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
 
+            case .defaultCurrency:
+                NavigationStack {
+                    List {
+                        ForEach(AppCurrencyCatalog.supportedCodes, id: \.self) { code in
+                            Button {
+                                defaultCurrencyCode = code
+                                activeSheet = nil
+                            } label: {
+                                HStack(spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text("\(AppCurrencyCatalog.displayName(for: code)) (\(code))")
+                                            .foregroundStyle(.primary)
+                                        Text(AppCurrencyCatalog.symbol(for: code))
+                                            .font(.footnote)
+                                            .foregroundStyle(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    if defaultCurrencyCode == code {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundStyle(.green)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .navigationTitle("Default currency")
+                    .navigationBarTitleDisplayMode(.inline)
+                }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+
             case .passportNationalities:
                 CountryMultiSelectView(
                     title: String(localized: "profile.settings.sheet.nationalities_title"),
@@ -357,6 +400,7 @@ struct ProfileSettingsView: View {
             favoriteCountries: $favoriteCountries,
             travelMode: $travelMode,
             travelStyle: $travelStyle,
+            defaultCurrencyCode: $defaultCurrencyCode,
             passportNationalities: $passportNationalities,
             visaPassportCountryCode: $visaPassportCountryCode,
             languages: $languages,
@@ -380,6 +424,10 @@ struct ProfileSettingsView: View {
             showTravelStyleDialog: Binding(
                 get: { false },
                 set: { if $0 { activeSheet = .travelStyle } }
+            ),
+            showDefaultCurrencyPicker: Binding(
+                get: { false },
+                set: { if $0 { activeSheet = .defaultCurrency } }
             ),
             showPassportNationalitiesPicker: Binding(
                 get: { false },
@@ -498,6 +546,7 @@ struct SettingsScrollContent: View {
     @Binding var favoriteCountries: [String]
     @Binding var travelMode: TravelMode?
     @Binding var travelStyle: TravelStyle?
+    @Binding var defaultCurrencyCode: String
     @Binding var passportNationalities: Set<String>
     @Binding var visaPassportCountryCode: String?
     @Binding var languages: [LanguageEntry]
@@ -508,6 +557,7 @@ struct SettingsScrollContent: View {
     @Binding var showFavoriteCountriesPicker: Bool
     @Binding var showTravelModeDialog: Bool
     @Binding var showTravelStyleDialog: Bool
+    @Binding var showDefaultCurrencyPicker: Bool
     @Binding var showPassportNationalitiesPicker: Bool
     @Binding var showNextDestinationPicker: Bool
     @Binding var showAddLanguage: Bool
@@ -640,8 +690,10 @@ struct SettingsScrollContent: View {
                 ProfileSettingsTravelSection(
                     travelMode: $travelMode,
                     travelStyle: $travelStyle,
+                    defaultCurrencyCode: $defaultCurrencyCode,
                     showTravelModeDialog: $showTravelModeDialog,
-                    showTravelStyleDialog: $showTravelStyleDialog
+                    showTravelStyleDialog: $showTravelStyleDialog,
+                    showDefaultCurrencyPicker: $showDefaultCurrencyPicker
                 )
 
                 // MARK: - Account Actions

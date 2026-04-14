@@ -50,6 +50,7 @@ struct TravelScoreriOSApp: App {
     @StateObject private var traveledStore: TraveledStore
     @StateObject private var sessionManager: SessionManager
     @StateObject private var scoreWeightsStore: ScoreWeightsStore
+    @StateObject private var currencyPreferenceStore: CurrencyPreferenceStore
 
     init() {
         let bucket = BucketListStore()
@@ -66,6 +67,7 @@ struct TravelScoreriOSApp: App {
         _traveledStore = StateObject(wrappedValue: traveled)
         _scoreWeightsStore = StateObject(wrappedValue: weights)
         _sessionManager = StateObject(wrappedValue: session)
+        _currencyPreferenceStore = StateObject(wrappedValue: CurrencyPreferenceStore())
 
         // Configure Nuke global image pipeline for avatar stability
         let dataCache = try? DataCache(name: "com.travelaf.avatarCache")
@@ -101,6 +103,7 @@ struct TravelScoreriOSApp: App {
                 .environmentObject(bucketListStore)
                 .environmentObject(traveledStore)
                 .environmentObject(scoreWeightsStore)
+                .environmentObject(currencyPreferenceStore)
                 .preferredColorScheme(.light)
         }
     }

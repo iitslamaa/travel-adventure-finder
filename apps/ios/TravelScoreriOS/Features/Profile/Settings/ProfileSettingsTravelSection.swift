@@ -12,9 +12,11 @@ struct ProfileSettingsTravelSection: View {
 
     @Binding var travelMode: TravelMode?
     @Binding var travelStyle: TravelStyle?
+    @Binding var defaultCurrencyCode: String
 
     @Binding var showTravelModeDialog: Bool
     @Binding var showTravelStyleDialog: Bool
+    @Binding var showDefaultCurrencyPicker: Bool
 
     var body: some View {
         SectionCard(title: String(localized: "profile.settings.travel.title")) {
@@ -54,6 +56,31 @@ struct ProfileSettingsTravelSection: View {
 
                         Text(travelStyle?.label ?? String(localized: "profile.settings.not_set"))
                             .foregroundStyle(travelStyle == nil ? .secondary : .primary)
+
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Divider()
+                    .opacity(0.18)
+
+                Button {
+                    showDefaultCurrencyPicker = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Text("Default currency")
+                            .foregroundStyle(.primary)
+
+                        Spacer()
+
+                        Text("\(AppCurrencyCatalog.displayName(for: defaultCurrencyCode)) (\(defaultCurrencyCode))")
+                            .foregroundStyle(.primary)
+                            .multilineTextAlignment(.trailing)
 
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.footnote)

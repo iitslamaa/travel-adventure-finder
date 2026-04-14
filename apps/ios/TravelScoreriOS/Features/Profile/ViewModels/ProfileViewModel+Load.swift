@@ -73,6 +73,12 @@ extension ProfileViewModel {
             }
 
             profile = fetchedProfile
+            if let defaultCurrencyCode = fetchedProfile.defaultCurrencyCode {
+                UserDefaults.standard.set(
+                    defaultCurrencyCode,
+                    forKey: "travelaf.default_currency_code"
+                )
+            }
             viewedTraveledCountries = traveled
             viewedBucketListCountries = bucket
             relationshipState = resolvedRelationship

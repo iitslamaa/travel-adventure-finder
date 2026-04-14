@@ -14,6 +14,7 @@ struct DiscoveryMapView: View {
     @State private var selectedCountryISO: String? = nil
     @State private var isLoadingMap: Bool = true
     @State private var shouldMountMap: Bool = false
+    @State private var isVisible: Bool = false
 
     private var displayedCountries: [Country] {
         countries.map {
@@ -63,9 +64,21 @@ struct DiscoveryMapView: View {
             }
         }
         .onAppear {
+            isVisible = true
+            selectedCountryISO = nil
+            isLoadingMap = true
+            shouldMountMap = false
+
             DispatchQueue.main.async {
+                guard isVisible else { return }
                 shouldMountMap = true
             }
+        }
+        .onDisappear {
+            isVisible = false
+            selectedCountryISO = nil
+            isLoadingMap = true
+            shouldMountMap = false
         }
         .preferredColorScheme(nil)
     }
