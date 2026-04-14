@@ -27,6 +27,7 @@ struct CountryListView: View {
     let showsSearchBar: Bool
     @Binding var searchText: String
     let countries: [Country]
+    var appliesWeighting: Bool = true
     @Binding var sort: CountrySort
     @Binding var sortOrder: SortOrder
     var mode: CountryListMode = .discovery
@@ -59,12 +60,17 @@ struct CountryListView: View {
     }
 
     private func scheduleRecomputeVisible() {
-        let weights = weightsStore.weights
-        let recalculatedCountries = countries.map {
-            $0.applyingOverallScore(
-                using: weights,
-                selectedMonth: weightsStore.selectedMonth
-            )
+        let displayCountries: [Country]
+        if appliesWeighting {
+            let weights = weightsStore.weights
+            displayCountries = countries.map {
+                $0.applyingOverallScore(
+                    using: weights,
+                    selectedMonth: weightsStore.selectedMonth
+                )
+            }
+        } else {
+            displayCountries = countries
         }
 
         let snapshotSearch = searchText
@@ -73,10 +79,10 @@ struct CountryListView: View {
 
         let filtered: [Country]
         if snapshotSearch.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            filtered = recalculatedCountries
+            filtered = displayCountries
         } else {
             let normalizedSearch = snapshotSearch.normalizedSearchKey
-            filtered = recalculatedCountries.filter { country in
+            filtered = displayCountries.filter { country in
                 country.localizedSearchableNames.contains {
                     $0.normalizedSearchKey.contains(normalizedSearch)
                 }

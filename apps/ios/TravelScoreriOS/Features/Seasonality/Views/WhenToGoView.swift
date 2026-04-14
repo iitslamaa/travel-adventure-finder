@@ -94,7 +94,7 @@ struct WhenToGoView: View {
         ScrollView {
             VStack(spacing: 16) {
                 VStack(spacing: 12) {
-                    ForEach(seasonSections, id: \.title) { section in
+                    ForEach(viewModel.seasonSections) { section in
                         countryListSection(
                             title: section.title,
                             note: section.note,
@@ -121,32 +121,6 @@ struct WhenToGoView: View {
         }
     }
 
-    private var seasonSections: [(title: String, note: String, countries: [WhenToGoItem])] {
-        [
-            (
-                title: "Peak season",
-                note: "Best weather and overall conditions. Expect the busiest stretch, higher prices, and the strongest all-around travel scores.",
-                countries: viewModel.peakCountries
-            ),
-            (
-                title: "Good season",
-                note: "Strong month to go with reliable conditions, but usually a little less perfect than the absolute best window.",
-                countries: viewModel.goodCountries
-            ),
-            (
-                title: "Shoulder season",
-                note: "A balanced middle ground. You may trade some ideal weather for lighter crowds, lower prices, or a more flexible trip.",
-                countries: viewModel.shoulderCountries
-            ),
-            (
-                title: "Rough season",
-                note: "This month is usually harder for travel here. Weather, crowds, closures, or value may all work against the trip.",
-                countries: viewModel.poorCountries
-            ),
-        ]
-        .filter { !$0.countries.isEmpty }
-    }
-    
     private func countryListSection(
         title: String,
         note: String,

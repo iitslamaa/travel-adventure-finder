@@ -90,6 +90,7 @@ struct DiscoveryCountryListView: View {
                 showsSearchBar: true,
                 searchText: $searchText,
                 countries: countries,
+                appliesWeighting: false,
                 sort: $sort,
                 sortOrder: $sortOrder
             )
@@ -143,9 +144,11 @@ struct DiscoveryView: View {
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
     @EnvironmentObject private var sessionManager: SessionManager
     @State private var showingWeights = false
+    @State private var baseCountries: [Country] = CountryAPI.loadCachedCountries() ?? []
+    @State private var didLoadCountries = false
 
     private var countries: [Country] {
-        (CountryAPI.loadCachedCountries() ?? []).map {
+        baseCountries.map {
             $0.applyingOverallScore(
                 using: weightsStore.weights,
                 selectedMonth: weightsStore.selectedMonth
@@ -246,6 +249,18 @@ struct DiscoveryView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
+        .task {
+            guard !didLoadCountries else { return }
+            didLoadCountries = true
+
+            if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
+                baseCountries = cached
+            }
+
+            if let refreshed = await CountryAPI.refreshCountriesIfNeeded(), !refreshed.isEmpty {
+                baseCountries = refreshed
+            }
+        }
         .sheet(isPresented: $showingWeights) {
             NavigationStack {
                 CustomWeightsView(
