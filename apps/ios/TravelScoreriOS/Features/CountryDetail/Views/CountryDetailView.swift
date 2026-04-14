@@ -65,6 +65,7 @@ struct CountryDetailView: View {
         traveledStore.ids.contains(country.id)
     }
 
+    @MainActor
     private var localizedVisaPassportLabels: [String] {
         let currentPassportCodes = profileVM.passportNationalities
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
@@ -109,6 +110,7 @@ struct CountryDetailView: View {
         return []
     }
 
+    @MainActor
     private var visaPassportLabel: String {
         if !localizedVisaPassportLabels.isEmpty {
             return localizedVisaPassportLabels.joined(separator: " / ")
@@ -121,6 +123,7 @@ struct CountryDetailView: View {
         return visaStore.activePassportLabel ?? String(localized: "trip_planner.visa.default_passport_label")
     }
 
+    @MainActor
     private var recommendedPassportLabel: String? {
         guard profileVM.passportNationalities.count > 1 else { return nil }
 
@@ -131,12 +134,14 @@ struct CountryDetailView: View {
         return country.visaRecommendedPassportLabel?.nilIfBlank
     }
 
+    @MainActor
     private var equalBestPassportLabels: [String] {
         guard profileVM.passportNationalities.count > 1 else { return [] }
         guard recommendedPassportLabel == nil else { return [] }
         return localizedVisaPassportLabels.count > 1 ? localizedVisaPassportLabels : []
     }
 
+    @MainActor
     private var shouldShowPassportRecommendation: Bool {
         guard profileVM.passportNationalities.count > 1 else { return false }
         return recommendedPassportLabel != nil || equalBestPassportLabels.count > 1

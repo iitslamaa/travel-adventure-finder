@@ -34,7 +34,7 @@ struct ScoreCountryDrawerView: View {
                 
                 // Header + Score (compact single row)
                 HStack(spacing: 8) {
-                    Text(country.flagEmoji ?? "🌍")
+                    Text(country.flagEmoji)
                         .font(.system(size: 30))
 
                     VStack(alignment: .leading, spacing: 1) {

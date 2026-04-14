@@ -464,8 +464,8 @@ final class ProfileService {
         try await supabase.client.storage
             .from("avatars")
             .upload(
-                path: path,
-                file: data,
+                path,
+                data: data,
                 options: FileOptions(
                     cacheControl: "3600",
                     contentType: "image/jpeg",
