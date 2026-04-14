@@ -86,6 +86,10 @@ struct CountryAffordabilityCard: View {
                     affordabilityLine(title: "Hotel (per night):", amountUSD: hotel)
                 }
 
+                if let hostel = country.dailySpendHostelUsd {
+                    affordabilityLine(title: "Hostel (per night):", amountUSD: hostel)
+                }
+
                 if let food = country.dailySpendFoodUsd {
                     affordabilityLine(title: "Food (per day):", amountUSD: food)
                 }

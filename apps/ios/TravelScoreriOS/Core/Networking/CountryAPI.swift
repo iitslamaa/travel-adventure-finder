@@ -150,6 +150,7 @@ extension CountryAPI {
                 visaSourceUrl: dto.visaSourceUrl,
                 dailySpendTotalUsd: dto.dailySpendTotalUsd,
                 dailySpendHotelUsd: dto.dailySpendHotelUsd,
+                dailySpendHostelUsd: dto.dailySpendHostelUsd,
                 dailySpendFoodUsd: dto.dailySpendFoodUsd,
                 dailySpendActivitiesUsd: dto.dailySpendActivitiesUsd,
                 affordabilityCategory: dto.affordabilityCategory,

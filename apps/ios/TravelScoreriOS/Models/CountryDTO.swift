@@ -44,6 +44,7 @@ struct CountryDTO: Decodable {
     /// Affordability / daily spend (approx, hotel traveler)
     let dailySpendTotalUsd: Double?
     let dailySpendHotelUsd: Double?
+    let dailySpendHostelUsd: Double?
     let dailySpendFoodUsd: Double?
     let dailySpendActivitiesUsd: Double?
 
@@ -91,6 +92,7 @@ struct CountryDTO: Decodable {
         let foodUsd: Double?
         let activitiesUsd: Double?
         let hotelUsd: Double?
+        let hostelUsd: Double?
         let totalUsd: Double?
     }
 
@@ -360,11 +362,13 @@ struct CountryDTO: Decodable {
         if let ds = facts?.dailySpend {
             self.dailySpendTotalUsd = ds.totalUsd
             self.dailySpendHotelUsd = ds.hotelUsd
+            self.dailySpendHostelUsd = ds.hostelUsd
             self.dailySpendFoodUsd = ds.foodUsd
             self.dailySpendActivitiesUsd = ds.activitiesUsd
         } else {
             self.dailySpendTotalUsd = nil
             self.dailySpendHotelUsd = nil
+            self.dailySpendHostelUsd = nil
             self.dailySpendFoodUsd = nil
             self.dailySpendActivitiesUsd = nil
         }
