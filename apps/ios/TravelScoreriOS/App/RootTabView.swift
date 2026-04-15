@@ -181,12 +181,18 @@ struct RootTabView: View {
             resetNavigationState()
         }
         .onChange(of: scenePhase) { _, phase in
-            guard phase == .active else { return }
             Task {
+                await sharedTripInbox.updateRealtimeConnection(isActive: phase == .active)
+
+                guard phase == .active else { return }
+
                 async let inboxRefresh: Void = sharedTripInbox.refresh()
                 async let rateRefresh: Void = currencyPreferenceStore.refreshRatesIfNeeded()
                 _ = await (inboxRefresh, rateRefresh)
             }
+        }
+        .task {
+            await sharedTripInbox.updateRealtimeConnection(isActive: scenePhase == .active)
         }
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.light, for: .navigationBar)

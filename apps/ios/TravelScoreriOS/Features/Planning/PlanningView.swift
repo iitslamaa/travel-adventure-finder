@@ -76,13 +76,14 @@ final class SharedTripInboxStore: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var realtimeChannel: RealtimeChannelV2?
     private var realtimeTask: Task<Void, Never>?
+    private var subscribedUserId: UUID?
+    private var isRealtimeActive = false
 
     init() {
         observeAuthState()
         observeTripUpdates()
 
         Task {
-            await configureRealtimeSubscription()
             await refresh()
         }
     }
@@ -99,24 +100,15 @@ final class SharedTripInboxStore: ObservableObject {
 
         do {
             let trips = try await syncService.fetchTrips(userId: userId)
-            let seenTripIDs = seenSharedTripIDs(for: userId)
-
-            notifications = trips
-                .filter { trip in
-                    trip.ownerId != nil
-                        && trip.ownerId != userId
-                        && !seenTripIDs.contains(trip.id.uuidString)
-                }
-                .sorted { $0.updatedAt > $1.updatedAt }
-                .map(SharedTripInboxEntry.init)
-
-            TripPlannerDebugLog.message(
-                "Inbox refresh for \(TripPlannerDebugLog.userLabel(userId)) fetched \(trips.count) trips, pending notifications=\(notifications.count)"
-            )
+            applyPrefetchedTrips(trips, for: userId)
         } catch {
             print("❌ Shared trip inbox refresh failed:", error)
             notifications = []
         }
+    }
+
+    func refresh(using trips: [TripPlannerTrip], userId: UUID) {
+        applyPrefetchedTrips(trips, for: userId)
     }
 
     func markSeen(tripId: UUID) {
@@ -134,7 +126,7 @@ final class SharedTripInboxStore: ObservableObject {
             .sink { [weak self] in
                 guard let self else { return }
                 Task {
-                    await self.configureRealtimeSubscription()
+                    await self.updateRealtimeConnection(isActive: self.isRealtimeActive)
                     await self.refresh()
                 }
             }
@@ -157,14 +149,43 @@ final class SharedTripInboxStore: ObservableObject {
         Set(UserDefaults.standard.stringArray(forKey: seenKey(for: userId)) ?? [])
     }
 
+    private func applyPrefetchedTrips(_ trips: [TripPlannerTrip], for userId: UUID) {
+        let seenTripIDs = seenSharedTripIDs(for: userId)
+
+        notifications = trips
+            .filter { trip in
+                trip.ownerId != nil
+                    && trip.ownerId != userId
+                    && !seenTripIDs.contains(trip.id.uuidString)
+            }
+            .sorted { $0.updatedAt > $1.updatedAt }
+            .map(SharedTripInboxEntry.init)
+
+        TripPlannerDebugLog.message(
+            "Inbox refresh for \(TripPlannerDebugLog.userLabel(userId)) fetched \(trips.count) trips, pending notifications=\(notifications.count)"
+        )
+    }
+
     private func seenKey(for userId: UUID) -> String {
         "trip_planner_seen_shared_trip_ids_\(userId.uuidString)"
     }
 
-    private func configureRealtimeSubscription() async {
-        await tearDownRealtimeSubscription()
+    func updateRealtimeConnection(isActive: Bool) async {
+        isRealtimeActive = isActive
 
+        guard isActive else {
+            await tearDownRealtimeSubscription()
+            return
+        }
+
+        await configureRealtimeSubscription()
+    }
+
+    private func configureRealtimeSubscription() async {
         guard let userId = supabase.currentUserId else { return }
+        guard realtimeChannel == nil || subscribedUserId != userId else { return }
+
+        await tearDownRealtimeSubscription()
 
         TripPlannerDebugLog.message("Configuring realtime subscription for \(TripPlannerDebugLog.userLabel(userId))")
 
@@ -179,11 +200,13 @@ final class SharedTripInboxStore: ObservableObject {
         do {
             try await channel.subscribeWithError()
             realtimeChannel = channel
+            subscribedUserId = userId
             TripPlannerDebugLog.message("Realtime subscribed for \(TripPlannerDebugLog.userLabel(userId))")
             realtimeTask = Task {
                 for await _ in changes {
                     guard !Task.isCancelled else { break }
                     TripPlannerDebugLog.message("Realtime change received for \(TripPlannerDebugLog.userLabel(userId))")
+                    await TripPlannerSyncService.invalidateCache(for: [userId])
                     await MainActor.run {
                         NotificationCenter.default.post(name: .sharedTripsUpdated, object: nil)
                     }
@@ -203,6 +226,8 @@ final class SharedTripInboxStore: ObservableObject {
             await supabase.client.removeChannel(realtimeChannel)
             self.realtimeChannel = nil
         }
+
+        subscribedUserId = nil
     }
 
     deinit {
@@ -2016,35 +2041,49 @@ final class TripPlannerStore: ObservableObject {
 
         do {
             let remoteTrips = try await syncService.fetchTrips(userId: userId)
-            let mergedTrips = mergedTrips(local: localTrips, remote: remoteTrips)
-
-            if migrateLocalTrips {
-                let localOnlyTrips = mergedTrips.filter { mergedTrip in
-                    !remoteTrips.contains(where: { $0.id == mergedTrip.id })
-                }
-
-                for trip in localOnlyTrips {
-                    if trip.isGroupTrip {
-                        TripPlannerDebugLog.message(
-                            "Skipping automatic migration for local group trip \(TripPlannerDebugLog.tripLabel(trip)); it will sync on explicit save"
-                        )
-                    } else {
-                        try await syncService.upsertTrip(userId: userId, trip: trip)
-                    }
-                }
-            }
-
-            trips = mergedTrips
-            persistLocal()
-            TripPlannerDebugLog.message(
-                "Remote refresh complete for \(TripPlannerDebugLog.userLabel(userId)); remote count=\(remoteTrips.count), merged count=\(mergedTrips.count)"
+            try await applyRemoteTrips(
+                remoteTrips,
+                for: userId,
+                localTrips: localTrips,
+                migrateLocalTrips: migrateLocalTrips
             )
-
-            if !mergedTrips.isEmpty {
-                UserDefaults.standard.removeObject(forKey: legacySaveKey)
-            }
         } catch {
             print("❌ Trip planner sync failed:", error)
+        }
+    }
+
+    private func applyRemoteTrips(
+        _ remoteTrips: [TripPlannerTrip],
+        for userId: UUID,
+        localTrips: [TripPlannerTrip],
+        migrateLocalTrips: Bool
+    ) async throws {
+        let mergedTrips = mergedTrips(local: localTrips, remote: remoteTrips)
+
+        if migrateLocalTrips {
+            let localOnlyTrips = mergedTrips.filter { mergedTrip in
+                !remoteTrips.contains(where: { $0.id == mergedTrip.id })
+            }
+
+            for trip in localOnlyTrips {
+                if trip.isGroupTrip {
+                    TripPlannerDebugLog.message(
+                        "Skipping automatic migration for local group trip \(TripPlannerDebugLog.tripLabel(trip)); it will sync on explicit save"
+                    )
+                } else {
+                    try await syncService.upsertTrip(userId: userId, trip: trip)
+                }
+            }
+        }
+
+        trips = mergedTrips
+        persistLocal()
+        TripPlannerDebugLog.message(
+            "Remote refresh complete for \(TripPlannerDebugLog.userLabel(userId)); remote count=\(remoteTrips.count), merged count=\(mergedTrips.count)"
+        )
+
+        if !mergedTrips.isEmpty {
+            UserDefaults.standard.removeObject(forKey: legacySaveKey)
         }
     }
 
@@ -2732,6 +2771,24 @@ extension TripPlannerStore {
     func refresh() async {
         await refreshFromRemoteIfNeeded(migrateLocalTrips: false)
     }
+
+    func refresh(using remoteTrips: [TripPlannerTrip], userId: UUID) async {
+        let localTrips = trips
+        TripPlannerDebugLog.message(
+            "Refreshing remote trips for \(TripPlannerDebugLog.userLabel(userId)); local count=\(localTrips.count), migrateLocal=false"
+        )
+
+        do {
+            try await applyRemoteTrips(
+                remoteTrips,
+                for: userId,
+                localTrips: localTrips,
+                migrateLocalTrips: false
+            )
+        } catch {
+            print("❌ Trip planner sync failed:", error)
+        }
+    }
 }
 
 private struct TripPlannerRemoteTripRow: Codable {
@@ -2758,27 +2815,130 @@ private struct TripPlannerRemoteTripMutationRow: Codable {
     }
 }
 
+private enum TripPlannerFetchPolicy {
+    case standard
+    case networkOnly
+}
+
+private enum TripPlannerAvatarLogDeduper {
+    private static let lock = NSLock()
+    private static var lastLoggedAtByKey: [String: TimeInterval] = [:]
+
+    static func shouldLog(key: String, cooldown: TimeInterval = 30) -> Bool {
+        let now = Date().timeIntervalSinceReferenceDate
+        lock.lock()
+        defer { lock.unlock() }
+
+        if let lastLoggedAt = lastLoggedAtByKey[key], now - lastLoggedAt < cooldown {
+            return false
+        }
+
+        lastLoggedAtByKey[key] = now
+        return true
+    }
+}
+
+private actor TripPlannerFetchCache {
+    struct Entry {
+        let trips: [TripPlannerTrip]
+        let fetchedAt: Date
+    }
+
+    private var entries: [UUID: Entry] = [:]
+    private var inFlightTasks: [UUID: Task<[TripPlannerTrip], Error>] = [:]
+
+    func cachedTrips(for userId: UUID, maxAge: TimeInterval) -> [TripPlannerTrip]? {
+        guard let entry = entries[userId] else { return nil }
+        guard Date().timeIntervalSince(entry.fetchedAt) <= maxAge else {
+            entries[userId] = nil
+            return nil
+        }
+        return entry.trips
+    }
+
+    func inFlightTask(for userId: UUID) -> Task<[TripPlannerTrip], Error>? {
+        inFlightTasks[userId]
+    }
+
+    func storeInFlightTask(_ task: Task<[TripPlannerTrip], Error>, for userId: UUID) {
+        inFlightTasks[userId] = task
+    }
+
+    func clearInFlightTask(for userId: UUID) {
+        inFlightTasks[userId] = nil
+    }
+
+    func storeTrips(_ trips: [TripPlannerTrip], for userId: UUID) {
+        entries[userId] = Entry(trips: trips, fetchedAt: Date())
+    }
+
+    func invalidate(userIds: [UUID]) {
+        for userId in userIds {
+            entries[userId] = nil
+            inFlightTasks[userId]?.cancel()
+            inFlightTasks[userId] = nil
+        }
+    }
+}
+
 private struct TripPlannerSyncService {
     let supabase: SupabaseManager
 
-    func fetchTrips(userId: UUID) async throws -> [TripPlannerTrip] {
-        let rows: [TripPlannerRemoteTripRow] = try await supabase.client
-            .from("user_trip_plans")
-            .select("user_id,trip_id,trip_data")
-            .eq("user_id", value: userId.uuidString)
-            .execute()
-            .value
+    private static let fetchCache = TripPlannerFetchCache()
+    private static let cacheMaxAge: TimeInterval = 30
 
-        TripPlannerDebugLog.message(
-            "Fetched \(rows.count) raw trip rows for user \(TripPlannerDebugLog.userLabel(userId)): [\(rows.map { $0.tripId.uuidString }.joined(separator: ", "))]"
-        )
+    static func invalidateCache(for userIds: [UUID]) async {
+        await fetchCache.invalidate(userIds: userIds)
+    }
 
-        return rows
-            .map(\.tripData)
-            .sorted { $0.createdAt > $1.createdAt }
+    func fetchTrips(userId: UUID, policy: TripPlannerFetchPolicy = .standard) async throws -> [TripPlannerTrip] {
+        if policy == .standard,
+           let cachedTrips = await Self.fetchCache.cachedTrips(for: userId, maxAge: Self.cacheMaxAge) {
+            TripPlannerDebugLog.message(
+                "Using cached trip rows for user \(TripPlannerDebugLog.userLabel(userId)) count=\(cachedTrips.count)"
+            )
+            return cachedTrips
+        }
+
+        if let inFlightTask = await Self.fetchCache.inFlightTask(for: userId) {
+            TripPlannerDebugLog.message(
+                "Awaiting in-flight trip fetch for user \(TripPlannerDebugLog.userLabel(userId))"
+            )
+            return try await inFlightTask.value
+        }
+
+        let fetchTask = Task<[TripPlannerTrip], Error> {
+            let rows: [TripPlannerRemoteTripRow] = try await supabase.client
+                .from("user_trip_plans")
+                .select("user_id,trip_id,trip_data")
+                .eq("user_id", value: userId.uuidString)
+                .execute()
+                .value
+
+            TripPlannerDebugLog.message(
+                "Fetched \(rows.count) raw trip rows for user \(TripPlannerDebugLog.userLabel(userId)): [\(rows.map { $0.tripId.uuidString }.joined(separator: ", "))]"
+            )
+
+            return rows
+                .map(\.tripData)
+                .sorted { $0.createdAt > $1.createdAt }
+        }
+
+        await Self.fetchCache.storeInFlightTask(fetchTask, for: userId)
+
+        do {
+            let trips = try await fetchTask.value
+            await Self.fetchCache.storeTrips(trips, for: userId)
+            await Self.fetchCache.clearInFlightTask(for: userId)
+            return trips
+        } catch {
+            await Self.fetchCache.clearInFlightTask(for: userId)
+            throw error
+        }
     }
 
     func upsertTrip(userId: UUID, trip: TripPlannerTrip) async throws {
+        await Self.invalidateCache(for: [userId])
         TripPlannerDebugLog.message("Attempting row upsert for user \(userId.uuidString) trip \(TripPlannerDebugLog.tripLabel(trip))")
         try await deleteTrip(userId: userId, tripId: trip.id)
 
@@ -2796,6 +2956,7 @@ private struct TripPlannerSyncService {
     }
 
     func shareTrip(trip: TripPlannerTrip, participantIDs: [UUID]) async throws {
+        await Self.invalidateCache(for: participantIDs)
         let payload = try encodedTripPayload(trip)
         TripPlannerDebugLog.message(
             """
@@ -2818,6 +2979,7 @@ private struct TripPlannerSyncService {
     }
 
     func deleteSharedTrip(trip: TripPlannerTrip, participantIDs: [UUID]) async throws {
+        await Self.invalidateCache(for: participantIDs)
         let payload = try encodedTripPayload(trip)
         TripPlannerDebugLog.message(
             """
@@ -2840,6 +3002,7 @@ private struct TripPlannerSyncService {
     }
 
     func deleteTrip(userId: UUID, tripId: UUID) async throws {
+        await Self.invalidateCache(for: [userId])
         TripPlannerDebugLog.message("Attempting row delete for user \(userId.uuidString) trip \(tripId.uuidString)")
         try await supabase.client
             .from("user_trip_plans")
@@ -2946,11 +3109,19 @@ struct TripPlannerView: View {
     @State private var pendingDeleteChoice: TripPlannerDeleteChoice?
     @State private var currentUserSnapshot: TripPlannerFriendSnapshot?
     @State private var ownerSnapshotsByTripID: [UUID: TripPlannerFriendSnapshot] = [:]
+    @State private var preparedUserId: UUID?
 
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
+    private let syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
 
     private var pendingSharedTripIDs: Set<UUID> {
         Set(sharedTripInbox.notifications.map { $0.trip.id })
+    }
+
+    private var ownerPreloadKey: String {
+        let userKey = sessionManager.userId?.uuidString ?? "nil-user"
+        let tripKey = store.trips.map { $0.id.uuidString }.joined(separator: ",")
+        return "\(userKey)|\(tripKey)"
     }
 
     var body: some View {
@@ -3019,10 +3190,24 @@ struct TripPlannerView: View {
                 }
                 .scrollIndicators(.hidden)
                 .refreshable {
-                    async let tripRefresh: Void = store.refresh()
-                    async let inboxRefresh: Void = sharedTripInbox.refresh()
                     async let snapshotRefresh: Void = loadCurrentUserSnapshot()
-                    _ = await (tripRefresh, inboxRefresh, snapshotRefresh)
+
+                    if let userId = sessionManager.userId {
+                        do {
+                            let remoteTrips = try await syncService.fetchTrips(userId: userId, policy: .networkOnly)
+                            await store.refresh(using: remoteTrips, userId: userId)
+                            sharedTripInbox.refresh(using: remoteTrips, userId: userId)
+                        } catch {
+                            print("❌ Trip planner shared refresh failed:", error)
+                            async let tripRefresh: Void = store.refresh()
+                            async let inboxRefresh: Void = sharedTripInbox.refresh()
+                            _ = await (tripRefresh, inboxRefresh)
+                        }
+                    } else {
+                        await store.refresh()
+                    }
+
+                    _ = await snapshotRefresh
                     await preloadTripOwnerProfiles()
                 }
             }
@@ -3115,18 +3300,23 @@ struct TripPlannerView: View {
         } message: { choice in
             Text(choice.confirmationMessage)
         }
-        .task {
+        .task(id: sessionManager.userId) {
+            guard preparedUserId != sessionManager.userId else { return }
             let loadStart = Date().timeIntervalSinceReferenceDate
+            preparedUserId = sessionManager.userId
             TripPlannerDebugLog.message(
                 "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
             )
             async let snapshotRefresh: Void = loadCurrentUserSnapshot()
             async let tripRefresh: Void = store.loadInitialTripsIfNeeded()
             _ = await (snapshotRefresh, tripRefresh)
-            await preloadTripOwnerProfiles()
             TripPlannerDebugLog.message(
                 "Planner screen task finished duration=\(TripPlannerDebugLog.durationText(since: loadStart)) trips=\(store.trips.count)"
             )
+        }
+        .task(id: ownerPreloadKey) {
+            guard preparedUserId == sessionManager.userId else { return }
+            await preloadTripOwnerProfiles()
         }
     }
 
@@ -12600,8 +12790,6 @@ private struct TripPlannerAvatarView: View {
     let username: String
     let avatarURL: String?
     let size: CGFloat
-    @State private var hasLoggedAvatarFailure = false
-    @State private var hasLoggedAvatarSuccess = false
     @State private var avatarLoadStart = Date().timeIntervalSinceReferenceDate
 
     private var initials: String {
@@ -12620,8 +12808,10 @@ private struct TripPlannerAvatarView: View {
                             .resizable()
                             .scaledToFill()
                             .onAppear {
-                                guard !hasLoggedAvatarSuccess else { return }
-                                hasLoggedAvatarSuccess = true
+                                guard TripPlannerAvatarLogDeduper.shouldLog(
+                                    key: "success:\(avatarURL)",
+                                    cooldown: 60
+                                ) else { return }
                                 TripPlannerDebugLog.message(
                                     "Avatar loaded username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL)"
                                 )
@@ -12629,8 +12819,11 @@ private struct TripPlannerAvatarView: View {
                     } else {
                         fallbackAvatar
                             .onAppear {
-                                guard !hasLoggedAvatarFailure, state.error != nil else { return }
-                                hasLoggedAvatarFailure = true
+                                guard state.error != nil else { return }
+                                guard TripPlannerAvatarLogDeduper.shouldLog(
+                                    key: "failure:\(avatarURL)",
+                                    cooldown: 60
+                                ) else { return }
                                 TripPlannerDebugLog.message(
                                     "Avatar failed username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL) error=\(String(describing: state.error))"
                                 )
@@ -12650,8 +12843,16 @@ private struct TripPlannerAvatarView: View {
         .onAppear {
             avatarLoadStart = Date().timeIntervalSinceReferenceDate
             if let avatarURL, !avatarURL.isEmpty {
+                guard TripPlannerAvatarLogDeduper.shouldLog(
+                    key: "request:\(avatarURL)",
+                    cooldown: 60
+                ) else { return }
                 TripPlannerDebugLog.message("Avatar request started username=@\(username) url=\(avatarURL)")
             } else {
+                guard TripPlannerAvatarLogDeduper.shouldLog(
+                    key: "fallback:\(username.lowercased())",
+                    cooldown: 60
+                ) else { return }
                 TripPlannerDebugLog.message("Avatar fallback used username=@\(username) reason=missing_url")
             }
         }

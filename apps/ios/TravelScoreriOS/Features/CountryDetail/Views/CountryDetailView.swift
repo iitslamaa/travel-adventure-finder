@@ -42,6 +42,7 @@ struct CountryDetailView: View {
     @State private var isResolvingVisaContext: Bool = false
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
+    @State private var countryRefreshTask: Task<Void, Never>?
 
     private var passportFallbackCountryCode: String {
         profileVM.effectivePassportCountryCode?.nilIfBlank ?? "US"
@@ -162,30 +163,45 @@ struct CountryDetailView: View {
     private var shouldResolveVisaContextBeforeDisplay: Bool {
         guard sessionManager.isAuthenticated else { return false }
         guard profileVM.userId == sessionManager.userId else { return false }
-        return !profileVM.hasLoadedCoreData
+        return !profileVM.hasLoadedPassportContext
     }
 
     @MainActor
     private func refreshCountryIfAvailable() async {
         let refreshStart = Date().timeIntervalSinceReferenceDate
         let iso2 = country.iso2.uppercased()
-        var loadedFromCache = false
-        var loadedFromRefresh = false
 
         if let cached = CountryAPI.loadCachedCountries()?.first(where: { $0.iso2.uppercased() == iso2 }) {
             country = cached
-            loadedFromCache = true
-        }
-
-        if let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 10 * 60)?
-            .first(where: { $0.iso2.uppercased() == iso2 }) {
-            country = refreshed
-            loadedFromRefresh = true
         }
 
         CountryDetailDebugLog.message(
-            "Country refresh iso2=\(iso2) cacheHit=\(loadedFromCache) refreshed=\(loadedFromRefresh) duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
+            "Country refresh iso2=\(iso2) cacheHit=\(CountryAPI.loadCachedCountries()?.contains(where: { $0.iso2.uppercased() == iso2 }) == true) refreshed=false duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
         )
+    }
+
+    private func refreshCountryInBackgroundIfNeeded() {
+        countryRefreshTask?.cancel()
+        let iso2 = country.iso2.uppercased()
+
+        countryRefreshTask = Task {
+            let refreshStart = Date().timeIntervalSinceReferenceDate
+
+            guard let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 10 * 60)?
+                .first(where: { $0.iso2.uppercased() == iso2 }) else {
+                return
+            }
+
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                country = refreshed
+            }
+
+            CountryDetailDebugLog.message(
+                "Country refresh iso2=\(iso2) cacheHit=true refreshed=true duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
+            )
+        }
     }
 
     @MainActor
@@ -343,7 +359,7 @@ struct CountryDetailView: View {
                 "Screen load started iso2=\(iso2) shouldResolveVisaContext=\(shouldResolveVisaContext) authenticated=\(sessionManager.isAuthenticated)"
             )
 
-            async let engagementLoad: Void = engagementVM.load(
+            engagementVM.load(
                 countryCode: country.iso2,
                 currentUserId: sessionManager.userId,
                 isAuthenticated: sessionManager.isAuthenticated
@@ -353,20 +369,24 @@ struct CountryDetailView: View {
             countryLanguageProfile = await languageProfileLoad
 
             if shouldResolveVisaContext {
-                await profileVM.loadIfNeeded()
+                await profileVM.loadPassportContextIfNeeded()
                 CountryDetailDebugLog.message(
-                    "Profile VM load finished iso2=\(iso2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                    "Passport context load finished iso2=\(iso2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
                 )
             }
 
             await refreshCountryIfAvailable()
+            refreshCountryInBackgroundIfNeeded()
             await refreshVisaPresentation()
             isResolvingVisaContext = false
 
-            _ = await engagementLoad
             CountryDetailDebugLog.message(
                 "Screen load finished iso2=\(iso2) languageProfileLoaded=\(countryLanguageProfile != nil) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
             )
+        }
+        .onDisappear {
+            countryRefreshTask?.cancel()
+            engagementVM.cancel()
         }
         .onChange(of: profileVM.passportPreferences) { _, _ in
             Task {
@@ -480,37 +500,55 @@ private final class CountryFriendEngagementViewModel: ObservableObject {
     @Published private(set) var isLoading = false
 
     private let service = CountryFriendEngagementService()
+    private var loadTask: Task<Void, Never>?
 
-    func load(countryCode: String, currentUserId: UUID?, isAuthenticated: Bool) async {
-        let loadStart = Date().timeIntervalSinceReferenceDate
-        guard isAuthenticated, let currentUserId else {
-            engagement = .empty
-            isLoading = false
-            CountryDetailDebugLog.message(
-                "Friend engagement skipped country=\(countryCode.uppercased()) authenticated=\(isAuthenticated) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
-            )
-            return
-        }
-
-        isLoading = true
-
-        do {
-            engagement = try await service.fetchEngagement(
-                for: countryCode,
-                currentUserId: currentUserId
-            )
-            CountryDetailDebugLog.message(
-                "Friend engagement loaded country=\(countryCode.uppercased()) totalFriends=\(engagement.totalFriends) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
-            )
-        } catch {
-            print("❌ failed to load country friend engagement:", error)
-            engagement = .empty
-            CountryDetailDebugLog.message(
-                "Friend engagement failed country=\(countryCode.uppercased()) duration=\(CountryDetailDebugLog.durationText(since: loadStart)) error=\(error.localizedDescription)"
-            )
-        }
-
+    func cancel() {
+        loadTask?.cancel()
+        loadTask = nil
         isLoading = false
+    }
+
+    func load(countryCode: String, currentUserId: UUID?, isAuthenticated: Bool) {
+        loadTask?.cancel()
+        let normalizedCountryCode = countryCode.uppercased()
+
+        loadTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            let loadStart = Date().timeIntervalSinceReferenceDate
+            guard isAuthenticated, let currentUserId else {
+                engagement = .empty
+                isLoading = false
+                CountryDetailDebugLog.message(
+                    "Friend engagement skipped country=\(normalizedCountryCode) authenticated=\(isAuthenticated) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+                return
+            }
+
+            isLoading = true
+
+            do {
+                engagement = try await service.fetchEngagement(
+                    for: countryCode,
+                    currentUserId: currentUserId
+                )
+                CountryDetailDebugLog.message(
+                    "Friend engagement loaded country=\(normalizedCountryCode) totalFriends=\(engagement.totalFriends) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+            } catch is CancellationError {
+                CountryDetailDebugLog.message(
+                    "Friend engagement cancelled country=\(normalizedCountryCode) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+            } catch {
+                print("❌ failed to load country friend engagement:", error)
+                engagement = .empty
+                CountryDetailDebugLog.message(
+                    "Friend engagement failed country=\(normalizedCountryCode) duration=\(CountryDetailDebugLog.durationText(since: loadStart)) error=\(error.localizedDescription)"
+                )
+            }
+
+            isLoading = false
+        }
     }
 }
 
@@ -544,6 +582,8 @@ private struct CountryFriendEngagementService {
                 "Engagement friends fetched country=\(normalizedCountryCode) count=\(friends.count) duration=\(CountryDetailDebugLog.durationText(since: fetchStart))"
             )
         }
+
+        try Task.checkCancellation()
 
         guard !friends.isEmpty else {
             return .empty
@@ -584,6 +624,8 @@ private struct CountryFriendEngagementService {
         countryCode: String,
         friendIds: [UUID]
     ) async throws -> Set<UUID> {
+        try Task.checkCancellation()
+
         let response: PostgrestResponse<[EngagementUserRow]> = try await supabase.client
             .from(table)
             .select("user_id")
@@ -592,6 +634,7 @@ private struct CountryFriendEngagementService {
             .limit(1000)
             .execute()
 
+        try Task.checkCancellation()
         return Set(response.value.map(\.userId))
     }
 

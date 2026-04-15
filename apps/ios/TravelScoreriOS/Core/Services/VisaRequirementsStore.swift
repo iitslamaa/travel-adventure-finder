@@ -1,6 +1,19 @@
 import Foundation
 import Combine
 
+private enum VisaRequirementsDebugLog {
+    nonisolated static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🛂 [VisaStore] \(timestamp) \(text)")
+#endif
+    }
+
+    nonisolated static func durationText(since startTime: TimeInterval) -> String {
+        String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)
+    }
+}
+
 private struct VisaSyncRunRow: Decodable {
     let version: Int
     let passportFromRaw: String?
@@ -351,24 +364,61 @@ final class VisaRequirementsStore: ObservableObject {
         passportCountryCodes: [String]? = nil,
         fallbackPassportCountryCode: String? = nil
     ) async -> Country {
+        let hydrateStart = Date().timeIntervalSinceReferenceDate
         let resolvedPassportCountryCodes = resolvedPassportCountryCodes(
             passportCountryCodes,
             fallbackPassportCountryCode: fallbackPassportCountryCode
         )
-        let cached = applySnapshot(to: country, passportCountryCodes: resolvedPassportCountryCodes)
+        primeCachedDatasets(for: resolvedPassportCountryCodes)
+        let passportList = resolvedPassportCountryCodes.joined(separator: ",")
+        let requiresForcedRefresh = resolvedPassportCountryCodes.contains { rowsByPassport[$0]?.isEmpty ?? true }
+        let cached = applySnapshot(
+            to: country,
+            passportCountryCodes: resolvedPassportCountryCodes,
+            logHits: true
+        )
 
-        do {
-            try await refreshIfNeeded(
+        if requiresForcedRefresh {
+            do {
+                try await refreshIfNeeded(
+                    passportCountryCodes: resolvedPassportCountryCodes,
+                    force: true
+                )
+            } catch {
+                #if DEBUG
+                print("⚠️ [VisaRequirementsStore] Refresh failed:", error)
+                #endif
+            }
+
+            let hydrated = applySnapshot(
+                to: cached,
                 passportCountryCodes: resolvedPassportCountryCodes,
-                force: resolvedPassportCountryCodes.contains { rowsByPassport[$0]?.isEmpty ?? true }
+                logHits: true
             )
-        } catch {
-            #if DEBUG
-            print("⚠️ [VisaRequirementsStore] Refresh failed:", error)
-            #endif
+            VisaRequirementsDebugLog.message(
+                "Hydrate iso2=\(country.iso2.uppercased()) passports=\(passportList) duration=\(VisaRequirementsDebugLog.durationText(since: hydrateStart))"
+            )
+            return hydrated
         }
 
-        return applySnapshot(to: cached, passportCountryCodes: resolvedPassportCountryCodes)
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                try await self.refreshIfNeeded(
+                    passportCountryCodes: resolvedPassportCountryCodes,
+                    force: false
+                )
+            } catch {
+                #if DEBUG
+                print("⚠️ [VisaRequirementsStore] Background refresh failed:", error)
+                #endif
+            }
+        }
+
+        VisaRequirementsDebugLog.message(
+            "Hydrate iso2=\(country.iso2.uppercased()) passports=\(passportList) duration=\(VisaRequirementsDebugLog.durationText(since: hydrateStart))"
+        )
+        return cached
     }
 
     func hydrate(
@@ -380,20 +430,44 @@ final class VisaRequirementsStore: ObservableObject {
             passportCountryCodes,
             fallbackPassportCountryCode: fallbackPassportCountryCode
         )
-        let cached = countries.map { applySnapshot(to: $0, passportCountryCodes: resolvedPassportCountryCodes) }
-
-        do {
-            try await refreshIfNeeded(
-                passportCountryCodes: resolvedPassportCountryCodes,
-                force: resolvedPassportCountryCodes.contains { rowsByPassport[$0]?.isEmpty ?? true }
-            )
-        } catch {
-            #if DEBUG
-            print("⚠️ [VisaRequirementsStore] Bulk refresh failed:", error)
-            #endif
+        primeCachedDatasets(for: resolvedPassportCountryCodes)
+        let requiresForcedRefresh = resolvedPassportCountryCodes.contains { rowsByPassport[$0]?.isEmpty ?? true }
+        let cached = countries.map {
+            applySnapshot(to: $0, passportCountryCodes: resolvedPassportCountryCodes, logHits: false)
         }
 
-        return cached.map { applySnapshot(to: $0, passportCountryCodes: resolvedPassportCountryCodes) }
+        if requiresForcedRefresh {
+            do {
+                try await refreshIfNeeded(
+                    passportCountryCodes: resolvedPassportCountryCodes,
+                    force: true
+                )
+            } catch {
+                #if DEBUG
+                print("⚠️ [VisaRequirementsStore] Bulk refresh failed:", error)
+                #endif
+            }
+
+            return countries.map {
+                applySnapshot(to: $0, passportCountryCodes: resolvedPassportCountryCodes, logHits: false)
+            }
+        }
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                try await self.refreshIfNeeded(
+                    passportCountryCodes: resolvedPassportCountryCodes,
+                    force: false
+                )
+            } catch {
+                #if DEBUG
+                print("⚠️ [VisaRequirementsStore] Background bulk refresh failed:", error)
+                #endif
+            }
+        }
+
+        return cached
     }
 
     private func refreshIfNeeded(passportCountryCodes: [String], force: Bool) async throws {
@@ -404,6 +478,7 @@ final class VisaRequirementsStore: ObservableObject {
         defer { isRefreshing = false }
 
         for passportCountryCode in passportCountryCodes {
+            let refreshStart = Date().timeIntervalSinceReferenceDate
             var shouldForce = force
 
             if rowsByPassport[passportCountryCode] == nil {
@@ -414,6 +489,9 @@ final class VisaRequirementsStore: ObservableObject {
             if !shouldForce,
                let lastVersionCheckAt = lastVersionCheckAtByPassport[passportCountryCode],
                Date().timeIntervalSince(lastVersionCheckAt) < versionCheckInterval {
+                VisaRequirementsDebugLog.message(
+                    "Refresh skipped passport=\(passportCountryCode) reason=version-check-throttled duration=\(VisaRequirementsDebugLog.durationText(since: refreshStart))"
+                )
                 continue
             }
 
@@ -423,7 +501,12 @@ final class VisaRequirementsStore: ObservableObject {
             let remoteVersion = latestRun.version
             let currentVersion = latestVersionByPassport[passportCountryCode]
             let currentRows = rowsByPassport[passportCountryCode] ?? []
-            if remoteVersion == currentVersion, !currentRows.isEmpty { continue }
+            if remoteVersion == currentVersion, !currentRows.isEmpty {
+                VisaRequirementsDebugLog.message(
+                    "Refresh skipped passport=\(passportCountryCode) reason=already-current version=\(remoteVersion) rows=\(currentRows.count) duration=\(VisaRequirementsDebugLog.durationText(since: refreshStart))"
+                )
+                continue
+            }
 
             let freshRows = try await service.fetchRequirements(
                 passportCountryCode: passportCountryCode,
@@ -441,14 +524,29 @@ final class VisaRequirementsStore: ObservableObject {
                 version: remoteVersion,
                 rows: freshRows
             )
+            VisaRequirementsDebugLog.message(
+                "Refresh applied passport=\(passportCountryCode) version=\(remoteVersion) rows=\(freshRows.count) duration=\(VisaRequirementsDebugLog.durationText(since: refreshStart))"
+            )
         }
     }
 
-    private func applySnapshot(to country: Country, passportCountryCodes: [String]) -> Country {
+    private func primeCachedDatasets(for passportCountryCodes: [String]) {
+        for passportCountryCode in passportCountryCodes where rowsByPassport[passportCountryCode] == nil {
+            loadCachedDataset(for: passportCountryCode)
+        }
+    }
+
+    private func applySnapshot(to country: Country, passportCountryCodes: [String], logHits: Bool) -> Country {
         let iso2 = country.iso2.uppercased()
+        let passportList = passportCountryCodes.joined(separator: ",")
         let cacheKey = "\(passportCountryCodes.sorted().joined(separator: ","))::\(iso2)"
 
         if let cached = hydratedByKey[cacheKey] {
+            if logHits {
+                VisaRequirementsDebugLog.message(
+                    "Snapshot cache hit iso2=\(iso2) passports=\(passportList)"
+                )
+            }
             return country.applyingVisa(
                 visaEaseScore: cached.snapshot.visaEaseScore,
                 visaType: cached.snapshot.visaType,
@@ -475,10 +573,20 @@ final class VisaRequirementsStore: ObservableObject {
         }
 
         guard let hydratedResult = hydratedResult(from: snapshots) else {
+            if logHits {
+                VisaRequirementsDebugLog.message(
+                    "Snapshot unavailable iso2=\(iso2) passports=\(passportList)"
+                )
+            }
             return country
         }
 
         hydratedByKey[cacheKey] = hydratedResult
+        if logHits {
+            VisaRequirementsDebugLog.message(
+                "Snapshot computed iso2=\(iso2) passports=\(passportList) matched=\(snapshots.count)"
+            )
+        }
         return country.applyingVisa(
             visaEaseScore: hydratedResult.snapshot.visaEaseScore,
             visaType: hydratedResult.snapshot.visaType,

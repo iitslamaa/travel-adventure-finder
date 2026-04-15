@@ -9,6 +9,13 @@ import Combine
 import PostgREST
 import Supabase
 
+private enum ProfileWarmupDebugLog {
+    static func log(_ message: String) {
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("👤 [ProfileWarmup] \(timestamp) \(message)")
+    }
+}
+
 enum RelationshipState {
     case selfProfile
     case none
@@ -57,6 +64,7 @@ final class ProfileViewModel: ObservableObject {
         didSet { }
     }
     @Published var hasLoadedCoreData: Bool = false
+    @Published var hasLoadedPassportContext: Bool = false
     @Published var passportPreferences: PassportPreferences = .empty
     
     // MARK: - Dependencies
@@ -69,6 +77,8 @@ final class ProfileViewModel: ObservableObject {
     let userId: UUID
 
     var loadTask: Task<Void, Never>?
+    var passportContextTask: Task<Void, Never>?
+    var sessionWarmupTask: Task<Void, Never>?
     var loadGeneration: UUID = UUID()
 
     var passportNationalities: [String] {
@@ -135,6 +145,11 @@ final class ProfileViewModel: ObservableObject {
     func loadIfNeeded() async {
         guard !hasLoadedCoreData || profile?.id != userId else { return }
 
+        if let existingTask = loadTask {
+            await existingTask.value
+            return
+        }
+
         errorMessage = nil
         isRelationshipLoading = true
 
@@ -170,6 +185,8 @@ final class ProfileViewModel: ObservableObject {
             mutualBucketCountries = []
             mutualTraveledCountries = []
             mutualLanguages = []
+            passportPreferences = .empty
+            hasLoadedPassportContext = false
         }
 
         computeOrderedLists()
@@ -188,9 +205,84 @@ final class ProfileViewModel: ObservableObject {
         isRelationshipLoading = false
     }
 
+    func warmSessionCachesIfNeeded() async {
+        guard !isGuestMode else { return }
+        guard userId == supabase.currentUserId else { return }
+
+        if hasLoadedPassportContext {
+            ProfileWarmupDebugLog.log("Warmup skipped user=\(userId.uuidString) reason=already-warm")
+            return
+        }
+
+        if let existingTask = sessionWarmupTask {
+            ProfileWarmupDebugLog.log("Warmup joined user=\(userId.uuidString)")
+            await existingTask.value
+            return
+        }
+
+        let task = Task<Void, Never> { [weak self] in
+            guard let self else { return }
+            defer { self.sessionWarmupTask = nil }
+
+            let startedAt = Date()
+            ProfileWarmupDebugLog.log("Warmup started user=\(self.userId.uuidString)")
+
+            if !self.hasLoadedPassportContext {
+                let passportStart = Date()
+                await self.loadPassportContextIfNeeded()
+                ProfileWarmupDebugLog.log(
+                    "Warmup stage user=\(self.userId.uuidString) stage=passport-context duration=\(Int(Date().timeIntervalSince(passportStart) * 1000))ms loaded=\(self.hasLoadedPassportContext)"
+                )
+            }
+
+            ProfileWarmupDebugLog.log(
+                "Warmup finished user=\(self.userId.uuidString) passportLoaded=\(self.hasLoadedPassportContext) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
+        }
+
+        sessionWarmupTask = task
+        await task.value
+    }
+
+    func loadPassportContextIfNeeded() async {
+        guard !hasLoadedPassportContext else { return }
+
+        if isGuestMode {
+            passportPreferences = .empty
+            hasLoadedPassportContext = true
+            return
+        }
+
+        guard userId == supabase.currentUserId else {
+            hasLoadedPassportContext = true
+            return
+        }
+
+        if let cachedPassportPreferences = profileService.cachedPassportPreferences(userId: userId) {
+            passportPreferences = cachedPassportPreferences
+            hasLoadedPassportContext = true
+            return
+        }
+
+        if let existingTask = passportContextTask {
+            await existingTask.value
+            return
+        }
+
+        let startingUserId = userId
+        let task = Task<Void, Never> { [weak self] in
+            guard let self else { return }
+            await self.loadPassportContext(for: startingUserId)
+        }
+        passportContextTask = task
+        await task.value
+    }
+
     func cancelInFlightWork() {
         loadTask?.cancel()
         loadTask = nil
+        passportContextTask?.cancel()
+        passportContextTask = nil
     }
 
     func loadSecondaryData(generation: UUID) async {
@@ -266,5 +358,27 @@ final class ProfileViewModel: ObservableObject {
         guard var current = profile else { return }
         current.avatarUrl = newUrl
         profile = current
+    }
+
+    private func loadPassportContext(for startingUserId: UUID) async {
+        defer { passportContextTask = nil }
+
+        do {
+            let fetchedPassportPreferences = try await profileService.fetchPassportPreferences(userId: startingUserId)
+
+            guard self.userId == startingUserId else { return }
+
+            passportPreferences = fetchedPassportPreferences
+            hasLoadedPassportContext = true
+        } catch {
+            if let urlError = error as? URLError, urlError.code == .cancelled {
+                return
+            }
+
+            let nsError = error as NSError
+            if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
+                return
+            }
+        }
     }
 }

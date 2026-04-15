@@ -15,6 +15,7 @@ private struct FriendRow: Decodable {
 @MainActor
 final class FriendService {
     private static var friendsCache: [UUID: [Profile]] = [:]
+    private static var inFlightFriendFetches: [UUID: Task<[Profile], Error>] = [:]
 
     private let supabase: SupabaseManager
 
@@ -30,46 +31,66 @@ final class FriendService {
 
 
     func fetchFriends(for userId: UUID) async throws -> [Profile] {
-        // These queries are independent, so fetch both directions in parallel.
-        async let sentResponse: PostgrestResponse<[FriendRow]> = supabase.client
-            .from("friends")
-            .select("user_id, friend_id")
-            .eq("user_id", value: userId)
-            .limit(1000)
-            .execute()
-        
-
-        async let receivedResponse: PostgrestResponse<[FriendRow]> = supabase.client
-            .from("friends")
-            .select("user_id, friend_id")
-            .eq("friend_id", value: userId)
-            .limit(1000)
-            .execute()
-        
-
-        let rows = try await sentResponse.value + receivedResponse.value
-
-        let friendIds: [UUID] = rows.map { row in
-            row.user_id == userId ? row.friend_id : row.user_id
-        }
-        let uniqueFriendIds = Array(NSOrderedSet(array: friendIds)) as? [UUID] ?? []
-        
-        if uniqueFriendIds.isEmpty {
-            Self.friendsCache[userId] = []
-            return []
+        if let cachedFriends = Self.friendsCache[userId] {
+            return cachedFriends
         }
 
-        let profilesResponse: PostgrestResponse<[Profile]> = try await supabase.client
-            .from("profiles")
-            .select("*")
-            .in("id", values: uniqueFriendIds)
-            .execute()
+        if let inFlightFetch = Self.inFlightFriendFetches[userId] {
+            return try await inFlightFetch.value
+        }
 
-        let profilesById = Dictionary(uniqueKeysWithValues: profilesResponse.value.map { ($0.id, $0) })
-        let orderedProfiles = uniqueFriendIds.compactMap { profilesById[$0] }
+        let fetchTask = Task<[Profile], Error> {
+            // These queries are independent, so fetch both directions in parallel.
+            async let sentResponse: PostgrestResponse<[FriendRow]> = supabase.client
+                .from("friends")
+                .select("user_id, friend_id")
+                .eq("user_id", value: userId)
+                .limit(1000)
+                .execute()
 
-        Self.friendsCache[userId] = orderedProfiles
-        return orderedProfiles
+            async let receivedResponse: PostgrestResponse<[FriendRow]> = supabase.client
+                .from("friends")
+                .select("user_id, friend_id")
+                .eq("friend_id", value: userId)
+                .limit(1000)
+                .execute()
+
+            let rows = try await sentResponse.value + receivedResponse.value
+
+            let friendIds: [UUID] = rows.map { row in
+                row.user_id == userId ? row.friend_id : row.user_id
+            }
+            let uniqueFriendIds = Array(NSOrderedSet(array: friendIds)) as? [UUID] ?? []
+
+            guard !uniqueFriendIds.isEmpty else {
+                return []
+            }
+
+            let profilesResponse: PostgrestResponse<[Profile]> = try await supabase.client
+                .from("profiles")
+                .select("*")
+                .in("id", values: uniqueFriendIds)
+                .execute()
+
+            let profilesById = Dictionary(uniqueKeysWithValues: profilesResponse.value.map { ($0.id, $0) })
+            return uniqueFriendIds.compactMap { profilesById[$0] }
+        }
+
+        Self.inFlightFriendFetches[userId] = fetchTask
+
+        do {
+            let orderedProfiles = try await fetchTask.value
+            Self.friendsCache[userId] = orderedProfiles
+            if Self.inFlightFriendFetches[userId] == fetchTask {
+                Self.inFlightFriendFetches[userId] = nil
+            }
+            return orderedProfiles
+        } catch {
+            if Self.inFlightFriendFetches[userId] == fetchTask {
+                Self.inFlightFriendFetches[userId] = nil
+            }
+            throw error
+        }
     }
 
     func cachedFriends(for userId: UUID) -> [Profile]? {
