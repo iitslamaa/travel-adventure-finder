@@ -30,6 +30,14 @@ export type CountryFacts = {
   affordabilityBand?: 'good' | 'warn' | 'bad' | 'danger';
   affordabilityExplanation?: string;
   averageDailyCostUsd?: number;
+  dailySpend?: {
+    totalUsd?: number;
+    hotelUsd?: number;
+    hostelUsd?: number;
+    foodUsd?: number;
+    transportUsd?: number;
+    activitiesUsd?: number;
+  };
   directFlight?: number;
   infrastructure?: number;
 

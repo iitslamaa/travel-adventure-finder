@@ -16,6 +16,19 @@ import CryptoKit
 import Translation
 #endif
 
+private enum CountryDetailDebugLog {
+    nonisolated static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🌍 [CountryDetail] \(timestamp) \(text)")
+#endif
+    }
+
+    nonisolated static func durationText(since startTime: TimeInterval) -> String {
+        String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)
+    }
+}
+
 struct CountryDetailView: View {
     @State var country: Country
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
@@ -26,10 +39,10 @@ struct CountryDetailView: View {
     @StateObject private var visaStore = VisaRequirementsStore.shared
     @State private var scrollAnchor: String? = nil
     @State private var countryLanguageProfile: CountryLanguageProfile?
-    @State private var isPreparingContent: Bool = true
     @State private var isResolvingVisaContext: Bool = false
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
+    @State private var countryRefreshTask: Task<Void, Never>?
 
     private var passportFallbackCountryCode: String {
         profileVM.effectivePassportCountryCode?.nilIfBlank ?? "US"
@@ -65,6 +78,7 @@ struct CountryDetailView: View {
         traveledStore.ids.contains(country.id)
     }
 
+    @MainActor
     private var localizedVisaPassportLabels: [String] {
         let currentPassportCodes = profileVM.passportNationalities
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
@@ -109,6 +123,7 @@ struct CountryDetailView: View {
         return []
     }
 
+    @MainActor
     private var visaPassportLabel: String {
         if !localizedVisaPassportLabels.isEmpty {
             return localizedVisaPassportLabels.joined(separator: " / ")
@@ -121,6 +136,7 @@ struct CountryDetailView: View {
         return visaStore.activePassportLabel ?? String(localized: "trip_planner.visa.default_passport_label")
     }
 
+    @MainActor
     private var recommendedPassportLabel: String? {
         guard profileVM.passportNationalities.count > 1 else { return nil }
 
@@ -131,12 +147,14 @@ struct CountryDetailView: View {
         return country.visaRecommendedPassportLabel?.nilIfBlank
     }
 
+    @MainActor
     private var equalBestPassportLabels: [String] {
         guard profileVM.passportNationalities.count > 1 else { return [] }
         guard recommendedPassportLabel == nil else { return [] }
         return localizedVisaPassportLabels.count > 1 ? localizedVisaPassportLabels : []
     }
 
+    @MainActor
     private var shouldShowPassportRecommendation: Bool {
         guard profileVM.passportNationalities.count > 1 else { return false }
         return recommendedPassportLabel != nil || equalBestPassportLabels.count > 1
@@ -145,139 +163,149 @@ struct CountryDetailView: View {
     private var shouldResolveVisaContextBeforeDisplay: Bool {
         guard sessionManager.isAuthenticated else { return false }
         guard profileVM.userId == sessionManager.userId else { return false }
-        return !profileVM.hasLoadedCoreData
+        return !profileVM.hasLoadedPassportContext
     }
 
     @MainActor
     private func refreshCountryIfAvailable() async {
+        let refreshStart = Date().timeIntervalSinceReferenceDate
         let iso2 = country.iso2.uppercased()
 
         if let cached = CountryAPI.loadCachedCountries()?.first(where: { $0.iso2.uppercased() == iso2 }) {
             country = cached
         }
 
-        if let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 0)?
-            .first(where: { $0.iso2.uppercased() == iso2 }) {
-            country = refreshed
-            return
-        }
+        CountryDetailDebugLog.message(
+            "Country refresh iso2=\(iso2) cacheHit=\(CountryAPI.loadCachedCountries()?.contains(where: { $0.iso2.uppercased() == iso2 }) == true) refreshed=false duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
+        )
+    }
 
-        if let fetched = try? await CountryAPI.fetchCountries()
-            .first(where: { $0.iso2.uppercased() == iso2 }) {
-            country = fetched
+    private func refreshCountryInBackgroundIfNeeded() {
+        countryRefreshTask?.cancel()
+        let iso2 = country.iso2.uppercased()
+
+        countryRefreshTask = Task {
+            let refreshStart = Date().timeIntervalSinceReferenceDate
+
+            guard let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 10 * 60)?
+                .first(where: { $0.iso2.uppercased() == iso2 }) else {
+                return
+            }
+
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                country = refreshed
+            }
+
+            CountryDetailDebugLog.message(
+                "Country refresh iso2=\(iso2) cacheHit=true refreshed=true duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
+            )
         }
     }
 
     @MainActor
     private func refreshVisaPresentation() async {
+        let refreshStart = Date().timeIntervalSinceReferenceDate
         country = await visaStore.hydrate(
             country: country,
             passportCountryCodes: profileVM.passportNationalities,
             fallbackPassportCountryCode: passportFallbackCountryCode
         )
+        CountryDetailDebugLog.message(
+            "Visa presentation hydrated iso2=\(country.iso2.uppercased()) passports=\(profileVM.passportNationalities.count) duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
+        )
     }
     
     var body: some View {
-        Group {
-            if isPreparingContent {
-                VStack {
-                    Spacer()
-                    ProgressView()
-                        .scaleEffect(1.1)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                GeometryReader { geometry in
-                    ScrollViewReader { proxy in
-                        ScrollView {
-                            VStack(spacing: 28) {
+        GeometryReader { geometry in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 28) {
 
-                                // Header polaroid style
-                                CountryHeaderCard(country: displayedCountry)
-                                    .padding()
-                                    .background(
-                                        Theme.countryDetailCardBackground(corner: 20)
-                                    )
-                                    .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+                        // Header polaroid style
+                        CountryHeaderCard(country: displayedCountry)
+                            .padding()
+                            .background(
+                                Theme.countryDetailCardBackground(corner: 20)
+                            )
+                            .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
 
-                                scrapbookSection {
-                                    CountryOverviewCard(country: displayedCountry)
-                                }
+                        scrapbookSection {
+                            CountryOverviewCard(country: displayedCountry)
+                        }
 
-                                if sessionManager.isAuthenticated {
-                                    scrapbookSection {
-                                        CountryFriendEngagementPreviewCard(
-                                            country: displayedCountry,
-                                            engagement: engagementVM.engagement,
-                                            isLoading: engagementVM.isLoading,
-                                            onOpen: {
-                                                activeSheet = .engagement
-                                            }
-                                        )
+                        if sessionManager.isAuthenticated {
+                            scrapbookSection {
+                                CountryFriendEngagementPreviewCard(
+                                    country: displayedCountry,
+                                    engagement: engagementVM.engagement,
+                                    isLoading: engagementVM.isLoading,
+                                    onOpen: {
+                                        activeSheet = .engagement
                                     }
-                                }
-
-                                // Advisory card stack
-                                scrapbookSection {
-                                    CountryAdvisoryCard(
-                                        country: displayedCountry,
-                                        weightPercentage: weightsStore.advisoryPercentage
-                                    )
-                                }
-
-                                // Seasonality card stack
-                                scrapbookSection {
-                                    CountrySeasonalityCard(
-                                        country: displayedCountry,
-                                        weightPercentage: weightsStore.seasonalityPercentage
-                                    )
-                                }
-
-                                // Visa card stack
-                                scrapbookSection {
-                                    CountryVisaCard(
-                                        country: displayedCountry,
-                                        weightPercentage: weightsStore.visaPercentage,
-                                        isLoading: isResolvingVisaContext,
-                                        passportLabel: visaPassportLabel,
-                                        recommendedPassportLabel: recommendedPassportLabel,
-                                        equalBestPassportLabels: equalBestPassportLabels,
-                                        showPassportRecommendation: shouldShowPassportRecommendation,
-                                        showsPassportSetupPrompt: shouldPromptForPassportSetup,
-                                        onOpenPassportSettings: {
-                                            guard let userId = sessionManager.userId else { return }
-                                            activeSheet = .passportSettings(userId)
-                                        }
-                                    )
-                                }
-
-                                // Affordability card stack
-                                if displayedCountry.affordabilityScore != nil {
-                                    scrapbookSection {
-                                        CountryAffordabilityCard(
-                                            country: displayedCountry,
-                                            weightPercentage: weightsStore.affordabilityPercentage
-                                        )
-                                    }
-                                }
-
-                                if let languageCompatibility {
-                                    scrapbookSection {
-                                        CountryLanguageCompatibilityCard(
-                                            result: languageCompatibility,
-                                            weightPercentage: weightsStore.languagePercentage
-                                        )
-                                    }
-                                }
+                                )
                             }
-                            .id("countryDetailTop")
-                            .padding(.top, 24)
-                            .padding(.horizontal)
-                            .safeAreaPadding(.bottom)
-                            .frame(width: geometry.size.width, alignment: .top)
+                        }
+
+                        // Advisory card stack
+                        scrapbookSection {
+                            CountryAdvisoryCard(
+                                country: displayedCountry,
+                                weightPercentage: weightsStore.advisoryPercentage
+                            )
+                        }
+
+                        // Seasonality card stack
+                        scrapbookSection {
+                            CountrySeasonalityCard(
+                                country: displayedCountry,
+                                weightPercentage: weightsStore.seasonalityPercentage
+                            )
+                        }
+
+                        // Visa card stack
+                        scrapbookSection {
+                            CountryVisaCard(
+                                country: displayedCountry,
+                                weightPercentage: weightsStore.visaPercentage,
+                                isLoading: isResolvingVisaContext,
+                                passportLabel: visaPassportLabel,
+                                recommendedPassportLabel: recommendedPassportLabel,
+                                equalBestPassportLabels: equalBestPassportLabels,
+                                showPassportRecommendation: shouldShowPassportRecommendation,
+                                showsPassportSetupPrompt: shouldPromptForPassportSetup,
+                                onOpenPassportSettings: {
+                                    guard let userId = sessionManager.userId else { return }
+                                    activeSheet = .passportSettings(userId)
+                                }
+                            )
+                        }
+
+                        // Affordability card stack
+                        if displayedCountry.affordabilityScore != nil {
+                            scrapbookSection {
+                                CountryAffordabilityCard(
+                                    country: displayedCountry,
+                                    weightPercentage: weightsStore.affordabilityPercentage
+                                )
+                            }
+                        }
+
+                        if let languageCompatibility {
+                            scrapbookSection {
+                                CountryLanguageCompatibilityCard(
+                                    result: languageCompatibility,
+                                    weightPercentage: weightsStore.languagePercentage
+                                )
+                            }
                         }
                     }
+                    .id("countryDetailTop")
+                    .padding(.top, 24)
+                    .padding(.horizontal)
+                    .safeAreaPadding(.bottom)
+                    .frame(width: geometry.size.width, alignment: .top)
                 }
             }
         }
@@ -323,31 +351,42 @@ struct CountryDetailView: View {
             .padding(.trailing, 18)
         }
         .task(id: country.iso2.uppercased()) {
-            isPreparingContent = true
+            let loadStart = Date().timeIntervalSinceReferenceDate
+            let iso2 = country.iso2.uppercased()
             let shouldResolveVisaContext = shouldResolveVisaContextBeforeDisplay
             isResolvingVisaContext = shouldResolveVisaContext
+            CountryDetailDebugLog.message(
+                "Screen load started iso2=\(iso2) shouldResolveVisaContext=\(shouldResolveVisaContext) authenticated=\(sessionManager.isAuthenticated)"
+            )
 
-            Task {
-                await engagementVM.load(
-                    countryCode: country.iso2,
-                    currentUserId: sessionManager.userId,
-                    isAuthenticated: sessionManager.isAuthenticated
+            engagementVM.load(
+                countryCode: country.iso2,
+                currentUserId: sessionManager.userId,
+                isAuthenticated: sessionManager.isAuthenticated
+            )
+            async let languageProfileLoad: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.profile(for: country.iso2)
+
+            countryLanguageProfile = await languageProfileLoad
+
+            if shouldResolveVisaContext {
+                await profileVM.loadPassportContextIfNeeded()
+                CountryDetailDebugLog.message(
+                    "Passport context load finished iso2=\(iso2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
                 )
             }
 
-            async let profileLoad: Void = {
-                guard shouldResolveVisaContext else { return }
-                await profileVM.loadIfNeeded()
-            }()
-            async let countryRefresh: Void = refreshCountryIfAvailable()
-            async let languageProfileRefresh: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.refreshProfile(for: country.iso2)
-
-            _ = await countryRefresh
-            _ = await profileLoad
+            await refreshCountryIfAvailable()
+            refreshCountryInBackgroundIfNeeded()
             await refreshVisaPresentation()
             isResolvingVisaContext = false
-            countryLanguageProfile = await languageProfileRefresh
-            isPreparingContent = false
+
+            CountryDetailDebugLog.message(
+                "Screen load finished iso2=\(iso2) languageProfileLoaded=\(countryLanguageProfile != nil) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+        }
+        .onDisappear {
+            countryRefreshTask?.cancel()
+            engagementVM.cancel()
         }
         .onChange(of: profileVM.passportPreferences) { _, _ in
             Task {
@@ -461,27 +500,55 @@ private final class CountryFriendEngagementViewModel: ObservableObject {
     @Published private(set) var isLoading = false
 
     private let service = CountryFriendEngagementService()
+    private var loadTask: Task<Void, Never>?
 
-    func load(countryCode: String, currentUserId: UUID?, isAuthenticated: Bool) async {
-        guard isAuthenticated, let currentUserId else {
-            engagement = .empty
-            isLoading = false
-            return
-        }
-
-        isLoading = true
-
-        do {
-            engagement = try await service.fetchEngagement(
-                for: countryCode,
-                currentUserId: currentUserId
-            )
-        } catch {
-            print("❌ failed to load country friend engagement:", error)
-            engagement = .empty
-        }
-
+    func cancel() {
+        loadTask?.cancel()
+        loadTask = nil
         isLoading = false
+    }
+
+    func load(countryCode: String, currentUserId: UUID?, isAuthenticated: Bool) {
+        loadTask?.cancel()
+        let normalizedCountryCode = countryCode.uppercased()
+
+        loadTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            let loadStart = Date().timeIntervalSinceReferenceDate
+            guard isAuthenticated, let currentUserId else {
+                engagement = .empty
+                isLoading = false
+                CountryDetailDebugLog.message(
+                    "Friend engagement skipped country=\(normalizedCountryCode) authenticated=\(isAuthenticated) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+                return
+            }
+
+            isLoading = true
+
+            do {
+                engagement = try await service.fetchEngagement(
+                    for: countryCode,
+                    currentUserId: currentUserId
+                )
+                CountryDetailDebugLog.message(
+                    "Friend engagement loaded country=\(normalizedCountryCode) totalFriends=\(engagement.totalFriends) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+            } catch is CancellationError {
+                CountryDetailDebugLog.message(
+                    "Friend engagement cancelled country=\(normalizedCountryCode) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+            } catch {
+                print("❌ failed to load country friend engagement:", error)
+                engagement = .empty
+                CountryDetailDebugLog.message(
+                    "Friend engagement failed country=\(normalizedCountryCode) duration=\(CountryDetailDebugLog.durationText(since: loadStart)) error=\(error.localizedDescription)"
+                )
+            }
+
+            isLoading = false
+        }
     }
 }
 
@@ -501,8 +568,22 @@ private struct CountryFriendEngagementService {
         for countryCode: String,
         currentUserId: UUID
     ) async throws -> CountryFriendEngagement {
+        let fetchStart = Date().timeIntervalSinceReferenceDate
         let normalizedCountryCode = countryCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-        let friends = try await friendService.fetchFriends(for: currentUserId)
+        let friends: [Profile]
+        if let cachedFriends = friendService.cachedFriends(for: currentUserId) {
+            friends = cachedFriends
+            CountryDetailDebugLog.message(
+                "Engagement friends cache hit country=\(normalizedCountryCode) count=\(friends.count) duration=\(CountryDetailDebugLog.durationText(since: fetchStart))"
+            )
+        } else {
+            friends = try await friendService.fetchFriends(for: currentUserId)
+            CountryDetailDebugLog.message(
+                "Engagement friends fetched country=\(normalizedCountryCode) count=\(friends.count) duration=\(CountryDetailDebugLog.durationText(since: fetchStart))"
+            )
+        }
+
+        try Task.checkCancellation()
 
         guard !friends.isEmpty else {
             return .empty
@@ -543,6 +624,8 @@ private struct CountryFriendEngagementService {
         countryCode: String,
         friendIds: [UUID]
     ) async throws -> Set<UUID> {
+        try Task.checkCancellation()
+
         let response: PostgrestResponse<[EngagementUserRow]> = try await supabase.client
             .from(table)
             .select("user_id")
@@ -551,6 +634,7 @@ private struct CountryFriendEngagementService {
             .limit(1000)
             .execute()
 
+        try Task.checkCancellation()
         return Set(response.value.map(\.userId))
     }
 
@@ -1057,13 +1141,20 @@ private actor CountryLanguageProfileStore {
     private var missingISO2: Set<String> = []
 
     func profile(for iso2: String) async throws -> CountryLanguageProfile? {
+        let loadStart = Date().timeIntervalSinceReferenceDate
         let normalizedISO2 = iso2.uppercased()
 
         if let cached = cache[normalizedISO2] {
+            CountryDetailDebugLog.message(
+                "Language profile cache hit iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
             return cached
         }
 
         if missingISO2.contains(normalizedISO2) {
+            CountryDetailDebugLog.message(
+                "Language profile known-missing iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
             return nil
         }
 
@@ -1076,10 +1167,16 @@ private actor CountryLanguageProfileStore {
 
         guard let profile = response.value.first else {
             missingISO2.insert(normalizedISO2)
+            CountryDetailDebugLog.message(
+                "Language profile missing from remote iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
             return nil
         }
 
         cache[normalizedISO2] = profile
+        CountryDetailDebugLog.message(
+            "Language profile fetched iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
         return profile
     }
 

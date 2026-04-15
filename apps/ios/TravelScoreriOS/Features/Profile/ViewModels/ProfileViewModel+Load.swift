@@ -30,6 +30,7 @@ extension ProfileViewModel {
             passportPreferences = .empty
             computeOrderedLists()
             hasLoadedCoreData = true
+            hasLoadedPassportContext = true
             isLoading = false
             errorMessage = nil
             return
@@ -89,6 +90,7 @@ extension ProfileViewModel {
             passportPreferences = fetchedPassportPreferences
             computeOrderedLists()
             hasLoadedCoreData = true
+            hasLoadedPassportContext = true
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {

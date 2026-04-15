@@ -111,8 +111,6 @@ final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
                     return polygon.countryName
                 }()
 
-                let polyId = polygonIdentifier(for: polygon)
-
                 if selectedCountryISO != identifier {
                     selectedCountryISO = identifier
                     onSelectionChange?(identifier)

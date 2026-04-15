@@ -16,19 +16,44 @@ import Supabase
 import PostgREST
 
 private enum TripPlannerDebugLog {
-    static func message(_ text: String) {
+    nonisolated static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🧭 [TripPlanner] \(timestamp) \(text)")
+#endif
     }
 
-    static func userLabel(_ userId: UUID?) -> String {
+    nonisolated static func userLabel(_ userId: UUID?) -> String {
         userId?.uuidString ?? "nil-user"
     }
 
-    static func tripLabel(_ trip: TripPlannerTrip) -> String {
+    nonisolated static func tripLabel(_ trip: TripPlannerTrip) -> String {
         "\(trip.title) [\(trip.id.uuidString)]"
     }
 
-    static func participantLabels(for ids: [UUID]) -> String {
+    nonisolated static func participantLabels(for ids: [UUID]) -> String {
         ids.map(\.uuidString).joined(separator: ", ")
+    }
+
+    nonisolated static func durationText(since startTime: TimeInterval) -> String {
+        String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)
+    }
+
+    nonisolated static func tripCardState(
+        trip: TripPlannerTrip,
+        ownerSnapshot: TripPlannerFriendSnapshot?,
+        travelerCount: Int
+    ) -> String {
+        let ownerState: String
+        if let ownerSnapshot {
+            ownerState = "owner=\(ownerSnapshot.displayName)"
+        } else if trip.ownerId != nil {
+            ownerState = "owner=missing"
+        } else {
+            ownerState = "owner=none"
+        }
+
+        return "\(tripLabel(trip)) \(ownerState) travelers=\(travelerCount) countries=\(trip.countryIds.count)"
     }
 }
 
@@ -51,13 +76,14 @@ final class SharedTripInboxStore: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var realtimeChannel: RealtimeChannelV2?
     private var realtimeTask: Task<Void, Never>?
+    private var subscribedUserId: UUID?
+    private var isRealtimeActive = false
 
     init() {
         observeAuthState()
         observeTripUpdates()
 
         Task {
-            await configureRealtimeSubscription()
             await refresh()
         }
     }
@@ -74,24 +100,15 @@ final class SharedTripInboxStore: ObservableObject {
 
         do {
             let trips = try await syncService.fetchTrips(userId: userId)
-            let seenTripIDs = seenSharedTripIDs(for: userId)
-
-            notifications = trips
-                .filter { trip in
-                    trip.ownerId != nil
-                        && trip.ownerId != userId
-                        && !seenTripIDs.contains(trip.id.uuidString)
-                }
-                .sorted { $0.updatedAt > $1.updatedAt }
-                .map(SharedTripInboxEntry.init)
-
-            TripPlannerDebugLog.message(
-                "Inbox refresh for \(TripPlannerDebugLog.userLabel(userId)) fetched \(trips.count) trips, pending notifications=\(notifications.count)"
-            )
+            applyPrefetchedTrips(trips, for: userId)
         } catch {
             print("❌ Shared trip inbox refresh failed:", error)
             notifications = []
         }
+    }
+
+    func refresh(using trips: [TripPlannerTrip], userId: UUID) {
+        applyPrefetchedTrips(trips, for: userId)
     }
 
     func markSeen(tripId: UUID) {
@@ -109,7 +126,7 @@ final class SharedTripInboxStore: ObservableObject {
             .sink { [weak self] in
                 guard let self else { return }
                 Task {
-                    await self.configureRealtimeSubscription()
+                    await self.updateRealtimeConnection(isActive: self.isRealtimeActive)
                     await self.refresh()
                 }
             }
@@ -132,14 +149,43 @@ final class SharedTripInboxStore: ObservableObject {
         Set(UserDefaults.standard.stringArray(forKey: seenKey(for: userId)) ?? [])
     }
 
+    private func applyPrefetchedTrips(_ trips: [TripPlannerTrip], for userId: UUID) {
+        let seenTripIDs = seenSharedTripIDs(for: userId)
+
+        notifications = trips
+            .filter { trip in
+                trip.ownerId != nil
+                    && trip.ownerId != userId
+                    && !seenTripIDs.contains(trip.id.uuidString)
+            }
+            .sorted { $0.updatedAt > $1.updatedAt }
+            .map(SharedTripInboxEntry.init)
+
+        TripPlannerDebugLog.message(
+            "Inbox refresh for \(TripPlannerDebugLog.userLabel(userId)) fetched \(trips.count) trips, pending notifications=\(notifications.count)"
+        )
+    }
+
     private func seenKey(for userId: UUID) -> String {
         "trip_planner_seen_shared_trip_ids_\(userId.uuidString)"
     }
 
-    private func configureRealtimeSubscription() async {
-        await tearDownRealtimeSubscription()
+    func updateRealtimeConnection(isActive: Bool) async {
+        isRealtimeActive = isActive
 
+        guard isActive else {
+            await tearDownRealtimeSubscription()
+            return
+        }
+
+        await configureRealtimeSubscription()
+    }
+
+    private func configureRealtimeSubscription() async {
         guard let userId = supabase.currentUserId else { return }
+        guard realtimeChannel == nil || subscribedUserId != userId else { return }
+
+        await tearDownRealtimeSubscription()
 
         TripPlannerDebugLog.message("Configuring realtime subscription for \(TripPlannerDebugLog.userLabel(userId))")
 
@@ -154,11 +200,13 @@ final class SharedTripInboxStore: ObservableObject {
         do {
             try await channel.subscribeWithError()
             realtimeChannel = channel
+            subscribedUserId = userId
             TripPlannerDebugLog.message("Realtime subscribed for \(TripPlannerDebugLog.userLabel(userId))")
             realtimeTask = Task {
                 for await _ in changes {
                     guard !Task.isCancelled else { break }
                     TripPlannerDebugLog.message("Realtime change received for \(TripPlannerDebugLog.userLabel(userId))")
+                    await TripPlannerSyncService.invalidateCache(for: [userId])
                     await MainActor.run {
                         NotificationCenter.default.post(name: .sharedTripsUpdated, object: nil)
                     }
@@ -178,6 +226,8 @@ final class SharedTripInboxStore: ObservableObject {
             await supabase.client.removeChannel(realtimeChannel)
             self.realtimeChannel = nil
         }
+
+        subscribedUserId = nil
     }
 
     deinit {
@@ -1462,6 +1512,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
     let friendNames: [String]
     let friends: [TripPlannerFriendSnapshot]
     let ownerId: UUID?
+    let ownerSnapshot: TripPlannerFriendSnapshot?
     let plannerCurrencyCode: String?
     let availability: [TripPlannerAvailabilityProposal]
     let dayPlans: [TripPlannerDayPlan]
@@ -1515,6 +1566,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
         case friendNames
         case friends
         case ownerId
+        case ownerSnapshot
         case plannerCurrencyCode
         case availability
         case dayPlans
@@ -1537,6 +1589,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
         friendNames: [String],
         friends: [TripPlannerFriendSnapshot],
         ownerId: UUID? = nil,
+        ownerSnapshot: TripPlannerFriendSnapshot? = nil,
         plannerCurrencyCode: String? = nil,
         availability: [TripPlannerAvailabilityProposal],
         dayPlans: [TripPlannerDayPlan] = [],
@@ -1557,6 +1610,15 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
         self.friendNames = friendNames
         self.friends = friends
         self.ownerId = ownerId
+        if let ownerId {
+            if let ownerSnapshot, ownerSnapshot.id == ownerId {
+                self.ownerSnapshot = ownerSnapshot
+            } else {
+                self.ownerSnapshot = friends.first(where: { $0.id == ownerId })
+            }
+        } else {
+            self.ownerSnapshot = nil
+        }
         self.plannerCurrencyCode = AppCurrencyCatalog.normalizedCode(plannerCurrencyCode)
         self.availability = availability
         self.dayPlans = dayPlans
@@ -1589,6 +1651,14 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
                 )
             }
         ownerId = try container.decodeIfPresent(UUID.self, forKey: .ownerId)
+        let decodedOwnerSnapshot = try container.decodeIfPresent(TripPlannerFriendSnapshot.self, forKey: .ownerSnapshot)
+        if let ownerId {
+            ownerSnapshot = decodedOwnerSnapshot?.id == ownerId
+                ? decodedOwnerSnapshot
+                : friends.first(where: { $0.id == ownerId })
+        } else {
+            ownerSnapshot = nil
+        }
         plannerCurrencyCode = AppCurrencyCatalog.normalizedCode(
             try container.decodeIfPresent(String.self, forKey: .plannerCurrencyCode)
         )
@@ -1614,6 +1684,7 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
             friendNames: friendNames,
             friends: friends,
             ownerId: ownerId ?? currentUserId,
+            ownerSnapshot: effectiveOwnerSnapshot,
             plannerCurrencyCode: plannerCurrencyCode,
             availability: availability,
             dayPlans: dayPlans,
@@ -1621,6 +1692,16 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
             packingProgressEntries: packingProgressEntries,
             expenses: expenses
         )
+    }
+
+    var effectiveOwnerSnapshot: TripPlannerFriendSnapshot? {
+        guard let ownerId else { return nil }
+
+        if let ownerSnapshot, ownerSnapshot.id == ownerId {
+            return ownerSnapshot
+        }
+
+        return friends.first(where: { $0.id == ownerId })
     }
 
     func participantIDs(including currentUserId: UUID?) -> [UUID] {
@@ -1828,15 +1909,12 @@ final class TripPlannerStore: ObservableObject {
     private let supabase = SupabaseManager.shared
     private let syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
     private var cancellables = Set<AnyCancellable>()
+    private var hasRequestedInitialRefresh = false
 
     init() {
         loadLocal()
         observeAuthState()
         observeTripUpdates()
-
-        Task {
-            await refreshFromRemoteIfNeeded(migrateLocalTrips: true)
-        }
     }
 
     func add(_ trip: TripPlannerTrip) {
@@ -1864,6 +1942,17 @@ final class TripPlannerStore: ObservableObject {
         Task {
             await syncUpsert(syncedTrip, previousTrip: previousTrip)
         }
+    }
+
+    func cacheOwnerSnapshot(_ snapshot: TripPlannerFriendSnapshot, forTripID tripId: UUID) {
+        guard let index = trips.firstIndex(where: { $0.id == tripId }) else { return }
+
+        let existingTrip = trips[index]
+        guard existingTrip.ownerId == snapshot.id else { return }
+        guard existingTrip.effectiveOwnerSnapshot != snapshot else { return }
+
+        trips[index] = existingTrip.withOwnerSnapshot(snapshot)
+        persistLocal()
     }
 
     enum DeleteScope {
@@ -1907,7 +1996,9 @@ final class TripPlannerStore: ObservableObject {
 
     private func handleAuthStateChange() async {
         loadLocal()
+        hasRequestedInitialRefresh = false
         await refreshFromRemoteIfNeeded(migrateLocalTrips: true)
+        hasRequestedInitialRefresh = true
     }
 
     private var localSaveKey: String {
@@ -1950,35 +2041,49 @@ final class TripPlannerStore: ObservableObject {
 
         do {
             let remoteTrips = try await syncService.fetchTrips(userId: userId)
-            let mergedTrips = mergedTrips(local: localTrips, remote: remoteTrips)
-
-            if migrateLocalTrips {
-                let localOnlyTrips = mergedTrips.filter { mergedTrip in
-                    !remoteTrips.contains(where: { $0.id == mergedTrip.id })
-                }
-
-                for trip in localOnlyTrips {
-                    if trip.isGroupTrip {
-                        TripPlannerDebugLog.message(
-                            "Skipping automatic migration for local group trip \(TripPlannerDebugLog.tripLabel(trip)); it will sync on explicit save"
-                        )
-                    } else {
-                        try await syncService.upsertTrip(userId: userId, trip: trip)
-                    }
-                }
-            }
-
-            trips = mergedTrips
-            persistLocal()
-            TripPlannerDebugLog.message(
-                "Remote refresh complete for \(TripPlannerDebugLog.userLabel(userId)); remote count=\(remoteTrips.count), merged count=\(mergedTrips.count)"
+            try await applyRemoteTrips(
+                remoteTrips,
+                for: userId,
+                localTrips: localTrips,
+                migrateLocalTrips: migrateLocalTrips
             )
-
-            if !mergedTrips.isEmpty {
-                UserDefaults.standard.removeObject(forKey: legacySaveKey)
-            }
         } catch {
             print("❌ Trip planner sync failed:", error)
+        }
+    }
+
+    private func applyRemoteTrips(
+        _ remoteTrips: [TripPlannerTrip],
+        for userId: UUID,
+        localTrips: [TripPlannerTrip],
+        migrateLocalTrips: Bool
+    ) async throws {
+        let mergedTrips = mergedTrips(local: localTrips, remote: remoteTrips)
+
+        if migrateLocalTrips {
+            let localOnlyTrips = mergedTrips.filter { mergedTrip in
+                !remoteTrips.contains(where: { $0.id == mergedTrip.id })
+            }
+
+            for trip in localOnlyTrips {
+                if trip.isGroupTrip {
+                    TripPlannerDebugLog.message(
+                        "Skipping automatic migration for local group trip \(TripPlannerDebugLog.tripLabel(trip)); it will sync on explicit save"
+                    )
+                } else {
+                    try await syncService.upsertTrip(userId: userId, trip: trip)
+                }
+            }
+        }
+
+        trips = mergedTrips
+        persistLocal()
+        TripPlannerDebugLog.message(
+            "Remote refresh complete for \(TripPlannerDebugLog.userLabel(userId)); remote count=\(remoteTrips.count), merged count=\(mergedTrips.count)"
+        )
+
+        if !mergedTrips.isEmpty {
+            UserDefaults.standard.removeObject(forKey: legacySaveKey)
         }
     }
 
@@ -2155,6 +2260,7 @@ private extension TripPlannerTrip {
             friendNames: mergedFriendNames,
             friends: mergedFriends,
             ownerId: preferred.ownerId ?? fallback.ownerId,
+            ownerSnapshot: preferred.effectiveOwnerSnapshot ?? fallback.effectiveOwnerSnapshot,
             plannerCurrencyCode: preferred.plannerCurrencyCode ?? fallback.plannerCurrencyCode,
             availability: preferred.availability,
             dayPlans: preferred.dayPlans,
@@ -2198,11 +2304,37 @@ private extension TripPlannerTrip {
             friendNames: friendNames,
             friends: friends,
             ownerId: ownerId ?? existing.ownerId,
+            ownerSnapshot: effectiveOwnerSnapshot ?? existing.effectiveOwnerSnapshot,
             plannerCurrencyCode: plannerCurrencyCode ?? existing.plannerCurrencyCode,
             availability: availability,
             dayPlans: dayPlans,
             overallChecklistItems: overallChecklistItems,
             packingProgressEntries: packingProgressEntries.isEmpty ? existing.packingProgressEntries : packingProgressEntries,
+            expenses: expenses
+        )
+    }
+
+    func withOwnerSnapshot(_ snapshot: TripPlannerFriendSnapshot?) -> TripPlannerTrip {
+        TripPlannerTrip(
+            id: id,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            title: title,
+            notes: notes,
+            startDate: startDate,
+            endDate: endDate,
+            countryIds: countryIds,
+            countryNames: countryNames,
+            friendIds: friendIds,
+            friendNames: friendNames,
+            friends: friends,
+            ownerId: ownerId,
+            ownerSnapshot: snapshot,
+            plannerCurrencyCode: plannerCurrencyCode,
+            availability: availability,
+            dayPlans: dayPlans,
+            overallChecklistItems: overallChecklistItems,
+            packingProgressEntries: packingProgressEntries,
             expenses: expenses
         )
     }
@@ -2268,6 +2400,7 @@ private extension TripPlannerTrip {
             friendNames: friendNames,
             friends: friends,
             ownerId: ownerId,
+            ownerSnapshot: effectiveOwnerSnapshot,
             plannerCurrencyCode: plannerCurrencyCode,
             availability: availability,
             dayPlans: updatedDayPlans,
@@ -2382,6 +2515,7 @@ private extension TripPlannerTrip {
             friendNames: friendNames,
             friends: friends,
             ownerId: ownerId,
+            ownerSnapshot: effectiveOwnerSnapshot,
             plannerCurrencyCode: plannerCurrencyCode,
             availability: availability,
             dayPlans: updatedDayPlans,
@@ -2403,6 +2537,30 @@ private extension TripPlannerTrip {
 
         for friend in friends where seen.insert(friend.id).inserted {
             ordered.append(friend)
+        }
+
+        if let ownerId = ownerId,
+           ownerId != SupabaseManager.shared.currentUserId,
+           !friends.contains(where: { $0.id == ownerId }),
+           seen.insert(ownerId).inserted {
+            if let effectiveOwnerSnapshot {
+                ordered.append(effectiveOwnerSnapshot)
+            } else {
+                let profileService = ProfileService(supabase: SupabaseManager.shared)
+
+                if let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+                    ordered.append(
+                        TripPlannerFriendSnapshot(
+                            id: cachedOwner.id,
+                            displayName: cachedOwner.tripDisplayName,
+                            username: cachedOwner.username,
+                            avatarURL: cachedOwner.avatarUrl
+                        )
+                    )
+                } else {
+                    ordered.append(.currentUserFallback(userId: ownerId))
+                }
+            }
         }
 
         return ordered
@@ -2599,8 +2757,37 @@ private struct TripPlannerDetectedLinkList: View {
 }
 
 extension TripPlannerStore {
+    @MainActor
+    func loadInitialTripsIfNeeded() async {
+        guard !hasRequestedInitialRefresh else {
+            TripPlannerDebugLog.message("Initial planner trip refresh skipped because it already ran")
+            return
+        }
+
+        hasRequestedInitialRefresh = true
+        await refreshFromRemoteIfNeeded(migrateLocalTrips: true)
+    }
+
     func refresh() async {
         await refreshFromRemoteIfNeeded(migrateLocalTrips: false)
+    }
+
+    func refresh(using remoteTrips: [TripPlannerTrip], userId: UUID) async {
+        let localTrips = trips
+        TripPlannerDebugLog.message(
+            "Refreshing remote trips for \(TripPlannerDebugLog.userLabel(userId)); local count=\(localTrips.count), migrateLocal=false"
+        )
+
+        do {
+            try await applyRemoteTrips(
+                remoteTrips,
+                for: userId,
+                localTrips: localTrips,
+                migrateLocalTrips: false
+            )
+        } catch {
+            print("❌ Trip planner sync failed:", error)
+        }
     }
 }
 
@@ -2628,27 +2815,130 @@ private struct TripPlannerRemoteTripMutationRow: Codable {
     }
 }
 
+private enum TripPlannerFetchPolicy {
+    case standard
+    case networkOnly
+}
+
+private enum TripPlannerAvatarLogDeduper {
+    private static let lock = NSLock()
+    private static var lastLoggedAtByKey: [String: TimeInterval] = [:]
+
+    static func shouldLog(key: String, cooldown: TimeInterval = 30) -> Bool {
+        let now = Date().timeIntervalSinceReferenceDate
+        lock.lock()
+        defer { lock.unlock() }
+
+        if let lastLoggedAt = lastLoggedAtByKey[key], now - lastLoggedAt < cooldown {
+            return false
+        }
+
+        lastLoggedAtByKey[key] = now
+        return true
+    }
+}
+
+private actor TripPlannerFetchCache {
+    struct Entry {
+        let trips: [TripPlannerTrip]
+        let fetchedAt: Date
+    }
+
+    private var entries: [UUID: Entry] = [:]
+    private var inFlightTasks: [UUID: Task<[TripPlannerTrip], Error>] = [:]
+
+    func cachedTrips(for userId: UUID, maxAge: TimeInterval) -> [TripPlannerTrip]? {
+        guard let entry = entries[userId] else { return nil }
+        guard Date().timeIntervalSince(entry.fetchedAt) <= maxAge else {
+            entries[userId] = nil
+            return nil
+        }
+        return entry.trips
+    }
+
+    func inFlightTask(for userId: UUID) -> Task<[TripPlannerTrip], Error>? {
+        inFlightTasks[userId]
+    }
+
+    func storeInFlightTask(_ task: Task<[TripPlannerTrip], Error>, for userId: UUID) {
+        inFlightTasks[userId] = task
+    }
+
+    func clearInFlightTask(for userId: UUID) {
+        inFlightTasks[userId] = nil
+    }
+
+    func storeTrips(_ trips: [TripPlannerTrip], for userId: UUID) {
+        entries[userId] = Entry(trips: trips, fetchedAt: Date())
+    }
+
+    func invalidate(userIds: [UUID]) {
+        for userId in userIds {
+            entries[userId] = nil
+            inFlightTasks[userId]?.cancel()
+            inFlightTasks[userId] = nil
+        }
+    }
+}
+
 private struct TripPlannerSyncService {
     let supabase: SupabaseManager
 
-    func fetchTrips(userId: UUID) async throws -> [TripPlannerTrip] {
-        let rows: [TripPlannerRemoteTripRow] = try await supabase.client
-            .from("user_trip_plans")
-            .select("user_id,trip_id,trip_data")
-            .eq("user_id", value: userId.uuidString)
-            .execute()
-            .value
+    private static let fetchCache = TripPlannerFetchCache()
+    private static let cacheMaxAge: TimeInterval = 30
 
-        TripPlannerDebugLog.message(
-            "Fetched \(rows.count) raw trip rows for user \(TripPlannerDebugLog.userLabel(userId)): [\(rows.map { $0.tripId.uuidString }.joined(separator: ", "))]"
-        )
+    static func invalidateCache(for userIds: [UUID]) async {
+        await fetchCache.invalidate(userIds: userIds)
+    }
 
-        return rows
-            .map(\.tripData)
-            .sorted { $0.createdAt > $1.createdAt }
+    func fetchTrips(userId: UUID, policy: TripPlannerFetchPolicy = .standard) async throws -> [TripPlannerTrip] {
+        if policy == .standard,
+           let cachedTrips = await Self.fetchCache.cachedTrips(for: userId, maxAge: Self.cacheMaxAge) {
+            TripPlannerDebugLog.message(
+                "Using cached trip rows for user \(TripPlannerDebugLog.userLabel(userId)) count=\(cachedTrips.count)"
+            )
+            return cachedTrips
+        }
+
+        if let inFlightTask = await Self.fetchCache.inFlightTask(for: userId) {
+            TripPlannerDebugLog.message(
+                "Awaiting in-flight trip fetch for user \(TripPlannerDebugLog.userLabel(userId))"
+            )
+            return try await inFlightTask.value
+        }
+
+        let fetchTask = Task<[TripPlannerTrip], Error> {
+            let rows: [TripPlannerRemoteTripRow] = try await supabase.client
+                .from("user_trip_plans")
+                .select("user_id,trip_id,trip_data")
+                .eq("user_id", value: userId.uuidString)
+                .execute()
+                .value
+
+            TripPlannerDebugLog.message(
+                "Fetched \(rows.count) raw trip rows for user \(TripPlannerDebugLog.userLabel(userId)): [\(rows.map { $0.tripId.uuidString }.joined(separator: ", "))]"
+            )
+
+            return rows
+                .map(\.tripData)
+                .sorted { $0.createdAt > $1.createdAt }
+        }
+
+        await Self.fetchCache.storeInFlightTask(fetchTask, for: userId)
+
+        do {
+            let trips = try await fetchTask.value
+            await Self.fetchCache.storeTrips(trips, for: userId)
+            await Self.fetchCache.clearInFlightTask(for: userId)
+            return trips
+        } catch {
+            await Self.fetchCache.clearInFlightTask(for: userId)
+            throw error
+        }
     }
 
     func upsertTrip(userId: UUID, trip: TripPlannerTrip) async throws {
+        await Self.invalidateCache(for: [userId])
         TripPlannerDebugLog.message("Attempting row upsert for user \(userId.uuidString) trip \(TripPlannerDebugLog.tripLabel(trip))")
         try await deleteTrip(userId: userId, tripId: trip.id)
 
@@ -2666,6 +2956,7 @@ private struct TripPlannerSyncService {
     }
 
     func shareTrip(trip: TripPlannerTrip, participantIDs: [UUID]) async throws {
+        await Self.invalidateCache(for: participantIDs)
         let payload = try encodedTripPayload(trip)
         TripPlannerDebugLog.message(
             """
@@ -2688,6 +2979,7 @@ private struct TripPlannerSyncService {
     }
 
     func deleteSharedTrip(trip: TripPlannerTrip, participantIDs: [UUID]) async throws {
+        await Self.invalidateCache(for: participantIDs)
         let payload = try encodedTripPayload(trip)
         TripPlannerDebugLog.message(
             """
@@ -2710,6 +3002,7 @@ private struct TripPlannerSyncService {
     }
 
     func deleteTrip(userId: UUID, tripId: UUID) async throws {
+        await Self.invalidateCache(for: [userId])
         TripPlannerDebugLog.message("Attempting row delete for user \(userId.uuidString) trip \(tripId.uuidString)")
         try await supabase.client
             .from("user_trip_plans")
@@ -2815,11 +3108,20 @@ struct TripPlannerView: View {
     @State private var pendingDeleteTrip: TripPlannerTrip?
     @State private var pendingDeleteChoice: TripPlannerDeleteChoice?
     @State private var currentUserSnapshot: TripPlannerFriendSnapshot?
+    @State private var ownerSnapshotsByTripID: [UUID: TripPlannerFriendSnapshot] = [:]
+    @State private var preparedUserId: UUID?
 
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
+    private let syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
 
     private var pendingSharedTripIDs: Set<UUID> {
         Set(sharedTripInbox.notifications.map { $0.trip.id })
+    }
+
+    private var ownerPreloadKey: String {
+        let userKey = sessionManager.userId?.uuidString ?? "nil-user"
+        let tripKey = store.trips.map { $0.id.uuidString }.joined(separator: ",")
+        return "\(userKey)|\(tripKey)"
     }
 
     var body: some View {
@@ -2866,6 +3168,7 @@ struct TripPlannerView: View {
                                             trip: trip,
                                             isNewSharedTrip: pendingSharedTripIDs.contains(trip.id),
                                             currentUserSnapshot: currentUserSnapshot,
+                                            ownerSnapshot: ownerSnapshotsByTripID[trip.id],
                                             onDelete: {
                                                 pendingDeleteTrip = trip
                                             },
@@ -2887,10 +3190,25 @@ struct TripPlannerView: View {
                 }
                 .scrollIndicators(.hidden)
                 .refreshable {
-                    async let tripRefresh: Void = store.refresh()
-                    async let inboxRefresh: Void = sharedTripInbox.refresh()
                     async let snapshotRefresh: Void = loadCurrentUserSnapshot()
-                    _ = await (tripRefresh, inboxRefresh, snapshotRefresh)
+
+                    if let userId = sessionManager.userId {
+                        do {
+                            let remoteTrips = try await syncService.fetchTrips(userId: userId, policy: .networkOnly)
+                            await store.refresh(using: remoteTrips, userId: userId)
+                            sharedTripInbox.refresh(using: remoteTrips, userId: userId)
+                        } catch {
+                            print("❌ Trip planner shared refresh failed:", error)
+                            async let tripRefresh: Void = store.refresh()
+                            async let inboxRefresh: Void = sharedTripInbox.refresh()
+                            _ = await (tripRefresh, inboxRefresh)
+                        }
+                    } else {
+                        await store.refresh()
+                    }
+
+                    _ = await snapshotRefresh
+                    await preloadTripOwnerProfiles()
                 }
             }
         }
@@ -2982,15 +3300,29 @@ struct TripPlannerView: View {
         } message: { choice in
             Text(choice.confirmationMessage)
         }
-        .task {
-            async let inboxRefresh: Void = sharedTripInbox.refresh()
+        .task(id: sessionManager.userId) {
+            guard preparedUserId != sessionManager.userId else { return }
+            let loadStart = Date().timeIntervalSinceReferenceDate
+            preparedUserId = sessionManager.userId
+            TripPlannerDebugLog.message(
+                "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
+            )
             async let snapshotRefresh: Void = loadCurrentUserSnapshot()
-            _ = await (inboxRefresh, snapshotRefresh)
+            async let tripRefresh: Void = store.loadInitialTripsIfNeeded()
+            _ = await (snapshotRefresh, tripRefresh)
+            TripPlannerDebugLog.message(
+                "Planner screen task finished duration=\(TripPlannerDebugLog.durationText(since: loadStart)) trips=\(store.trips.count)"
+            )
+        }
+        .task(id: ownerPreloadKey) {
+            guard preparedUserId == sessionManager.userId else { return }
+            await preloadTripOwnerProfiles()
         }
     }
 
     @MainActor
     private func loadCurrentUserSnapshot() async {
+        let loadStart = Date().timeIntervalSinceReferenceDate
         guard let userId = sessionManager.userId else {
             currentUserSnapshot = nil
             return
@@ -3003,6 +3335,9 @@ struct TripPlannerView: View {
                 username: cachedProfile.username,
                 avatarURL: cachedProfile.avatarUrl
             )
+            TripPlannerDebugLog.message(
+                "Current user snapshot loaded from cache duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
             return
         }
 
@@ -3013,7 +3348,103 @@ struct TripPlannerView: View {
                 username: profile.username,
                 avatarURL: profile.avatarUrl
             )
+            TripPlannerDebugLog.message(
+                "Current user snapshot fetched duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
+        } else {
+            TripPlannerDebugLog.message(
+                "Current user snapshot missing after fetch duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
         }
+    }
+
+    @MainActor
+    private func preloadTripOwnerProfiles() async {
+        let preloadStart = Date().timeIntervalSinceReferenceDate
+        let ownerTargets = store.trips.compactMap { trip -> (tripId: UUID, ownerId: UUID, embeddedSnapshot: TripPlannerFriendSnapshot?)? in
+            guard let ownerId = trip.ownerId,
+                  ownerId != sessionManager.userId,
+                  !trip.friends.contains(where: { $0.id == ownerId }) else {
+                return nil
+            }
+            return (trip.id, ownerId, trip.effectiveOwnerSnapshot)
+        }
+
+        TripPlannerDebugLog.message(
+            "Owner preload started totalTrips=\(store.trips.count) ownerTargets=\(ownerTargets.count)"
+        )
+
+        var nextSnapshots: [UUID: TripPlannerFriendSnapshot] = [:]
+        var uncachedTargets: [(tripId: UUID, ownerId: UUID)] = []
+
+        for target in ownerTargets {
+            if let embeddedSnapshot = target.embeddedSnapshot {
+                nextSnapshots[target.tripId] = embeddedSnapshot
+            } else if let cachedOwner = profileService.cachedProfile(userId: target.ownerId) {
+                let snapshot = TripPlannerFriendSnapshot(
+                    id: cachedOwner.id,
+                    displayName: cachedOwner.tripDisplayName,
+                    username: cachedOwner.username,
+                    avatarURL: cachedOwner.avatarUrl
+                )
+                nextSnapshots[target.tripId] = snapshot
+                store.cacheOwnerSnapshot(snapshot, forTripID: target.tripId)
+            } else {
+                uncachedTargets.append((tripId: target.tripId, ownerId: target.ownerId))
+            }
+        }
+
+        ownerSnapshotsByTripID = nextSnapshots
+
+        guard !uncachedTargets.isEmpty else {
+            TripPlannerDebugLog.message(
+                "Owner preload finished without remote fetch duration=\(TripPlannerDebugLog.durationText(since: preloadStart)) resolved=\(nextSnapshots.count)"
+            )
+            return
+        }
+
+        TripPlannerDebugLog.message(
+            "Owner preload fetching remotely uncachedTargets=\(uncachedTargets.count) cachedResolved=\(nextSnapshots.count)"
+        )
+
+        await withTaskGroup(of: (UUID, TripPlannerFriendSnapshot?).self) { group in
+            for target in uncachedTargets {
+                group.addTask {
+                    let fetchStart = Date().timeIntervalSinceReferenceDate
+                    let fetchedOwner = try? await profileService.fetchMyProfile(userId: target.ownerId)
+                    let snapshot: TripPlannerFriendSnapshot?
+                    if let fetchedOwner {
+                        snapshot = await MainActor.run {
+                            TripPlannerFriendSnapshot(
+                                id: fetchedOwner.id,
+                                displayName: fetchedOwner.tripDisplayName,
+                                username: fetchedOwner.username,
+                                avatarURL: fetchedOwner.avatarUrl
+                            )
+                        }
+                        TripPlannerDebugLog.message(
+                            "Owner profile fetched trip=\(target.tripId.uuidString) owner=\(fetchedOwner.username) duration=\(TripPlannerDebugLog.durationText(since: fetchStart))"
+                        )
+                    } else {
+                        snapshot = nil
+                        TripPlannerDebugLog.message(
+                            "Owner profile fetch failed trip=\(target.tripId.uuidString) ownerId=\(target.ownerId.uuidString) duration=\(TripPlannerDebugLog.durationText(since: fetchStart))"
+                        )
+                    }
+                    return (target.tripId, snapshot)
+                }
+            }
+
+            for await (tripId, snapshot) in group {
+                guard let snapshot else { continue }
+                ownerSnapshotsByTripID[tripId] = snapshot
+                store.cacheOwnerSnapshot(snapshot, forTripID: tripId)
+            }
+        }
+
+        TripPlannerDebugLog.message(
+            "Owner preload finished duration=\(TripPlannerDebugLog.durationText(since: preloadStart)) resolved=\(ownerSnapshotsByTripID.count)"
+        )
     }
 
     @ViewBuilder
@@ -3061,6 +3492,7 @@ struct TripPlannerView: View {
             event.startDate = Calendar.current.startOfDay(for: startDate)
             event.endDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: endDate)) ?? endDate
 
+            let travelerNames = calendarTravelerDisplayNames(for: trip)
             let noteParts = [
                 trip.notes.isEmpty ? nil : trip.notes,
                 trip.countryNames.isEmpty ? nil : String(
@@ -3068,10 +3500,10 @@ struct TripPlannerView: View {
                     locale: AppDisplayLocale.current,
                     trip.countryNames.joined(separator: ", ")
                 ),
-                trip.travelerDisplayNames.isEmpty ? nil : String(
+                travelerNames.isEmpty ? nil : String(
                     format: String(localized: "trip_planner.calendar_notes_friends"),
                     locale: AppDisplayLocale.current,
-                    trip.travelerDisplayNames.joined(separator: ", ")
+                    travelerNames.joined(separator: ", ")
                 )
             ].compactMap { $0 }
             event.notes = noteParts.joined(separator: "\n")
@@ -3081,6 +3513,27 @@ struct TripPlannerView: View {
             calendarError = error.localizedDescription.isEmpty
                 ? String(localized: "trip_planner.calendar_error_generic")
                 : error.localizedDescription
+        }
+    }
+
+    private func calendarTravelerDisplayNames(for trip: TripPlannerTrip) -> [String] {
+        var names = trip.travelerDisplayNames
+
+        if let ownerId = trip.ownerId,
+           ownerId != sessionManager.userId,
+           !trip.friends.contains(where: { $0.id == ownerId }),
+           let ownerName = trip.effectiveOwnerSnapshot?.displayName
+            ?? ProfileService(supabase: SupabaseManager.shared).cachedProfile(userId: ownerId)?.tripDisplayName {
+            names.insert(ownerName, at: 0)
+        }
+
+        var seen = Set<String>()
+        return names.filter { rawName in
+            let normalized = rawName
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: AppDisplayLocale.current)
+            guard !normalized.isEmpty else { return false }
+            return seen.insert(normalized).inserted
         }
     }
 }
@@ -3115,13 +3568,11 @@ private struct TripPlannerComposerView: View {
     @State private var friendsError: String?
     @State private var showingAllFriends = false
     @State private var showingBucketCountries = false
-    @State private var usernameSearchText = ""
-    @State private var searchedUsers: [Profile] = []
-    @State private var isSearchingUsers = false
+    @StateObject private var usernameSearch = TripPlannerUsernameSearchController()
 
     private let friendService = FriendService()
-    private let profileService = ProfileService(supabase: SupabaseManager.shared)
     private let supabase = SupabaseManager.shared
+    private let profileService = ProfileService(supabase: SupabaseManager.shared)
 
     init(
         existingTrip: TripPlannerTrip? = nil,
@@ -3421,16 +3872,16 @@ private struct TripPlannerComposerView: View {
 
                                         TripPlannerTextInput(
                                             title: "Add by username",
-                                            text: $usernameSearchText,
+                                            text: $usernameSearch.query,
                                             placeholder: "@username"
                                         )
 
-                                        if isSearchingUsers {
+                                        if usernameSearch.isSearching {
                                             ProgressView()
                                                 .tint(.black)
-                                        } else if !searchedUsers.isEmpty {
+                                        } else if !usernameSearch.results.isEmpty {
                                             LazyVStack(spacing: 10) {
-                                                ForEach(searchedUsers) { profile in
+                                                ForEach(usernameSearch.results) { profile in
                                                     Button {
                                                         addSearchedUser(profile)
                                                     } label: {
@@ -3611,14 +4062,17 @@ private struct TripPlannerComposerView: View {
         .onChange(of: includeFriends) { _, enabled in
             if !enabled {
                 selectedFriendIds.removeAll()
-                usernameSearchText = ""
-                searchedUsers = []
+                usernameSearch.reset()
             }
         }
-        .onChange(of: usernameSearchText) { _, _ in
-            Task {
-                await searchUsersByUsername()
-            }
+        .onChange(of: usernameSearch.query) { _, _ in
+            usernameSearch.scheduleSearch(
+                enabled: includeFriends,
+                excluding: sessionManager.userId
+            )
+        }
+        .onDisappear {
+            usernameSearch.cancel()
         }
     }
 
@@ -3725,40 +4179,12 @@ private struct TripPlannerComposerView: View {
     }
 
     @MainActor
-    private func searchUsersByUsername() async {
-        let query = usernameSearchText
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "@", with: "")
-
-        guard includeFriends, !query.isEmpty else {
-            searchedUsers = []
-            return
-        }
-
-        isSearchingUsers = true
-        defer { isSearchingUsers = false }
-
-        do {
-            let results = try await supabase.searchUsers(byUsername: query)
-            TripPlannerDebugLog.message(
-                "Username search '\(query)' returned \(results.count) results for actor=\(TripPlannerDebugLog.userLabel(sessionManager.userId))"
-            )
-            searchedUsers = results.filter { profile in
-                profile.id != sessionManager.userId
-            }
-        } catch {
-            TripPlannerDebugLog.message("Username search '\(query)' failed")
-            searchedUsers = []
-        }
-    }
-
     private func addSearchedUser(_ profile: Profile) {
         if !friends.contains(where: { $0.id == profile.id }) {
             friends.append(profile)
         }
         selectedFriendIds.insert(profile.id)
-        usernameSearchText = ""
-        searchedUsers = []
+        usernameSearch.reset()
         TripPlannerDebugLog.message(
             "Added searched user @\(profile.username) [\(profile.id.uuidString)] to draft trip for actor=\(TripPlannerDebugLog.userLabel(sessionManager.userId))"
         )
@@ -3815,6 +4241,7 @@ private struct TripPlannerComposerView: View {
             friendNames: selectedFriends.map(displayName),
             friends: selectedFriends.map(friendSnapshot),
             ownerId: existingTrip?.ownerId,
+            ownerSnapshot: existingTrip?.effectiveOwnerSnapshot,
             plannerCurrencyCode: existingTrip?.plannerCurrencyCode ?? CurrencyPreferenceStore.persistedDefaultCurrencyCode(),
             availability: existingTrip?.availability ?? defaultAvailability(),
             dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
@@ -3940,7 +4367,11 @@ private struct TripPlannerDetailView: View {
         let ownerSnapshot: TripPlannerFriendSnapshot?
         if let ownerId = trip.ownerId,
            ownerId != SupabaseManager.shared.currentUserId,
-           let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+           let embeddedOwnerSnapshot = trip.effectiveOwnerSnapshot {
+            ownerSnapshot = embeddedOwnerSnapshot
+        } else if let ownerId = trip.ownerId,
+                  ownerId != SupabaseManager.shared.currentUserId,
+                  let cachedOwner = profileService.cachedProfile(userId: ownerId) {
             ownerSnapshot = TripPlannerFriendSnapshot(
                 id: cachedOwner.id,
                 displayName: cachedOwner.tripDisplayName,
@@ -3973,6 +4404,7 @@ private struct TripPlannerDetailView: View {
             .preservingMissingState(from: trip)
             .normalizedForPersistence(currentUser: currentUserSnapshot)
         trip = normalizedTrip
+        ownerSnapshot = normalizedTrip.effectiveOwnerSnapshot
         onSave(normalizedTrip)
     }
 
@@ -4028,8 +4460,12 @@ private struct TripPlannerDetailView: View {
         } : resolvedCountries
     }
 
+    private var isDisplayedGroupTrip: Bool {
+        displayedTravelers.count > 1
+    }
+
     private var effectiveScoreWeights: ScoreWeights {
-        trip.isGroupTrip ? .default : scoreWeightsStore.weights
+        isDisplayedGroupTrip ? .default : scoreWeightsStore.weights
     }
 
     private var checklistActorName: String {
@@ -4067,6 +4503,7 @@ private struct TripPlannerDetailView: View {
             friendNames: trip.friendNames,
             friends: trip.friends,
             ownerId: trip.ownerId,
+            ownerSnapshot: trip.effectiveOwnerSnapshot,
             plannerCurrencyCode: trip.plannerCurrencyCode,
             availability: trip.availability,
             dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
@@ -4112,7 +4549,7 @@ private struct TripPlannerDetailView: View {
     private var tripDetailsSection: some View {
         TripPlannerEditableSectionCard(
             title: String(localized: "trip_planner.detail.trip_details"),
-            subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip")
+            subtitle: isDisplayedGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip")
         ) {
             NavigationLink {
                 TripPlannerBasicsEditorView(trip: trip, onSave: saveTripChanges)
@@ -4245,7 +4682,7 @@ private struct TripPlannerDetailView: View {
                 tripDayPlans: syncedTrip.dayPlans,
                 weights: effectiveScoreWeights,
                 preferredMonth: scoreWeightsStore.selectedMonth,
-                isGroupTrip: trip.isGroupTrip,
+                isGroupTrip: isDisplayedGroupTrip,
                 travelerCount: displayedTravelers.count,
                 currencyCode: effectivePlannerCurrencyCode,
                 passportLabel: tripPassportLabel,
@@ -4264,7 +4701,7 @@ private struct TripPlannerDetailView: View {
                     tripDayPlans: syncedTrip.dayPlans,
                     weights: effectiveScoreWeights,
                     preferredMonth: scoreWeightsStore.selectedMonth,
-                    isGroupTrip: trip.isGroupTrip,
+                    isGroupTrip: isDisplayedGroupTrip,
                     travelerCount: displayedTravelers.count,
                     currencyCode: effectivePlannerCurrencyCode,
                     groupVisaNeeds: limitedVisaNeeds
@@ -4281,7 +4718,7 @@ private struct TripPlannerDetailView: View {
         } label: {
             TripPlannerNavigationSectionCard(
                 title: String(localized: "trip_planner.availability.title"),
-                subtitle: trip.isGroupTrip ? String(localized: "trip_planner.detail.availability_group_subtitle") : String(localized: "trip_planner.detail.availability_solo_subtitle")
+                subtitle: isDisplayedGroupTrip ? String(localized: "trip_planner.detail.availability_group_subtitle") : String(localized: "trip_planner.detail.availability_solo_subtitle")
             ) {
                 TripPlannerAvailabilityPreviewSection(trip: syncedTrip)
             }
@@ -4494,6 +4931,10 @@ private struct TripPlannerDetailView: View {
 
         if !refreshed.isEmpty {
             resolvedFriends = refreshed
+        }
+
+        if let ownerSnapshot, ownerSnapshot != trip.effectiveOwnerSnapshot {
+            trip = trip.withOwnerSnapshot(ownerSnapshot)
         }
     }
 
@@ -4742,6 +5183,7 @@ private struct TripPlannerBasicsEditorView: View {
                         friendNames: trip.friendNames,
                         friends: trip.friends,
                         ownerId: trip.ownerId,
+                        ownerSnapshot: trip.effectiveOwnerSnapshot,
                         plannerCurrencyCode: trip.plannerCurrencyCode,
                         availability: updatedAvailability(),
                         dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
@@ -4797,9 +5239,7 @@ private struct TripPlannerFriendsEditorView: View {
     @State private var selectedFriendIds: Set<UUID>
     @State private var isLoading = true
     @State private var errorMessage: String?
-    @State private var usernameSearchText = ""
-    @State private var searchedUsers: [Profile] = []
-    @State private var isSearchingUsers = false
+    @StateObject private var usernameSearch = TripPlannerUsernameSearchController()
 
     private let friendService = FriendService()
     private let supabase = SupabaseManager.shared
@@ -4861,16 +5301,16 @@ private struct TripPlannerFriendsEditorView: View {
 
                                 TripPlannerTextInput(
                                     title: "Add by username",
-                                    text: $usernameSearchText,
+                                    text: $usernameSearch.query,
                                     placeholder: "@username"
                                 )
 
-                                if isSearchingUsers {
+                                if usernameSearch.isSearching {
                                     ProgressView()
                                         .tint(.black)
-                                } else if !searchedUsers.isEmpty {
+                                } else if !usernameSearch.results.isEmpty {
                                     LazyVStack(spacing: 10) {
-                                        ForEach(searchedUsers) { profile in
+                                        ForEach(usernameSearch.results) { profile in
                                             Button {
                                                 addSearchedUser(profile)
                                             } label: {
@@ -4916,6 +5356,7 @@ private struct TripPlannerFriendsEditorView: View {
                         friendNames: selectedFriends.map(displayName),
                         friends: selectedFriends.map(friendSnapshot),
                         ownerId: trip.ownerId,
+                        ownerSnapshot: trip.effectiveOwnerSnapshot,
                         plannerCurrencyCode: trip.plannerCurrencyCode,
                         availability: preservedAvailability(with: selectedFriends.map(friendSnapshot)),
                         dayPlans: trip.dayPlans,
@@ -4932,10 +5373,11 @@ private struct TripPlannerFriendsEditorView: View {
         .task {
             await loadFriends()
         }
-        .onChange(of: usernameSearchText) { _, _ in
-            Task {
-                await searchUsersByUsername()
-            }
+        .onChange(of: usernameSearch.query) { _, _ in
+            usernameSearch.scheduleSearch(excluding: sessionManager.userId)
+        }
+        .onDisappear {
+            usernameSearch.cancel()
         }
     }
 
@@ -4967,35 +5409,10 @@ private struct TripPlannerFriendsEditorView: View {
         }
     }
 
-    @MainActor
-    private func searchUsersByUsername() async {
-        let query = usernameSearchText
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "@", with: "")
-
-        guard !query.isEmpty else {
-            searchedUsers = []
-            return
-        }
-
-        isSearchingUsers = true
-        defer { isSearchingUsers = false }
-
-        do {
-            let results = try await supabase.searchUsers(byUsername: query)
-            searchedUsers = results.filter { profile in
-                profile.id != sessionManager.userId
-            }
-        } catch {
-            searchedUsers = []
-        }
-    }
-
     private func addSearchedUser(_ profile: Profile) {
         friends = mergedProfiles(friends + [profile])
         selectedFriendIds.insert(profile.id)
-        usernameSearchText = ""
-        searchedUsers = []
+        usernameSearch.reset()
     }
 
     private func fetchProfiles(for ids: [UUID]) async throws -> [Profile] {
@@ -5344,6 +5761,7 @@ private struct TripPlannerAvailabilityEditorView: View {
                         friendNames: trip.friendNames,
                         friends: trip.friends,
                         ownerId: trip.ownerId,
+                        ownerSnapshot: trip.effectiveOwnerSnapshot,
                         plannerCurrencyCode: trip.plannerCurrencyCode,
                         availability: proposals.sorted { $0.startDate < $1.startDate },
                         dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
@@ -5704,6 +6122,7 @@ private struct TripPlannerCountriesEditorView: View {
                         friendNames: trip.friendNames,
                         friends: trip.friends,
                         ownerId: trip.ownerId,
+                        ownerSnapshot: trip.effectiveOwnerSnapshot,
                         plannerCurrencyCode: trip.plannerCurrencyCode,
                         availability: trip.availability,
                         dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
@@ -5918,6 +6337,7 @@ private struct TripPlannerItineraryEditorView: View {
                         friendNames: trip.friendNames,
                         friends: trip.friends,
                         ownerId: trip.ownerId,
+                        ownerSnapshot: trip.effectiveOwnerSnapshot,
                         plannerCurrencyCode: trip.plannerCurrencyCode,
                         availability: trip.availability,
                         dayPlans: normalizedDayPlans(),
@@ -7085,6 +7505,7 @@ private struct TripPlannerChecklistEditorView: View {
                 friendNames: trip.friendNames,
                 friends: trip.friends,
                 ownerId: trip.ownerId,
+                ownerSnapshot: trip.effectiveOwnerSnapshot,
                 plannerCurrencyCode: trip.plannerCurrencyCode,
                 availability: trip.availability,
                 dayPlans: snapshot.dayPlans,
@@ -8372,6 +8793,7 @@ private struct TripPlannerExpensesEditorView: View {
                 friendNames: tripWithChecklistUpdates.friendNames,
                 friends: tripWithChecklistUpdates.friends,
                 ownerId: tripWithChecklistUpdates.ownerId,
+                ownerSnapshot: tripWithChecklistUpdates.effectiveOwnerSnapshot,
                 plannerCurrencyCode: tripWithChecklistUpdates.plannerCurrencyCode,
                 availability: tripWithChecklistUpdates.availability,
                 dayPlans: tripWithChecklistUpdates.dayPlans,
@@ -11640,12 +12062,38 @@ private struct TripPlannerOverlapCard: View {
 
 private struct TripPlannerSavedTripCard: View {
     @EnvironmentObject private var sessionManager: SessionManager
+    @State private var hasLoggedInitialAppearance = false
     let trip: TripPlannerTrip
     let isNewSharedTrip: Bool
     let currentUserSnapshot: TripPlannerFriendSnapshot?
+    let ownerSnapshot: TripPlannerFriendSnapshot?
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
+
+    private var isDisplayedGroupTrip: Bool {
+        travelerChips.count > 1
+            || (trip.ownerId != nil && trip.ownerId != sessionManager.userId)
+    }
+
+    private var ownerChip: TripPlannerTravelerChip? {
+        guard let ownerId = trip.ownerId,
+              ownerId != sessionManager.userId,
+              !trip.friends.contains(where: { $0.id == ownerId }) else {
+            return nil
+        }
+
+        if let ownerSnapshot = ownerSnapshot ?? trip.effectiveOwnerSnapshot {
+            return TripPlannerTravelerChip(
+                id: ownerSnapshot.id.uuidString,
+                name: ownerSnapshot.displayName,
+                username: ownerSnapshot.username,
+                avatarURL: ownerSnapshot.avatarURL
+            )
+        }
+
+        return nil
+    }
 
     private var currentUserChip: TripPlannerTravelerChip? {
         if let currentUserSnapshot {
@@ -11700,6 +12148,10 @@ private struct TripPlannerSavedTripCard: View {
             chips.append(currentUserChip)
         }
 
+        if let ownerChip {
+            chips.append(ownerChip)
+        }
+
         chips.append(contentsOf: participantSnapshots.map {
             TripPlannerTravelerChip(
                 id: $0.id.uuidString,
@@ -11741,7 +12193,7 @@ private struct TripPlannerSavedTripCard: View {
                         .lineLimit(2)
                         .minimumScaleFactor(0.8)
 
-                    Text(trip.isGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip"))
+                    Text(isDisplayedGroupTrip ? String(localized: "trip_planner.detail.group_trip") : String(localized: "trip_planner.detail.solo_trip"))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.black.opacity(0.62))
                 }
@@ -11811,6 +12263,13 @@ private struct TripPlannerSavedTripCard: View {
                 )
         )
         .shadow(color: .black.opacity(0.1), radius: 10, y: 6)
+        .onAppear {
+            guard !hasLoggedInitialAppearance else { return }
+            hasLoggedInitialAppearance = true
+            TripPlannerDebugLog.message(
+                "Saved trip card appeared \(TripPlannerDebugLog.tripCardState(trip: trip, ownerSnapshot: ownerSnapshot ?? trip.effectiveOwnerSnapshot, travelerCount: travelerChips.count))"
+            )
+        }
     }
 }
 
@@ -12331,6 +12790,7 @@ private struct TripPlannerAvatarView: View {
     let username: String
     let avatarURL: String?
     let size: CGFloat
+    @State private var avatarLoadStart = Date().timeIntervalSinceReferenceDate
 
     private var initials: String {
         let source = name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? username : name
@@ -12347,8 +12807,27 @@ private struct TripPlannerAvatarView: View {
                         image
                             .resizable()
                             .scaledToFill()
+                            .onAppear {
+                                guard TripPlannerAvatarLogDeduper.shouldLog(
+                                    key: "success:\(avatarURL)",
+                                    cooldown: 60
+                                ) else { return }
+                                TripPlannerDebugLog.message(
+                                    "Avatar loaded username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL)"
+                                )
+                            }
                     } else {
                         fallbackAvatar
+                            .onAppear {
+                                guard state.error != nil else { return }
+                                guard TripPlannerAvatarLogDeduper.shouldLog(
+                                    key: "failure:\(avatarURL)",
+                                    cooldown: 60
+                                ) else { return }
+                                TripPlannerDebugLog.message(
+                                    "Avatar failed username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL) error=\(String(describing: state.error))"
+                                )
+                            }
                     }
                 }
             } else {
@@ -12361,6 +12840,22 @@ private struct TripPlannerAvatarView: View {
             Circle()
                 .stroke(.white.opacity(0.5), lineWidth: 1)
         )
+        .onAppear {
+            avatarLoadStart = Date().timeIntervalSinceReferenceDate
+            if let avatarURL, !avatarURL.isEmpty {
+                guard TripPlannerAvatarLogDeduper.shouldLog(
+                    key: "request:\(avatarURL)",
+                    cooldown: 60
+                ) else { return }
+                TripPlannerDebugLog.message("Avatar request started username=@\(username) url=\(avatarURL)")
+            } else {
+                guard TripPlannerAvatarLogDeduper.shouldLog(
+                    key: "fallback:\(username.lowercased())",
+                    cooldown: 60
+                ) else { return }
+                TripPlannerDebugLog.message("Avatar fallback used username=@\(username) reason=missing_url")
+            }
+        }
     }
 
     private var fallbackAvatar: some View {
@@ -13009,7 +13504,7 @@ private enum TripPlannerAvailabilityCalculator {
         return slots
     }
 
-    private static func merge(_ intervals: [DateInterval]) -> [DateInterval] {
+    nonisolated private static func merge(_ intervals: [DateInterval]) -> [DateInterval] {
         let sorted = intervals.sorted { $0.start < $1.start }
         var result: [DateInterval] = []
 
@@ -13044,7 +13539,7 @@ private enum TripPlannerAvailabilityCalculator {
         return DateInterval(start: start, end: end)
     }
 
-    private static func merge(_ overlaps: [TripPlannerAvailabilityOverlap]) -> [TripPlannerAvailabilityOverlap] {
+    nonisolated private static func merge(_ overlaps: [TripPlannerAvailabilityOverlap]) -> [TripPlannerAvailabilityOverlap] {
         var result: [TripPlannerAvailabilityOverlap] = []
 
         for overlap in overlaps.sorted(by: { $0.startDate < $1.startDate }) {

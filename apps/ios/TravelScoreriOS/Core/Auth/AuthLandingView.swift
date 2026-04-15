@@ -64,13 +64,13 @@ struct AuthLandingView: View {
                 }
             }
         }
-        .onChange(of: sessionManager.isAuthenticated) { isAuthed in
+        .onChange(of: sessionManager.isAuthenticated) { _, isAuthed in
             if isAuthed {
                 revealTask?.cancel()
                 showAuthUI = false
             }
         }
-        .onChange(of: sessionManager.didContinueAsGuest) { didGuest in
+        .onChange(of: sessionManager.didContinueAsGuest) { _, didGuest in
             if didGuest {
                 revealTask?.cancel()
                 showAuthUI = false

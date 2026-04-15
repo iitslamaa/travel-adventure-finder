@@ -45,6 +45,7 @@ struct Country: Identifiable, Hashable {
     // Daily spend
     let dailySpendTotalUsd: Double?
     let dailySpendHotelUsd: Double?
+    let dailySpendHostelUsd: Double?
     let dailySpendFoodUsd: Double?
     let dailySpendActivitiesUsd: Double?
 
@@ -125,6 +126,7 @@ struct Country: Identifiable, Hashable {
         visaRecommendedPassportLabel: String? = nil,
         dailySpendTotalUsd: Double? = nil,
         dailySpendHotelUsd: Double? = nil,
+        dailySpendHostelUsd: Double? = nil,
         dailySpendFoodUsd: Double? = nil,
         dailySpendActivitiesUsd: Double? = nil,
         affordabilityCategory: Int? = nil,
@@ -160,6 +162,7 @@ struct Country: Identifiable, Hashable {
         self.visaRecommendedPassportLabel = visaRecommendedPassportLabel
         self.dailySpendTotalUsd = dailySpendTotalUsd
         self.dailySpendHotelUsd = dailySpendHotelUsd
+        self.dailySpendHostelUsd = dailySpendHostelUsd
         self.dailySpendFoodUsd = dailySpendFoodUsd
         self.dailySpendActivitiesUsd = dailySpendActivitiesUsd
         self.affordabilityCategory = affordabilityCategory
@@ -2258,6 +2261,7 @@ extension Country {
             visaRecommendedPassportLabel: visaRecommendedPassportLabel ?? self.visaRecommendedPassportLabel,
             dailySpendTotalUsd: dailySpendTotalUsd,
             dailySpendHotelUsd: dailySpendHotelUsd,
+            dailySpendHostelUsd: dailySpendHostelUsd,
             dailySpendFoodUsd: dailySpendFoodUsd,
             dailySpendActivitiesUsd: dailySpendActivitiesUsd,
             affordabilityCategory: affordabilityCategory,

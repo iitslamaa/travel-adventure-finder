@@ -7,6 +7,15 @@ type WdiItem = {
   value?: number | null;
 };
 
+type SpendBreakdown = {
+  avgDailyUsd: number;
+  hotelUsd: number;
+  hostelUsd: number;
+  foodUsd: number;
+  transportUsd: number;
+  activitiesUsd: number;
+};
+
 function labelForCategory(cat: number) {
   if (cat <= 2) return "Extremely Affordable";
   if (cat <= 4) return "Affordable";
@@ -24,6 +33,41 @@ function categoryFromMetric(metric: number) {
   const clamped = Math.max(MIN, Math.min(MAX, metric));
   const idx = Math.floor((clamped - MIN) / width) + 1;
   return Math.max(1, Math.min(10, idx === 11 ? 10 : idx));
+}
+
+function scaleFromMetric(metric: number) {
+  let scale: number;
+  if (metric <= 3) {
+    scale = metric / 0.6;
+  } else {
+    scale = metric / 100;
+  }
+
+  return Math.min(3, Math.max(0.4, scale));
+}
+
+function estimateSpendBreakdown(metric: number): SpendBreakdown {
+  const BASE_FOOD_USD = 25;
+  const BASE_TRANSPORT_USD = 15;
+  const BASE_ACTIVITIES_USD = 15;
+  const BASE_HOTEL_USD = 70;
+
+  const scale = scaleFromMetric(metric);
+  const foodUsd = Math.round(BASE_FOOD_USD * scale);
+  const transportUsd = Math.round(BASE_TRANSPORT_USD * scale);
+  const activitiesUsd = Math.round(BASE_ACTIVITIES_USD * scale);
+  const hotelUsd = Math.round(BASE_HOTEL_USD * scale);
+  const hostelUsd = Math.round(hotelUsd * 0.4);
+  const avgDailyUsd = Math.round(foodUsd + transportUsd + activitiesUsd + hotelUsd);
+
+  return {
+    avgDailyUsd,
+    hotelUsd,
+    hostelUsd,
+    foodUsd,
+    transportUsd,
+    activitiesUsd,
+  };
 }
 
 async function fetchLatestWdiIndicator(indicator: string) {
@@ -65,12 +109,20 @@ serve(async () => {
 
     for (const [iso2, data] of latestByIso2.entries()) {
       const category = categoryFromMetric(data.value);
+      const spend = estimateSpendBreakdown(data.value);
 
       sourceRows.push({
         iso2,
         price_level_ratio_ppp_to_fx: data.value,
         source_year: data.year,
         source_updated_at: new Date().toISOString(),
+        avg_daily_usd: spend.avgDailyUsd,
+        hotel_usd: spend.hotelUsd,
+        hostel_usd: spend.hostelUsd,
+        food_usd: spend.foodUsd,
+        transport_usd: spend.transportUsd,
+        activities_usd: spend.activitiesUsd,
+        methodology: "world_bank_price_level_baseline_v1",
       });
 
       derivedRows.push({
@@ -81,6 +133,12 @@ serve(async () => {
         metric_year: data.year,
         version: 1,
         computed_at: new Date().toISOString(),
+        avg_daily_usd: spend.avgDailyUsd,
+        hotel_usd: spend.hotelUsd,
+        hostel_usd: spend.hostelUsd,
+        food_usd: spend.foodUsd,
+        transport_usd: spend.transportUsd,
+        activities_usd: spend.activitiesUsd,
       });
     }
 

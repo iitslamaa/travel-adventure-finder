@@ -171,9 +171,9 @@ function extractAverageDailyCostUsd(fx: FactsExtraServer): number | undefined {
 
   const parts: number[] = [];
   if (typeof spend.hotelUsd === 'number') parts.push(spend.hotelUsd);
-  if (typeof spend.hostelUsd === 'number') parts.push(spend.hostelUsd);
   if (typeof spend.foodUsd === 'number') parts.push(spend.foodUsd);
   if (typeof spend.transportUsd === 'number') parts.push(spend.transportUsd);
+  if (typeof spend.activitiesUsd === 'number') parts.push(spend.activitiesUsd);
 
   if (!parts.length) return undefined;
   return parts.reduce((a, b) => a + b, 0);

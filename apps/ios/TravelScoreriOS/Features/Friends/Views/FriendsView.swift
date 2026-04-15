@@ -134,7 +134,7 @@ struct FriendsView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
-            .onChange(of: friendsVM.searchText) { _ in
+            .onChange(of: friendsVM.searchText) { _, _ in
                 guard isOwnFriendsPage else { return }
                 Task { await friendsVM.searchUsers() }
             }
