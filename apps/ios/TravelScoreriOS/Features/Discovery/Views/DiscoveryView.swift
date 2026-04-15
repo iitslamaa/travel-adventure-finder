@@ -257,8 +257,8 @@ struct DiscoveryView: View {
                 baseCountries = cached
             }
 
-            if let refreshed = await CountryAPI.refreshCountriesIfNeeded(), !refreshed.isEmpty {
-                baseCountries = refreshed
+            if baseCountries.isEmpty, let fetched = try? await CountryAPI.fetchCountries(), !fetched.isEmpty {
+                baseCountries = fetched
             }
         }
         .sheet(isPresented: $showingWeights) {

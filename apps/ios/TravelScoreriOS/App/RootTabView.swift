@@ -204,9 +204,7 @@ struct RootTabView: View {
                 countries = cached
             }
 
-            if let refreshed = await CountryAPI.refreshCountriesIfNeeded() {
-                countries = refreshed
-            } else if countries.isEmpty {
+            if countries.isEmpty {
                 do {
                     countries = try await CountryAPI.fetchCountries()
                 } catch {

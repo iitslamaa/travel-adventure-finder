@@ -3102,7 +3102,7 @@ private struct TripPlannerCalendarDraft: Identifiable {
 struct TripPlannerView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var sharedTripInbox: SharedTripInboxStore
-    @StateObject private var store = TripPlannerStore()
+    @StateObject private var store: TripPlannerStore
     @State private var calendarDraft: TripPlannerCalendarDraft?
     @State private var calendarError: String?
     @State private var pendingDeleteTrip: TripPlannerTrip?
@@ -3111,8 +3111,16 @@ struct TripPlannerView: View {
     @State private var ownerSnapshotsByTripID: [UUID: TripPlannerFriendSnapshot] = [:]
     @State private var preparedUserId: UUID?
 
-    private let profileService = ProfileService(supabase: SupabaseManager.shared)
-    private let syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
+    private let profileService: ProfileService
+    private let syncService: TripPlannerSyncService
+
+    init() {
+        let profileService = ProfileService(supabase: SupabaseManager.shared)
+        self.profileService = profileService
+        self.syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
+        _store = StateObject(wrappedValue: TripPlannerStore())
+        _currentUserSnapshot = State(initialValue: Self.seededCurrentUserSnapshot(profileService: profileService))
+    }
 
     private var pendingSharedTripIDs: Set<UUID> {
         Set(sharedTripInbox.notifications.map { $0.trip.id })
@@ -3307,9 +3315,19 @@ struct TripPlannerView: View {
             TripPlannerDebugLog.message(
                 "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
             )
-            async let snapshotRefresh: Void = loadCurrentUserSnapshot()
+            let hasCachedCurrentUserProfile = sessionManager.userId.flatMap { profileService.cachedProfile(userId: $0) } != nil
             async let tripRefresh: Void = store.loadInitialTripsIfNeeded()
-            _ = await (snapshotRefresh, tripRefresh)
+
+            if hasCachedCurrentUserProfile {
+                Task {
+                    await loadCurrentUserSnapshot()
+                }
+                await tripRefresh
+            } else {
+                async let snapshotRefresh: Void = loadCurrentUserSnapshot()
+                _ = await (snapshotRefresh, tripRefresh)
+            }
+
             TripPlannerDebugLog.message(
                 "Planner screen task finished duration=\(TripPlannerDebugLog.durationText(since: loadStart)) trips=\(store.trips.count)"
             )
@@ -3369,13 +3387,14 @@ struct TripPlannerView: View {
             }
             return (trip.id, ownerId, trip.effectiveOwnerSnapshot)
         }
+        let uniqueOwnerCount = Set(ownerTargets.map(\.ownerId)).count
 
         TripPlannerDebugLog.message(
-            "Owner preload started totalTrips=\(store.trips.count) ownerTargets=\(ownerTargets.count)"
+            "Owner preload started totalTrips=\(store.trips.count) ownerTargets=\(ownerTargets.count) uniqueOwners=\(uniqueOwnerCount)"
         )
 
         var nextSnapshots: [UUID: TripPlannerFriendSnapshot] = [:]
-        var uncachedTargets: [(tripId: UUID, ownerId: UUID)] = []
+        var uncachedTripIDsByOwnerID: [UUID: [UUID]] = [:]
 
         for target in ownerTargets {
             if let embeddedSnapshot = target.embeddedSnapshot {
@@ -3390,13 +3409,13 @@ struct TripPlannerView: View {
                 nextSnapshots[target.tripId] = snapshot
                 store.cacheOwnerSnapshot(snapshot, forTripID: target.tripId)
             } else {
-                uncachedTargets.append((tripId: target.tripId, ownerId: target.ownerId))
+                uncachedTripIDsByOwnerID[target.ownerId, default: []].append(target.tripId)
             }
         }
 
         ownerSnapshotsByTripID = nextSnapshots
 
-        guard !uncachedTargets.isEmpty else {
+        guard !uncachedTripIDsByOwnerID.isEmpty else {
             TripPlannerDebugLog.message(
                 "Owner preload finished without remote fetch duration=\(TripPlannerDebugLog.durationText(since: preloadStart)) resolved=\(nextSnapshots.count)"
             )
@@ -3404,14 +3423,14 @@ struct TripPlannerView: View {
         }
 
         TripPlannerDebugLog.message(
-            "Owner preload fetching remotely uncachedTargets=\(uncachedTargets.count) cachedResolved=\(nextSnapshots.count)"
+            "Owner preload fetching remotely uncachedOwners=\(uncachedTripIDsByOwnerID.count) cachedResolved=\(nextSnapshots.count)"
         )
 
-        await withTaskGroup(of: (UUID, TripPlannerFriendSnapshot?).self) { group in
-            for target in uncachedTargets {
+        await withTaskGroup(of: (UUID, TripPlannerFriendSnapshot?, [UUID]).self) { group in
+            for (ownerId, tripIDs) in uncachedTripIDsByOwnerID {
                 group.addTask {
                     let fetchStart = Date().timeIntervalSinceReferenceDate
-                    let fetchedOwner = try? await profileService.fetchMyProfile(userId: target.ownerId)
+                    let fetchedOwner = try? await profileService.fetchMyProfile(userId: ownerId)
                     let snapshot: TripPlannerFriendSnapshot?
                     if let fetchedOwner {
                         snapshot = await MainActor.run {
@@ -3423,28 +3442,47 @@ struct TripPlannerView: View {
                             )
                         }
                         TripPlannerDebugLog.message(
-                            "Owner profile fetched trip=\(target.tripId.uuidString) owner=\(fetchedOwner.username) duration=\(TripPlannerDebugLog.durationText(since: fetchStart))"
+                            "Owner profile fetched owner=\(fetchedOwner.username) tripCount=\(tripIDs.count) duration=\(TripPlannerDebugLog.durationText(since: fetchStart))"
                         )
                     } else {
                         snapshot = nil
                         TripPlannerDebugLog.message(
-                            "Owner profile fetch failed trip=\(target.tripId.uuidString) ownerId=\(target.ownerId.uuidString) duration=\(TripPlannerDebugLog.durationText(since: fetchStart))"
+                            "Owner profile fetch failed ownerId=\(ownerId.uuidString) tripCount=\(tripIDs.count) duration=\(TripPlannerDebugLog.durationText(since: fetchStart))"
                         )
                     }
-                    return (target.tripId, snapshot)
+                    return (ownerId, snapshot, tripIDs)
                 }
             }
 
-            for await (tripId, snapshot) in group {
+            for await (_, snapshot, tripIDs) in group {
                 guard let snapshot else { continue }
-                ownerSnapshotsByTripID[tripId] = snapshot
-                store.cacheOwnerSnapshot(snapshot, forTripID: tripId)
+                for tripId in tripIDs {
+                    ownerSnapshotsByTripID[tripId] = snapshot
+                    store.cacheOwnerSnapshot(snapshot, forTripID: tripId)
+                }
             }
         }
 
         TripPlannerDebugLog.message(
             "Owner preload finished duration=\(TripPlannerDebugLog.durationText(since: preloadStart)) resolved=\(ownerSnapshotsByTripID.count)"
         )
+    }
+
+    private static func seededCurrentUserSnapshot(profileService: ProfileService) -> TripPlannerFriendSnapshot? {
+        guard let currentUserId = SupabaseManager.shared.currentUserId else {
+            return nil
+        }
+
+        if let cachedProfile = profileService.cachedProfile(userId: currentUserId) {
+            return TripPlannerFriendSnapshot(
+                id: cachedProfile.id,
+                displayName: cachedProfile.tripDisplayName,
+                username: cachedProfile.username,
+                avatarURL: cachedProfile.avatarUrl
+            )
+        }
+
+        return TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
     }
 
     @ViewBuilder
