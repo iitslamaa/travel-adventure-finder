@@ -3102,7 +3102,7 @@ private struct TripPlannerCalendarDraft: Identifiable {
 struct TripPlannerView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var sharedTripInbox: SharedTripInboxStore
-    @StateObject private var store = TripPlannerStore()
+    @StateObject private var store: TripPlannerStore
     @State private var calendarDraft: TripPlannerCalendarDraft?
     @State private var calendarError: String?
     @State private var pendingDeleteTrip: TripPlannerTrip?
@@ -3111,8 +3111,16 @@ struct TripPlannerView: View {
     @State private var ownerSnapshotsByTripID: [UUID: TripPlannerFriendSnapshot] = [:]
     @State private var preparedUserId: UUID?
 
-    private let profileService = ProfileService(supabase: SupabaseManager.shared)
-    private let syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
+    private let profileService: ProfileService
+    private let syncService: TripPlannerSyncService
+
+    init() {
+        let profileService = ProfileService(supabase: SupabaseManager.shared)
+        self.profileService = profileService
+        self.syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
+        _store = StateObject(wrappedValue: TripPlannerStore())
+        _currentUserSnapshot = State(initialValue: Self.seededCurrentUserSnapshot(profileService: profileService))
+    }
 
     private var pendingSharedTripIDs: Set<UUID> {
         Set(sharedTripInbox.notifications.map { $0.trip.id })
@@ -3307,9 +3315,11 @@ struct TripPlannerView: View {
             TripPlannerDebugLog.message(
                 "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
             )
-            async let snapshotRefresh: Void = loadCurrentUserSnapshot()
+            Task {
+                await loadCurrentUserSnapshot()
+            }
             async let tripRefresh: Void = store.loadInitialTripsIfNeeded()
-            _ = await (snapshotRefresh, tripRefresh)
+            await tripRefresh
             TripPlannerDebugLog.message(
                 "Planner screen task finished duration=\(TripPlannerDebugLog.durationText(since: loadStart)) trips=\(store.trips.count)"
             )
@@ -3448,6 +3458,23 @@ struct TripPlannerView: View {
         TripPlannerDebugLog.message(
             "Owner preload finished duration=\(TripPlannerDebugLog.durationText(since: preloadStart)) resolved=\(ownerSnapshotsByTripID.count)"
         )
+    }
+
+    private static func seededCurrentUserSnapshot(profileService: ProfileService) -> TripPlannerFriendSnapshot? {
+        guard let currentUserId = SupabaseManager.shared.currentUserId else {
+            return nil
+        }
+
+        if let cachedProfile = profileService.cachedProfile(userId: currentUserId) {
+            return TripPlannerFriendSnapshot(
+                id: cachedProfile.id,
+                displayName: cachedProfile.tripDisplayName,
+                username: cachedProfile.username,
+                avatarURL: cachedProfile.avatarUrl
+            )
+        }
+
+        return TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
     }
 
     @ViewBuilder
