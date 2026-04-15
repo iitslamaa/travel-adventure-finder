@@ -3315,11 +3315,19 @@ struct TripPlannerView: View {
             TripPlannerDebugLog.message(
                 "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
             )
-            Task {
-                await loadCurrentUserSnapshot()
-            }
+            let hasCachedCurrentUserProfile = sessionManager.userId.flatMap { profileService.cachedProfile(userId: $0) } != nil
             async let tripRefresh: Void = store.loadInitialTripsIfNeeded()
-            await tripRefresh
+
+            if hasCachedCurrentUserProfile {
+                Task {
+                    await loadCurrentUserSnapshot()
+                }
+                await tripRefresh
+            } else {
+                async let snapshotRefresh: Void = loadCurrentUserSnapshot()
+                _ = await (snapshotRefresh, tripRefresh)
+            }
+
             TripPlannerDebugLog.message(
                 "Planner screen task finished duration=\(TripPlannerDebugLog.durationText(since: loadStart)) trips=\(store.trips.count)"
             )
