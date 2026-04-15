@@ -14,14 +14,23 @@ enum CountryAPI {
     private static let cacheLock = NSLock()
     private static var memoryCachedCountries: [Country]?
     private static var inFlightRefreshTask: Task<[Country]?, Never>?
+    private static let networkSession: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 12
+        configuration.timeoutIntervalForResource = 20
+        configuration.waitsForConnectivity = false
+        return URLSession(configuration: configuration)
+    }()
 
     static func fetchCountries() async throws -> [Country] {
-        let data = try await fetchCountriesData()
-        let countries = try decodeCountries(from: data)
-        CountriesCache.saveData(data)
-        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: CountriesCache.lastRefreshKey)
-        updateMemoryCache(with: countries)
-        return countries
+        do {
+            return try await fetchAndCacheCountries()
+        } catch {
+            if isTransientNetworkError(error), let cached = loadCachedCountries(), !cached.isEmpty {
+                return cached
+            }
+            throw error
+        }
     }
 }
 
@@ -69,13 +78,13 @@ extension CountryAPI {
             }
 
             do {
-                let data = try await fetchCountriesData()
-                let countries = try decodeCountries(from: data)
-                CountriesCache.saveData(data)
-                UserDefaults.standard.set(now, forKey: CountriesCache.lastRefreshKey)
-                updateMemoryCache(with: countries)
-                return countries
+                return try await fetchAndCacheCountries(refreshedAt: now)
             } catch {
+                if isTransientNetworkError(error),
+                   let cached = loadCachedCountries(),
+                   !cached.isEmpty {
+                    return cached
+                }
                 return nil
             }
         }
@@ -99,6 +108,15 @@ extension CountryAPI {
         withCacheLock {
             memoryCachedCountries = countries
         }
+    }
+
+    private static func fetchAndCacheCountries(refreshedAt: TimeInterval = Date().timeIntervalSince1970) async throws -> [Country] {
+        let data = try await fetchCountriesData()
+        let countries = try decodeCountries(from: data)
+        CountriesCache.saveData(data)
+        UserDefaults.standard.set(refreshedAt, forKey: CountriesCache.lastRefreshKey)
+        updateMemoryCache(with: countries)
+        return countries
     }
 
     private static func decodeCountries(from data: Data) throws -> [Country] {
@@ -169,13 +187,14 @@ extension CountryAPI {
     private static func fetchCountriesData() async throws -> Data {
         var request = URLRequest(url: countriesURL)
         request.httpMethod = "GET"
+        request.timeoutInterval = 12
 
         if let session = try? await SupabaseManager.shared.fetchCurrentSession() {
             let accessToken = session.accessToken
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         }
 
-        let (data, resp) = try await URLSession.shared.data(for: request)
+        let (data, resp) = try await networkSession.data(for: request)
         guard let http = resp as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
@@ -188,6 +207,25 @@ extension CountryAPI {
             throw URLError(.badServerResponse)
         }
         return data
+    }
+
+    private static func isTransientNetworkError(_ error: Error) -> Bool {
+        guard let urlError = error as? URLError else { return false }
+        switch urlError.code {
+        case .timedOut,
+             .cannotFindHost,
+             .cannotConnectToHost,
+             .dnsLookupFailed,
+             .networkConnectionLost,
+             .notConnectedToInternet,
+             .internationalRoamingOff,
+             .callIsActive,
+             .dataNotAllowed,
+             .resourceUnavailable:
+            return true
+        default:
+            return false
+        }
     }
 
     private enum CountriesCache {
