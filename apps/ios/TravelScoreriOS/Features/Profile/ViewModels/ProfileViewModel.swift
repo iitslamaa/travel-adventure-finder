@@ -9,13 +9,6 @@ import Combine
 import PostgREST
 import Supabase
 
-private enum ProfileWarmupDebugLog {
-    static func log(_ message: String) {
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("👤 [ProfileWarmup] \(timestamp) \(message)")
-    }
-}
-
 enum RelationshipState {
     case selfProfile
     case none
@@ -157,7 +150,6 @@ final class ProfileViewModel: ObservableObject {
         let cachedProfile = profileService.cachedProfile(userId: userId)
         let cachedTraveled = profileService.cachedTraveledCountries(userId: userId)
         let cachedBucket = profileService.cachedBucketListCountries(userId: userId)
-
         if let cachedProfile {
             profile = cachedProfile
         } else if isSwitchingUsers {
@@ -190,7 +182,7 @@ final class ProfileViewModel: ObservableObject {
         }
 
         computeOrderedLists()
-        isLoading = cachedProfile == nil && cachedTraveled == nil && cachedBucket == nil
+        isLoading = cachedProfile == nil && cachedTraveled == nil && cachedBucket == nil && profile?.id != userId
 
         cancelInFlightWork()
 
@@ -210,12 +202,10 @@ final class ProfileViewModel: ObservableObject {
         guard userId == supabase.currentUserId else { return }
 
         if hasLoadedPassportContext {
-            ProfileWarmupDebugLog.log("Warmup skipped user=\(userId.uuidString) reason=already-warm")
             return
         }
 
         if let existingTask = sessionWarmupTask {
-            ProfileWarmupDebugLog.log("Warmup joined user=\(userId.uuidString)")
             await existingTask.value
             return
         }
@@ -224,20 +214,9 @@ final class ProfileViewModel: ObservableObject {
             guard let self else { return }
             defer { self.sessionWarmupTask = nil }
 
-            let startedAt = Date()
-            ProfileWarmupDebugLog.log("Warmup started user=\(self.userId.uuidString)")
-
             if !self.hasLoadedPassportContext {
-                let passportStart = Date()
                 await self.loadPassportContextIfNeeded()
-                ProfileWarmupDebugLog.log(
-                    "Warmup stage user=\(self.userId.uuidString) stage=passport-context duration=\(Int(Date().timeIntervalSince(passportStart) * 1000))ms loaded=\(self.hasLoadedPassportContext)"
-                )
             }
-
-            ProfileWarmupDebugLog.log(
-                "Warmup finished user=\(self.userId.uuidString) passportLoaded=\(self.hasLoadedPassportContext) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
-            )
         }
 
         sessionWarmupTask = task
@@ -297,7 +276,7 @@ final class ProfileViewModel: ObservableObject {
 
         async let myTraveledTask = profileService.fetchTraveledCountries(userId: currentUserId)
         async let myBucketTask = profileService.fetchBucketListCountries(userId: currentUserId)
-        async let myProfileTask = profileService.fetchMyProfile(userId: currentUserId)
+        async let myProfileTask = currentUserProfile(userId: currentUserId)
         async let mutualFriendsTask = friendService.fetchMutualFriends(
             currentUserId: currentUserId,
             otherUserId: viewedUserId
@@ -380,5 +359,13 @@ final class ProfileViewModel: ObservableObject {
                 return
             }
         }
+    }
+
+    private func currentUserProfile(userId: UUID) async throws -> Profile {
+        if let cachedProfile = profileService.cachedProfile(userId: userId) {
+            return cachedProfile
+        }
+
+        return try await profileService.fetchMyProfile(userId: userId)
     }
 }

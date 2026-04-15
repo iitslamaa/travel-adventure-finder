@@ -8,7 +8,6 @@ struct FriendsView: View {
     private let userId: UUID
     private let showsBackButton: Bool
     @StateObject private var friendsVM = FriendsViewModel()
-    @State private var displayName: String = ""
     @FocusState private var isSearchFocused: Bool
     @Environment(\.floatingTabBarInset) private var floatingTabBarInset
 
@@ -144,15 +143,9 @@ struct FriendsView: View {
                 Text(friendsVM.errorMessage ?? "")
             }
             .task(id: userId) {
-                let shouldLoadDisplayName = friendsVM.displayName.isEmpty
                 let shouldLoadRequestCount = isOwnFriendsPage
 
                 await friendsVM.loadFriends(for: userId, forceRefresh: false)
-
-                if shouldLoadDisplayName {
-                    await friendsVM.loadDisplayName(for: userId)
-                    displayName = friendsVM.displayName
-                }
 
                 if shouldLoadRequestCount {
                     await friendsVM.loadIncomingRequestCount()

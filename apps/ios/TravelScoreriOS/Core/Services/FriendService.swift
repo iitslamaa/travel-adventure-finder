@@ -16,6 +16,10 @@ private struct FriendRow: Decodable {
 final class FriendService {
     private static var friendsCache: [UUID: [Profile]] = [:]
     private static var inFlightFriendFetches: [UUID: Task<[Profile], Error>] = [:]
+    private static var incomingRequestsCache: [UUID: [Profile]] = [:]
+    private static var inFlightIncomingRequestFetches: [UUID: Task<[Profile], Error>] = [:]
+    private static var incomingRequestCountCache: [UUID: Int] = [:]
+    private static var inFlightIncomingRequestCounts: [UUID: Task<Int, Error>] = [:]
 
     private let supabase: SupabaseManager
 
@@ -97,6 +101,14 @@ final class FriendService {
         Self.friendsCache[userId]
     }
 
+    func cachedIncomingRequests(for userId: UUID) -> [Profile]? {
+        Self.incomingRequestsCache[userId]
+    }
+
+    func cachedIncomingRequestCount(for userId: UUID) -> Int? {
+        Self.incomingRequestCountCache[userId]
+    }
+
     func isFriend(currentUserId: UUID, otherUserId: UUID) async throws -> Bool {
         let filter = "and(user_id.eq.\(currentUserId.uuidString),friend_id.eq.\(otherUserId.uuidString)),and(user_id.eq.\(otherUserId.uuidString),friend_id.eq.\(currentUserId.uuidString))"
 
@@ -118,7 +130,8 @@ final class FriendService {
             .delete()
             .or(filter)
             .execute()
-        
+
+        Self.invalidateFriendCaches(for: [myUserId, otherUserId])
     }
 
     func fetchMutualFriends(currentUserId: UUID, otherUserId: UUID) async throws -> [Profile] {
@@ -136,34 +149,84 @@ final class FriendService {
     // MARK: - Requests
 
     func fetchIncomingRequests(for myUserId: UUID) async throws -> [Profile] {
-        
+        if let cachedRequests = Self.incomingRequestsCache[myUserId] {
+            return cachedRequests
+        }
 
-        let response: PostgrestResponse<[IncomingRequestJoinedRow]> = try await supabase.client
-            .from("friend_requests")
-            .select("""
-                id,
-                sender_id,
-                profiles!friend_requests_sender_id_fkey (*)
-            """)
-            .eq("receiver_id", value: myUserId)
-            .eq("status", value: "pending")
-            .execute()
+        if let inFlightFetch = Self.inFlightIncomingRequestFetches[myUserId] {
+            return try await inFlightFetch.value
+        }
 
-        
-        return response.value.map { $0.profile }
+        let fetchTask = Task<[Profile], Error> {
+            let response: PostgrestResponse<[IncomingRequestJoinedRow]> = try await supabase.client
+                .from("friend_requests")
+                .select("""
+                    id,
+                    sender_id,
+                    profiles!friend_requests_sender_id_fkey (*)
+                """)
+                .eq("receiver_id", value: myUserId)
+                .eq("status", value: "pending")
+                .execute()
+
+            return response.value.map { $0.profile }
+        }
+
+        Self.inFlightIncomingRequestFetches[myUserId] = fetchTask
+
+        do {
+            let profiles = try await fetchTask.value
+            Self.incomingRequestsCache[myUserId] = profiles
+            Self.incomingRequestCountCache[myUserId] = profiles.count
+            if Self.inFlightIncomingRequestFetches[myUserId] == fetchTask {
+                Self.inFlightIncomingRequestFetches[myUserId] = nil
+            }
+            return profiles
+        } catch {
+            if Self.inFlightIncomingRequestFetches[myUserId] == fetchTask {
+                Self.inFlightIncomingRequestFetches[myUserId] = nil
+            }
+            throw error
+        }
     }
 
     func incomingRequestCount(for myUserId: UUID) async throws -> Int {
+        if let cachedCount = Self.incomingRequestCountCache[myUserId] {
+            return cachedCount
+        }
+
+        if let inFlightCount = Self.inFlightIncomingRequestCounts[myUserId] {
+            return try await inFlightCount.value
+        }
+
         struct RequestIDRow: Decodable { let id: UUID }
 
-        let response: PostgrestResponse<[RequestIDRow]> = try await supabase.client
-            .from("friend_requests")
-            .select("id")
-            .eq("receiver_id", value: myUserId)
-            .eq("status", value: "pending")
-            .limit(1000)
-            .execute()
-        return response.value.count
+        let fetchTask = Task<Int, Error> {
+            let response: PostgrestResponse<[RequestIDRow]> = try await supabase.client
+                .from("friend_requests")
+                .select("id")
+                .eq("receiver_id", value: myUserId)
+                .eq("status", value: "pending")
+                .limit(1000)
+                .execute()
+            return response.value.count
+        }
+
+        Self.inFlightIncomingRequestCounts[myUserId] = fetchTask
+
+        do {
+            let count = try await fetchTask.value
+            Self.incomingRequestCountCache[myUserId] = count
+            if Self.inFlightIncomingRequestCounts[myUserId] == fetchTask {
+                Self.inFlightIncomingRequestCounts[myUserId] = nil
+            }
+            return count
+        } catch {
+            if Self.inFlightIncomingRequestCounts[myUserId] == fetchTask {
+                Self.inFlightIncomingRequestCounts[myUserId] = nil
+            }
+            throw error
+        }
     }
 
     func fetchPendingRequestCount(for userId: UUID) async throws -> Int {
@@ -274,6 +337,8 @@ final class FriendService {
                 .insert(payload)
                 .execute()
 
+            Self.invalidateRequestCaches(for: [myUserId, otherUserId])
+
         } catch {
             print("❌ [\(requestId)] sendFriendRequest FAILED — raw:", error)
             print("❌ [\(requestId)] sendFriendRequest FAILED — description:", error.localizedDescription)
@@ -297,6 +362,8 @@ final class FriendService {
                 .eq("receiver_id", value: otherUserId)
                 .eq("status", value: "pending")
                 .execute()
+
+            Self.invalidateRequestCaches(for: [myUserId, otherUserId])
 
         } catch {
             print("❌ [\(requestId)] cancelRequest FAILED — raw:", error)
@@ -328,8 +395,9 @@ final class FriendService {
                 "friend_id": otherUserId
             ])
             .execute()
-        
-        
+
+        Self.invalidateRequestCaches(for: [myUserId, otherUserId])
+        Self.invalidateFriendCaches(for: [myUserId, otherUserId])
     }
 
     func rejectRequest(myUserId: UUID, from otherUserId: UUID) async throws {
@@ -341,6 +409,27 @@ final class FriendService {
             .eq("sender_id", value: otherUserId)
             .eq("receiver_id", value: myUserId)
             .execute()
+
+        Self.invalidateRequestCaches(for: [myUserId, otherUserId])
+    }
+
+    private static func invalidateFriendCaches(for userIds: [UUID]) {
+        for userId in userIds {
+            friendsCache[userId] = nil
+            inFlightFriendFetches[userId]?.cancel()
+            inFlightFriendFetches[userId] = nil
+        }
+    }
+
+    private static func invalidateRequestCaches(for userIds: [UUID]) {
+        for userId in userIds {
+            incomingRequestsCache[userId] = nil
+            inFlightIncomingRequestFetches[userId]?.cancel()
+            inFlightIncomingRequestFetches[userId] = nil
+            incomingRequestCountCache[userId] = nil
+            inFlightIncomingRequestCounts[userId]?.cancel()
+            inFlightIncomingRequestCounts[userId] = nil
+        }
     }
 }
 

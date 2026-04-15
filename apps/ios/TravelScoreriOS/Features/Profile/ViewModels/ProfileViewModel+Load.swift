@@ -38,14 +38,17 @@ extension ProfileViewModel {
 
         let startingUserId = userId
         let isOwnProfile = startingUserId == supabase.currentUserId
+        let hasRenderableSeed = profile?.id == startingUserId
 
         // Only show full-screen loading during initial load,
         // NOT during pull-to-refresh.
-        if !isRefreshing {
+        if !isRefreshing && !hasRenderableSeed {
             isLoading = true
+        } else if hasRenderableSeed {
+            isLoading = false
         }
         defer {
-            if !isRefreshing {
+            if !isRefreshing && !hasRenderableSeed {
                 isLoading = false
             }
         }
@@ -57,17 +60,14 @@ extension ProfileViewModel {
                 : profileService.fetchMyProfile(userId: startingUserId)
             async let traveledTask = profileService.fetchTraveledCountries(userId: startingUserId)
             async let bucketTask = profileService.fetchBucketListCountries(userId: startingUserId)
-            async let relationshipTask = resolvedRelationshipState(for: startingUserId)
+            async let relationshipTask: RelationshipState = isOwnProfile
+                ? .selfProfile
+                : resolvedRelationshipState(for: startingUserId)
             async let passportPreferencesTask: PassportPreferences = isOwnProfile
                 ? profileService.fetchPassportPreferences(userId: startingUserId)
                 : .empty
 
             let fetchedProfile = try await fetchedProfileTask
-            let traveled = try await traveledTask
-            let bucket = try await bucketTask
-            let resolvedRelationship = try await relationshipTask
-            let fetchedPassportPreferences = try await passportPreferencesTask
-
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
                 return
@@ -80,6 +80,22 @@ extension ProfileViewModel {
                     forKey: "travelaf.default_currency_code"
                 )
             }
+            if isOwnProfile {
+                relationshipState = .selfProfile
+                isFriend = false
+            }
+            computeOrderedLists()
+
+            let traveled = try await traveledTask
+            let bucket = try await bucketTask
+            let resolvedRelationship = try await relationshipTask
+            let fetchedPassportPreferences = try await passportPreferencesTask
+
+            guard generation == loadGeneration,
+                  self.userId == startingUserId else {
+                return
+            }
+
             viewedTraveledCountries = traveled
             viewedBucketListCountries = bucket
             relationshipState = resolvedRelationship

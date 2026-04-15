@@ -8,8 +8,16 @@
 import Foundation
 import Combine
 import SwiftUI
-import PostgREST
 import Supabase
+
+private enum FriendsDebugLog {
+    static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("👥 [Friends] \(timestamp) \(text)")
+#endif
+    }
+}
 
 @MainActor
 final class FriendsViewModel: ObservableObject {
@@ -56,6 +64,7 @@ final class FriendsViewModel: ObservableObject {
 
     func loadFriends(for userId: UUID, forceRefresh: Bool = false) async {
         if hasLoaded && !forceRefresh {
+            FriendsDebugLog.message("Friends load skipped user=\(userId.uuidString) reason=already-loaded")
             return
         }
 
@@ -63,8 +72,10 @@ final class FriendsViewModel: ObservableObject {
            !cachedFriends.isEmpty,
            friends.isEmpty {
             friends = cachedFriends
+            FriendsDebugLog.message("Friends seeded from cache user=\(userId.uuidString) count=\(cachedFriends.count)")
         }
 
+        let loadStart = Date()
         isLoading = true
         hasAttemptedLoad = true
         defer { isLoading = false }
@@ -77,6 +88,9 @@ final class FriendsViewModel: ObservableObject {
             let fetchedFriends = try await friendService.fetchFriends(for: userId)
             friends = fetchedFriends
             hasLoaded = true
+            FriendsDebugLog.message(
+                "Friends loaded user=\(userId.uuidString) count=\(fetchedFriends.count) duration=\(Int(Date().timeIntervalSince(loadStart) * 1000))ms forceRefresh=\(forceRefresh)"
+            )
         } catch {
             if (error as? URLError)?.code == .cancelled || Task.isCancelled {
                 return
@@ -96,35 +110,23 @@ final class FriendsViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Load Display Name
-
-    func loadDisplayName(for userId: UUID) async {
-        do {
-            let response: PostgrestResponse<Profile> = try await supabase.client
-                .from("profiles")
-                .select("*")
-                .eq("id", value: userId.uuidString)
-                .single()
-                .execute()
-
-            displayName = response.value.displayName
-        } catch {
-            if (error as? URLError)?.code == .cancelled || Task.isCancelled {
-                return
-            }
-
-            print("❌ [FriendsVM:", instanceId, "] loadDisplayName failed:", error)
-            displayName = ""
-        }
-    }
-
     // MARK: - Incoming Requests Count
 
     func loadIncomingRequestCount() async {
         guard let userId = supabase.currentUserId else { return }
 
+        if let cachedCount = friendService.cachedIncomingRequestCount(for: userId) {
+            incomingRequestCount = cachedCount
+            FriendsDebugLog.message("Request count loaded from cache user=\(userId.uuidString) count=\(cachedCount)")
+            return
+        }
+
+        let loadStart = Date()
         do {
             incomingRequestCount = try await friendService.incomingRequestCount(for: userId)
+            FriendsDebugLog.message(
+                "Request count loaded user=\(userId.uuidString) count=\(incomingRequestCount) duration=\(Int(Date().timeIntervalSince(loadStart) * 1000))ms"
+            )
         } catch {
             if (error as? URLError)?.code == .cancelled || Task.isCancelled {
                 return

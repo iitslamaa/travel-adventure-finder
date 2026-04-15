@@ -153,20 +153,13 @@ struct BucketListView: View {
         isLoading = shouldShowBlockingLoad
         hasLoadedOnce = true
 
-        let isAuthenticated = sessionManager.isAuthenticated
         let userId = sessionManager.userId
         let service = ProfileService(supabase: SupabaseManager.shared)
         async let freshCountriesTask = CountryAPI.refreshCountriesIfNeeded(minInterval: 60)
-        async let profileLoadTask: Void = {
-            guard isAuthenticated else { return }
-            await profileVM.loadIfNeeded()
-        }()
         async let bucketFetchTask: Set<String>? = {
             guard let userId else { return nil }
             return try? await service.fetchBucketListCountries(userId: userId)
         }()
-
-        _ = await profileLoadTask
 
         if let bucket = await bucketFetchTask {
             bucketCountryIds = bucket

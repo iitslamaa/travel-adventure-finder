@@ -134,6 +134,7 @@ extension ProfileViewModel {
             }
 
             profile = current
+            profileService.cacheProfile(current)
         }
 
         passportPreferences = PassportPreferences(
