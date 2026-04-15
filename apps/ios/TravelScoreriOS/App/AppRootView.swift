@@ -62,10 +62,6 @@ struct AppRootView: View {
                 profileVMHolder.profileVM?.profile?.defaultCurrencyCode
             )
         }
-        .task(id: profileVMHolder.profileVM?.userId) {
-            guard let profileVM = profileVMHolder.profileVM else { return }
-            await profileVM.warmSessionCachesIfNeeded()
-        }
         .font(TAFTypography.body())
         .foregroundStyle(.black)
         .tint(.black)

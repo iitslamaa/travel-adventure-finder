@@ -53,6 +53,42 @@ struct Profile: Codable, Identifiable {
         case friendCount = "friend_count"
     }
 
+    init(
+        id: UUID,
+        username: String,
+        fullName: String,
+        firstName: String?,
+        lastName: String?,
+        avatarUrl: String?,
+        languages: [LanguageJSON],
+        livedCountries: [String],
+        travelStyle: [String],
+        travelMode: [String],
+        nextDestination: String?,
+        defaultCurrencyCode: String?,
+        currentCountry: String?,
+        favoriteCountries: [String]?,
+        onboardingCompleted: Bool?,
+        friendCount: Int
+    ) {
+        self.id = id
+        self.username = username
+        self.fullName = fullName
+        self.firstName = firstName
+        self.lastName = lastName
+        self.avatarUrl = avatarUrl
+        self.languages = languages
+        self.livedCountries = livedCountries
+        self.travelStyle = travelStyle
+        self.travelMode = travelMode
+        self.nextDestination = nextDestination
+        self.defaultCurrencyCode = defaultCurrencyCode
+        self.currentCountry = currentCountry
+        self.favoriteCountries = favoriteCountries
+        self.onboardingCompleted = onboardingCompleted
+        self.friendCount = friendCount
+    }
+
     private struct LegacyLanguageObject: Decodable {
         let name: String
         let proficiency: String?

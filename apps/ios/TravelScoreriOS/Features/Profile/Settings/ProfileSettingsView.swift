@@ -72,7 +72,6 @@ struct ProfileSettingsView: View {
     @State private var usernameError: String? = nil
     @State private var saveErrorMessage: String? = nil
     @State private var isLoggingOut = false
-
     private var isFormValid: Bool {
         let trimmedName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -60,6 +60,7 @@ struct RootTabView: View {
         case profile
     }
     @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var profileVM: ProfileViewModel
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
     @EnvironmentObject private var currencyPreferenceStore: CurrencyPreferenceStore
     @Environment(\.scenePhase) private var scenePhase
@@ -81,6 +82,7 @@ struct RootTabView: View {
 
     @State private var selectedTab: Tab = .discovery
     @State private var floatingTabBarInset: CGFloat = 0
+    @State private var isProcessingTabInteraction = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -125,7 +127,10 @@ struct RootTabView: View {
             Group {
                 if sessionManager.isAuthenticated,
                    let userId = sessionManager.userId {
-                    ProfileView(userId: userId)
+                    ProfileView(
+                        userId: userId,
+                        profileViewModel: profileVM
+                    )
                         .id(userId)
                         .environmentObject(profileSocialNav)
                 } else {
@@ -150,6 +155,7 @@ struct RootTabView: View {
         .tag(Tab.more)
         }
         .ignoresSafeArea()
+        .toolbar(.hidden, for: .tabBar)
         .overlay(alignment: .bottom) {
             GeometryReader { geo in
                 customTabBar
@@ -227,10 +233,25 @@ struct RootTabView: View {
     }
 
     private func selectTab(_ tab: Tab) {
+        guard !isProcessingTabInteraction else {
+            return
+        }
+
+        processTabInteraction(tab)
+    }
+
+    private func processTabInteraction(_ tab: Tab) {
+        isProcessingTabInteraction = true
+
         if selectedTab == tab {
             resetPath(for: tab)
         } else {
             selectedTab = tab
+        }
+
+        Task { @MainActor in
+            await Task.yield()
+            isProcessingTabInteraction = false
         }
     }
 

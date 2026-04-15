@@ -3359,21 +3359,54 @@ struct TripPlannerView: View {
             return
         }
 
-        if let profile = try? await profileService.fetchOrCreateProfile(userId: userId) {
-            currentUserSnapshot = TripPlannerFriendSnapshot(
-                id: profile.id,
-                displayName: profile.tripDisplayName,
-                username: profile.username,
-                avatarURL: profile.avatarUrl
-            )
+        if let authSnapshot = currentUserAuthSnapshot(userId: userId) {
+            currentUserSnapshot = authSnapshot
             TripPlannerDebugLog.message(
-                "Current user snapshot fetched duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+                "Current user snapshot primed from auth duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
             )
-        } else {
-            TripPlannerDebugLog.message(
-                "Current user snapshot missing after fetch duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
-            )
+            return
         }
+
+        TripPlannerDebugLog.message(
+            "Current user snapshot unavailable without cache duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+        )
+    }
+
+    private func currentUserAuthSnapshot(userId: UUID) -> TripPlannerFriendSnapshot? {
+        guard let user = SupabaseManager.shared.client.auth.currentUser,
+              user.id == userId else {
+            return nil
+        }
+
+        let metadata = user.userMetadata
+        let firstName =
+            metadata["first_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
+            metadata["given_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fullName =
+            metadata["full_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
+            metadata["name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let avatarURL =
+            metadata["avatar_url"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
+            metadata["picture"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let username =
+            metadata["user_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
+            metadata["preferred_username"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
+            "traveler"
+
+        let displayName = [firstName, fullName]
+            .compactMap { $0?.isEmpty == false ? $0 : nil }
+            .first ?? String(localized: "trip_planner.you")
+
+        if displayName.isEmpty && (avatarURL?.isEmpty ?? true) {
+            return nil
+        }
+
+        return TripPlannerFriendSnapshot(
+            id: userId,
+            displayName: displayName,
+            username: username,
+            avatarURL: avatarURL?.isEmpty == true ? nil : avatarURL
+        )
     }
 
     @MainActor

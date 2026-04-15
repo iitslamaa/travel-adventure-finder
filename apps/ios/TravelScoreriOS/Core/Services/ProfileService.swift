@@ -128,10 +128,24 @@ private struct CountryRow: Decodable {
     }
 }
 
+private struct PersistedCountrySet: Codable {
+    let countryCodes: [String]
+}
+
 @MainActor
 final class ProfileService {
 
+    private enum CacheKeys {
+        static let version = "v1"
+        static let profilePrefix = "travelaf.profile.cache.\(version).profile."
+        static let traveledPrefix = "travelaf.profile.cache.\(version).traveled."
+        static let bucketPrefix = "travelaf.profile.cache.\(version).bucket."
+        static let passportPrefix = "travelaf.profile.cache.\(version).passport."
+    }
+
     private static var profileCache: [UUID: Profile] = [:]
+    private static var inFlightProfileFetches: [UUID: Task<Profile, Error>] = [:]
+    private static var inFlightProfileWarmups: [UUID: Task<Profile, Error>] = [:]
     private static var traveledCache: [UUID: Set<String>] = [:]
     private static var bucketCache: [UUID: Set<String>] = [:]
     private static var passportPreferencesCache: [UUID: PassportPreferences] = [:]
@@ -143,42 +157,140 @@ final class ProfileService {
     }
 
     func cachedProfile(userId: UUID) -> Profile? {
-        Self.profileCache[userId]
+        if let cachedProfile = Self.profileCache[userId] {
+            return cachedProfile
+        }
+
+        guard let persistedProfile: Profile = Self.loadCachedValue(forKey: Self.profileCacheKey(for: userId)) else {
+            return nil
+        }
+
+        Self.profileCache[userId] = persistedProfile
+        return persistedProfile
+    }
+
+    func warmProfileCacheIfNeeded(
+        userId: UUID,
+        defaultUsername: String? = nil,
+        defaultAvatarUrl: String? = nil
+    ) async throws -> Profile {
+        if let cachedProfile = Self.profileCache[userId] {
+            return cachedProfile
+        }
+
+        if let inFlightTask = Self.inFlightProfileWarmups[userId] {
+            return try await inFlightTask.value
+        }
+
+        let warmTask = Task<Profile, Error> { @MainActor [weak self] in
+            guard let self else {
+                throw CancellationError()
+            }
+
+            return try await self.fetchOrCreateProfile(
+                userId: userId,
+                defaultUsername: defaultUsername,
+                defaultAvatarUrl: defaultAvatarUrl
+            )
+        }
+
+        Self.inFlightProfileWarmups[userId] = warmTask
+        defer {
+            if Self.inFlightProfileWarmups[userId] == warmTask {
+                Self.inFlightProfileWarmups[userId] = nil
+            }
+        }
+
+        return try await warmTask.value
     }
 
     func cachedTraveledCountries(userId: UUID) -> Set<String>? {
-        Self.traveledCache[userId]
+        if let cached = Self.traveledCache[userId] {
+            return cached
+        }
+
+        guard let persisted: PersistedCountrySet = Self.loadCachedValue(forKey: Self.traveledCacheKey(for: userId)) else {
+            return nil
+        }
+
+        let cached = Set(persisted.countryCodes)
+        Self.traveledCache[userId] = cached
+        return cached
     }
 
     func cachedBucketListCountries(userId: UUID) -> Set<String>? {
-        Self.bucketCache[userId]
+        if let cached = Self.bucketCache[userId] {
+            return cached
+        }
+
+        guard let persisted: PersistedCountrySet = Self.loadCachedValue(forKey: Self.bucketCacheKey(for: userId)) else {
+            return nil
+        }
+
+        let cached = Set(persisted.countryCodes)
+        Self.bucketCache[userId] = cached
+        return cached
     }
 
     func cachedPassportPreferences(userId: UUID) -> PassportPreferences? {
-        Self.passportPreferencesCache[userId]
+        if let cached = Self.passportPreferencesCache[userId] {
+            return cached
+        }
+
+        guard let persisted: PassportPreferences = Self.loadCachedValue(forKey: Self.passportCacheKey(for: userId)) else {
+            return nil
+        }
+
+        Self.passportPreferencesCache[userId] = persisted
+        return persisted
     }
 
     // MARK: - Fetch
 
     func fetchMyProfile(userId: UUID) async throws -> Profile {
-        let response: PostgrestResponse<[Profile]> = try await supabase.client
-            .from("profiles")
-            .select()
-            .eq("id", value: userId)
-            .limit(1)
-            .execute()
-
-        guard let profile = response.value.first else {
-            throw NSError(
-                domain: "ProfileService",
-                code: 404,
-                userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.not_found")]
-            )
+        if let cachedProfile = Self.profileCache[userId] {
+            return cachedProfile
         }
 
-        Self.profileCache[userId] = profile
+        if let inFlightFetch = Self.inFlightProfileFetches[userId] {
+            return try await inFlightFetch.value
+        }
 
-        return profile
+        let fetchTask = Task<Profile, Error> { [supabase] in
+            let response: PostgrestResponse<[Profile]> = try await supabase.client
+                .from("profiles")
+                .select()
+                .eq("id", value: userId.uuidString)
+                .limit(1)
+                .execute()
+
+            guard let profile = response.value.first else {
+                throw NSError(
+                    domain: "ProfileService",
+                    code: 404,
+                    userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.not_found")]
+                )
+            }
+
+            return profile
+        }
+
+        Self.inFlightProfileFetches[userId] = fetchTask
+
+        do {
+            let profile = try await fetchTask.value
+            Self.profileCache[userId] = profile
+            Self.persistCachedValue(profile, forKey: Self.profileCacheKey(for: userId))
+            if Self.inFlightProfileFetches[userId] == fetchTask {
+                Self.inFlightProfileFetches[userId] = nil
+            }
+            return profile
+        } catch {
+            if Self.inFlightProfileFetches[userId] == fetchTask {
+                Self.inFlightProfileFetches[userId] = nil
+            }
+            throw error
+        }
     }
 
     func ensureProfileExists(
@@ -288,10 +400,11 @@ final class ProfileService {
     ) async throws -> Profile {
         do {
             let profile = try await fetchMyProfile(userId: userId)
-            return try await hydrateProfileIdentityFromAuthMetadataIfNeeded(
+            hydrateProfileIdentityFromAuthMetadataIfNeededInBackground(
                 userId: userId,
                 profile: profile
             )
+            return profile
         } catch let error as NSError where error.code == 404 {
             try await ensureProfileExists(
                 userId: userId,
@@ -299,10 +412,11 @@ final class ProfileService {
                 defaultAvatarUrl: defaultAvatarUrl
             )
             let profile = try await fetchMyProfile(userId: userId)
-            return try await hydrateProfileIdentityFromAuthMetadataIfNeeded(
+            hydrateProfileIdentityFromAuthMetadataIfNeededInBackground(
                 userId: userId,
                 profile: profile
             )
+            return profile
         }
     }
 
@@ -331,6 +445,11 @@ final class ProfileService {
         }
     }
 
+    func cacheProfile(_ profile: Profile) {
+        Self.profileCache[profile.id] = profile
+        Self.persistCachedValue(profile, forKey: Self.profileCacheKey(for: profile.id))
+    }
+
     func fetchPassportPreferences(userId: UUID) async throws -> PassportPreferences {
         let response: PostgrestResponse<[PassportPreferencesRow]> = try await supabase.client
             .from("user_passport_preferences")
@@ -345,6 +464,7 @@ final class ProfileService {
         )
 
         Self.passportPreferencesCache[userId] = preferences
+        Self.persistCachedValue(preferences, forKey: Self.passportCacheKey(for: userId))
         return preferences
     }
 
@@ -374,6 +494,10 @@ final class ProfileService {
         Self.passportPreferencesCache[userId] = PassportPreferences(
             nationalityCountryCodes: normalizedNationalityCountryCodes,
             passportCountryCode: normalizedPassportCountryCode
+        )
+        Self.persistCachedValue(
+            Self.passportPreferencesCache[userId],
+            forKey: Self.passportCacheKey(for: userId)
         )
     }
 
@@ -425,7 +549,23 @@ final class ProfileService {
         if shouldFillFullName { hydratedProfile.fullName = identity.fullName }
         if shouldFillAvatar { hydratedProfile.avatarUrl = identity.avatarURL }
         Self.profileCache[userId] = hydratedProfile
+        Self.persistCachedValue(hydratedProfile, forKey: Self.profileCacheKey(for: userId))
         return hydratedProfile
+    }
+
+    private func hydrateProfileIdentityFromAuthMetadataIfNeededInBackground(
+        userId: UUID,
+        profile: Profile
+    ) {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                _ = try await self.hydrateProfileIdentityFromAuthMetadataIfNeeded(
+                    userId: userId,
+                    profile: profile
+                )
+            } catch { }
+        }
     }
 
     private func resolvedIdentity(from user: User) -> ResolvedProfileIdentity {
@@ -494,6 +634,10 @@ final class ProfileService {
 
         let traveled = Set(response.value.map { $0.countryId })
         Self.traveledCache[userId] = traveled
+        Self.persistCachedValue(
+            PersistedCountrySet(countryCodes: traveled.sorted()),
+            forKey: Self.traveledCacheKey(for: userId)
+        )
         return traveled
     }
 
@@ -508,6 +652,10 @@ final class ProfileService {
 
         let bucket = Set(response.value.map { $0.countryId })
         Self.bucketCache[userId] = bucket
+        Self.persistCachedValue(
+            PersistedCountrySet(countryCodes: bucket.sorted()),
+            forKey: Self.bucketCacheKey(for: userId)
+        )
         return bucket
     }
 
@@ -586,6 +734,57 @@ final class ProfileService {
             avatar_url: payload.avatar_url,
             full_name: payload.full_name
         )
+    }
+
+    private static func profileCacheKey(for userId: UUID) -> String {
+        CacheKeys.profilePrefix + userId.uuidString.lowercased()
+    }
+
+    private static func traveledCacheKey(for userId: UUID) -> String {
+        CacheKeys.traveledPrefix + userId.uuidString.lowercased()
+    }
+
+    private static func bucketCacheKey(for userId: UUID) -> String {
+        CacheKeys.bucketPrefix + userId.uuidString.lowercased()
+    }
+
+    private static func passportCacheKey(for userId: UUID) -> String {
+        CacheKeys.passportPrefix + userId.uuidString.lowercased()
+    }
+
+    private static func loadCachedValue<Value: Decodable>(forKey key: String) -> Value? {
+        guard let data = loadCachedData(forKey: key) else { return nil }
+
+        do {
+            return try JSONDecoder().decode(Value.self, from: data)
+        } catch {
+            removeCachedValue(forKey: key)
+            return nil
+        }
+    }
+
+    private static func persistCachedValue<Value: Encodable>(_ value: Value?, forKey key: String) {
+        guard let value else {
+            removeCachedValue(forKey: key)
+            return
+        }
+
+        do {
+            let data = try JSONEncoder().encode(value)
+            persistCachedData(data, forKey: key)
+        } catch { }
+    }
+
+    private static func loadCachedData(forKey key: String) -> Data? {
+        UserDefaults.standard.data(forKey: key)
+    }
+
+    private static func persistCachedData(_ data: Data, forKey key: String) {
+        UserDefaults.standard.set(data, forKey: key)
+    }
+
+    private static func removeCachedValue(forKey key: String) {
+        UserDefaults.standard.removeObject(forKey: key)
     }
 }
 

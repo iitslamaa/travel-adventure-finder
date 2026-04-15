@@ -43,16 +43,20 @@ struct ProfileView: View {
     private let userId: UUID
     private let showsBackButton: Bool
     @State private var showFriendsDrawer = false
+    @State private var showSettings = false
     @State private var scrollAnchor: String? = nil
     @State private var selectedCountry: Country? = nil
 
-    init(userId: UUID, showsBackButton: Bool = false) {
+    init(
+        userId: UUID,
+        showsBackButton: Bool = false,
+        profileViewModel: ProfileViewModel? = nil
+    ) {
         self.userId = userId
         self.showsBackButton = showsBackButton
 
-        // ✅ VM is now single-identity (no rebinding / no stale reuse)
         _profileVM = StateObject(
-            wrappedValue: ProfileViewModel(
+            wrappedValue: profileViewModel ?? ProfileViewModel(
                 userId: userId,
                 profileService: ProfileService(supabase: SupabaseManager.shared),
                 friendService: FriendService(supabase: SupabaseManager.shared)
@@ -83,8 +87,7 @@ struct ProfileView: View {
     }
 
     private var isReadyToRenderProfile: Bool {
-        profileVM.profile?.id == userId &&
-        profileVM.isLoading == false
+        profileVM.profile?.id == userId
     }
 
     private var travelModeLabel: String? {
@@ -139,7 +142,6 @@ struct ProfileView: View {
             ZStack {
                 Color.clear
 
-                // 🛡 Strict identity + relationship gate (production-safe)
                 if !isReadyToRenderProfile {
                     ProfileLoadingView()
                 } else {
@@ -279,11 +281,8 @@ struct ProfileView: View {
                         Spacer()
 
                         if SupabaseManager.shared.currentUserId == userId {
-                            NavigationLink {
-                                ProfileSettingsView(
-                                    profileVM: profileVM,
-                                    viewedUserId: userId
-                                )
+                            Button {
+                                showSettings = true
                             } label: {
                                 ZStack {
                                     Theme.chromeIconButtonBackground(size: 40)
@@ -310,18 +309,22 @@ struct ProfileView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
+        .fullScreenCover(isPresented: $showSettings) {
+            NavigationStack {
+                ProfileSettingsView(
+                    profileVM: profileVM,
+                    viewedUserId: userId
+                )
+            }
+        }
         .onAppear {
-            // 🔒 Only load if no profile is currently bound
             guard profileVM.profile == nil else {
-                
                 return
             }
 
             Task {
                 await profileVM.loadIfNeeded()
             }
-        }
-        .onDisappear {
         }
     }
 }
