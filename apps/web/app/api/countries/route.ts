@@ -7,6 +7,7 @@ import type { CountryFacts } from '@travel-af/shared';
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 
 import { gdpPerCapitaUSDMap } from '@/lib/providers/worldbank';
 import { fxLocalPerUSDMapByIso2 } from '@/lib/providers/fx';
@@ -16,7 +17,6 @@ import {
 } from '../../../../../packages/data/src/countrySeasonality';
 import { buildVisaIndex } from '@/lib/providers/visa';
 import { estimateDailySpendHotel } from '@/lib/providers/costs';
-import type { DailySpend } from '@/lib/providers/costs';
 import { buildRows, DEFAULT_WEIGHTS } from '@travel-af/domain/src/scoring';
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import {
@@ -54,7 +54,7 @@ type FactsExtraServer = Partial<CountryFacts> & {
   localPerUSD?: number;
   usdToLocalRate?: number;
   affordability?: number;          // final 0–100 affordability score (cheap = 100)
-  dailySpend?: DailySpend;
+  dailySpend?: CountryFacts['dailySpend'];
 
   // server-computed affordability details
   averageDailyCostUsd?: number;    // per-person daily cost in USD
@@ -162,6 +162,7 @@ function extractAverageDailyCostUsd(fx: FactsExtraServer): number | undefined {
     hostelUsd?: number;
     foodUsd?: number;
     transportUsd?: number;
+    activitiesUsd?: number;
   } | undefined;
 
   if (!spend) return undefined;
@@ -227,6 +228,43 @@ type CountryOut = CountrySeed & {
   facts?: FactsExtraServer;
 };
 
+type CountryPayload = {
+  iso2: string;
+  iso3: string;
+  m49: number;
+  name: string;
+  region?: string;
+  subregion?: string;
+  aliases?: string[];
+  advisory: CountryOut['advisory'];
+  facts?: {
+    scoreTotal?: number;
+    advisoryScore?: number;
+    advisoryLevel?: number;
+    seasonality?: number;
+    fmSeasonalityTodayScore?: number;
+    fmSeasonalityTodayLabel?: string;
+    fmSeasonalityBestMonths?: number[];
+    fmSeasonalityShoulderMonths?: number[];
+    fmSeasonalityGoodMonths?: number[];
+    fmSeasonalityAvoidMonths?: number[];
+    fmSeasonalityNotes?: string;
+    visaEase?: number;
+    visaType?: string;
+    visaAllowedDays?: number;
+    visaFeeUsd?: number;
+    visaNotes?: string;
+    visaSource?: string;
+    dailySpend?: CountryFacts['dailySpend'];
+    affordabilityCategory?: number;
+    affordability?: number;
+    affordabilityBand?: string;
+    affordabilityExplanation?: string;
+    languageCompatibilityScore?: number;
+  };
+  scoreTotal: number;
+};
+
 type UserScorePreferencesRow = {
   advisory?: number | null;
   seasonality?: number | null;
@@ -234,6 +272,80 @@ type UserScorePreferencesRow = {
   affordability?: number | null;
   language?: number | null;
 };
+
+function buildCountriesPayload(rows: CountryOut[]): CountryPayload[] {
+  return rows.map((row) => {
+    const facts = row.facts as FactsExtraServer | undefined;
+    const scoreTotal = facts?.scoreTotal ?? 0;
+
+    return {
+      iso2: row.iso2,
+      iso3: row.iso3,
+      m49: row.m49,
+      name: row.name,
+      region: row.region,
+      subregion: row.subregion,
+      aliases: row.aliases,
+      advisory: row.advisory,
+      facts: facts
+        ? {
+            scoreTotal,
+            advisoryScore: facts.advisoryScore,
+            advisoryLevel: facts.advisoryLevel,
+            seasonality: facts.seasonality,
+            fmSeasonalityTodayScore: facts.fmSeasonalityTodayScore,
+            fmSeasonalityTodayLabel: facts.fmSeasonalityTodayLabel,
+            fmSeasonalityBestMonths: facts.fmSeasonalityBestMonths,
+            fmSeasonalityShoulderMonths: facts.fmSeasonalityShoulderMonths,
+            fmSeasonalityGoodMonths: facts.fmSeasonalityGoodMonths,
+            fmSeasonalityAvoidMonths: facts.fmSeasonalityAvoidMonths,
+            fmSeasonalityNotes: facts.fmSeasonalityNotes,
+            visaEase: facts.visaEase,
+            visaType: facts.visaType,
+            visaAllowedDays: facts.visaAllowedDays,
+            visaFeeUsd: facts.visaFeeUsd,
+            visaNotes: facts.visaNotes,
+            visaSource: facts.visaSource,
+            dailySpend: facts.dailySpend,
+            affordabilityCategory: facts.affordabilityCategory,
+            affordability: facts.affordability,
+            affordabilityBand: facts.affordabilityBand,
+            affordabilityExplanation: facts.affordabilityExplanation,
+            languageCompatibilityScore: facts.languageCompatibilityScore,
+          }
+        : undefined,
+      scoreTotal,
+    };
+  });
+}
+
+function jsonResponseWithEtag(payload: unknown, request: Request) {
+  const body = JSON.stringify(payload);
+  const etag = `"${createHash('sha1').update(body).digest('hex')}"`;
+  const ifNoneMatch = request.headers.get('if-none-match');
+
+  if (ifNoneMatch === etag) {
+    return new NextResponse(null, {
+      status: 304,
+      headers: {
+        ETag: etag,
+        'Cache-Control': 'private, max-age=0, must-revalidate',
+        Vary: 'Authorization, Cookie, Accept-Encoding',
+      },
+    });
+  }
+
+  return new NextResponse(body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Content-Length': String(Buffer.byteLength(body)),
+      ETag: etag,
+      'Cache-Control': 'private, max-age=0, must-revalidate',
+      Vary: 'Authorization, Cookie, Accept-Encoding',
+    },
+  });
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -461,14 +573,15 @@ export async function GET(request: Request) {
 
     console.log('[countries] returning LITE payload');
 
-    return NextResponse.json(
+    return jsonResponseWithEtag(
       merged.map((c) => ({
         iso2: c.iso2,
         name: c.name,
         region: c.region,
         subregion: c.subregion,
         advisory: c.advisory,
-      }))
+      })),
+      request
     );
   }
   try {
@@ -483,13 +596,15 @@ export async function GET(request: Request) {
       gdpPerCapitaUSDMap(iso2s),
       fxLocalPerUSDMapByIso2(iso2s),
     ]);
-    const costsByIso2: Map<string, DailySpend> = await (async () => {
+    const costsByIso2: Map<string, NonNullable<CountryFacts['dailySpend']>> = await (async () => {
       try {
         const mod = await import('@/lib/providers/costs');
-        const fn = (mod as { buildCostIndex?: () => Promise<Map<string, DailySpend>> }).buildCostIndex;
-        return fn ? await fn() : new Map<string, DailySpend>();
+        const fn = (mod as {
+          buildCostIndex?: () => Promise<Map<string, NonNullable<CountryFacts['dailySpend']>>>;
+        }).buildCostIndex;
+        return fn ? await fn() : new Map<string, NonNullable<CountryFacts['dailySpend']>>();
       } catch {
-        return new Map<string, DailySpend>();
+        return new Map<string, NonNullable<CountryFacts['dailySpend']>>();
       }
     })();
 
@@ -832,12 +947,5 @@ export async function GET(request: Request) {
 
   // Sort alphabetically by name
   merged.sort((x, y) => x.name.localeCompare(y.name));
-
-  // Expose scoreTotal at top level for Discovery list
-  const listPayload = merged.map((row) => ({
-    ...row,
-    scoreTotal: row.facts?.scoreTotal ?? 0,
-  }));
-
-  return NextResponse.json(listPayload);
+  return jsonResponseWithEtag(buildCountriesPayload(merged), request);
 }

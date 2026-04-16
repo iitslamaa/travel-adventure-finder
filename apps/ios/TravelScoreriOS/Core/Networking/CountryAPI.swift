@@ -33,6 +33,11 @@ enum CountryAPI {
         return URLSession(configuration: configuration)
     }()
 
+    private struct CountriesResponsePayload {
+        let data: Data
+        let etag: String?
+    }
+
     static func fetchCountries() async throws -> [Country] {
         let startedAt = Date()
         do {
@@ -148,9 +153,11 @@ extension CountryAPI {
     }
 
     private static func fetchAndCacheCountries(refreshedAt: TimeInterval = Date().timeIntervalSince1970) async throws -> [Country] {
-        let data = try await fetchCountriesData()
+        let response = try await fetchCountriesData()
+        let data = response.data
         let countries = try decodeCountries(from: data)
         CountriesCache.saveData(data)
+        CountriesCache.saveETag(response.etag)
         UserDefaults.standard.set(refreshedAt, forKey: CountriesCache.lastRefreshKey)
         updateMemoryCache(with: countries)
         return countries
@@ -221,11 +228,14 @@ extension CountryAPI {
         return countries
     }
 
-    private static func fetchCountriesData() async throws -> Data {
+    private static func fetchCountriesData() async throws -> CountriesResponsePayload {
         let startedAt = Date()
         var request = URLRequest(url: countriesURL)
         request.httpMethod = "GET"
         request.timeoutInterval = requestTimeout
+        if let etag = CountriesCache.loadETag(), !etag.isEmpty {
+            request.setValue(etag, forHTTPHeaderField: "If-None-Match")
+        }
 
         if let session = try? await SupabaseManager.shared.fetchCurrentSession() {
             let accessToken = session.accessToken
@@ -236,6 +246,17 @@ extension CountryAPI {
         guard let http = resp as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
+        if http.statusCode == 304 {
+            guard let cached = CountriesCache.loadData() else {
+                throw URLError(.badServerResponse)
+            }
+            let etag = http.value(forHTTPHeaderField: "ETag") ?? CountriesCache.loadETag()
+            CountryAPIDebugLog.message(
+                "fetchCountriesData status=304 bytes=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
+            return CountriesResponsePayload(data: cached, etag: etag)
+        }
+
         if !(200..<300).contains(http.statusCode) {
             #if DEBUG
             if let body = String(data: data, encoding: .utf8) {
@@ -244,10 +265,11 @@ extension CountryAPI {
             #endif
             throw URLError(.badServerResponse)
         }
+        let etag = http.value(forHTTPHeaderField: "ETag")
         CountryAPIDebugLog.message(
             "fetchCountriesData status=\(http.statusCode) bytes=\(data.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
         )
-        return data
+        return CountriesResponsePayload(data: data, etag: etag)
     }
 
     private static func isTransientNetworkError(_ error: Error) -> Bool {
@@ -271,7 +293,8 @@ extension CountryAPI {
 
     private enum CountriesCache {
         static let lastRefreshKey = "countries_last_refresh_ts_v2"
-        private static let fileName = "countries_cache_v3.json"
+        private static let etagKey = "countries_cache_etag_v1"
+        private static let fileName = "countries_cache_v4.json"
 
         private static var cacheURL: URL {
             let fm = FileManager.default
@@ -293,6 +316,14 @@ extension CountryAPI {
 
         static func loadData() -> Data? {
             try? Data(contentsOf: cacheURL)
+        }
+
+        static func saveETag(_ etag: String?) {
+            UserDefaults.standard.set(etag, forKey: etagKey)
+        }
+
+        static func loadETag() -> String? {
+            UserDefaults.standard.string(forKey: etagKey)
         }
     }
 
