@@ -8,27 +8,49 @@
 import Foundation
 import Supabase
 
+private enum CountryAPIDebugLog {
+    static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🌐 [CountryAPI] \(timestamp) \(text)")
+#endif
+    }
+}
+
 enum CountryAPI {
     static let baseURL = APIConfig.baseURL
     static var countriesURL: URL { baseURL.appendingPathComponent("api/countries") }
     private static let cacheLock = NSLock()
     private static var memoryCachedCountries: [Country]?
     private static var inFlightRefreshTask: Task<[Country]?, Never>?
+    private static let requestTimeout: TimeInterval = 4
+    private static let resourceTimeout: TimeInterval = 6
     private static let networkSession: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 12
-        configuration.timeoutIntervalForResource = 20
+        configuration.timeoutIntervalForRequest = requestTimeout
+        configuration.timeoutIntervalForResource = resourceTimeout
         configuration.waitsForConnectivity = false
         return URLSession(configuration: configuration)
     }()
 
     static func fetchCountries() async throws -> [Country] {
+        let startedAt = Date()
         do {
-            return try await fetchAndCacheCountries()
+            let countries = try await fetchAndCacheCountries()
+            CountryAPIDebugLog.message(
+                "fetchCountries source=remote count=\(countries.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
+            return countries
         } catch {
             if isTransientNetworkError(error), let cached = loadCachedCountries(), !cached.isEmpty {
+                CountryAPIDebugLog.message(
+                    "fetchCountries source=cache-fallback count=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms error=\(error.localizedDescription)"
+                )
                 return cached
             }
+            CountryAPIDebugLog.message(
+                "fetchCountries failed duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms error=\(error.localizedDescription)"
+            )
             throw error
         }
     }
@@ -59,14 +81,19 @@ extension CountryAPI {
     /// - Parameter minInterval: Minimum seconds between refreshes (default: 60)
     /// - Returns: Fresh countries if refreshed, or nil if skipped/failed.
     static func refreshCountriesIfNeeded(minInterval: TimeInterval = 60) async -> [Country]? {
+        let startedAt = Date()
         let now = Date().timeIntervalSince1970
         let last = UserDefaults.standard.double(forKey: CountriesCache.lastRefreshKey)
 
         if last > 0, (now - last) < minInterval {
+            CountryAPIDebugLog.message(
+                "refreshCountriesIfNeeded skipped reason=cooldown age=\(Int(now - last))s minInterval=\(Int(minInterval))s duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
             return nil
         }
 
         if let inFlightTask = withCacheLock({ inFlightRefreshTask }) {
+            CountryAPIDebugLog.message("refreshCountriesIfNeeded joined in-flight request")
             return await inFlightTask.value
         }
 
@@ -78,13 +105,23 @@ extension CountryAPI {
             }
 
             do {
-                return try await fetchAndCacheCountries(refreshedAt: now)
+                let countries = try await fetchAndCacheCountries(refreshedAt: now)
+                CountryAPIDebugLog.message(
+                    "refreshCountriesIfNeeded applied source=remote count=\(countries.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                )
+                return countries
             } catch {
                 if isTransientNetworkError(error),
                    let cached = loadCachedCountries(),
                    !cached.isEmpty {
+                    CountryAPIDebugLog.message(
+                        "refreshCountriesIfNeeded source=cache-fallback count=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms error=\(error.localizedDescription)"
+                    )
                     return cached
                 }
+                CountryAPIDebugLog.message(
+                    "refreshCountriesIfNeeded failed duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms error=\(error.localizedDescription)"
+                )
                 return nil
             }
         }
@@ -185,9 +222,10 @@ extension CountryAPI {
     }
 
     private static func fetchCountriesData() async throws -> Data {
+        let startedAt = Date()
         var request = URLRequest(url: countriesURL)
         request.httpMethod = "GET"
-        request.timeoutInterval = 12
+        request.timeoutInterval = requestTimeout
 
         if let session = try? await SupabaseManager.shared.fetchCurrentSession() {
             let accessToken = session.accessToken
@@ -206,6 +244,9 @@ extension CountryAPI {
             #endif
             throw URLError(.badServerResponse)
         }
+        CountryAPIDebugLog.message(
+            "fetchCountriesData status=\(http.statusCode) bytes=\(data.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+        )
         return data
     }
 
