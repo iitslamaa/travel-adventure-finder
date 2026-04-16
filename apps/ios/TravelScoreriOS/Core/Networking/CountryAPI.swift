@@ -8,27 +8,54 @@
 import Foundation
 import Supabase
 
+private enum CountryAPIDebugLog {
+    static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🌐 [CountryAPI] \(timestamp) \(text)")
+#endif
+    }
+}
+
 enum CountryAPI {
     static let baseURL = APIConfig.baseURL
     static var countriesURL: URL { baseURL.appendingPathComponent("api/countries") }
     private static let cacheLock = NSLock()
     private static var memoryCachedCountries: [Country]?
     private static var inFlightRefreshTask: Task<[Country]?, Never>?
+    private static let requestTimeout: TimeInterval = 4
+    private static let resourceTimeout: TimeInterval = 6
     private static let networkSession: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 12
-        configuration.timeoutIntervalForResource = 20
+        configuration.timeoutIntervalForRequest = requestTimeout
+        configuration.timeoutIntervalForResource = resourceTimeout
         configuration.waitsForConnectivity = false
         return URLSession(configuration: configuration)
     }()
 
+    private struct CountriesResponsePayload {
+        let data: Data
+        let etag: String?
+    }
+
     static func fetchCountries() async throws -> [Country] {
+        let startedAt = Date()
         do {
-            return try await fetchAndCacheCountries()
+            let countries = try await fetchAndCacheCountries()
+            CountryAPIDebugLog.message(
+                "fetchCountries source=remote count=\(countries.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
+            return countries
         } catch {
             if isTransientNetworkError(error), let cached = loadCachedCountries(), !cached.isEmpty {
+                CountryAPIDebugLog.message(
+                    "fetchCountries source=cache-fallback count=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms error=\(error.localizedDescription)"
+                )
                 return cached
             }
+            CountryAPIDebugLog.message(
+                "fetchCountries failed duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms error=\(error.localizedDescription)"
+            )
             throw error
         }
     }
@@ -59,14 +86,19 @@ extension CountryAPI {
     /// - Parameter minInterval: Minimum seconds between refreshes (default: 60)
     /// - Returns: Fresh countries if refreshed, or nil if skipped/failed.
     static func refreshCountriesIfNeeded(minInterval: TimeInterval = 60) async -> [Country]? {
+        let startedAt = Date()
         let now = Date().timeIntervalSince1970
         let last = UserDefaults.standard.double(forKey: CountriesCache.lastRefreshKey)
 
         if last > 0, (now - last) < minInterval {
+            CountryAPIDebugLog.message(
+                "refreshCountriesIfNeeded skipped reason=cooldown age=\(Int(now - last))s minInterval=\(Int(minInterval))s duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
             return nil
         }
 
         if let inFlightTask = withCacheLock({ inFlightRefreshTask }) {
+            CountryAPIDebugLog.message("refreshCountriesIfNeeded joined in-flight request")
             return await inFlightTask.value
         }
 
@@ -78,13 +110,23 @@ extension CountryAPI {
             }
 
             do {
-                return try await fetchAndCacheCountries(refreshedAt: now)
+                let countries = try await fetchAndCacheCountries(refreshedAt: now)
+                CountryAPIDebugLog.message(
+                    "refreshCountriesIfNeeded applied source=remote count=\(countries.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                )
+                return countries
             } catch {
                 if isTransientNetworkError(error),
                    let cached = loadCachedCountries(),
                    !cached.isEmpty {
+                    CountryAPIDebugLog.message(
+                        "refreshCountriesIfNeeded source=cache-fallback count=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms error=\(error.localizedDescription)"
+                    )
                     return cached
                 }
+                CountryAPIDebugLog.message(
+                    "refreshCountriesIfNeeded failed duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms error=\(error.localizedDescription)"
+                )
                 return nil
             }
         }
@@ -111,9 +153,11 @@ extension CountryAPI {
     }
 
     private static func fetchAndCacheCountries(refreshedAt: TimeInterval = Date().timeIntervalSince1970) async throws -> [Country] {
-        let data = try await fetchCountriesData()
+        let response = try await fetchCountriesData()
+        let data = response.data
         let countries = try decodeCountries(from: data)
         CountriesCache.saveData(data)
+        CountriesCache.saveETag(response.etag)
         UserDefaults.standard.set(refreshedAt, forKey: CountriesCache.lastRefreshKey)
         updateMemoryCache(with: countries)
         return countries
@@ -184,10 +228,14 @@ extension CountryAPI {
         return countries
     }
 
-    private static func fetchCountriesData() async throws -> Data {
+    private static func fetchCountriesData() async throws -> CountriesResponsePayload {
+        let startedAt = Date()
         var request = URLRequest(url: countriesURL)
         request.httpMethod = "GET"
-        request.timeoutInterval = 12
+        request.timeoutInterval = requestTimeout
+        if let etag = CountriesCache.loadETag(), !etag.isEmpty {
+            request.setValue(etag, forHTTPHeaderField: "If-None-Match")
+        }
 
         if let session = try? await SupabaseManager.shared.fetchCurrentSession() {
             let accessToken = session.accessToken
@@ -198,6 +246,17 @@ extension CountryAPI {
         guard let http = resp as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
+        if http.statusCode == 304 {
+            guard let cached = CountriesCache.loadData() else {
+                throw URLError(.badServerResponse)
+            }
+            let etag = http.value(forHTTPHeaderField: "ETag") ?? CountriesCache.loadETag()
+            CountryAPIDebugLog.message(
+                "fetchCountriesData status=304 bytes=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
+            return CountriesResponsePayload(data: cached, etag: etag)
+        }
+
         if !(200..<300).contains(http.statusCode) {
             #if DEBUG
             if let body = String(data: data, encoding: .utf8) {
@@ -206,7 +265,11 @@ extension CountryAPI {
             #endif
             throw URLError(.badServerResponse)
         }
-        return data
+        let etag = http.value(forHTTPHeaderField: "ETag")
+        CountryAPIDebugLog.message(
+            "fetchCountriesData status=\(http.statusCode) bytes=\(data.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+        )
+        return CountriesResponsePayload(data: data, etag: etag)
     }
 
     private static func isTransientNetworkError(_ error: Error) -> Bool {
@@ -230,9 +293,15 @@ extension CountryAPI {
 
     private enum CountriesCache {
         static let lastRefreshKey = "countries_last_refresh_ts_v2"
+        private static let etagKey = "countries_cache_etag_v1"
         private static let fileName = "countries_cache_v3.json"
+        private static let legacyFileNames = ["countries_cache_v4.json"]
 
         private static var cacheURL: URL {
+            cacheURL(for: fileName)
+        }
+
+        private static func cacheURL(for fileName: String) -> URL {
             let fm = FileManager.default
             let dir = (try? fm.url(
                 for: .applicationSupportDirectory,
@@ -251,7 +320,27 @@ extension CountryAPI {
         }
 
         static func loadData() -> Data? {
-            try? Data(contentsOf: cacheURL)
+            if let data = try? Data(contentsOf: cacheURL) {
+                return data
+            }
+
+            for legacyFileName in legacyFileNames {
+                let legacyURL = cacheURL(for: legacyFileName)
+                if let data = try? Data(contentsOf: legacyURL) {
+                    saveData(data)
+                    return data
+                }
+            }
+
+            return nil
+        }
+
+        static func saveETag(_ etag: String?) {
+            UserDefaults.standard.set(etag, forKey: etagKey)
+        }
+
+        static func loadETag() -> String? {
+            UserDefaults.standard.string(forKey: etagKey)
         }
     }
 

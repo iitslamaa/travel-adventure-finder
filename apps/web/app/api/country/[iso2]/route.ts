@@ -7,7 +7,6 @@ import { buildVisaIndex } from '@/lib/providers/visa';
 import { gdpPerCapitaUSDMap } from '@/lib/providers/worldbank';
 import { fxLocalPerUSDMapByIso2 } from '@/lib/providers/fx';
 import { estimateDailySpendHotel } from '@/lib/providers/costs';
-import type { DailySpend } from '@/lib/providers/costs';
 import { buildRows, DEFAULT_WEIGHTS } from '@travel-af/domain/src/scoring';
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
@@ -35,7 +34,7 @@ type CountryRouteFacts = Partial<CountryFacts> & {
   foodCostIndex?: number;
   housingCostIndex?: number;
   transportCostIndex?: number;
-  dailySpend?: DailySpend;
+  dailySpend?: CountryFacts['dailySpend'];
   fmSeasonalityBestMonths?: number[];
   fmSeasonalityShoulderMonths?: number[];
   fmSeasonalityGoodMonths?: number[];
@@ -264,7 +263,7 @@ export async function GET(
 
   // Compute daily spend (lightweight single-country version)
   try {
-    const spend: DailySpend | undefined = estimateDailySpendHotel({
+    const spend = estimateDailySpendHotel({
       costOfLivingIndex: enriched.facts.costOfLivingIndex,
       foodCostIndex: enriched.facts.foodCostIndex,
       housingCostIndex: enriched.facts.housingCostIndex,

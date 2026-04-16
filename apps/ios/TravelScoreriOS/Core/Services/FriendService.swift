@@ -7,6 +7,15 @@ import Foundation
 import Supabase
 import PostgREST
 
+private enum FriendServiceDebugLog {
+    static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🤝 [FriendService] \(timestamp) \(text)")
+#endif
+    }
+}
+
 private struct FriendRow: Decodable {
     let user_id: UUID
     let friend_id: UUID
@@ -36,13 +45,16 @@ final class FriendService {
 
     func fetchFriends(for userId: UUID) async throws -> [Profile] {
         if let cachedFriends = Self.friendsCache[userId] {
+            FriendServiceDebugLog.message("Friends cache hit user=\(userId.uuidString) count=\(cachedFriends.count)")
             return cachedFriends
         }
 
         if let inFlightFetch = Self.inFlightFriendFetches[userId] {
+            FriendServiceDebugLog.message("Friends joined in-flight fetch user=\(userId.uuidString)")
             return try await inFlightFetch.value
         }
 
+        let startedAt = Date()
         let fetchTask = Task<[Profile], Error> {
             // These queries are independent, so fetch both directions in parallel.
             async let sentResponse: PostgrestResponse<[FriendRow]> = supabase.client
@@ -88,6 +100,9 @@ final class FriendService {
             if Self.inFlightFriendFetches[userId] == fetchTask {
                 Self.inFlightFriendFetches[userId] = nil
             }
+            FriendServiceDebugLog.message(
+                "Friends fetched user=\(userId.uuidString) count=\(orderedProfiles.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
             return orderedProfiles
         } catch {
             if Self.inFlightFriendFetches[userId] == fetchTask {
@@ -150,13 +165,16 @@ final class FriendService {
 
     func fetchIncomingRequests(for myUserId: UUID) async throws -> [Profile] {
         if let cachedRequests = Self.incomingRequestsCache[myUserId] {
+            FriendServiceDebugLog.message("Incoming requests cache hit user=\(myUserId.uuidString) count=\(cachedRequests.count)")
             return cachedRequests
         }
 
         if let inFlightFetch = Self.inFlightIncomingRequestFetches[myUserId] {
+            FriendServiceDebugLog.message("Incoming requests joined in-flight fetch user=\(myUserId.uuidString)")
             return try await inFlightFetch.value
         }
 
+        let startedAt = Date()
         let fetchTask = Task<[Profile], Error> {
             let response: PostgrestResponse<[IncomingRequestJoinedRow]> = try await supabase.client
                 .from("friend_requests")
@@ -181,6 +199,9 @@ final class FriendService {
             if Self.inFlightIncomingRequestFetches[myUserId] == fetchTask {
                 Self.inFlightIncomingRequestFetches[myUserId] = nil
             }
+            FriendServiceDebugLog.message(
+                "Incoming requests fetched user=\(myUserId.uuidString) count=\(profiles.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
             return profiles
         } catch {
             if Self.inFlightIncomingRequestFetches[myUserId] == fetchTask {
@@ -192,15 +213,18 @@ final class FriendService {
 
     func incomingRequestCount(for myUserId: UUID) async throws -> Int {
         if let cachedCount = Self.incomingRequestCountCache[myUserId] {
+            FriendServiceDebugLog.message("Incoming request count cache hit user=\(myUserId.uuidString) count=\(cachedCount)")
             return cachedCount
         }
 
         if let inFlightCount = Self.inFlightIncomingRequestCounts[myUserId] {
+            FriendServiceDebugLog.message("Incoming request count joined in-flight fetch user=\(myUserId.uuidString)")
             return try await inFlightCount.value
         }
 
         struct RequestIDRow: Decodable { let id: UUID }
 
+        let startedAt = Date()
         let fetchTask = Task<Int, Error> {
             let response: PostgrestResponse<[RequestIDRow]> = try await supabase.client
                 .from("friend_requests")
@@ -220,6 +244,9 @@ final class FriendService {
             if Self.inFlightIncomingRequestCounts[myUserId] == fetchTask {
                 Self.inFlightIncomingRequestCounts[myUserId] = nil
             }
+            FriendServiceDebugLog.message(
+                "Incoming request count fetched user=\(myUserId.uuidString) count=\(count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
             return count
         } catch {
             if Self.inFlightIncomingRequestCounts[myUserId] == fetchTask {
