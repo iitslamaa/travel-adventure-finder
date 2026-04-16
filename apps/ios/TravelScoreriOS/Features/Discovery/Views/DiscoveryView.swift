@@ -7,6 +7,15 @@
 
 import SwiftUI
 
+private enum DiscoveryDebugLog {
+    static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🧭 [Discovery] \(timestamp) \(text)")
+#endif
+    }
+}
+
 struct DiscoveryCountryListView: View {
 
     @EnvironmentObject private var profileVM: ProfileViewModel
@@ -38,14 +47,28 @@ struct DiscoveryCountryListView: View {
 
     @MainActor
     private func reloadCountries() async {
+        let startedAt = Date()
         if let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 0), !refreshed.isEmpty {
             countries = await applyCurrentWeightsAndVisa(to: refreshed)
+            DiscoveryDebugLog.message(
+                "Country list refresh source=refreshIfNeeded countries=\(refreshed.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
         } else if let fetched = try? await CountryAPI.fetchCountries(), !fetched.isEmpty {
             countries = await applyCurrentWeightsAndVisa(to: fetched)
+            DiscoveryDebugLog.message(
+                "Country list refresh source=fetch countries=\(fetched.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
         } else if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
             countries = await applyCurrentWeightsAndVisa(to: cached)
+            DiscoveryDebugLog.message(
+                "Country list refresh source=cache countries=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
         }
+        let profileLoadStart = Date()
         await profileVM.loadIfNeeded()
+        DiscoveryDebugLog.message(
+            "Country list refresh profile load duration=\(Int(Date().timeIntervalSince(profileLoadStart) * 1000))ms"
+        )
     }
 
     @MainActor
@@ -109,13 +132,19 @@ struct DiscoveryCountryListView: View {
         .task {
             guard !didRunInitialLoad else { return }
             didRunInitialLoad = true
+            let startedAt = Date()
 
             await loadCountriesWithRetry()
+            let profileLoadStart = Date()
             await profileVM.loadIfNeeded()
 
             if countries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
                 countries = await applyCurrentWeightsAndVisa(to: cached)
             }
+
+            DiscoveryDebugLog.message(
+                "Country list initial load countries=\(countries.count) profileReady=\(profileVM.profile != nil) profileLoadDuration=\(Int(Date().timeIntervalSince(profileLoadStart) * 1000))ms totalDuration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
         }
         .onReceive(weightsStore.$weights) { _ in
             countries = countries.map {
@@ -252,14 +281,22 @@ struct DiscoveryView: View {
         .task {
             guard !didLoadCountries else { return }
             didLoadCountries = true
+            let startedAt = Date()
+            var source = "existing-state"
 
             if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
                 baseCountries = cached
+                source = "cache"
             }
 
             if baseCountries.isEmpty, let fetched = try? await CountryAPI.fetchCountries(), !fetched.isEmpty {
                 baseCountries = fetched
+                source = "fetch"
             }
+
+            DiscoveryDebugLog.message(
+                "Discovery home loaded source=\(source) countries=\(baseCountries.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
         }
         .sheet(isPresented: $showingWeights) {
             NavigationStack {

@@ -2,6 +2,15 @@ import SwiftUI
 import NukeUI
 import Nuke
 
+private enum FriendsScreenDebugLog {
+    static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("📇 [FriendsView] \(timestamp) \(text)")
+#endif
+    }
+}
+
 struct FriendsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var socialNav: SocialNavigationController
@@ -144,20 +153,30 @@ struct FriendsView: View {
             }
             .task(id: userId) {
                 let shouldLoadRequestCount = isOwnFriendsPage
+                let startedAt = Date()
 
                 await friendsVM.loadFriends(for: userId, forceRefresh: false)
 
                 if shouldLoadRequestCount {
                     await friendsVM.loadIncomingRequestCount()
                 }
+
+                FriendsScreenDebugLog.message(
+                    "Initial task finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) requestCount=\(friendsVM.incomingRequestCount) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                )
             }
             .onReceive(NotificationCenter.default.publisher(for: .friendshipUpdated)) { _ in
                 Task {
+                    let startedAt = Date()
                     await friendsVM.loadFriends(for: userId, forceRefresh: true)
 
                     if isOwnFriendsPage {
                         await friendsVM.loadIncomingRequestCount()
                     }
+
+                    FriendsScreenDebugLog.message(
+                        "Friendship refresh finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) requestCount=\(friendsVM.incomingRequestCount) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                    )
                 }
             }
     }

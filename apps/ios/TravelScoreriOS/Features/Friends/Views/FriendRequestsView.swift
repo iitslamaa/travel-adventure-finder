@@ -9,6 +9,15 @@ import SwiftUI
 import NukeUI
 import Nuke
 
+private enum FriendRequestsScreenDebugLog {
+    static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("📨 [FriendRequestsView] \(timestamp) \(text)")
+#endif
+    }
+}
+
 struct FriendRequestsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var socialNav: SocialNavigationController
@@ -75,7 +84,11 @@ struct FriendRequestsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .task {
+            let startedAt = Date()
             await vm.loadIncomingRequests()
+            FriendRequestsScreenDebugLog.message(
+                "Initial task finished requests=\(vm.incomingRequests.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
         }
         .alert(String(localized: "common.error"), isPresented: .constant(vm.errorMessage != nil)) {
             Button(String(localized: "common.ok")) {

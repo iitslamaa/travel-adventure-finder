@@ -150,9 +150,13 @@ final class FriendsViewModel: ObservableObject {
 
         isLoading = true
         errorMessage = nil
+        let startedAt = Date()
 
         do {
             searchResults = try await supabase.searchUsers(byUsername: query)
+            FriendsDebugLog.message(
+                "Search completed query=\(query) results=\(searchResults.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+            )
         } catch {
             if (error as? URLError)?.code == .cancelled || Task.isCancelled {
                 return

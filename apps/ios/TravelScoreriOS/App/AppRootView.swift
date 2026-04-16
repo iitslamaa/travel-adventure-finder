@@ -9,6 +9,15 @@ import Foundation
 import SwiftUI
 import Combine
 
+private enum AppRootDebugLog {
+    static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🏠 [AppRoot] \(timestamp) \(text)")
+#endif
+    }
+}
+
 struct AppRootView: View {
     private let instanceId = UUID()
     @EnvironmentObject private var sessionManager: SessionManager
@@ -49,12 +58,22 @@ struct AppRootView: View {
             await SupabaseManager.shared.startAuthListener()
         }
         .task(id: authConfigurationKey) {
+            let startedAt = Date()
             if let userId = sessionManager.userId {
                 profileVMHolder.configureIfNeeded(userId: userId)
+                AppRootDebugLog.message(
+                    "Configured auth session instance=\(instanceId.uuidString) mode=user user=\(userId.uuidString) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                )
             } else if sessionManager.didContinueAsGuest {
                 profileVMHolder.configureGuestIfNeeded()
+                AppRootDebugLog.message(
+                    "Configured auth session instance=\(instanceId.uuidString) mode=guest duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                )
             } else {
                 profileVMHolder.clear()
+                AppRootDebugLog.message(
+                    "Configured auth session instance=\(instanceId.uuidString) mode=logged-out duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                )
             }
         }
         .task(id: profileVMHolder.profileVM?.profile?.defaultCurrencyCode) {
@@ -94,8 +113,11 @@ final class ProfileVMHolder: ObservableObject {
 
     func configureIfNeeded(userId: UUID) {
         if profileVM?.userId == userId {
+            AppRootDebugLog.message("Profile VM reuse user=\(userId.uuidString) mode=authenticated")
             return
         }
+
+        let startedAt = Date()
 
         let profileService = ProfileService(supabase: SupabaseManager.shared)
         let friendService = FriendService(supabase: SupabaseManager.shared)
@@ -105,12 +127,18 @@ final class ProfileVMHolder: ObservableObject {
             profileService: profileService,
             friendService: friendService
         )
+        AppRootDebugLog.message(
+            "Profile VM created user=\(userId.uuidString) mode=authenticated duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+        )
     }
 
     func configureGuestIfNeeded() {
         if profileVM?.isGuestMode == true {
+            AppRootDebugLog.message("Profile VM reuse mode=guest")
             return
         }
+
+        let startedAt = Date()
 
         let profileService = ProfileService(supabase: SupabaseManager.shared)
         let friendService = FriendService(supabase: SupabaseManager.shared)
@@ -121,9 +149,17 @@ final class ProfileVMHolder: ObservableObject {
             friendService: friendService,
             isGuestMode: true
         )
+        AppRootDebugLog.message(
+            "Profile VM created mode=guest duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+        )
     }
 
     func clear() {
+        if let existingUserId = profileVM?.userId {
+            AppRootDebugLog.message("Profile VM cleared user=\(existingUserId.uuidString)")
+        } else if profileVM != nil {
+            AppRootDebugLog.message("Profile VM cleared")
+        }
         profileVM = nil
     }
 }
