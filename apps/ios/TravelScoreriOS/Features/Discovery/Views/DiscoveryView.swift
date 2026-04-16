@@ -21,7 +21,6 @@ struct DiscoveryCountryListView: View {
     @EnvironmentObject private var profileVM: ProfileViewModel
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
-    @StateObject private var visaStore = VisaRequirementsStore.shared
 
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
@@ -31,14 +30,8 @@ struct DiscoveryCountryListView: View {
     @State private var didRunInitialLoad = false
     @State private var refreshTask: Task<Void, Never>?
 
-    @MainActor
-    private func applyCurrentWeightsAndVisa(to countries: [Country]) async -> [Country] {
-        let visaHydrated = await visaStore.hydrate(
-            countries: countries,
-            passportCountryCodes: profileVM.passportNationalities,
-            fallbackPassportCountryCode: profileVM.effectivePassportCountryCode
-        )
-        return visaHydrated.map {
+    private func applyCurrentWeights(to countries: [Country]) -> [Country] {
+        countries.map {
             $0.applyingOverallScore(
                 using: weightsStore.weights,
                 selectedMonth: weightsStore.selectedMonth
@@ -54,43 +47,19 @@ struct DiscoveryCountryListView: View {
 
         if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
             displayedBaseCountries = cached
-            countries = await applyCurrentWeightsAndVisa(to: cached)
+            countries = applyCurrentWeights(to: cached)
             DiscoveryDebugLog.message(
                 "Country list refresh immediate source=cache countries=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
             )
         } else if let fetched = try? await CountryAPI.fetchCountries(), !fetched.isEmpty {
             displayedBaseCountries = fetched
-            countries = await applyCurrentWeightsAndVisa(to: fetched)
+            countries = applyCurrentWeights(to: fetched)
             DiscoveryDebugLog.message(
                 "Country list refresh immediate source=fetch countries=\(fetched.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
             )
         }
 
-        if profileVM.profile != nil, !displayedBaseCountries.isEmpty {
-            countries = await applyCurrentWeightsAndVisa(to: displayedBaseCountries)
-        }
-
         refreshTask = Task {
-            let profileLoadStart = Date()
-
-            if profileVM.profile == nil {
-                await profileVM.loadIfNeeded()
-                await MainActor.run {
-                    DiscoveryDebugLog.message(
-                        "Country list refresh profile load duration=\(Int(Date().timeIntervalSince(profileLoadStart) * 1000))ms"
-                    )
-                }
-            }
-
-            if !displayedBaseCountries.isEmpty {
-                let hydratedDisplayed = await applyCurrentWeightsAndVisa(to: displayedBaseCountries)
-                guard !Task.isCancelled else { return }
-
-                await MainActor.run {
-                    countries = hydratedDisplayed
-                }
-            }
-
             let remoteStart = Date()
             guard let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 0), !refreshed.isEmpty else {
                 await MainActor.run {
@@ -110,11 +79,10 @@ struct DiscoveryCountryListView: View {
                 return
             }
 
-            let hydrated = await applyCurrentWeightsAndVisa(to: refreshed)
             guard !Task.isCancelled else { return }
 
             await MainActor.run {
-                countries = hydrated
+                countries = applyCurrentWeights(to: refreshed)
                 DiscoveryDebugLog.message(
                     "Country list refresh background source=refreshIfNeeded countries=\(refreshed.count) duration=\(Int(Date().timeIntervalSince(remoteStart) * 1000))ms"
                 )
@@ -171,48 +139,33 @@ struct DiscoveryCountryListView: View {
             didRunInitialLoad = true
             let startedAt = Date()
             if countries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
-                countries = cached
+                countries = applyCurrentWeights(to: cached)
             } else if countries.isEmpty,
                       let fetched = try? await CountryAPI.fetchCountries(),
                       !fetched.isEmpty {
-                countries = fetched
+                countries = applyCurrentWeights(to: fetched)
             }
 
             let initialCountryCount = countries.count
-            let profileReadyAtStart = profileVM.profile != nil
 
             refreshTask?.cancel()
             refreshTask = Task {
-                let profileLoadStart = Date()
-
-                if !profileReadyAtStart {
-                    await profileVM.loadIfNeeded()
-                }
-
-                let hydrated = await applyCurrentWeightsAndVisa(to: countries)
-                guard !Task.isCancelled else { return }
-
-                await MainActor.run {
-                    countries = hydrated
-                    DiscoveryDebugLog.message(
-                        "Country list initial load countries=\(countries.count) profileReady=\(profileVM.profile != nil) profileLoadDuration=\(profileReadyAtStart ? 0 : Int(Date().timeIntervalSince(profileLoadStart) * 1000))ms totalDuration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
-                    )
-                }
-
                 guard let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 0), !refreshed.isEmpty else {
                     return
                 }
 
-                let hydratedRefreshed = await applyCurrentWeightsAndVisa(to: refreshed)
                 guard !Task.isCancelled else { return }
 
                 await MainActor.run {
-                    countries = hydratedRefreshed
+                    countries = applyCurrentWeights(to: refreshed)
+                    DiscoveryDebugLog.message(
+                        "Country list initial refresh countries=\(refreshed.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                    )
                 }
             }
 
             DiscoveryDebugLog.message(
-                "Country list initial render countries=\(initialCountryCount) profileReady=\(profileReadyAtStart) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                "Country list initial render countries=\(initialCountryCount) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
             )
         }
         .onReceive(weightsStore.$weights) { _ in
