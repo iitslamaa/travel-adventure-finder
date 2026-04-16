@@ -50,13 +50,16 @@ struct DiscoveryCountryListView: View {
     private func reloadCountries() async {
         let startedAt = Date()
         refreshTask?.cancel()
+        var displayedBaseCountries: [Country] = []
 
         if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
+            displayedBaseCountries = cached
             countries = await applyCurrentWeightsAndVisa(to: cached)
             DiscoveryDebugLog.message(
                 "Country list refresh immediate source=cache countries=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
             )
         } else if let fetched = try? await CountryAPI.fetchCountries(), !fetched.isEmpty {
+            displayedBaseCountries = fetched
             countries = await applyCurrentWeightsAndVisa(to: fetched)
             DiscoveryDebugLog.message(
                 "Country list refresh immediate source=fetch countries=\(fetched.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
@@ -77,6 +80,15 @@ struct DiscoveryCountryListView: View {
                 await MainActor.run {
                     DiscoveryDebugLog.message(
                         "Country list refresh background source=none duration=\(Int(Date().timeIntervalSince(remoteStart) * 1000))ms"
+                    )
+                }
+                return
+            }
+
+            if refreshed == displayedBaseCountries {
+                await MainActor.run {
+                    DiscoveryDebugLog.message(
+                        "Country list refresh background source=unchanged countries=\(refreshed.count) duration=\(Int(Date().timeIntervalSince(remoteStart) * 1000))ms"
                     )
                 }
                 return
