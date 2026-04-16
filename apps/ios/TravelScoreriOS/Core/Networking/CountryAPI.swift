@@ -294,9 +294,14 @@ extension CountryAPI {
     private enum CountriesCache {
         static let lastRefreshKey = "countries_last_refresh_ts_v2"
         private static let etagKey = "countries_cache_etag_v1"
-        private static let fileName = "countries_cache_v4.json"
+        private static let fileName = "countries_cache_v3.json"
+        private static let legacyFileNames = ["countries_cache_v4.json"]
 
         private static var cacheURL: URL {
+            cacheURL(for: fileName)
+        }
+
+        private static func cacheURL(for fileName: String) -> URL {
             let fm = FileManager.default
             let dir = (try? fm.url(
                 for: .applicationSupportDirectory,
@@ -315,7 +320,19 @@ extension CountryAPI {
         }
 
         static func loadData() -> Data? {
-            try? Data(contentsOf: cacheURL)
+            if let data = try? Data(contentsOf: cacheURL) {
+                return data
+            }
+
+            for legacyFileName in legacyFileNames {
+                let legacyURL = cacheURL(for: legacyFileName)
+                if let data = try? Data(contentsOf: legacyURL) {
+                    saveData(data)
+                    return data
+                }
+            }
+
+            return nil
         }
 
         static func saveETag(_ etag: String?) {
