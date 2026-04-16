@@ -150,7 +150,7 @@ struct DiscoveryCountryListView: View {
 
             refreshTask?.cancel()
             refreshTask = Task {
-                guard let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 0), !refreshed.isEmpty else {
+                guard let refreshed = await CountryAPI.refreshCountriesIfNeeded(minInterval: 60), !refreshed.isEmpty else {
                     return
                 }
 
