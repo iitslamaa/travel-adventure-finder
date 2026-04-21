@@ -1968,6 +1968,7 @@ private enum TripPlannerChecklistBuilder {
 @MainActor
 final class TripPlannerStore: ObservableObject {
     @Published private(set) var trips: [TripPlannerTrip] = []
+    @Published private(set) var isLoadingLocalTrips = true
 
     private let legacySaveKey = "trip_planner_trips_v1"
     private let guestSaveKey = "trip_planner_trips_guest_v1"
@@ -1975,15 +1976,11 @@ final class TripPlannerStore: ObservableObject {
     private let syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
     private var cancellables = Set<AnyCancellable>()
     private var hasRequestedInitialRefresh = false
+    private var hasLoadedLocalTrips = false
 
     init() {
         let initStart = Date().timeIntervalSinceReferenceDate
         TripPlannerDebugLog.probe("TripPlannerStore.init.start")
-        loadLocal()
-        TripPlannerDebugLog.probe(
-            "TripPlannerStore.init.after_loadLocal",
-            "duration=\(TripPlannerDebugLog.durationText(since: initStart)) trips=\(trips.count)"
-        )
         observeAuthState()
         observeTripUpdates()
         TripPlannerDebugLog.probe(
@@ -2076,7 +2073,7 @@ final class TripPlannerStore: ObservableObject {
     private func handleAuthStateChange() async {
         let start = Date().timeIntervalSinceReferenceDate
         TripPlannerDebugLog.probe("TripPlannerStore.auth_change.start")
-        loadLocal()
+        loadLocalIfNeeded(force: true)
         hasRequestedInitialRefresh = false
         await refreshFromRemoteIfNeeded(migrateLocalTrips: true)
         hasRequestedInitialRefresh = true
@@ -2092,6 +2089,26 @@ final class TripPlannerStore: ObservableObject {
         }
 
         return "trip_planner_trips_user_\(userId.uuidString)"
+    }
+
+    private func loadLocalIfNeeded(force: Bool = false) {
+        guard force || !hasLoadedLocalTrips else {
+            TripPlannerDebugLog.probe(
+                "TripPlannerStore.loadLocalIfNeeded.skipped",
+                "force=\(force) trips=\(trips.count)"
+            )
+            return
+        }
+
+        let start = Date().timeIntervalSinceReferenceDate
+        TripPlannerDebugLog.probe("TripPlannerStore.loadLocalIfNeeded.start", "force=\(force)")
+        loadLocal()
+        hasLoadedLocalTrips = true
+        isLoadingLocalTrips = false
+        TripPlannerDebugLog.probe(
+            "TripPlannerStore.loadLocalIfNeeded.end",
+            "duration=\(TripPlannerDebugLog.durationText(since: start)) trips=\(trips.count)"
+        )
     }
 
     private func loadLocal() {
@@ -2925,6 +2942,7 @@ extension TripPlannerStore {
 
         TripPlannerDebugLog.probe("TripPlannerStore.loadInitialTripsIfNeeded.start")
         hasRequestedInitialRefresh = true
+        loadLocalIfNeeded()
         await refreshFromRemoteIfNeeded(migrateLocalTrips: true)
         TripPlannerDebugLog.probe(
             "TripPlannerStore.loadInitialTripsIfNeeded.end",
@@ -3376,7 +3394,9 @@ struct TripPlannerView: View {
                             }
                         }
 
-                        if store.trips.isEmpty {
+                        if store.isLoadingLocalTrips {
+                            TripPlannerLoadingStateCard()
+                        } else if store.trips.isEmpty {
                             NavigationLink {
                                 TripPlannerComposerView { trip in
                                     store.add(trip)
@@ -13208,6 +13228,30 @@ private struct TripPlannerSharedTripNotificationCard: View {
                 .fill(Color(red: 0.97, green: 0.94, blue: 0.88).opacity(0.94))
                 .overlay(
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(.white.opacity(0.45), lineWidth: 1)
+                )
+        )
+        .shadow(color: .black.opacity(0.1), radius: 10, y: 6)
+    }
+}
+
+private struct TripPlannerLoadingStateCard: View {
+    var body: some View {
+        VStack(spacing: 14) {
+            ProgressView()
+                .tint(.black.opacity(0.82))
+
+            Text("Loading your trips")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.black)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(Color(red: 0.97, green: 0.94, blue: 0.88).opacity(0.94))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
                         .stroke(.white.opacity(0.45), lineWidth: 1)
                 )
         )
