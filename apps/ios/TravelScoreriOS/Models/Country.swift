@@ -15,6 +15,7 @@ struct Country: Identifiable, Hashable {
     var score: Int?
     let region: String?
     let subregion: String?
+    let currencyCode: String?
     let advisoryScore: Int?
 
     // Extra details from API
@@ -104,6 +105,7 @@ struct Country: Identifiable, Hashable {
         score: Int?,
         region: String? = nil,
         subregion: String? = nil,
+        currencyCode: String? = nil,
         advisoryScore: Int? = nil,
         advisorySummary: String? = nil,
         advisoryUpdatedAt: String? = nil,
@@ -140,6 +142,7 @@ struct Country: Identifiable, Hashable {
         self.score = score
         self.region = region
         self.subregion = subregion
+        self.currencyCode = AppCurrencyCatalog.normalizedCode(currencyCode)
         self.advisoryScore = advisoryScore
         self.advisorySummary = advisorySummary
         self.advisoryUpdatedAt = advisoryUpdatedAt
