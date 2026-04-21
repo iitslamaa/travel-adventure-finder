@@ -503,6 +503,18 @@ private extension View {
     }
 }
 
+private struct TripPlannerLazyDestination<Content: View>: View {
+    let content: () -> Content
+
+    init(@ViewBuilder content: @escaping () -> Content) {
+        self.content = content
+    }
+
+    var body: some View {
+        content()
+    }
+}
+
 struct PlanningListActionButton: View {
     let kind: PlanningListKind
     let isActive: Bool
@@ -3170,7 +3182,9 @@ struct TripPlannerView: View {
                             LazyVStack(spacing: 14) {
                                 ForEach(store.trips) { trip in
                                     NavigationLink {
-                                        tripDetailDestination(for: trip)
+                                        TripPlannerLazyDestination {
+                                            tripDetailDestination(for: trip)
+                                        }
                                     } label: {
                                         TripPlannerSavedTripCard(
                                             trip: trip,
@@ -5944,8 +5958,6 @@ private struct TripPlannerAvailabilityEditorView: View {
             endDate: max(start, end),
             countries: countryOptions
         )
-        onSave(savedTrip(startDate: start, endDate: max(start, end)))
-        dismiss()
     }
 
     private func moveSelectedMonth(by value: Int) {
