@@ -5911,8 +5911,11 @@ private struct TripPlannerInlineAvailabilityEditor: View {
     }
 
     private var currentParticipantColor: Color {
-        let participantIndex = participants.firstIndex(where: { $0.id == currentParticipantId }) ?? 0
-        return TripPlannerAvailabilityTheme.color(for: currentParticipantId, index: participantIndex)
+        participantColors[currentParticipantId] ?? TripPlannerAvailabilityTheme.color(at: 0)
+    }
+
+    private var participantColors: [String: Color] {
+        TripPlannerAvailabilityTheme.colors(for: participants)
     }
 
     private var selectedDateRangeText: String {
@@ -5941,6 +5944,7 @@ private struct TripPlannerInlineAvailabilityEditor: View {
                 proposals: proposals,
                 participants: participants,
                 selectedDates: selectedDates,
+                participantColors: participantColors,
                 selectedColor: currentParticipantColor,
                 onToggleDate: toggleSelectedDate
             )
@@ -5982,7 +5986,7 @@ private struct TripPlannerInlineAvailabilityEditor: View {
                 ForEach(Array(participants.enumerated()), id: \.1.id) { index, participant in
                     TripPlannerAvailabilityParticipantBubble(
                         participant: participant,
-                        color: TripPlannerAvailabilityTheme.color(for: participant.id, index: index),
+                        color: participantColors[participant.id] ?? TripPlannerAvailabilityTheme.color(at: index),
                         isComplete: hasAvailability(for: participant.id)
                     )
                 }
@@ -6069,7 +6073,7 @@ private struct TripPlannerInlineAvailabilityEditor: View {
                     TripPlannerTravelerAvailabilityRow(
                         participant: group.participant,
                         proposals: group.proposals,
-                        color: TripPlannerAvailabilityTheme.color(for: group.participant.id, index: index),
+                        color: participantColors[group.participant.id] ?? TripPlannerAvailabilityTheme.color(at: index),
                         editableParticipantId: currentParticipantId,
                         isExpanded: expandedTravelerIds.contains(group.participant.id),
                         onToggle: {
@@ -6323,8 +6327,11 @@ private struct TripPlannerAvailabilityEditorView: View {
     }
 
     private var currentParticipantColor: Color {
-        let participantIndex = participants.firstIndex(where: { $0.id == currentParticipantId }) ?? 0
-        return TripPlannerAvailabilityTheme.color(for: currentParticipantId, index: participantIndex)
+        participantColors[currentParticipantId] ?? TripPlannerAvailabilityTheme.color(at: 0)
+    }
+
+    private var participantColors: [String: Color] {
+        TripPlannerAvailabilityTheme.colors(for: participants)
     }
 
     private var selectedDateRangeText: String {
@@ -6403,6 +6410,7 @@ private struct TripPlannerAvailabilityEditorView: View {
                                     proposals: proposals,
                                     participants: participants,
                                     selectedDates: selectedDates,
+                                    participantColors: participantColors,
                                     selectedColor: currentParticipantColor,
                                     onToggleDate: toggleSelectedDate
                                 )
@@ -6461,7 +6469,7 @@ private struct TripPlannerAvailabilityEditorView: View {
                 ForEach(Array(participants.enumerated()), id: \.1.id) { index, participant in
                     TripPlannerAvailabilityParticipantBubble(
                         participant: participant,
-                        color: TripPlannerAvailabilityTheme.color(for: participant.id, index: index),
+                        color: participantColors[participant.id] ?? TripPlannerAvailabilityTheme.color(at: index),
                         isComplete: proposals.contains { $0.participantId == participant.id }
                     )
                 }
@@ -6537,7 +6545,7 @@ private struct TripPlannerAvailabilityEditorView: View {
                     TripPlannerTravelerAvailabilityRow(
                         participant: group.participant,
                         proposals: group.proposals,
-                        color: TripPlannerAvailabilityTheme.color(for: group.participant.id, index: index),
+                        color: participantColors[group.participant.id] ?? TripPlannerAvailabilityTheme.color(at: index),
                         editableParticipantId: currentParticipantId,
                         isExpanded: expandedTravelerIds.contains(group.participant.id),
                         onToggle: {
@@ -6837,6 +6845,7 @@ private struct TripPlannerAvailabilitySelectionMonth: View {
     let proposals: [TripPlannerAvailabilityProposal]
     let participants: [TripPlannerAvailabilityParticipant]
     let selectedDates: Set<Date>
+    let participantColors: [String: Color]
     let selectedColor: Color
     let onToggleDate: (Date) -> Void
 
@@ -6896,7 +6905,7 @@ private struct TripPlannerAvailabilitySelectionMonth: View {
                     && TripPlannerAvailabilityCalculator.includes(date: date, in: proposal)
             }
             guard isAvailable else { return nil }
-            return TripPlannerAvailabilityTheme.color(for: participant.id, index: index)
+            return participantColors[participant.id] ?? TripPlannerAvailabilityTheme.color(at: index)
         }
     }
 }
@@ -13223,6 +13232,10 @@ private struct TripPlannerAvailabilityCalendarBoard: View {
         !proposalsByParticipant.isEmpty && proposalsByParticipant.allSatisfy { !$0.1.isEmpty }
     }
 
+    private var participantColors: [String: Color] {
+        TripPlannerAvailabilityTheme.colors(for: proposalsByParticipant.map(\.0))
+    }
+
     private var monthsToDisplay: [Date] {
         let calendar = Calendar.current
         let allDates = trip.normalizedAvailabilityProposals(currentUserId: SupabaseManager.shared.currentUserId).flatMap { [$0.startDate, $0.endDate] }
@@ -13268,7 +13281,7 @@ private struct TripPlannerAvailabilityCalendarBoard: View {
 
                         TripPlannerAvailabilityParticipantBubble(
                             participant: participant,
-                            color: TripPlannerAvailabilityTheme.color(for: participant.id, index: index),
+                            color: participantColors[participant.id] ?? TripPlannerAvailabilityTheme.color(at: index),
                             isComplete: !entry.1.isEmpty
                         )
                     }
@@ -13317,7 +13330,8 @@ private struct TripPlannerAvailabilityCalendarBoard: View {
 
                     TripPlannerAvailabilityMonthCard(
                         month: currentMonthPage,
-                        proposalsByParticipant: proposalsByParticipant
+                        proposalsByParticipant: proposalsByParticipant,
+                        participantColors: participantColors
                     )
                 }
             }
@@ -13363,6 +13377,7 @@ private struct TripPlannerAvailabilityCalendarBoard: View {
 private struct TripPlannerAvailabilityMonthCard: View {
     let month: Date
     let proposalsByParticipant: [(TripPlannerAvailabilityParticipant, [TripPlannerAvailabilityProposal])]
+    let participantColors: [String: Color]
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
 
@@ -13389,7 +13404,8 @@ private struct TripPlannerAvailabilityMonthCard: View {
                         TripPlannerAvailabilityDayCell(
                             date: day,
                             month: month,
-                            proposalsByParticipant: proposalsByParticipant
+                            proposalsByParticipant: proposalsByParticipant,
+                            participantColors: participantColors
                         )
                     } else {
                         Color.clear
@@ -13410,6 +13426,7 @@ private struct TripPlannerAvailabilityDayCell: View {
     let date: Date
     let month: Date
     let proposalsByParticipant: [(TripPlannerAvailabilityParticipant, [TripPlannerAvailabilityProposal])]
+    let participantColors: [String: Color]
 
     private var inMonth: Bool {
         Calendar.current.isDate(date, equalTo: month, toGranularity: .month)
@@ -13421,7 +13438,7 @@ private struct TripPlannerAvailabilityDayCell: View {
                 TripPlannerAvailabilityCalculator.includes(date: date, in: proposal)
             }
             guard hasAvailability else { return nil }
-            return TripPlannerAvailabilityTheme.color(for: entry.0.id, index: index)
+            return participantColors[entry.0.id] ?? TripPlannerAvailabilityTheme.color(at: index)
         }
     }
 
@@ -15019,12 +15036,28 @@ private enum TripPlannerAvailabilityTheme {
         Color(red: 0.52, green: 0.66, blue: 0.34),
         Color(red: 0.74, green: 0.56, blue: 0.78),
         Color(red: 0.88, green: 0.68, blue: 0.30),
-        Color(red: 0.31, green: 0.63, blue: 0.57)
+        Color(red: 0.31, green: 0.63, blue: 0.57),
+        Color(red: 0.66, green: 0.48, blue: 0.78),
+        Color(red: 0.85, green: 0.38, blue: 0.56),
+        Color(red: 0.38, green: 0.68, blue: 0.45),
+        Color(red: 0.92, green: 0.55, blue: 0.24),
+        Color(red: 0.42, green: 0.50, blue: 0.84),
+        Color(red: 0.72, green: 0.64, blue: 0.28)
     ]
 
-    static func color(for participantId: String, index: Int) -> Color {
-        let seed = abs(participantId.hashValue + index)
-        return palette[seed % palette.count]
+    static func colors(for participants: [TripPlannerAvailabilityParticipant]) -> [String: Color] {
+        Dictionary(uniqueKeysWithValues: participants.enumerated().map { index, participant in
+            (participant.id, color(at: index))
+        })
+    }
+
+    static func color(at index: Int) -> Color {
+        guard index >= palette.count else {
+            return palette[index]
+        }
+
+        let hue = (Double(index) * 0.61803398875).truncatingRemainder(dividingBy: 1)
+        return Color(hue: hue, saturation: 0.58, brightness: 0.78)
     }
 }
 
