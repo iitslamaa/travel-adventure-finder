@@ -12,6 +12,7 @@ struct CountryDTO: Decodable {
     let name: String
     let region: String?
     let subregion: String?
+    let currencyCode: String?
 
     /// Final 0...100 Travelability score
     let score: Int?
@@ -69,6 +70,7 @@ struct CountryDTO: Decodable {
         case name
         case region
         case subregion
+        case currency
 
         // old/easy places to look for a score
         case score, overallScore, rating, value
@@ -262,6 +264,7 @@ struct CountryDTO: Decodable {
         self.name = try c.decode(String.self, forKey: .name)
         self.region = try c.decodeIfPresent(String.self, forKey: .region)
         self.subregion = try c.decodeIfPresent(String.self, forKey: .subregion)
+        self.currencyCode = AppCurrencyCatalog.normalizedCode(try c.decodeIfPresent(String.self, forKey: .currency))
 
         // Try lots of shapes for scores: Int, Double, String
         func decodeIntLikeScore(for key: CodingKeys) -> Int? {

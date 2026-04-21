@@ -6928,6 +6928,17 @@ private struct TripPlannerChecklistEditorView: View {
         trip.effectivePlannerCurrencyCode
     }
 
+    private var countryCurrencyCodesByID: [String: String] {
+        Dictionary(uniqueKeysWithValues: countries.compactMap { country in
+            guard let currencyCode = country.currencyCode else { return nil }
+            return (country.id, currencyCode)
+        })
+    }
+
+    private var tripLocalCurrencyCode: String? {
+        trip.countryIds.compactMap { countryCurrencyCodesByID[$0.uppercased()] }.first
+    }
+
     private var displayedMonthPage: Date? {
         if monthsToDisplay.contains(selectedMonthPage) {
             return selectedMonthPage
@@ -6960,6 +6971,7 @@ private struct TripPlannerChecklistEditorView: View {
                                     TripPlannerVisaChecklistView(
                                         overallItems: $overallItems,
                                         currencyCode: plannerCurrencyCode,
+                                        localCurrencyCode: tripLocalCurrencyCode,
                                         actorId: actorId,
                                         actorName: actorName
                                     )
@@ -7064,6 +7076,7 @@ private struct TripPlannerChecklistEditorView: View {
                                                     item: bindingForDayItem(dayIndex: selectedDayIndex, itemIndex: itemIndex),
                                                     planDate: plan.date,
                                                     currencyCode: plannerCurrencyCode,
+                                                    localCurrencyCode: localCurrencyCode(for: plan),
                                                     saveFeedbackNonce: saveFeedbackNonce,
                                                     actorId: actorId,
                                                     actorName: actorName,
@@ -7203,6 +7216,7 @@ private struct TripPlannerChecklistEditorView: View {
                     item: packingDraft.item,
                     progressEntries: packingDraft.progressEntries,
                     currencyCode: plannerCurrencyCode,
+                    localCurrencyCode: tripLocalCurrencyCode,
                     actorId: actorId,
                     actorName: actorName,
                     commitAction: packingCommitAction
@@ -7234,6 +7248,14 @@ private struct TripPlannerChecklistEditorView: View {
     private func availableDaySuggestions(for plan: TripPlannerDayPlan) -> [TripPlannerChecklistItem] {
         let existingKeys = Set(plan.checklistItems.map { suggestionKey(for: $0) })
         return TripPlannerChecklistTemplates.daySuggestions.filter { !existingKeys.contains(suggestionKey(for: $0)) }
+    }
+
+    private func localCurrencyCode(for plan: TripPlannerDayPlan) -> String? {
+        guard let countryId = plan.countryId?.uppercased() else {
+            return tripLocalCurrencyCode
+        }
+
+        return countryCurrencyCodesByID[countryId] ?? tripLocalCurrencyCode
     }
 
     @ViewBuilder
@@ -7701,6 +7723,7 @@ private struct TripPlannerChecklistMonthCard: View {
 private struct TripPlannerVisaChecklistView: View {
     @Binding var overallItems: [TripPlannerChecklistItem]
     let currencyCode: String
+    var localCurrencyCode: String? = nil
     let actorId: UUID?
     let actorName: String
 
@@ -7734,6 +7757,7 @@ private struct TripPlannerVisaChecklistView: View {
                                             item: visaBinding(at: index),
                                             planDate: Date(),
                                             currencyCode: currencyCode,
+                                            localCurrencyCode: localCurrencyCode,
                                             saveFeedbackNonce: 0,
                                             actorId: actorId,
                                             actorName: actorName,
@@ -7774,6 +7798,7 @@ private struct TripPlannerPackingListView: View {
     @State private var item: TripPlannerChecklistItem
     @State private var progressEntries: [TripPlannerPackingProgress]
     let currencyCode: String
+    let localCurrencyCode: String?
     let actorId: UUID?
     let actorName: String
     let commitAction: TripPlannerPackingCommitAction
@@ -7782,6 +7807,7 @@ private struct TripPlannerPackingListView: View {
         item: TripPlannerChecklistItem,
         progressEntries: [TripPlannerPackingProgress],
         currencyCode: String,
+        localCurrencyCode: String? = nil,
         actorId: UUID?,
         actorName: String,
         commitAction: TripPlannerPackingCommitAction
@@ -7789,6 +7815,7 @@ private struct TripPlannerPackingListView: View {
         self._item = State(initialValue: item)
         self._progressEntries = State(initialValue: progressEntries)
         self.currencyCode = currencyCode
+        self.localCurrencyCode = localCurrencyCode
         self.actorId = actorId
         self.actorName = actorName
         self.commitAction = commitAction
@@ -7835,6 +7862,7 @@ private struct TripPlannerPackingListView: View {
                                     item: $item,
                                     planDate: Date(),
                                     currencyCode: currencyCode,
+                                    localCurrencyCode: localCurrencyCode,
                                     saveFeedbackNonce: 0,
                                     actorId: actorId,
                                     actorName: actorName,
@@ -8064,6 +8092,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
     @Binding var item: TripPlannerChecklistItem
     let planDate: Date
     let currencyCode: String
+    let localCurrencyCode: String?
     let saveFeedbackNonce: Int
     let actorId: UUID?
     let actorName: String
@@ -8124,6 +8153,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
         item: Binding<TripPlannerChecklistItem>,
         planDate: Date,
         currencyCode: String,
+        localCurrencyCode: String? = nil,
         saveFeedbackNonce: Int,
         actorId: UUID?,
         actorName: String,
@@ -8136,6 +8166,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
         self._item = item
         self.planDate = planDate
         self.currencyCode = currencyCode
+        self.localCurrencyCode = localCurrencyCode
         self.saveFeedbackNonce = saveFeedbackNonce
         self.actorId = actorId
         self.actorName = actorName
@@ -8207,6 +8238,10 @@ private struct TripPlannerChecklistItemEditorRow: View {
                                     title: "Cost",
                                     currencyCode: linkedExpenseCurrencyCode,
                                     currencySelection: $linkedExpenseCurrencyCode,
+                                    suggestedCurrencyCodes: [
+                                        currencyPreferenceStore.defaultCurrencyCode,
+                                        localCurrencyCode
+                                    ],
                                     text: Binding(
                                         get: { linkedExpenseAmountText },
                                         set: { newValue in
@@ -13289,11 +13324,29 @@ private struct TripPlannerCurrencyInput: View {
     let title: String
     let currencyCode: String
     var currencySelection: Binding<String>? = nil
+    var suggestedCurrencyCodes: [String?] = []
     @Binding var text: String
     let placeholder: String
 
     private var decimalSeparator: String {
         Locale.current.decimalSeparator ?? "."
+    }
+
+    private var normalizedSuggestedCurrencyCodes: [String] {
+        var seen = Set<String>()
+        return suggestedCurrencyCodes.compactMap { rawCode in
+            guard let code = AppCurrencyCatalog.normalizedCode(rawCode),
+                  seen.insert(code).inserted
+            else {
+                return nil
+            }
+            return code
+        }
+    }
+
+    private var regularCurrencyCodes: [String] {
+        let suggestedCodes = Set(normalizedSuggestedCurrencyCodes)
+        return AppCurrencyCatalog.supportedCodes.filter { !suggestedCodes.contains($0) }
     }
 
     var body: some View {
@@ -13305,10 +13358,18 @@ private struct TripPlannerCurrencyInput: View {
             HStack(spacing: 8) {
                 if let currencySelection {
                     Menu {
-                        ForEach(AppCurrencyCatalog.supportedCodes, id: \.self) { code in
-                            Button("\(AppCurrencyCatalog.displayName(for: code)) (\(code))") {
-                                currencySelection.wrappedValue = code
+                        if !normalizedSuggestedCurrencyCodes.isEmpty {
+                            Section("Suggested") {
+                                ForEach(normalizedSuggestedCurrencyCodes, id: \.self) { code in
+                                    currencyMenuButton(code: code, currencySelection: currencySelection)
+                                }
                             }
+
+                            Divider()
+                        }
+
+                        ForEach(regularCurrencyCodes, id: \.self) { code in
+                            currencyMenuButton(code: code, currencySelection: currencySelection)
                         }
                     } label: {
                         HStack(spacing: 4) {
@@ -13347,6 +13408,12 @@ private struct TripPlannerCurrencyInput: View {
                     .fill(Color.white.opacity(0.78))
             )
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func currencyMenuButton(code: String, currencySelection: Binding<String>) -> some View {
+        Button("\(AppCurrencyCatalog.displayName(for: code)) (\(code))") {
+            currencySelection.wrappedValue = code
         }
     }
 

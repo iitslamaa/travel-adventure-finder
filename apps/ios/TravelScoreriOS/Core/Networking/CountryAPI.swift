@@ -193,6 +193,7 @@ extension CountryAPI {
                 score: dto.score,
                 region: dto.region,
                 subregion: dto.subregion,
+                currencyCode: dto.currencyCode,
                 advisoryScore: dto.advisoryScore,
                 advisorySummary: nil,
                 advisoryUpdatedAt: dto.advisoryUpdatedAt,
