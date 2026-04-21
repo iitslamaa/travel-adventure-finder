@@ -399,8 +399,10 @@ struct ListsView: View {
                         .buttonStyle(.plain)
 
                         NavigationLink {
-                            TripPlannerView()
-                                .environmentObject(sharedTripInbox)
+                            TripPlannerLazyDestination {
+                                TripPlannerView()
+                                    .environmentObject(sharedTripInbox)
+                            }
                         } label: {
                             PlanningCard(
                                 title: String(localized: "planning.trip_planner.title"),
@@ -3329,6 +3331,8 @@ struct TripPlannerView: View {
             TripPlannerDebugLog.message(
                 "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
             )
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 250_000_000)
             let hasCachedCurrentUserProfile = sessionManager.userId.flatMap { profileService.cachedProfile(userId: $0) } != nil
             async let tripRefresh: Void = store.loadInitialTripsIfNeeded()
 
@@ -3348,6 +3352,7 @@ struct TripPlannerView: View {
         }
         .task(id: ownerPreloadKey) {
             guard preparedUserId == sessionManager.userId else { return }
+            try? await Task.sleep(nanoseconds: 350_000_000)
             await preloadTripOwnerProfiles()
         }
     }
