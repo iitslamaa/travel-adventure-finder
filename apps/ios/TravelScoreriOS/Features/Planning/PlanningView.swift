@@ -5949,25 +5949,6 @@ private struct TripPlannerInlineAvailabilityEditor: View {
                 onToggleDate: toggleSelectedDate
             )
 
-            HStack(spacing: 10) {
-                Button(role: .destructive) {
-                    clearMyAvailability()
-                } label: {
-                    Image(systemName: "trash")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(TripPlannerAvailabilityTheme.ink.opacity(0.66))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.white.opacity(0.72))
-                        )
-                }
-                .buttonStyle(.plain)
-                .disabled(!hasAvailability(for: currentParticipant.id))
-                .opacity(hasAvailability(for: currentParticipant.id) ? 1 : 0.4)
-            }
-
             suggestedWindowsSection
 
             travelerAvailabilityList
@@ -6074,7 +6055,6 @@ private struct TripPlannerInlineAvailabilityEditor: View {
                         participant: group.participant,
                         proposals: group.proposals,
                         color: participantColors[group.participant.id] ?? TripPlannerAvailabilityTheme.color(at: index),
-                        editableParticipantId: currentParticipantId,
                         isExpanded: expandedTravelerIds.contains(group.participant.id),
                         onToggle: {
                             if expandedTravelerIds.contains(group.participant.id) {
@@ -6082,12 +6062,6 @@ private struct TripPlannerInlineAvailabilityEditor: View {
                             } else {
                                 expandedTravelerIds.insert(group.participant.id)
                             }
-                        },
-                        onDelete: { proposal in
-                            guard proposal.participantId == currentParticipantId else { return }
-                            proposals.removeAll { $0.id == proposal.id }
-                            selectedDates = Self.selectedDates(from: proposals, currentParticipantId: currentParticipantId)
-                            persist()
                         }
                     )
                 }
@@ -6127,12 +6101,6 @@ private struct TripPlannerInlineAvailabilityEditor: View {
             participant: currentParticipant
         ))
         proposals.sort { $0.startDate < $1.startDate }
-        persist()
-    }
-
-    private func clearMyAvailability() {
-        proposals.removeAll { $0.participantId == currentParticipantId }
-        selectedDates.removeAll()
         persist()
     }
 
@@ -6415,22 +6383,6 @@ private struct TripPlannerAvailabilityEditorView: View {
                                     onToggleDate: toggleSelectedDate
                                 )
 
-                                HStack(spacing: 10) {
-                                    Button(role: .destructive) {
-                                        clearMyAvailability()
-                                    } label: {
-                                        Image(systemName: "trash")
-                                            .font(.system(size: 14, weight: .bold))
-                                            .foregroundStyle(.black.opacity(0.72))
-                                            .frame(maxWidth: .infinity)
-                                            .frame(height: 44)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                    .fill(Color.white.opacity(0.72))
-                                            )
-                                    }
-                                    .buttonStyle(.plain)
-                                }
                             }
                         }
 
@@ -6546,7 +6498,6 @@ private struct TripPlannerAvailabilityEditorView: View {
                         participant: group.participant,
                         proposals: group.proposals,
                         color: participantColors[group.participant.id] ?? TripPlannerAvailabilityTheme.color(at: index),
-                        editableParticipantId: currentParticipantId,
                         isExpanded: expandedTravelerIds.contains(group.participant.id),
                         onToggle: {
                             if expandedTravelerIds.contains(group.participant.id) {
@@ -6554,11 +6505,6 @@ private struct TripPlannerAvailabilityEditorView: View {
                             } else {
                                 expandedTravelerIds.insert(group.participant.id)
                             }
-                        },
-                        onDelete: { proposal in
-                            guard proposal.participantId == currentParticipantId else { return }
-                            proposals.removeAll { $0.id == proposal.id }
-                            selectedDates = Self.selectedDates(from: proposals, currentParticipantId: currentParticipantId)
                         }
                     )
                 }
@@ -6594,11 +6540,6 @@ private struct TripPlannerAvailabilityEditorView: View {
             participant: currentParticipant
         ))
         proposals.sort { $0.startDate < $1.startDate }
-    }
-
-    private func clearMyAvailability() {
-        proposals.removeAll { $0.participantId == currentParticipantId }
-        selectedDates.removeAll()
     }
 
     private func moveSelectedMonth(by value: Int) {
@@ -7038,10 +6979,8 @@ private struct TripPlannerTravelerAvailabilityRow: View {
     let participant: TripPlannerAvailabilityParticipant
     let proposals: [TripPlannerAvailabilityProposal]
     let color: Color
-    let editableParticipantId: String
     let isExpanded: Bool
     let onToggle: () -> Void
-    let onDelete: (TripPlannerAvailabilityProposal) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -7083,19 +7022,6 @@ private struct TripPlannerTravelerAvailabilityRow: View {
                         TripPlannerProposalChip(proposal: proposal, color: color)
 
                         Spacer()
-
-                        if proposal.participantId == editableParticipantId {
-                            Button(role: .destructive) {
-                                onDelete(proposal)
-                            } label: {
-                                Image(systemName: "trash")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black.opacity(0.72))
-                                    .padding(8)
-                                    .background(Circle().fill(Color.white.opacity(0.82)))
-                            }
-                            .buttonStyle(.plain)
-                        }
                     }
                 }
             }
