@@ -5531,17 +5531,17 @@ private struct TripPlannerAvailabilityEditorView: View {
     let onSave: (TripPlannerTrip) -> Void
 
     @State private var proposals: [TripPlannerAvailabilityProposal]
-    @State private var selectedKind: TripPlannerAvailabilityKind = .exactDates
-    @State private var rangeStart = Date()
-    @State private var rangeEnd = Calendar.current.date(byAdding: .day, value: 5, to: Date()) ?? Date()
     @State private var selectedMonth = TripPlannerAvailabilityCalculator.startOfMonth(for: Date())
-    @State private var editingProposalId: UUID?
+    @State private var selectedTab: TripPlannerAvailabilityEditorTab = .myDates
+    @State private var selectedDates: Set<Date>
+    @State private var expandedTravelerIds: Set<String> = []
     @State private var dayPlans: [TripPlannerDayPlan]
 
     init(trip: TripPlannerTrip, onSave: @escaping (TripPlannerTrip) -> Void) {
         self.trip = trip
         self.onSave = onSave
         _proposals = State(initialValue: trip.availability.sorted { $0.startDate < $1.startDate })
+        _selectedDates = State(initialValue: Self.initialSelectedDates(from: trip.availability))
         _dayPlans = State(initialValue: TripPlannerDayPlanBuilder.syncedDayPlans(
             existingPlans: trip.dayPlans,
             startDate: trip.startDate,
@@ -5564,12 +5564,34 @@ private struct TripPlannerAvailabilityEditorView: View {
 
     private var monthOptions: [Date] {
         let calendar = Calendar.current
-        let start = TripPlannerAvailabilityCalculator.startOfMonth(for: Date())
+        let allDates = proposals.flatMap { [$0.startDate, $0.endDate] } + [trip.startDate, trip.endDate].compactMap { $0 }
+        let start = TripPlannerAvailabilityCalculator.startOfMonth(for: allDates.min() ?? Date())
         return (0..<12).compactMap { calendar.date(byAdding: .month, value: $0, to: start) }
     }
 
     private var countryOptions: [(id: String, name: String)] {
         zip(trip.countryIds, trip.countryNames).map { ($0, $1) }
+    }
+
+    private var yourFlexibleMonths: Set<Date> {
+        Set(proposals
+            .filter { $0.participantId == "self" && $0.kind == .flexibleMonth }
+            .map { TripPlannerAvailabilityCalculator.startOfMonth(for: $0.startDate) })
+    }
+
+    private var currentMonthIsFlexible: Bool {
+        yourFlexibleMonths.contains(selectedMonth)
+    }
+
+    private var selectedDateRangeText: String {
+        let sorted = selectedDates.sorted()
+        guard let first = sorted.first else { return "Tap dates when you are free." }
+
+        if sorted.count == 1 {
+            return AppDateFormatting.dateString(from: first, dateStyle: .medium)
+        }
+
+        return "\(sorted.count) dates selected"
     }
 
     var body: some View {
@@ -5583,229 +5605,153 @@ private struct TripPlannerAvailabilityEditorView: View {
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
-                            title: String(localized: "trip_planner.availability.how_it_works_title"),
-                            subtitle: String(localized: "trip_planner.availability.how_it_works_subtitle")
+                            title: "Find the best dates",
+                            subtitle: "Paint your free days, then let the planner rank the best group windows."
                         ) {
                             VStack(alignment: .leading, spacing: 10) {
-                                TripPlannerInfoCard(
-                                    text: String(localized: "trip_planner.availability.info_exact_vs_flexible"),
-                                    systemImage: "calendar"
-                                )
-
-                                if overlapMatches.isEmpty {
-                                    TripPlannerInfoCard(
-                                        text: String(localized: "trip_planner.availability.no_shared_window"),
-                                        systemImage: "person.3.sequence.fill"
-                                    )
-                                } else {
-                                    VStack(spacing: 10) {
-                                        ForEach(overlapMatches.prefix(2)) { overlap in
-                                            TripPlannerOverlapCard(overlap: overlap)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        TripPlannerSectionCard(
-                            title: String(localized: "trip_planner.availability.current_proposals_title"),
-                            subtitle: String(localized: "trip_planner.availability.current_proposals_subtitle")
-                        ) {
-                            if proposals.isEmpty {
-                                TripPlannerInfoCard(
-                                    text: String(localized: "trip_planner.availability.none_proposed"),
-                                    systemImage: "calendar.badge.plus"
-                                )
-                            } else {
-                                VStack(spacing: 10) {
-                                    ForEach(Array(groupedProposals().enumerated()), id: \.1.participant.id) { index, group in
-                                        VStack(alignment: .leading, spacing: 10) {
-                                            HStack(spacing: 10) {
-                                                Circle()
-                                                    .fill(TripPlannerAvailabilityTheme.color(for: group.participant.id, index: index))
-                                                    .frame(width: 10, height: 10)
-
-                                                TripPlannerAvatarView(
-                                                    name: group.participant.name,
-                                                    username: group.participant.username ?? group.participant.name,
-                                                    avatarURL: group.participant.avatarURL,
-                                                    size: 34
-                                                )
-
-                                                VStack(alignment: .leading, spacing: 2) {
-                                                    Text(group.participant.name)
-                                                        .font(.system(size: 14, weight: .bold))
-                                                        .foregroundStyle(.black)
-
-                                                    if let username = group.participant.username {
-                                                        Text("@\(username)")
-                                                            .font(.caption)
-                                                            .foregroundStyle(.black.opacity(0.62))
-                                                    }
-                                                }
-                                            }
-
-                                            ForEach(group.proposals) { proposal in
-                                                HStack(spacing: 10) {
-                                                    TripPlannerProposalChip(
-                                                        proposal: proposal,
-                                                        color: TripPlannerAvailabilityTheme.color(for: group.participant.id, index: index)
-                                                    )
-
-                                                    Spacer()
-
-                                                    if proposal.participantId == "self" {
-                                                        Button {
-                                                            beginEditing(proposal)
-                                                        } label: {
-                                                            Text("common.edit")
-                                                                .font(.system(size: 13, weight: .bold))
-                                                                .foregroundStyle(.black)
-                                                                .padding(.horizontal, 12)
-                                                                .padding(.vertical, 8)
-                                                                .background(Capsule().fill(Color.white.opacity(0.86)))
-                                                        }
-                                                        .buttonStyle(.plain)
-
-                                                        Button(role: .destructive) {
-                                                            proposals.removeAll { $0.id == proposal.id }
-                                                            if editingProposalId == proposal.id {
-                                                                resetComposer()
-                                                            }
-                                                        } label: {
-                                                            Image(systemName: "trash")
-                                                                .font(.system(size: 14, weight: .bold))
-                                                                .foregroundStyle(.black)
-                                                                .padding(8)
-                                                                .background(Circle().fill(Color.white.opacity(0.82)))
-                                                        }
-                                                        .buttonStyle(.plain)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        .padding(14)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                                .fill(Color.white.opacity(0.72))
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        TripPlannerSectionCard(
-                            title: editingProposalId == nil ? String(localized: "trip_planner.availability.your_availability") : String(localized: "trip_planner.availability.edit_your_availability"),
-                            subtitle: editingProposalId == nil
-                                ? String(localized: "trip_planner.availability.your_availability_subtitle")
-                                : String(localized: "trip_planner.availability.edit_your_availability_subtitle")
-                        ) {
-                            VStack(alignment: .leading, spacing: 14) {
-                                HStack(spacing: 12) {
-                                    TripPlannerAvatarView(
-                                        name: currentParticipant.name,
-                                        username: currentParticipant.username ?? currentParticipant.name,
-                                        avatarURL: currentParticipant.avatarURL,
-                                        size: 42
-                                    )
-
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text(currentParticipant.name)
-                                            .font(.system(size: 15, weight: .bold))
-                                            .foregroundStyle(.black)
-
-                                        Text("trip_planner.availability.only_you_can_edit")
-                                            .font(.system(size: 13))
-                                            .foregroundStyle(.black.opacity(0.62))
-                                    }
-                                }
-
-                                Picker(String(localized: "trip_planner.itinerary.type"), selection: $selectedKind) {
-                                    ForEach(TripPlannerAvailabilityKind.allCases) { kind in
-                                        Text(kind.title).tag(kind)
+                                Picker("Availability view", selection: $selectedTab) {
+                                    ForEach(TripPlannerAvailabilityEditorTab.allCases) { tab in
+                                        Text(tab.title).tag(tab)
                                     }
                                 }
                                 .pickerStyle(.segmented)
 
-                                if selectedKind == .exactDates {
-                                    DatePicker("trip_planner.start", selection: $rangeStart, displayedComponents: .date)
-                                        .tint(.black)
-
-                                    DatePicker("trip_planner.end", selection: $rangeEnd, in: rangeStart..., displayedComponents: .date)
-                                        .tint(.black)
+                                if overlapMatches.isEmpty {
+                                    TripPlannerInfoCard(
+                                        text: "No shared window yet. Add your dates or ask travelers to add theirs.",
+                                        systemImage: "sparkles"
+                                    )
                                 } else {
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        Text("trip_planner.availability.month")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundStyle(.black.opacity(0.72))
+                                    TripPlannerBestMatchHero(
+                                        overlap: overlapMatches[0],
+                                        actionTitle: "Use as trip dates",
+                                        action: { applyTripDates(from: overlapMatches[0]) }
+                                    )
+                                }
+                            }
+                        }
 
-                                        Picker(String(localized: "trip_planner.availability.month"), selection: $selectedMonth) {
-                                            ForEach(monthOptions, id: \.self) { month in
-                                                Text(TripPlannerAvailabilityCalculator.monthTitle(for: month)).tag(month)
-                                            }
+                        if selectedTab == .myDates {
+                            TripPlannerSectionCard(
+                                title: "My availability",
+                                subtitle: selectedDateRangeText
+                            ) {
+                                VStack(alignment: .leading, spacing: 14) {
+                                    HStack(spacing: 12) {
+                                        TripPlannerAvatarView(
+                                            name: currentParticipant.name,
+                                            username: currentParticipant.username ?? currentParticipant.name,
+                                            avatarURL: currentParticipant.avatarURL,
+                                            size: 42
+                                        )
+
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            Text("Tap every day you could travel")
+                                                .font(.system(size: 15, weight: .bold))
+                                                .foregroundStyle(.black)
+
+                                            Text("Use flexible month when exact dates do not matter.")
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(.black.opacity(0.62))
                                         }
-                                        .pickerStyle(.menu)
-                                        .padding(.horizontal, 14)
-                                        .padding(.vertical, 12)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(Color.white.opacity(0.78))
-                                        )
                                     }
-                                }
 
-                                Button {
-                                    saveProposal()
-                                } label: {
-                                    Label(editingProposalId == nil ? String(localized: "trip_planner.availability.save") : String(localized: "trip_planner.availability.update"), systemImage: editingProposalId == nil ? "plus" : "checkmark")
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundStyle(.black)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(Color.white.opacity(0.84))
-                                        )
-                                }
-                                .buttonStyle(.plain)
+                                    monthPicker
 
-                                if editingProposalId != nil {
-                                    Button("trip_planner.availability.cancel_editing") {
-                                        resetComposer()
+                                    TripPlannerAvailabilitySelectionMonth(
+                                        month: selectedMonth,
+                                        proposals: proposals,
+                                        participants: participants,
+                                        selectedDates: selectedDates,
+                                        flexibleMonthSelected: currentMonthIsFlexible,
+                                        onToggleDate: toggleSelectedDate
+                                    )
+
+                                    HStack(spacing: 10) {
+                                        Button {
+                                            persistSelectedDates()
+                                        } label: {
+                                            Label("Save my dates", systemImage: "checkmark")
+                                                .font(.system(size: 14, weight: .bold))
+                                                .foregroundStyle(.white)
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 12)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                        .fill(Color.black)
+                                                )
+                                        }
+                                        .buttonStyle(.plain)
+
+                                        Button {
+                                            toggleFlexibleMonth()
+                                        } label: {
+                                            Label(currentMonthIsFlexible ? "Flexible saved" : "Flexible month", systemImage: currentMonthIsFlexible ? "checkmark.circle.fill" : "calendar.badge.clock")
+                                                .font(.system(size: 14, weight: .bold))
+                                                .foregroundStyle(.black)
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 12)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                        .fill(Color.white.opacity(0.86))
+                                                )
+                                        }
+                                        .buttonStyle(.plain)
                                     }
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundStyle(.black.opacity(0.75))
+
+                                    Button(role: .destructive) {
+                                        clearMyAvailability()
+                                    } label: {
+                                        Label("Clear my availability", systemImage: "trash")
+                                            .font(.system(size: 13, weight: .bold))
+                                            .foregroundStyle(.black.opacity(0.72))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        } else {
+                            TripPlannerSectionCard(
+                                title: "Best matches",
+                                subtitle: overlapMatches.isEmpty ? "Add availability to unlock recommendations." : "Ranked by who can actually make it."
+                            ) {
+                                if overlapMatches.isEmpty {
+                                    TripPlannerInfoCard(
+                                        text: "Once travelers add availability, the best windows will appear here automatically.",
+                                        systemImage: "person.3.sequence.fill"
+                                    )
+                                } else {
+                                    VStack(spacing: 10) {
+                                        ForEach(Array(overlapMatches.prefix(5).enumerated()), id: \.element.id) { index, overlap in
+                                            TripPlannerAvailabilityMatchCard(
+                                                rank: index + 1,
+                                                overlap: overlap,
+                                                onUse: { applyTripDates(from: overlap) }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
 
                         TripPlannerSectionCard(
-                            title: String(localized: "trip_planner.availability.trip_route_title"),
-                            subtitle: trip.startDate != nil && trip.endDate != nil
-                                ? String(localized: "trip_planner.availability.trip_route_subtitle")
-                                : String(localized: "trip_planner.availability.trip_route_missing_dates")
+                            title: "Availability by traveler",
+                            subtitle: proposals.isEmpty ? "No dates added yet." : "\(proposals.count) saved option\(proposals.count == 1 ? "" : "s")"
                         ) {
-                            if dayPlans.isEmpty {
-                                TripPlannerInfoCard(
-                                    text: String(localized: "trip_planner.availability.trip_route_empty"),
-                                    systemImage: "calendar.badge.plus"
-                                )
-                            } else {
-                                VStack(spacing: 10) {
-                                    ForEach(dayPlans.indices, id: \.self) { index in
-                                        TripPlannerDayPlanEditorRow(
-                                            plan: Binding(
-                                                get: { dayPlans[index] },
-                                                set: { dayPlans[index] = $0 }
-                                            ),
-                                            countryOptions: countryOptions,
-                                            previousPlan: index > 0 ? dayPlans[index - 1] : nil,
-                                            nextPlan: index + 1 < dayPlans.count ? dayPlans[index + 1] : nil
-                                        )
-                                    }
-                                }
-                            }
+                            travelerAvailabilityList
                         }
+
+                        DisclosureGroup {
+                            routeEditor
+                        } label: {
+                            Label("Trip route", systemImage: "map")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(.black)
+                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(Color.white.opacity(0.72))
+                        )
                     }
                     .padding(.horizontal, Theme.pageHorizontalInset)
                     .padding(.top, 18)
@@ -5818,44 +5764,121 @@ private struct TripPlannerAvailabilityEditorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .tripPlannerNavigationChrome {
             Button(String(localized: "common.save")) {
-                onSave(
-                    TripPlannerTrip(
-                        id: trip.id,
-                        createdAt: trip.createdAt,
-                        title: trip.title,
-                        notes: trip.notes,
-                        startDate: trip.startDate,
-                        endDate: trip.endDate,
-                        countryIds: trip.countryIds,
-                        countryNames: trip.countryNames,
-                        friendIds: trip.friendIds,
-                        friendNames: trip.friendNames,
-                        friends: trip.friends,
-                        ownerId: trip.ownerId,
-                        ownerSnapshot: trip.effectiveOwnerSnapshot,
-                        plannerCurrencyCode: trip.plannerCurrencyCode,
-                        availability: proposals.sorted { $0.startDate < $1.startDate },
-                        dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
-                            existingPlans: dayPlans,
-                            startDate: trip.startDate,
-                            endDate: trip.endDate,
-                            countries: countryOptions
-                        ),
-                        overallChecklistItems: trip.overallChecklistItems,
-                        packingProgressEntries: trip.packingProgressEntries,
-                        expenses: trip.expenses
-                    )
-                )
+                onSave(savedTrip())
                 dismiss()
             }
             .foregroundStyle(.black)
             .font(.system(size: 17, weight: .semibold))
         }
-        .onChange(of: rangeStart) { _, newValue in
-            if rangeEnd < newValue {
-                rangeEnd = newValue
+    }
+
+    private var monthPicker: some View {
+        HStack(spacing: 10) {
+            Button {
+                moveSelectedMonth(by: -1)
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.black)
+                    .frame(width: 38, height: 38)
+                    .background(Circle().fill(Color.white.opacity(0.84)))
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            Menu {
+                ForEach(monthOptions, id: \.self) { month in
+                    Button(TripPlannerAvailabilityCalculator.monthTitle(for: month)) {
+                        selectedMonth = month
+                    }
+                }
+            } label: {
+                Label(TripPlannerAvailabilityCalculator.monthTitle(for: selectedMonth), systemImage: "calendar")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.86))
+                    )
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            Button {
+                moveSelectedMonth(by: 1)
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.black)
+                    .frame(width: 38, height: 38)
+                    .background(Circle().fill(Color.white.opacity(0.84)))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private var travelerAvailabilityList: some View {
+        if proposals.isEmpty {
+            TripPlannerInfoCard(
+                text: "No one has added availability yet.",
+                systemImage: "calendar.badge.plus"
+            )
+        } else {
+            VStack(spacing: 10) {
+                ForEach(Array(groupedProposals().enumerated()), id: \.1.participant.id) { index, group in
+                    TripPlannerTravelerAvailabilityRow(
+                        participant: group.participant,
+                        proposals: group.proposals,
+                        color: TripPlannerAvailabilityTheme.color(for: group.participant.id, index: index),
+                        isExpanded: expandedTravelerIds.contains(group.participant.id),
+                        onToggle: {
+                            if expandedTravelerIds.contains(group.participant.id) {
+                                expandedTravelerIds.remove(group.participant.id)
+                            } else {
+                                expandedTravelerIds.insert(group.participant.id)
+                            }
+                        },
+                        onDelete: { proposal in
+                            guard proposal.participantId == "self" else { return }
+                            proposals.removeAll { $0.id == proposal.id }
+                            selectedDates = Self.selectedDates(from: proposals)
+                        }
+                    )
+                }
             }
         }
+    }
+
+    @ViewBuilder
+    private var routeEditor: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if dayPlans.isEmpty {
+                TripPlannerInfoCard(
+                    text: String(localized: "trip_planner.availability.trip_route_empty"),
+                    systemImage: "calendar.badge.plus"
+                )
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(dayPlans.indices, id: \.self) { index in
+                        TripPlannerDayPlanEditorRow(
+                            plan: Binding(
+                                get: { dayPlans[index] },
+                                set: { dayPlans[index] = $0 }
+                            ),
+                            countryOptions: countryOptions,
+                            previousPlan: index > 0 ? dayPlans[index - 1] : nil,
+                            nextPlan: index + 1 < dayPlans.count ? dayPlans[index + 1] : nil
+                        )
+                    }
+                }
+            }
+        }
+        .padding(.top, 12)
     }
 
     private func groupedProposals() -> [(participant: TripPlannerAvailabilityParticipant, proposals: [TripPlannerAvailabilityProposal])] {
@@ -5866,63 +5889,501 @@ private struct TripPlannerAvailabilityEditorView: View {
         }
     }
 
-    private func saveProposal() {
-        let proposal = composedProposal(id: editingProposalId ?? UUID())
-
-        if let editingProposalId, let index = proposals.firstIndex(where: { $0.id == editingProposalId }) {
-            proposals[index] = proposal
+    private func toggleSelectedDate(_ date: Date) {
+        let normalized = Calendar.current.startOfDay(for: date)
+        if selectedDates.contains(normalized) {
+            selectedDates.remove(normalized)
         } else {
-            proposals.append(proposal)
+            selectedDates.insert(normalized)
+        }
+    }
+
+    private func persistSelectedDates() {
+        proposals.removeAll { $0.participantId == "self" && $0.kind == .exactDates }
+        proposals.append(contentsOf: Self.exactDateProposals(
+            from: selectedDates,
+            participant: currentParticipant
+        ))
+        proposals.sort { $0.startDate < $1.startDate }
+    }
+
+    private func toggleFlexibleMonth() {
+        if currentMonthIsFlexible {
+            proposals.removeAll {
+                $0.participantId == "self"
+                    && $0.kind == .flexibleMonth
+                    && TripPlannerAvailabilityCalculator.startOfMonth(for: $0.startDate) == selectedMonth
+            }
+        } else {
+            proposals.append(
+                TripPlannerAvailabilityProposal(
+                    participantId: "self",
+                    participantName: currentParticipant.name,
+                    participantUsername: currentParticipant.username,
+                    participantAvatarURL: currentParticipant.avatarURL,
+                    kind: .flexibleMonth,
+                    startDate: selectedMonth,
+                    endDate: TripPlannerAvailabilityCalculator.endOfMonth(for: selectedMonth)
+                )
+            )
         }
         proposals.sort { $0.startDate < $1.startDate }
-        resetComposer()
     }
 
-    private func beginEditing(_ proposal: TripPlannerAvailabilityProposal) {
-        editingProposalId = proposal.id
-        selectedKind = proposal.kind
+    private func clearMyAvailability() {
+        proposals.removeAll { $0.participantId == "self" }
+        selectedDates.removeAll()
+    }
 
-        if proposal.kind == .exactDates {
-            rangeStart = proposal.startDate
-            rangeEnd = proposal.endDate
-        } else {
-            selectedMonth = TripPlannerAvailabilityCalculator.startOfMonth(for: proposal.startDate)
+    private func applyTripDates(from overlap: TripPlannerAvailabilityOverlap) {
+        let start = Calendar.current.startOfDay(for: overlap.startDate)
+        let end = Calendar.current.date(byAdding: .day, value: -1, to: Calendar.current.startOfDay(for: overlap.endDate)) ?? start
+        dayPlans = TripPlannerDayPlanBuilder.syncedDayPlans(
+            existingPlans: dayPlans,
+            startDate: start,
+            endDate: max(start, end),
+            countries: countryOptions
+        )
+        onSave(savedTrip(startDate: start, endDate: max(start, end)))
+        dismiss()
+    }
+
+    private func moveSelectedMonth(by value: Int) {
+        if let next = Calendar.current.date(byAdding: .month, value: value, to: selectedMonth) {
+            selectedMonth = TripPlannerAvailabilityCalculator.startOfMonth(for: next)
         }
     }
 
-    private func resetComposer() {
-        editingProposalId = nil
-        selectedKind = .exactDates
-        rangeStart = Date()
-        rangeEnd = Calendar.current.date(byAdding: .day, value: 5, to: rangeStart) ?? rangeStart
-        selectedMonth = TripPlannerAvailabilityCalculator.startOfMonth(for: Date())
+    private func savedTrip(startDate: Date? = nil, endDate: Date? = nil) -> TripPlannerTrip {
+        TripPlannerTrip(
+            id: trip.id,
+            createdAt: trip.createdAt,
+            title: trip.title,
+            notes: trip.notes,
+            startDate: startDate ?? trip.startDate,
+            endDate: endDate ?? trip.endDate,
+            countryIds: trip.countryIds,
+            countryNames: trip.countryNames,
+            friendIds: trip.friendIds,
+            friendNames: trip.friendNames,
+            friends: trip.friends,
+            ownerId: trip.ownerId,
+            ownerSnapshot: trip.effectiveOwnerSnapshot,
+            plannerCurrencyCode: trip.plannerCurrencyCode,
+            availability: proposals.sorted { $0.startDate < $1.startDate },
+            dayPlans: TripPlannerDayPlanBuilder.syncedDayPlans(
+                existingPlans: dayPlans,
+                startDate: startDate ?? trip.startDate,
+                endDate: endDate ?? trip.endDate,
+                countries: countryOptions
+            ),
+            overallChecklistItems: trip.overallChecklistItems,
+            packingProgressEntries: trip.packingProgressEntries,
+            expenses: trip.expenses
+        )
     }
 
-    private func composedProposal(id: UUID) -> TripPlannerAvailabilityProposal {
-        if selectedKind == .exactDates {
-            return TripPlannerAvailabilityProposal(
-                id: id,
+    private static func initialSelectedDates(from proposals: [TripPlannerAvailabilityProposal]) -> Set<Date> {
+        selectedDates(from: proposals)
+    }
+
+    private static func selectedDates(from proposals: [TripPlannerAvailabilityProposal]) -> Set<Date> {
+        Set(proposals
+            .filter { $0.participantId == "self" && $0.kind == .exactDates }
+            .flatMap { dates(from: $0.startDate, through: $0.endDate) })
+    }
+
+    private static func exactDateProposals(
+        from dates: Set<Date>,
+        participant: TripPlannerAvailabilityParticipant
+    ) -> [TripPlannerAvailabilityProposal] {
+        contiguousRanges(from: dates).map { range in
+            TripPlannerAvailabilityProposal(
                 participantId: "self",
-                participantName: currentParticipant.name,
-                participantUsername: currentParticipant.username,
-                participantAvatarURL: currentParticipant.avatarURL,
+                participantName: participant.name,
+                participantUsername: participant.username,
+                participantAvatarURL: participant.avatarURL,
                 kind: .exactDates,
-                startDate: rangeStart,
-                endDate: rangeEnd
-            )
-        } else {
-            let monthStart = TripPlannerAvailabilityCalculator.startOfMonth(for: selectedMonth)
-            return TripPlannerAvailabilityProposal(
-                id: id,
-                participantId: "self",
-                participantName: currentParticipant.name,
-                participantUsername: currentParticipant.username,
-                participantAvatarURL: currentParticipant.avatarURL,
-                kind: .flexibleMonth,
-                startDate: monthStart,
-                endDate: TripPlannerAvailabilityCalculator.endOfMonth(for: monthStart)
+                startDate: range.start,
+                endDate: range.end
             )
         }
+    }
+
+    private static func contiguousRanges(from dates: Set<Date>) -> [(start: Date, end: Date)] {
+        let calendar = Calendar.current
+        let sorted = dates.map { calendar.startOfDay(for: $0) }.sorted()
+        guard let first = sorted.first else { return [] }
+
+        var ranges: [(start: Date, end: Date)] = []
+        var currentStart = first
+        var currentEnd = first
+
+        for date in sorted.dropFirst() {
+            let nextDay = calendar.date(byAdding: .day, value: 1, to: currentEnd) ?? currentEnd
+            if calendar.isDate(date, inSameDayAs: nextDay) {
+                currentEnd = date
+            } else {
+                ranges.append((currentStart, currentEnd))
+                currentStart = date
+                currentEnd = date
+            }
+        }
+
+        ranges.append((currentStart, currentEnd))
+        return ranges
+    }
+
+    private static func dates(from startDate: Date, through endDate: Date) -> [Date] {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: startDate)
+        let end = calendar.startOfDay(for: endDate)
+        guard start <= end else { return [] }
+
+        var dates: [Date] = []
+        var current = start
+        while current <= end {
+            dates.append(current)
+            guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
+            current = next
+        }
+        return dates
+    }
+}
+
+private enum TripPlannerAvailabilityEditorTab: String, CaseIterable, Identifiable {
+    case myDates
+    case bestMatches
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .myDates:
+            return "My dates"
+        case .bestMatches:
+            return "Best matches"
+        }
+    }
+}
+
+private struct TripPlannerBestMatchHero: View {
+    let overlap: TripPlannerAvailabilityOverlap
+    let actionTitle: String
+    let action: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: overlap.isFullMatch ? "sparkles" : "calendar.badge.clock")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(.black)
+                    .frame(width: 42, height: 42)
+                    .background(Circle().fill(Color.white.opacity(0.78)))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(overlap.isFullMatch ? "Everyone can make this" : "Strong match")
+                        .font(.system(size: 17, weight: .black, design: .rounded))
+                        .foregroundStyle(.black)
+
+                    Text(TripPlannerDateFormatter.rangeText(start: overlap.startDate, end: displayEndDate) ?? "Shared window")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.78))
+                }
+
+                Spacer()
+            }
+
+            HStack(spacing: 10) {
+                TripPlannerBadge(text: "\(overlap.exactParticipantCount)/\(overlap.totalParticipantCount) exact")
+
+                Spacer()
+
+                Button(action: action) {
+                    Text(actionTitle)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(Capsule().fill(Color.black))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color(red: 0.91, green: 0.84, blue: 0.64).opacity(0.78))
+        )
+    }
+
+    private var displayEndDate: Date {
+        Calendar.current.date(byAdding: .day, value: -1, to: overlap.endDate) ?? overlap.endDate
+    }
+}
+
+private struct TripPlannerAvailabilitySelectionMonth: View {
+    let month: Date
+    let proposals: [TripPlannerAvailabilityProposal]
+    let participants: [TripPlannerAvailabilityParticipant]
+    let selectedDates: Set<Date>
+    let flexibleMonthSelected: Bool
+    let onToggleDate: (Date) -> Void
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
+
+    private var daySlots: [Date?] {
+        TripPlannerAvailabilityCalculator.daySlots(for: month)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(TripPlannerAvailabilityCalculator.monthTitle(for: month))
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.black)
+
+                Spacer()
+
+                if flexibleMonthSelected {
+                    TripPlannerBadge(text: "Flexible")
+                }
+            }
+
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(TripPlannerAvailabilityCalculator.weekdaySymbols(), id: \.self) { symbol in
+                    Text(symbol)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.black.opacity(0.55))
+                        .frame(maxWidth: .infinity)
+                }
+
+                ForEach(Array(daySlots.enumerated()), id: \.offset) { _, day in
+                    if let day {
+                        TripPlannerAvailabilitySelectionDayCell(
+                            date: day,
+                            month: month,
+                            selectedDates: selectedDates,
+                            availableCount: availableCount(on: day),
+                            participantCount: participants.count,
+                            onTap: { onToggleDate(day) }
+                        )
+                    } else {
+                        Color.clear
+                            .frame(height: 44)
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.72))
+        )
+    }
+
+    private func availableCount(on date: Date) -> Int {
+        participants.reduce(into: 0) { count, participant in
+            let isAvailable = proposals.contains { proposal in
+                proposal.participantId == participant.id
+                    && TripPlannerAvailabilityCalculator.includes(date: date, in: proposal)
+            }
+            if isAvailable {
+                count += 1
+            }
+        }
+    }
+}
+
+private struct TripPlannerAvailabilitySelectionDayCell: View {
+    let date: Date
+    let month: Date
+    let selectedDates: Set<Date>
+    let availableCount: Int
+    let participantCount: Int
+    let onTap: () -> Void
+
+    private var isSelected: Bool {
+        selectedDates.contains(Calendar.current.startOfDay(for: date))
+    }
+
+    private var inMonth: Bool {
+        Calendar.current.isDate(date, equalTo: month, toGranularity: .month)
+    }
+
+    private var availabilityText: String {
+        guard availableCount > 0 else { return "" }
+        return "\(availableCount)"
+    }
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 3) {
+                Text("\(Calendar.current.component(.day, from: date))")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(isSelected ? .white : .black)
+
+                Text(availabilityText)
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundStyle(isSelected ? .white.opacity(0.86) : .black.opacity(0.55))
+                    .frame(height: 10)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(backgroundColor)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(borderColor, lineWidth: isSelected ? 2 : 1)
+            )
+            .opacity(inMonth ? 1 : 0.32)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var backgroundColor: Color {
+        if isSelected {
+            return .black
+        }
+        if participantCount > 0, availableCount == participantCount {
+            return Color(red: 0.91, green: 0.84, blue: 0.64)
+        }
+        if availableCount > 0 {
+            return Color.white.opacity(0.94)
+        }
+        return Color.black.opacity(0.05)
+    }
+
+    private var borderColor: Color {
+        if isSelected {
+            return .black
+        }
+        if participantCount > 0, availableCount == participantCount {
+            return Color.black.opacity(0.24)
+        }
+        return Color.black.opacity(0.08)
+    }
+}
+
+private struct TripPlannerAvailabilityMatchCard: View {
+    let rank: Int
+    let overlap: TripPlannerAvailabilityOverlap
+    let onUse: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text("\(rank)")
+                .font(.system(size: 15, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(width: 34, height: 34)
+                .background(Circle().fill(Color.black))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(TripPlannerDateFormatter.rangeText(start: overlap.startDate, end: displayEndDate) ?? "Shared window")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.black)
+
+                Text(overlap.isFullMatch ? "Everyone is available" : "\(overlap.exactParticipantCount) of \(overlap.totalParticipantCount) exact matches")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.black.opacity(0.64))
+            }
+
+            Spacer()
+
+            Button(action: onUse) {
+                Text("Use")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Capsule().fill(Color.white.opacity(0.86)))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(overlap.isFullMatch ? Color(red: 0.91, green: 0.84, blue: 0.64).opacity(0.72) : Color.white.opacity(0.72))
+        )
+    }
+
+    private var displayEndDate: Date {
+        Calendar.current.date(byAdding: .day, value: -1, to: overlap.endDate) ?? overlap.endDate
+    }
+}
+
+private struct TripPlannerTravelerAvailabilityRow: View {
+    let participant: TripPlannerAvailabilityParticipant
+    let proposals: [TripPlannerAvailabilityProposal]
+    let color: Color
+    let isExpanded: Bool
+    let onToggle: () -> Void
+    let onDelete: (TripPlannerAvailabilityProposal) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button(action: onToggle) {
+                HStack(spacing: 10) {
+                    Circle()
+                        .fill(color)
+                        .frame(width: 10, height: 10)
+
+                    TripPlannerAvatarView(
+                        name: participant.name,
+                        username: participant.username ?? participant.name,
+                        avatarURL: participant.avatarURL,
+                        size: 34
+                    )
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(participant.name)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.black)
+
+                        Text("\(proposals.count) option\(proposals.count == 1 ? "" : "s")")
+                            .font(.caption)
+                            .foregroundStyle(.black.opacity(0.62))
+                    }
+
+                    Spacer()
+
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.6))
+                }
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                ForEach(proposals) { proposal in
+                    HStack(spacing: 10) {
+                        TripPlannerProposalChip(proposal: proposal, color: color)
+
+                        Spacer()
+
+                        if proposal.participantId == "self" {
+                            Button(role: .destructive) {
+                                onDelete(proposal)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(.black.opacity(0.72))
+                                    .padding(8)
+                                    .background(Circle().fill(Color.white.opacity(0.82)))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.72))
+        )
     }
 }
 
