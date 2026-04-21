@@ -3326,6 +3326,7 @@ struct TripPlannerView: View {
     @State private var ownerSnapshotsByTripID: [UUID: TripPlannerFriendSnapshot] = [:]
     @State private var preparedUserId: UUID?
     @State private var selectedTripForDetail: TripPlannerTrip?
+    @State private var selectedCountryForDetail: Country?
 
     private let profileService: ProfileService
     private let syncService: TripPlannerSyncService
@@ -3398,6 +3399,13 @@ struct TripPlannerView: View {
                                                 TripPlannerDebugLog.tripLabel(trip)
                                             )
                                             selectedTripForDetail = trip
+                                        },
+                                        onOpenCountry: { country in
+                                            TripPlannerDebugLog.probe(
+                                                "TripPlannerView.country.open",
+                                                "\(country.iso2.uppercased()) \(country.localizedDisplayName)"
+                                            )
+                                            selectedCountryForDetail = country
                                         },
                                         onDelete: {
                                             pendingDeleteTrip = trip
@@ -3587,6 +3595,9 @@ struct TripPlannerView: View {
                 )
                 tripDetailDestination(for: selectedTrip)
             }
+        }
+        .navigationDestination(item: $selectedCountryForDetail) { country in
+            CountryDetailView(country: country)
         }
     }
 
@@ -4690,6 +4701,7 @@ private struct TripPlannerDetailView: View {
     @State private var pendingDeleteChoice: TripPlannerDeleteChoice?
     @State private var checklistPresentation: TripPlannerChecklistPresentation?
     @State private var isShowingChecklistEditor = false
+    @State private var selectedCountryForDetail: Country?
 
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
     private let visaStore = VisaRequirementsStore.shared
@@ -4985,7 +4997,12 @@ private struct TripPlannerDetailView: View {
             }
             .buttonStyle(.plain)
         } content: {
-            TripPlannerCountryNavigationGrid(countries: displayedCountries)
+            TripPlannerCountryNavigationGrid(
+                countries: displayedCountries,
+                onOpenCountry: { country in
+                    selectedCountryForDetail = country
+                }
+            )
         }
     }
 
@@ -5187,6 +5204,9 @@ private struct TripPlannerDetailView: View {
                     saveAction: presentation.saveAction
                 )
             }
+        }
+        .navigationDestination(item: $selectedCountryForDetail) { country in
+            CountryDetailView(country: country)
         }
     }
 
@@ -12902,6 +12922,7 @@ private struct TripPlannerSavedTripCard: View {
     let currentUserSnapshot: TripPlannerFriendSnapshot?
     let ownerSnapshot: TripPlannerFriendSnapshot?
     let onOpen: () -> Void
+    let onOpenCountry: (Country) -> Void
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
@@ -13058,7 +13079,10 @@ private struct TripPlannerSavedTripCard: View {
                 }
             }
 
-            TripPlannerSavedTripCountryPreview(countryIds: trip.countryIds)
+            TripPlannerSavedTripCountryPreview(
+                countryIds: trip.countryIds,
+                onOpenCountry: onOpenCountry
+            )
 
             if !trip.notes.isEmpty {
                 Text(trip.notes)
@@ -13908,16 +13932,18 @@ private enum TripPlannerCountryLookup {
 
 private struct TripPlannerCountryNavigationGrid: View {
     let countries: [Country]
+    let onOpenCountry: (Country) -> Void
 
     private let columns = [
+        GridItem(.flexible(), spacing: 8),
         GridItem(.flexible(), spacing: 8)
     ]
 
     var body: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
             ForEach(countries) { country in
-                NavigationLink {
-                    CountryDetailView(country: country)
+                Button {
+                    onOpenCountry(country)
                 } label: {
                     HStack(spacing: 8) {
                         Text("\(country.flagEmoji) \(country.localizedDisplayName)")
@@ -13948,6 +13974,7 @@ private struct TripPlannerCountryNavigationGrid: View {
 
 private struct TripPlannerSavedTripCountryPreview: View {
     let countryIds: [String]
+    let onOpenCountry: (Country) -> Void
 
     private var previewCountries: [Country] {
         Array(TripPlannerCountryLookup.countries(for: countryIds).prefix(6))
@@ -13965,8 +13992,8 @@ private struct TripPlannerSavedTripCountryPreview: View {
     var body: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
             ForEach(previewCountries) { country in
-                NavigationLink {
-                    CountryDetailView(country: country)
+                Button {
+                    onOpenCountry(country)
                 } label: {
                     HStack(spacing: 7) {
                         Text("\(country.flagEmoji) \(country.localizedDisplayName)")
