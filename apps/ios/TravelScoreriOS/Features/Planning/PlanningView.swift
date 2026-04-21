@@ -3577,7 +3577,6 @@ struct TripPlannerView: View {
                 "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
             )
             await Task.yield()
-            try? await Task.sleep(nanoseconds: 250_000_000)
             let hasCachedCurrentUserProfile = sessionManager.userId.flatMap { profileService.cachedProfile(userId: $0) } != nil
             async let tripRefresh: Void = store.loadInitialTripsIfNeeded()
 
@@ -7703,8 +7702,12 @@ private struct TripPlannerChecklistEditorView: View {
         })
     }
 
+    private var tripLocalCurrencyCodes: [String] {
+        uniqueCurrencyCodes(trip.countryIds.compactMap { countryCurrencyCodesByID[$0.uppercased()] })
+    }
+
     private var tripLocalCurrencyCode: String? {
-        trip.countryIds.compactMap { countryCurrencyCodesByID[$0.uppercased()] }.first
+        tripLocalCurrencyCodes.first
     }
 
     private var displayedMonthPage: Date? {
@@ -7739,7 +7742,7 @@ private struct TripPlannerChecklistEditorView: View {
                                     TripPlannerVisaChecklistView(
                                         overallItems: $overallItems,
                                         currencyCode: plannerCurrencyCode,
-                                        localCurrencyCode: tripLocalCurrencyCode,
+                                        localCurrencyCodes: tripLocalCurrencyCodes,
                                         actorId: actorId,
                                         actorName: actorName
                                     )
@@ -7844,7 +7847,7 @@ private struct TripPlannerChecklistEditorView: View {
                                                     item: bindingForDayItem(dayIndex: selectedDayIndex, itemIndex: itemIndex),
                                                     planDate: plan.date,
                                                     currencyCode: plannerCurrencyCode,
-                                                    localCurrencyCode: localCurrencyCode(for: plan),
+                                                    localCurrencyCodes: localCurrencyCodes(for: plan, at: selectedDayIndex),
                                                     saveFeedbackNonce: saveFeedbackNonce,
                                                     actorId: actorId,
                                                     actorName: actorName,
@@ -7984,7 +7987,7 @@ private struct TripPlannerChecklistEditorView: View {
                     item: packingDraft.item,
                     progressEntries: packingDraft.progressEntries,
                     currencyCode: plannerCurrencyCode,
-                    localCurrencyCode: tripLocalCurrencyCode,
+                    localCurrencyCodes: tripLocalCurrencyCodes,
                     actorId: actorId,
                     actorName: actorName,
                     commitAction: packingCommitAction
@@ -8018,12 +8021,45 @@ private struct TripPlannerChecklistEditorView: View {
         return TripPlannerChecklistTemplates.daySuggestions.filter { !existingKeys.contains(suggestionKey(for: $0)) }
     }
 
-    private func localCurrencyCode(for plan: TripPlannerDayPlan) -> String? {
-        guard let countryId = plan.countryId?.uppercased() else {
-            return tripLocalCurrencyCode
+    private func localCurrencyCodes(for plan: TripPlannerDayPlan, at dayIndex: Int? = nil) -> [String] {
+        if plan.kind == .travel {
+            var codes: [String] = []
+
+            if let dayIndex,
+               let previousCurrencyCode = countryCurrencyCode(for: previousPlan(for: dayIndex)) {
+                codes.append(previousCurrencyCode)
+            }
+
+            if let dayIndex,
+               let nextCurrencyCode = countryCurrencyCode(for: nextPlan(for: dayIndex)) {
+                codes.append(nextCurrencyCode)
+            }
+
+            return uniqueCurrencyCodes(codes.isEmpty ? tripLocalCurrencyCodes : codes)
         }
 
-        return countryCurrencyCodesByID[countryId] ?? tripLocalCurrencyCode
+        if let currencyCode = countryCurrencyCode(for: plan) {
+            return [currencyCode]
+        }
+
+        return tripLocalCurrencyCodes
+    }
+
+    private func countryCurrencyCode(for plan: TripPlannerDayPlan?) -> String? {
+        guard let countryId = plan?.countryId?.uppercased() else { return nil }
+        return countryCurrencyCodesByID[countryId]
+    }
+
+    private func uniqueCurrencyCodes(_ codes: [String]) -> [String] {
+        var seen = Set<String>()
+        return codes.compactMap { rawCode in
+            guard let code = AppCurrencyCatalog.normalizedCode(rawCode),
+                  seen.insert(code).inserted
+            else {
+                return nil
+            }
+            return code
+        }
     }
 
     @ViewBuilder
@@ -8491,7 +8527,7 @@ private struct TripPlannerChecklistMonthCard: View {
 private struct TripPlannerVisaChecklistView: View {
     @Binding var overallItems: [TripPlannerChecklistItem]
     let currencyCode: String
-    var localCurrencyCode: String? = nil
+    var localCurrencyCodes: [String] = []
     let actorId: UUID?
     let actorName: String
 
@@ -8525,7 +8561,7 @@ private struct TripPlannerVisaChecklistView: View {
                                             item: visaBinding(at: index),
                                             planDate: Date(),
                                             currencyCode: currencyCode,
-                                            localCurrencyCode: localCurrencyCode,
+                                            localCurrencyCodes: localCurrencyCodes,
                                             saveFeedbackNonce: 0,
                                             actorId: actorId,
                                             actorName: actorName,
@@ -8566,7 +8602,7 @@ private struct TripPlannerPackingListView: View {
     @State private var item: TripPlannerChecklistItem
     @State private var progressEntries: [TripPlannerPackingProgress]
     let currencyCode: String
-    let localCurrencyCode: String?
+    let localCurrencyCodes: [String]
     let actorId: UUID?
     let actorName: String
     let commitAction: TripPlannerPackingCommitAction
@@ -8575,7 +8611,7 @@ private struct TripPlannerPackingListView: View {
         item: TripPlannerChecklistItem,
         progressEntries: [TripPlannerPackingProgress],
         currencyCode: String,
-        localCurrencyCode: String? = nil,
+        localCurrencyCodes: [String] = [],
         actorId: UUID?,
         actorName: String,
         commitAction: TripPlannerPackingCommitAction
@@ -8583,7 +8619,7 @@ private struct TripPlannerPackingListView: View {
         self._item = State(initialValue: item)
         self._progressEntries = State(initialValue: progressEntries)
         self.currencyCode = currencyCode
-        self.localCurrencyCode = localCurrencyCode
+        self.localCurrencyCodes = localCurrencyCodes
         self.actorId = actorId
         self.actorName = actorName
         self.commitAction = commitAction
@@ -8630,7 +8666,7 @@ private struct TripPlannerPackingListView: View {
                                     item: $item,
                                     planDate: Date(),
                                     currencyCode: currencyCode,
-                                    localCurrencyCode: localCurrencyCode,
+                                    localCurrencyCodes: localCurrencyCodes,
                                     saveFeedbackNonce: 0,
                                     actorId: actorId,
                                     actorName: actorName,
@@ -8860,7 +8896,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
     @Binding var item: TripPlannerChecklistItem
     let planDate: Date
     let currencyCode: String
-    let localCurrencyCode: String?
+    let localCurrencyCodes: [String]
     let saveFeedbackNonce: Int
     let actorId: UUID?
     let actorName: String
@@ -8921,7 +8957,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
         item: Binding<TripPlannerChecklistItem>,
         planDate: Date,
         currencyCode: String,
-        localCurrencyCode: String? = nil,
+        localCurrencyCodes: [String] = [],
         saveFeedbackNonce: Int,
         actorId: UUID?,
         actorName: String,
@@ -8934,7 +8970,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
         self._item = item
         self.planDate = planDate
         self.currencyCode = currencyCode
-        self.localCurrencyCode = localCurrencyCode
+        self.localCurrencyCodes = localCurrencyCodes
         self.saveFeedbackNonce = saveFeedbackNonce
         self.actorId = actorId
         self.actorName = actorName
@@ -9007,9 +9043,8 @@ private struct TripPlannerChecklistItemEditorRow: View {
                                     currencyCode: linkedExpenseCurrencyCode,
                                     currencySelection: $linkedExpenseCurrencyCode,
                                     suggestedCurrencyCodes: [
-                                        currencyPreferenceStore.defaultCurrencyCode,
-                                        localCurrencyCode
-                                    ],
+                                        currencyPreferenceStore.defaultCurrencyCode
+                                    ] + localCurrencyCodes.map(Optional.some),
                                     text: Binding(
                                         get: { linkedExpenseAmountText },
                                         set: { newValue in
@@ -9452,6 +9487,17 @@ private struct TripPlannerExpensesEditorView: View {
         participants.map(TripPlannerExpenseParticipant.init(friend:))
     }
 
+    private var countryCurrencyCodesByID: [String: String] {
+        Dictionary(uniqueKeysWithValues: TripPlannerCountryLookup.countries(for: trip.countryIds).compactMap { country in
+            guard let currencyCode = country.currencyCode else { return nil }
+            return (country.id.uppercased(), currencyCode)
+        })
+    }
+
+    private var tripLocalCurrencyCodes: [String] {
+        uniqueCurrencyCodes(trip.countryIds.compactMap { countryCurrencyCodesByID[$0.uppercased()] })
+    }
+
     private var balances: [TripPlannerExpenseBalance] {
         var totals = Dictionary(uniqueKeysWithValues: expenseParticipants.map { ($0.id, 0.0) })
 
@@ -9585,6 +9631,7 @@ private struct TripPlannerExpensesEditorView: View {
                 TripPlannerExpenseComposerOverlay(
                     participants: expenseParticipants,
                     currencyCode: currencyCode,
+                    suggestedCurrencyCodes: suggestedCurrencyCodes(for:),
                     existingExpense: composerPresentation.expense,
                     onClose: {
                         self.composerPresentation = nil
@@ -9647,6 +9694,54 @@ private struct TripPlannerExpensesEditorView: View {
         expenses[index] = expense
         expenses = Self.sortedExpenses(expenses)
         persistExpenses()
+    }
+
+    private func suggestedCurrencyCodes(for date: Date) -> [String] {
+        let calendar = Calendar.current
+        let day = calendar.startOfDay(for: date)
+        guard let dayIndex = trip.dayPlans.firstIndex(where: { calendar.isDate($0.date, inSameDayAs: day) }) else {
+            return tripLocalCurrencyCodes
+        }
+
+        let plan = trip.dayPlans[dayIndex]
+        if plan.kind == .travel {
+            var codes: [String] = []
+
+            if dayIndex > 0,
+               let previousCode = countryCurrencyCode(for: trip.dayPlans[dayIndex - 1]) {
+                codes.append(previousCode)
+            }
+
+            if dayIndex < trip.dayPlans.count - 1,
+               let nextCode = countryCurrencyCode(for: trip.dayPlans[dayIndex + 1]) {
+                codes.append(nextCode)
+            }
+
+            return uniqueCurrencyCodes(codes.isEmpty ? tripLocalCurrencyCodes : codes)
+        }
+
+        if let currencyCode = countryCurrencyCode(for: plan) {
+            return [currencyCode]
+        }
+
+        return tripLocalCurrencyCodes
+    }
+
+    private func countryCurrencyCode(for plan: TripPlannerDayPlan?) -> String? {
+        guard let countryId = plan?.countryId?.uppercased() else { return nil }
+        return countryCurrencyCodesByID[countryId]
+    }
+
+    private func uniqueCurrencyCodes(_ codes: [String]) -> [String] {
+        var seen = Set<String>()
+        return codes.compactMap { rawCode in
+            guard let code = AppCurrencyCatalog.normalizedCode(rawCode),
+                  seen.insert(code).inserted
+            else {
+                return nil
+            }
+            return code
+        }
     }
 
     private func persistExpenses() {
@@ -9757,6 +9852,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
 
     let participants: [TripPlannerExpenseParticipant]
     let currencyCode: String
+    let suggestedCurrencyCodes: (Date) -> [String]
     let existingExpense: TripPlannerExpense?
     let onClose: () -> Void
     let onDeleteExpense: (() -> Void)?
@@ -9779,6 +9875,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
     init(
         participants: [TripPlannerExpenseParticipant],
         currencyCode: String,
+        suggestedCurrencyCodes: @escaping (Date) -> [String] = { _ in [] },
         existingExpense: TripPlannerExpense? = nil,
         onClose: @escaping () -> Void,
         onDeleteExpense: (() -> Void)? = nil,
@@ -9786,6 +9883,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
     ) {
         self.participants = participants
         self.currencyCode = currencyCode
+        self.suggestedCurrencyCodes = suggestedCurrencyCodes
         self.existingExpense = existingExpense
         self.onClose = onClose
         self.onDeleteExpense = onDeleteExpense
@@ -9977,6 +10075,9 @@ private struct TripPlannerExpenseComposerOverlay: View {
                                 title: "Amount",
                                 currencyCode: entryCurrencyCode,
                                 currencySelection: $entryCurrencyCode,
+                                suggestedCurrencyCodes: [
+                                    currencyPreferenceStore.defaultCurrencyCode
+                                ] + suggestedCurrencyCodes(expenseDate).map(Optional.some),
                                 text: $amountText,
                                 placeholder: "0.00"
                             )
