@@ -3427,13 +3427,6 @@ struct TripPlannerView: View {
                                             )
                                             selectedTripForDetail = trip
                                         },
-                                        onOpenCountry: { country in
-                                            TripPlannerDebugLog.probe(
-                                                "TripPlannerView.country.open",
-                                                "\(country.iso2.uppercased()) \(country.localizedDisplayName)"
-                                            )
-                                            selectedCountryForDetail = country
-                                        },
                                         onDelete: {
                                             pendingDeleteTrip = trip
                                         },
@@ -13494,7 +13487,6 @@ private struct TripPlannerSavedTripCard: View {
     let currentUserSnapshot: TripPlannerFriendSnapshot?
     let ownerSnapshot: TripPlannerFriendSnapshot?
     let onOpen: () -> Void
-    let onOpenCountry: (Country) -> Void
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
@@ -13660,10 +13652,7 @@ private struct TripPlannerSavedTripCard: View {
                 }
             }
 
-            TripPlannerSavedTripCountryPreview(
-                countryIds: trip.countryIds,
-                onOpenCountry: onOpenCountry
-            )
+            TripPlannerSavedTripCountryPreview(countryIds: trip.countryIds)
 
             if !trip.notes.isEmpty {
                 Text(trip.notes)
@@ -14624,7 +14613,6 @@ private struct TripPlannerCountryNavigationGrid: View {
 
 private struct TripPlannerSavedTripCountryPreview: View {
     let countryIds: [String]
-    let onOpenCountry: (Country) -> Void
 
     private var previewCountries: [Country] {
         Array(TripPlannerCountryLookup.countries(for: countryIds).prefix(6))
@@ -14642,31 +14630,22 @@ private struct TripPlannerSavedTripCountryPreview: View {
     var body: some View {
         LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
             ForEach(previewCountries) { country in
-                Button {
-                    onOpenCountry(country)
-                } label: {
-                    HStack(spacing: 7) {
-                        Text("\(country.flagEmoji) \(country.localizedDisplayName)")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.black)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(2)
+                HStack(spacing: 7) {
+                    Text("\(country.flagEmoji) \(country.localizedDisplayName)")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.black)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
 
-                        Spacer(minLength: 0)
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(.black.opacity(0.44))
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color.white.opacity(0.78))
-                    )
+                    Spacer(minLength: 0)
                 }
-                .buttonStyle(.plain)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.white.opacity(0.78))
+                )
             }
 
             if remainingCount > 0 {
