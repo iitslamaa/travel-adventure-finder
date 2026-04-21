@@ -134,7 +134,6 @@
 		17B478C72F55FFAF002B1865 /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B478C62F55FFAF002B1865 /* ReviewManager.swift */; };
 		17C1D3332F58F88A00FD768B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C1D3322F58F88800FD768B /* Theme.swift */; };
 		17C1D3362F594CDA00FD768B /* PlanningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C1D3352F594CD700FD768B /* PlanningView.swift */; };
-		E1A111112F90000100ABCDEF /* TripPlannerUsernameSearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A111102F90000100ABCDEF /* TripPlannerUsernameSearchController.swift */; };
 		17E1053D2F4F8A7B00BEED72 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 17E1053C2F4F8A7B00BEED72 /* Nuke */; };
 		17E1053F2F4F8A7B00BEED72 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 17E1053E2F4F8A7B00BEED72 /* NukeUI */; };
 		17EC41DE2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17EC41DD2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift */; };
@@ -153,6 +152,7 @@
 		17F2E1602F4C3C27009A7E6D /* CountryScoreSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F2E15F2F4C3C27009A7E6D /* CountryScoreSection.swift */; };
 		17F9A0012F60000100AA0001 /* VisaRequirementsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */; };
 		17F9A0012F70000100000001 /* CountryOverviewDescriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */; };
+		E1A111112F90000100ABCDEF /* TripPlannerUsernameSearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A111102F90000100ABCDEF /* TripPlannerUsernameSearchController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -285,7 +285,6 @@
 		17B478C62F55FFAF002B1865 /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReviewManager.swift; path = Core/Services/ReviewManager.swift; sourceTree = SOURCE_ROOT; };
 		17C1D3322F58F88800FD768B /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		17C1D3352F594CD700FD768B /* PlanningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningView.swift; sourceTree = "<group>"; };
-		E1A111102F90000100ABCDEF /* TripPlannerUsernameSearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlannerUsernameSearchController.swift; sourceTree = "<group>"; };
 		17EC41DD2F4BB204004B80DA /* ScoreWorldMapRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapRepresentable.swift; sourceTree = "<group>"; };
 		17EC41DF2F4BB213004B80DA /* ScoreWorldMapCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapCoordinator.swift; sourceTree = "<group>"; };
 		17EC41E12F4BB227004B80DA /* ScoreWorldMapRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreWorldMapRenderer.swift; sourceTree = "<group>"; };
@@ -301,6 +300,7 @@
 		17F2E15F2F4C3C27009A7E6D /* CountryScoreSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryScoreSection.swift; sourceTree = "<group>"; };
 		17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisaRequirementsStore.swift; sourceTree = "<group>"; };
 		17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryOverviewDescriptionStore.swift; sourceTree = "<group>"; };
+		E1A111102F90000100ABCDEF /* TripPlannerUsernameSearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlannerUsernameSearchController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1363,7 +1363,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TravelScorerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SVZL633CJV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1379,7 +1379,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2;
+				MARKETING_VERSION = 2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1399,7 +1399,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TravelScorerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SVZL633CJV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1415,7 +1415,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2;
+				MARKETING_VERSION = 2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
