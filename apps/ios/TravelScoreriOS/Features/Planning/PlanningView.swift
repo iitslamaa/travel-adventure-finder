@@ -3429,11 +3429,6 @@ struct TripPlannerView: View {
                                         },
                                         onDelete: {
                                             pendingDeleteTrip = trip
-                                        },
-                                        onAddToCalendar: {
-                                            Task {
-                                                await openCalendar(for: trip)
-                                            }
                                         }
                                     )
                                 }
@@ -13488,7 +13483,6 @@ private struct TripPlannerSavedTripCard: View {
     let ownerSnapshot: TripPlannerFriendSnapshot?
     let onOpen: () -> Void
     let onDelete: () -> Void
-    let onAddToCalendar: () -> Void
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
 
     private var isDisplayedGroupTrip: Bool {
@@ -13660,22 +13654,6 @@ private struct TripPlannerSavedTripCard: View {
                     .foregroundStyle(.black.opacity(0.74))
             }
 
-            if trip.startDate != nil, trip.endDate != nil {
-                Button {
-                    onAddToCalendar()
-                } label: {
-                    Label("trip_planner.actions.add_to_calendar", systemImage: "calendar.badge.plus")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.white.opacity(0.85))
-                        )
-                }
-                .buttonStyle(.plain)
-            }
         }
         .padding(18)
         .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
