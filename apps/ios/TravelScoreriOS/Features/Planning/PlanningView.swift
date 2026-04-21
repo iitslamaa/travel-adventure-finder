@@ -7698,7 +7698,7 @@ private struct TripPlannerChecklistEditorView: View {
     private var countryCurrencyCodesByID: [String: String] {
         Dictionary(uniqueKeysWithValues: countries.compactMap { country in
             guard let currencyCode = country.currencyCode else { return nil }
-            return (country.id, currencyCode)
+            return (country.id.uppercased(), currencyCode)
         })
     }
 
@@ -14065,10 +14065,18 @@ private struct TripPlannerChipItem: Identifiable, Hashable {
 
 private enum TripPlannerCountryLookup {
     static func countries(for ids: [String]) -> [Country] {
+        let cachedCountries = CountryAPI.loadCachedCountries() ?? []
+        let countriesByID = Dictionary(uniqueKeysWithValues: cachedCountries.map { ($0.id.uppercased(), $0) })
+
         return ids.map { id in
-            Country(
-                iso2: id,
-                name: CountrySelectionFormatter.localizedName(for: id),
+            let normalizedID = id.uppercased()
+            if let country = countriesByID[normalizedID] {
+                return country
+            }
+
+            return Country(
+                iso2: normalizedID,
+                name: CountrySelectionFormatter.localizedName(for: normalizedID),
                 score: nil
             )
         }
