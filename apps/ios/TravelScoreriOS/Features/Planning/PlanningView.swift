@@ -3325,6 +3325,7 @@ struct TripPlannerView: View {
     @State private var currentUserSnapshot: TripPlannerFriendSnapshot?
     @State private var ownerSnapshotsByTripID: [UUID: TripPlannerFriendSnapshot] = [:]
     @State private var preparedUserId: UUID?
+    @State private var selectedTripForDetail: TripPlannerTrip?
 
     private let profileService: ProfileService
     private let syncService: TripPlannerSyncService
@@ -3335,7 +3336,7 @@ struct TripPlannerView: View {
         self.profileService = profileService
         self.syncService = TripPlannerSyncService(supabase: SupabaseManager.shared)
         _store = StateObject(wrappedValue: TripPlannerStore())
-        _currentUserSnapshot = State(initialValue: Self.seededCurrentUserSnapshot(profileService: profileService))
+        _currentUserSnapshot = State(initialValue: nil)
         TripPlannerDebugLog.probe("TripPlannerView.init.end")
     }
 
@@ -3386,41 +3387,27 @@ struct TripPlannerView: View {
                         } else {
                             LazyVStack(spacing: 14) {
                                 ForEach(store.trips) { trip in
-                                    NavigationLink {
-                                        TripPlannerDebugProbeView(
-                                            "TripPlannerView.trip_detail.destination_builder",
-                                            TripPlannerDebugLog.tripLabel(trip)
-                                        )
-                                        TripPlannerLazyDestination {
-                                            TripPlannerDebugProbeView(
-                                                "TripPlannerView.trip_detail.lazy_destination_body",
+                                    TripPlannerSavedTripCard(
+                                        trip: trip,
+                                        isNewSharedTrip: pendingSharedTripIDs.contains(trip.id),
+                                        currentUserSnapshot: currentUserSnapshot,
+                                        ownerSnapshot: ownerSnapshotsByTripID[trip.id],
+                                        onOpen: {
+                                            TripPlannerDebugLog.probe(
+                                                "TripPlannerView.trip_card.open",
                                                 TripPlannerDebugLog.tripLabel(trip)
                                             )
-                                            tripDetailDestination(for: trip)
-                                        }
-                                    } label: {
-                                        TripPlannerSavedTripCard(
-                                            trip: trip,
-                                            isNewSharedTrip: pendingSharedTripIDs.contains(trip.id),
-                                            currentUserSnapshot: currentUserSnapshot,
-                                            ownerSnapshot: ownerSnapshotsByTripID[trip.id],
-                                            onDelete: {
-                                                pendingDeleteTrip = trip
-                                            },
-                                            onAddToCalendar: {
-                                                Task {
-                                                    await openCalendar(for: trip)
-                                                }
+                                            selectedTripForDetail = trip
+                                        },
+                                        onDelete: {
+                                            pendingDeleteTrip = trip
+                                        },
+                                        onAddToCalendar: {
+                                            Task {
+                                                await openCalendar(for: trip)
                                             }
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-                                    .simultaneousGesture(TapGesture().onEnded {
-                                        TripPlannerDebugLog.probe(
-                                            "TripPlannerView.trip_card.tap",
-                                            TripPlannerDebugLog.tripLabel(trip)
-                                        )
-                                    })
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -3591,6 +3578,15 @@ struct TripPlannerView: View {
                 "TripPlannerView.onAppear",
                 "trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
             )
+        }
+        .navigationDestination(item: $selectedTripForDetail) { selectedTrip in
+            TripPlannerLazyDestination {
+                TripPlannerDebugProbeView(
+                    "TripPlannerView.trip_detail.lazy_destination_body",
+                    TripPlannerDebugLog.tripLabel(selectedTrip)
+                )
+                tripDetailDestination(for: selectedTrip)
+            }
         }
     }
 
@@ -12905,6 +12901,7 @@ private struct TripPlannerSavedTripCard: View {
     let isNewSharedTrip: Bool
     let currentUserSnapshot: TripPlannerFriendSnapshot?
     let ownerSnapshot: TripPlannerFriendSnapshot?
+    let onOpen: () -> Void
     let onDelete: () -> Void
     let onAddToCalendar: () -> Void
     private let profileService = ProfileService(supabase: SupabaseManager.shared)
@@ -13061,12 +13058,7 @@ private struct TripPlannerSavedTripCard: View {
                 }
             }
 
-            TripPlannerChipGrid(
-                items: trip.countryChipItems.map {
-                    TripPlannerChipItem(id: $0.id, title: $0.title, isSelected: false)
-                },
-                onTap: { _ in }
-            )
+            TripPlannerSavedTripCountryPreview(countryIds: trip.countryIds)
 
             if !trip.notes.isEmpty {
                 Text(trip.notes)
@@ -13092,6 +13084,8 @@ private struct TripPlannerSavedTripCard: View {
             }
         }
         .padding(18)
+        .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .onTapGesture(perform: onOpen)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .fill(Color(red: 0.97, green: 0.94, blue: 0.88).opacity(0.94))
@@ -13900,11 +13894,22 @@ private struct TripPlannerChipItem: Identifiable, Hashable {
     let isSelected: Bool
 }
 
+private enum TripPlannerCountryLookup {
+    static func countries(for ids: [String]) -> [Country] {
+        return ids.map { id in
+            Country(
+                iso2: id,
+                name: CountrySelectionFormatter.localizedName(for: id),
+                score: nil
+            )
+        }
+    }
+}
+
 private struct TripPlannerCountryNavigationGrid: View {
     let countries: [Country]
 
     private let columns = [
-        GridItem(.flexible(), spacing: 8),
         GridItem(.flexible(), spacing: 8)
     ]
 
@@ -13919,6 +13924,7 @@ private struct TripPlannerCountryNavigationGrid: View {
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(.black)
                             .multilineTextAlignment(.leading)
+                            .lineLimit(2)
 
                         Spacer(minLength: 0)
 
@@ -13935,6 +13941,73 @@ private struct TripPlannerCountryNavigationGrid: View {
                     )
                 }
                 .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+private struct TripPlannerSavedTripCountryPreview: View {
+    let countryIds: [String]
+
+    private var previewCountries: [Country] {
+        Array(TripPlannerCountryLookup.countries(for: countryIds).prefix(6))
+    }
+
+    private var remainingCount: Int {
+        max(countryIds.count - previewCountries.count, 0)
+    }
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 8),
+        GridItem(.flexible(), spacing: 8)
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+            ForEach(previewCountries) { country in
+                NavigationLink {
+                    CountryDetailView(country: country)
+                } label: {
+                    HStack(spacing: 7) {
+                        Text("\(country.flagEmoji) \(country.localizedDisplayName)")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.black)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(2)
+
+                        Spacer(minLength: 0)
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.black.opacity(0.44))
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Color.white.opacity(0.78))
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
+            if remainingCount > 0 {
+                HStack(spacing: 7) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 11, weight: .bold))
+
+                    Text("\(remainingCount) more")
+                        .font(.system(size: 13, weight: .bold))
+                }
+                .foregroundStyle(.black.opacity(0.68))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.white.opacity(0.58))
+                )
             }
         }
     }
