@@ -11876,7 +11876,8 @@ private struct TripPlannerStatsPreviewSection: View {
                 font: .system(size: 18, weight: .bold),
                 fontSize: 18,
                 color: .black,
-                maximumFractionDigits: 0
+                maximumFractionDigits: 2,
+                minimumFractionDigits: 2
             )
         } else {
             Text("Add dates")
@@ -12274,7 +12275,8 @@ private struct TripPlannerStatsSection: View {
                             font: .system(size: 21, weight: .bold),
                             fontSize: 21,
                             color: .black,
-                            maximumFractionDigits: 0
+                            maximumFractionDigits: 2,
+                            minimumFractionDigits: 2
                         )
                     } else {
                         Text(String(localized: "trip_planner.stats.add_trip_dates"))
@@ -12298,7 +12300,8 @@ private struct TripPlannerStatsSection: View {
                             font: .system(size: 21, weight: .bold),
                             fontSize: 21,
                             color: .black,
-                            maximumFractionDigits: 0
+                            maximumFractionDigits: 2,
+                            minimumFractionDigits: 2
                         )
                     } else {
                         Text(String(localized: "trip_planner.stats.na"))
@@ -12860,7 +12863,8 @@ private struct TripPlannerEstimatedCostBreakdownCard: View {
                         currencyCode: currencyCode,
                         font: .system(size: 13, weight: .bold),
                         fontSize: 13,
-                        color: .black
+                        color: .black,
+                        minimumFractionDigits: 2
                     )
                 }
             }
@@ -12883,7 +12887,8 @@ private struct TripPlannerEstimatedCostBreakdownCard: View {
                     currencyCode: currencyCode,
                     font: .system(size: 14, weight: .black),
                     fontSize: 14,
-                    color: .black
+                    color: .black,
+                    minimumFractionDigits: 2
                 )
             }
         }
