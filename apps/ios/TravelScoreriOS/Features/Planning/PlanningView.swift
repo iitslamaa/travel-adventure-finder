@@ -5873,15 +5873,18 @@ private struct TripPlannerInlineAvailabilityEditor: View {
         self.trip = trip
         self.onSave = onSave
         let currentUserId = SupabaseManager.shared.currentUserId
-        let normalizedProposals = trip.normalizedAvailabilityProposals(currentUserId: currentUserId)
-            .sorted { $0.startDate < $1.startDate }
+        let currentParticipantId = Self.currentParticipantID(for: trip, currentUserId: currentUserId)
+        let normalizedProposals = Self.editableProposals(
+            from: trip.normalizedAvailabilityProposals(currentUserId: currentUserId),
+            currentParticipantId: currentParticipantId
+        )
         let initialMonth = TripPlannerAvailabilityCalculator.primaryDisplayMonth(for: trip)
             ?? TripPlannerAvailabilityCalculator.startOfMonth(for: Date())
         _proposals = State(initialValue: normalizedProposals)
         _selectedMonth = State(initialValue: initialMonth)
         _selectedDates = State(initialValue: Self.selectedDates(
             from: normalizedProposals,
-            currentParticipantId: Self.currentParticipantID(for: trip, currentUserId: currentUserId)
+            currentParticipantId: currentParticipantId
         ))
     }
 
@@ -5904,14 +5907,6 @@ private struct TripPlannerInlineAvailabilityEditor: View {
     private var everyoneHasAvailability: Bool {
         !participants.isEmpty && participants.allSatisfy { participant in
             hasAvailability(for: participant.id)
-        }
-    }
-
-    private var currentMonthIsFlexible: Bool {
-        proposals.contains {
-            $0.participantId == currentParticipantId
-                && $0.kind == .flexibleMonth
-                && TripPlannerAvailabilityCalculator.startOfMonth(for: $0.startDate) == selectedMonth
         }
     }
 
@@ -5946,41 +5941,19 @@ private struct TripPlannerInlineAvailabilityEditor: View {
                 proposals: proposals,
                 participants: participants,
                 selectedDates: selectedDates,
-                flexibleMonthSelected: currentMonthIsFlexible,
                 selectedColor: currentParticipantColor,
                 onToggleDate: toggleSelectedDate
             )
 
             HStack(spacing: 10) {
-                Button {
-                    toggleFlexibleMonth()
-                } label: {
-                    Label(
-                        currentMonthIsFlexible ? "All month" : "Available all month",
-                        systemImage: currentMonthIsFlexible ? "checkmark.circle.fill" : "calendar.badge.clock"
-                    )
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(TripPlannerAvailabilityTheme.ink)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(currentMonthIsFlexible ? TripPlannerAvailabilityTheme.gold : Color.white.opacity(0.86))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(currentMonthIsFlexible ? TripPlannerAvailabilityTheme.goldDeep.opacity(0.35) : Color.clear, lineWidth: 1)
-                            )
-                    )
-                }
-                .buttonStyle(.plain)
-
                 Button(role: .destructive) {
                     clearMyAvailability()
                 } label: {
                     Image(systemName: "trash")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(TripPlannerAvailabilityTheme.ink.opacity(0.66))
-                        .frame(width: 46, height: 44)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
                         .background(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(Color.white.opacity(0.72))
@@ -6141,35 +6114,14 @@ private struct TripPlannerInlineAvailabilityEditor: View {
     }
 
     private func syncSelectedDatesToProposals() {
-        proposals.removeAll { $0.participantId == currentParticipantId && $0.kind == .exactDates }
+        proposals.removeAll {
+            $0.participantId == currentParticipantId
+                && ($0.kind == .exactDates || $0.kind == .flexibleMonth)
+        }
         proposals.append(contentsOf: Self.exactDateProposals(
             from: selectedDates,
             participant: currentParticipant
         ))
-        proposals.sort { $0.startDate < $1.startDate }
-        persist()
-    }
-
-    private func toggleFlexibleMonth() {
-        if currentMonthIsFlexible {
-            proposals.removeAll {
-                $0.participantId == currentParticipantId
-                    && $0.kind == .flexibleMonth
-                    && TripPlannerAvailabilityCalculator.startOfMonth(for: $0.startDate) == selectedMonth
-            }
-        } else {
-            proposals.append(
-                TripPlannerAvailabilityProposal(
-                    participantId: currentParticipantId,
-                    participantName: currentParticipant.name,
-                    participantUsername: currentParticipant.username,
-                    participantAvatarURL: currentParticipant.avatarURL,
-                    kind: .flexibleMonth,
-                    startDate: selectedMonth,
-                    endDate: TripPlannerAvailabilityCalculator.endOfMonth(for: selectedMonth)
-                )
-            )
-        }
         proposals.sort { $0.startDate < $1.startDate }
         persist()
     }
@@ -6215,10 +6167,21 @@ private struct TripPlannerInlineAvailabilityEditor: View {
     }
 
     private func resetFromTrip() {
-        let normalizedProposals = trip.normalizedAvailabilityProposals(currentUserId: sessionManager.userId)
-            .sorted { $0.startDate < $1.startDate }
+        let normalizedProposals = Self.editableProposals(
+            from: trip.normalizedAvailabilityProposals(currentUserId: sessionManager.userId),
+            currentParticipantId: currentParticipantId
+        )
         proposals = normalizedProposals
         selectedDates = Self.selectedDates(from: normalizedProposals, currentParticipantId: currentParticipantId)
+    }
+
+    private static func editableProposals(
+        from proposals: [TripPlannerAvailabilityProposal],
+        currentParticipantId: String
+    ) -> [TripPlannerAvailabilityProposal] {
+        proposals
+            .filter { !($0.participantId == currentParticipantId && $0.kind == .flexibleMonth) }
+            .sorted { $0.startDate < $1.startDate }
     }
 
     private static func selectedDates(
@@ -6323,12 +6286,16 @@ private struct TripPlannerAvailabilityEditorView: View {
     init(trip: TripPlannerTrip, onSave: @escaping (TripPlannerTrip) -> Void) {
         self.trip = trip
         self.onSave = onSave
-        let normalizedProposals = trip.normalizedAvailabilityProposals(currentUserId: SupabaseManager.shared.currentUserId)
-            .sorted { $0.startDate < $1.startDate }
+        let currentUserId = SupabaseManager.shared.currentUserId
+        let currentParticipantId = Self.currentParticipantID(for: trip, currentUserId: currentUserId)
+        let normalizedProposals = Self.editableProposals(
+            from: trip.normalizedAvailabilityProposals(currentUserId: currentUserId),
+            currentParticipantId: currentParticipantId
+        )
         _proposals = State(initialValue: normalizedProposals)
         _selectedDates = State(initialValue: Self.initialSelectedDates(
             from: normalizedProposals,
-            currentParticipantId: Self.currentParticipantID(for: trip, currentUserId: SupabaseManager.shared.currentUserId)
+            currentParticipantId: currentParticipantId
         ))
     }
 
@@ -6353,16 +6320,6 @@ private struct TripPlannerAvailabilityEditorView: View {
         let allDates = proposals.flatMap { [$0.startDate, $0.endDate] }
         let start = TripPlannerAvailabilityCalculator.startOfMonth(for: allDates.min() ?? Date())
         return (0..<12).compactMap { calendar.date(byAdding: .month, value: $0, to: start) }
-    }
-
-    private var yourFlexibleMonths: Set<Date> {
-        Set(proposals
-            .filter { $0.participantId == currentParticipantId && $0.kind == .flexibleMonth }
-            .map { TripPlannerAvailabilityCalculator.startOfMonth(for: $0.startDate) })
-    }
-
-    private var currentMonthIsFlexible: Bool {
-        yourFlexibleMonths.contains(selectedMonth)
     }
 
     private var currentParticipantColor: Color {
@@ -6433,10 +6390,6 @@ private struct TripPlannerAvailabilityEditorView: View {
                                         Text(currentParticipant.name)
                                             .font(.system(size: 15, weight: .bold))
                                             .foregroundStyle(.black)
-
-                                        if currentMonthIsFlexible {
-                                            TripPlannerBadge(text: "Available all month")
-                                        }
                                     }
 
                                     Spacer(minLength: 0)
@@ -6450,41 +6403,19 @@ private struct TripPlannerAvailabilityEditorView: View {
                                     proposals: proposals,
                                     participants: participants,
                                     selectedDates: selectedDates,
-                                    flexibleMonthSelected: currentMonthIsFlexible,
                                     selectedColor: currentParticipantColor,
                                     onToggleDate: toggleSelectedDate
                                 )
 
                                 HStack(spacing: 10) {
-                                    Button {
-                                        toggleFlexibleMonth()
-                                    } label: {
-                                        Label(
-                                            currentMonthIsFlexible ? "All month" : "Available all month",
-                                            systemImage: currentMonthIsFlexible ? "checkmark.circle.fill" : "calendar.badge.clock"
-                                        )
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundStyle(TripPlannerAvailabilityTheme.ink)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .fill(currentMonthIsFlexible ? TripPlannerAvailabilityTheme.gold : Color.white.opacity(0.86))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                        .stroke(currentMonthIsFlexible ? TripPlannerAvailabilityTheme.goldDeep.opacity(0.35) : Color.clear, lineWidth: 1)
-                                                )
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-
                                     Button(role: .destructive) {
                                         clearMyAvailability()
                                     } label: {
                                         Image(systemName: "trash")
                                             .font(.system(size: 14, weight: .bold))
                                             .foregroundStyle(.black.opacity(0.72))
-                                            .frame(width: 46, height: 44)
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: 44)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                                                     .fill(Color.white.opacity(0.72))
@@ -6646,34 +6577,14 @@ private struct TripPlannerAvailabilityEditorView: View {
     }
 
     private func syncSelectedDatesToProposals() {
-        proposals.removeAll { $0.participantId == currentParticipantId && $0.kind == .exactDates }
+        proposals.removeAll {
+            $0.participantId == currentParticipantId
+                && ($0.kind == .exactDates || $0.kind == .flexibleMonth)
+        }
         proposals.append(contentsOf: Self.exactDateProposals(
             from: selectedDates,
             participant: currentParticipant
         ))
-        proposals.sort { $0.startDate < $1.startDate }
-    }
-
-    private func toggleFlexibleMonth() {
-        if currentMonthIsFlexible {
-            proposals.removeAll {
-                $0.participantId == currentParticipantId
-                    && $0.kind == .flexibleMonth
-                    && TripPlannerAvailabilityCalculator.startOfMonth(for: $0.startDate) == selectedMonth
-            }
-        } else {
-            proposals.append(
-                TripPlannerAvailabilityProposal(
-                    participantId: currentParticipantId,
-                    participantName: currentParticipant.name,
-                    participantUsername: currentParticipant.username,
-                    participantAvatarURL: currentParticipant.avatarURL,
-                    kind: .flexibleMonth,
-                    startDate: selectedMonth,
-                    endDate: TripPlannerAvailabilityCalculator.endOfMonth(for: selectedMonth)
-                )
-            )
-        }
         proposals.sort { $0.startDate < $1.startDate }
     }
 
@@ -6717,6 +6628,15 @@ private struct TripPlannerAvailabilityEditorView: View {
         currentParticipantId: String
     ) -> Set<Date> {
         selectedDates(from: proposals, currentParticipantId: currentParticipantId)
+    }
+
+    private static func editableProposals(
+        from proposals: [TripPlannerAvailabilityProposal],
+        currentParticipantId: String
+    ) -> [TripPlannerAvailabilityProposal] {
+        proposals
+            .filter { !($0.participantId == currentParticipantId && $0.kind == .flexibleMonth) }
+            .sorted { $0.startDate < $1.startDate }
     }
 
     private static func selectedDates(
@@ -6917,7 +6837,6 @@ private struct TripPlannerAvailabilitySelectionMonth: View {
     let proposals: [TripPlannerAvailabilityProposal]
     let participants: [TripPlannerAvailabilityParticipant]
     let selectedDates: Set<Date>
-    let flexibleMonthSelected: Bool
     let selectedColor: Color
     let onToggleDate: (Date) -> Void
 
@@ -6925,19 +6844,6 @@ private struct TripPlannerAvailabilitySelectionMonth: View {
 
     private var daySlots: [Date?] {
         TripPlannerAvailabilityCalculator.daySlots(for: month)
-    }
-
-    private var displaySelectedDates: Set<Date> {
-        guard flexibleMonthSelected else { return selectedDates }
-
-        let calendar = Calendar.current
-        let monthDates = daySlots.compactMap { day -> Date? in
-            guard let day, calendar.isDate(day, equalTo: month, toGranularity: .month) else {
-                return nil
-            }
-            return calendar.startOfDay(for: day)
-        }
-        return selectedDates.union(monthDates)
     }
 
     var body: some View {
@@ -6948,10 +6854,6 @@ private struct TripPlannerAvailabilitySelectionMonth: View {
                     .foregroundStyle(TripPlannerAvailabilityTheme.ink)
 
                 Spacer()
-
-                if flexibleMonthSelected {
-                    TripPlannerBadge(text: "Flexible")
-                }
             }
 
             LazyVGrid(columns: columns, spacing: 8) {
@@ -6967,7 +6869,7 @@ private struct TripPlannerAvailabilitySelectionMonth: View {
                         TripPlannerAvailabilitySelectionDayCell(
                             date: day,
                             month: month,
-                            selectedDates: displaySelectedDates,
+                            selectedDates: selectedDates,
                             availableColors: availableColors(on: day),
                             participantCount: participants.count,
                             selectedColor: selectedColor,
