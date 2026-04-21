@@ -6927,6 +6927,19 @@ private struct TripPlannerAvailabilitySelectionMonth: View {
         TripPlannerAvailabilityCalculator.daySlots(for: month)
     }
 
+    private var displaySelectedDates: Set<Date> {
+        guard flexibleMonthSelected else { return selectedDates }
+
+        let calendar = Calendar.current
+        let monthDates = daySlots.compactMap { day -> Date? in
+            guard let day, calendar.isDate(day, equalTo: month, toGranularity: .month) else {
+                return nil
+            }
+            return calendar.startOfDay(for: day)
+        }
+        return selectedDates.union(monthDates)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -6954,7 +6967,7 @@ private struct TripPlannerAvailabilitySelectionMonth: View {
                         TripPlannerAvailabilitySelectionDayCell(
                             date: day,
                             month: month,
-                            selectedDates: selectedDates,
+                            selectedDates: displaySelectedDates,
                             availableColors: availableColors(on: day),
                             participantCount: participants.count,
                             selectedColor: selectedColor,
