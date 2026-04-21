@@ -9734,7 +9734,8 @@ private struct TripPlannerExpensesPreviewSection: View {
             currencyCode: currencyCode,
             font: .system(size: 21, weight: .bold),
             fontSize: 21,
-            color: .black
+            color: .black,
+            minimumFractionDigits: 2
         )
     }
 }
@@ -9818,7 +9819,8 @@ private struct TripPlannerExpensesSection: View {
             currencyCode: currencyCode,
             font: .system(size: 21, weight: .bold),
             fontSize: 21,
-            color: .black
+            color: .black,
+            minimumFractionDigits: 2
         )
     }
 }
@@ -10215,7 +10217,8 @@ private struct TripPlannerExpenseBalanceCard: View {
                 currencyCode: currencyCode,
                 font: .system(size: 24, weight: .bold),
                 fontSize: 24,
-                color: balanceColor
+                color: balanceColor,
+                minimumFractionDigits: 2
             )
         }
         .padding(14)
@@ -10833,7 +10836,8 @@ private struct TripPlannerExpenseRow: View {
                             currencyCode: currencyCode,
                             font: .system(size: 14, weight: .black),
                             fontSize: 14,
-                            color: .black
+                            color: .black,
+                            minimumFractionDigits: 2
                         )
                     }
 
@@ -11044,7 +11048,8 @@ private struct TripPlannerExpenseCategoryBreakdownView: View {
                             currencyCode: currencyCode,
                             font: .system(size: 12, weight: .semibold),
                             fontSize: 12,
-                            color: .black.opacity(0.58)
+                            color: .black.opacity(0.58),
+                            minimumFractionDigits: 2
                         )
                     }
                 }
@@ -11061,7 +11066,8 @@ private struct TripPlannerExpenseCategoryBreakdownView: View {
                     currencyCode: currencyCode,
                     font: .system(size: 12, weight: .semibold),
                     fontSize: 12,
-                    color: .black.opacity(0.56)
+                    color: .black.opacity(0.56),
+                    minimumFractionDigits: 2
                 )
             }
             .font(.system(size: 12, weight: .semibold))
@@ -11391,7 +11397,8 @@ private struct TripPlannerExpenseShareEditorRow: View {
                     currencyCode: currencyCode,
                     font: .system(size: 13, weight: .semibold),
                     fontSize: 13,
-                    color: share.isPaid ? Color(red: 0.14, green: 0.47, blue: 0.25).opacity(0.78) : .black.opacity(0.64)
+                    color: share.isPaid ? Color(red: 0.14, green: 0.47, blue: 0.25).opacity(0.78) : .black.opacity(0.64),
+                    minimumFractionDigits: 2
                 )
             }
 
