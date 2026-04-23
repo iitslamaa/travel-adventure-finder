@@ -25,7 +25,7 @@ struct SocialView: View {
                     }
                     .frame(width: contentWidth)
                     .frame(maxWidth: .infinity)
-                    .padding(.top, geo.safeAreaInsets.top + 18)
+                    .padding(.top, max(geo.safeAreaInsets.top - 12, 12))
                     .padding(.bottom, max(floatingTabBarInset + 24, 112))
                 }
             }
