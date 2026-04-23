@@ -78,24 +78,6 @@ struct SocialView: View {
                     ProgressView()
                         .controlSize(.small)
                 }
-
-                Button {
-                    Task {
-                        await feedVM.loadFeed(for: userId)
-                    }
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.black)
-                        .frame(width: 34, height: 34)
-                        .background(
-                            Circle()
-                                .fill(Color.white.opacity(0.46))
-                        )
-                }
-                .buttonStyle(.plain)
-                .disabled(feedVM.isLoading)
-                .opacity(feedVM.isLoading ? 0.45 : 1)
             }
 
             if feedVM.events.isEmpty {
@@ -197,7 +179,7 @@ struct SocialView: View {
             avatarView(for: event.actorProfile)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(activityTitle(for: event))
+                Text(activityText(for: event))
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.black)
                     .fixedSize(horizontal: false, vertical: true)
@@ -243,27 +225,98 @@ struct SocialView: View {
         .clipShape(Circle())
     }
 
-    private func activityTitle(for event: SocialActivityEvent) -> String {
-        let name = event.actorProfile?.firstName ?? event.actorProfile?.username ?? "A friend"
-        let country = event.metadata["country_name"]?.stringValue
-            ?? event.metadata["country"]?.stringValue
-            ?? event.metadata["country_code"]?.stringValue
-        let destination = event.metadata["destination_name"]?.stringValue
-            ?? event.metadata["destination"]?.stringValue
+    private func activityText(for event: SocialActivityEvent) -> String {
+        let subject = activitySubject(for: event.actorProfile)
+        let country = countryDisplayName(for: event)
+        let destination = destinationDisplayName(for: event)
 
         switch event.eventType {
         case .bucketListAdded:
-            return "\(name) added \(country ?? "a country") to their bucket list"
+            return "\(subject) added \(country ?? "a country") to their bucket list"
         case .countryVisited:
-            return "\(name) marked \(country ?? "a country") as visited"
+            return "\(subject) marked \(country ?? "a country") as visited"
         case .nextDestinationChanged:
-            return "\(name) changed their next destination to \(destination ?? country ?? "somewhere new")"
+            return "\(subject) changed their next destination to \(destination ?? country ?? "somewhere new")"
         case .profilePhotoUpdated:
-            return "\(name) updated their profile photo"
+            return "\(subject) updated their profile photo"
         case .currentCountryChanged:
-            return "\(name) changed their current country to \(country ?? "somewhere new")"
+            return "\(subject) changed their current country to \(country ?? "somewhere new")"
         case .homeCountryChanged:
-            return "\(name) updated their home country"
+            return "\(subject) updated their home country"
         }
+    }
+
+    private func activitySubject(for profile: Profile?) -> String {
+        if let fullName = profile?.fullName.trimmingCharacters(in: .whitespacesAndNewlines),
+           !fullName.isEmpty {
+            return fullName
+        }
+
+        let nameParts = [profile?.firstName, profile?.lastName]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        if !nameParts.isEmpty {
+            return nameParts.joined(separator: " ")
+        }
+
+        if let username = profile?.username.trimmingCharacters(in: .whitespacesAndNewlines),
+           !username.isEmpty {
+            return "@\(username)"
+        }
+
+        return "A friend"
+    }
+
+    private func countryDisplayName(for event: SocialActivityEvent) -> String? {
+        if let countryName = event.metadata["country_name"]?.stringValue,
+           !countryName.isEmpty {
+            return flagPrefix(for: event) + countryName
+        }
+
+        guard let countryCode = event.metadata["country_code"]?.stringValue
+            ?? event.metadata["country"]?.stringValue
+        else { return nil }
+
+        let code = countryCode.uppercased()
+        let name = Locale.current.localizedString(forRegionCode: code) ?? code
+        return flagPrefix(for: code) + name
+    }
+
+    private func destinationDisplayName(for event: SocialActivityEvent) -> String? {
+        if let destinationName = event.metadata["destination_name"]?.stringValue,
+           !destinationName.isEmpty {
+            return flagPrefix(for: event) + destinationName
+        }
+
+        guard let destination = event.metadata["destination"]?.stringValue else {
+            return countryDisplayName(for: event)
+        }
+
+        let code = destination.uppercased()
+        let name = Locale.current.localizedString(forRegionCode: code) ?? destination
+        return flagPrefix(for: code) + name
+    }
+
+    private func flagPrefix(for event: SocialActivityEvent) -> String {
+        guard let countryCode = event.metadata["country_code"]?.stringValue
+            ?? event.metadata["country"]?.stringValue
+            ?? event.metadata["destination"]?.stringValue
+        else { return "" }
+
+        return flagPrefix(for: countryCode)
+    }
+
+    private func flagPrefix(for code: String) -> String {
+        let upper = code.uppercased()
+        guard upper.count == 2, upper.allSatisfy(\.isLetter) else { return "" }
+
+        let base: UInt32 = 127397
+        let flag = upper.unicodeScalars
+            .compactMap { UnicodeScalar(base + $0.value) }
+            .map { String($0) }
+            .joined()
+
+        return "\(flag) "
     }
 }

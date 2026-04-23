@@ -46,6 +46,7 @@ final class SocialActivityService {
                     )
                 """)
                 .in("actor_user_id", values: actorIds)
+                .gte("created_at", value: Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date())
                 .order("created_at", ascending: false)
                 .limit(limit)
                 .execute()
