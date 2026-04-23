@@ -31,6 +31,7 @@ extension ProfileViewModel {
         avatarUrl: String?
     ) async throws {
         let userId = self.userId
+        let previousProfile = profile
         errorMessage = nil
         
         let trimmedFirstName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -142,6 +143,14 @@ extension ProfileViewModel {
             passportCountryCode: normalizedVisaPassportCountryCode
         )
 
+        await recordProfileActivityChanges(
+            userId: userId,
+            previousProfile: previousProfile,
+            nextDestination: nextDestination,
+            currentCountry: normalizedCurrentCountry,
+            homeCountries: homeCountries,
+            avatarUrl: avatarUrl
+        )
         
     }
     
@@ -154,5 +163,104 @@ extension ProfileViewModel {
         )
         
         return try profileService.publicAvatarURL(path: path)
+    }
+
+    private func recordProfileActivityChanges(
+        userId: UUID,
+        previousProfile: Profile?,
+        nextDestination: String?,
+        currentCountry: String?,
+        homeCountries: [String]?,
+        avatarUrl: String?
+    ) async {
+        let activityService = SocialActivityService()
+
+        if let currentCountry,
+           normalizedCountryCode(previousProfile?.currentCountry) != normalizedCountryCode(currentCountry) {
+            await recordActivity(
+                service: activityService,
+                userId: userId,
+                eventType: .currentCountryChanged,
+                countryCode: currentCountry
+            )
+        }
+
+        if let nextDestination,
+           normalizedCountryCode(previousProfile?.nextDestination) != normalizedCountryCode(nextDestination) {
+            await recordActivity(
+                service: activityService,
+                userId: userId,
+                eventType: .nextDestinationChanged,
+                countryCode: nextDestination
+            )
+        }
+
+        if let homeCountries {
+            let previousHomeCountries = Set(previousProfile?.livedCountries.map(normalizedCountryCode) ?? [])
+            let updatedHomeCountries = Set(homeCountries.map(normalizedCountryCode))
+
+            if previousHomeCountries != updatedHomeCountries,
+               let changedCountry = updatedHomeCountries.subtracting(previousHomeCountries).first ?? updatedHomeCountries.first {
+                await recordActivity(
+                    service: activityService,
+                    userId: userId,
+                    eventType: .homeCountryChanged,
+                    countryCode: changedCountry
+                )
+            }
+        }
+
+        if let avatarUrl {
+            let previousAvatarUrl = previousProfile?.avatarUrl?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let updatedAvatarUrl = avatarUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if previousAvatarUrl != updatedAvatarUrl, !updatedAvatarUrl.isEmpty {
+                do {
+                    try await activityService.recordActivity(
+                        actorUserId: userId,
+                        eventType: .profilePhotoUpdated,
+                        metadata: [:]
+                    )
+                } catch {
+#if DEBUG
+                    print("Failed to record profile photo activity:", error.localizedDescription)
+#endif
+                }
+            }
+        }
+    }
+
+    private func recordActivity(
+        service: SocialActivityService,
+        userId: UUID,
+        eventType: SocialActivityEventType,
+        countryCode: String
+    ) async {
+        let code = normalizedCountryCode(countryCode)
+
+        do {
+            try await service.recordActivity(
+                actorUserId: userId,
+                eventType: eventType,
+                metadata: [
+                    "country_code": code,
+                    "country_name": countryDisplayName(for: code)
+                ]
+            )
+        } catch {
+#if DEBUG
+            print("Failed to record profile activity:", error.localizedDescription)
+#endif
+        }
+    }
+
+    private func normalizedCountryCode(_ code: String?) -> String {
+        code?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased() ?? ""
+    }
+
+    private func countryDisplayName(for code: String) -> String {
+        Locale.current.localizedString(forRegionCode: code) ?? code
     }
 }

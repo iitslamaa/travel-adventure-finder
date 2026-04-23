@@ -63,4 +63,33 @@ final class SocialActivityService {
             return []
         }
     }
+
+    func recordActivity(
+        actorUserId: UUID,
+        eventType: SocialActivityEventType,
+        metadata: [String: String]
+    ) async throws {
+        let payload = SocialActivityInsert(
+            actorUserId: actorUserId,
+            eventType: eventType.rawValue,
+            metadata: metadata
+        )
+
+        try await supabase.client
+            .from("activity_events")
+            .insert(payload)
+            .execute()
+    }
+}
+
+private struct SocialActivityInsert: Encodable {
+    let actorUserId: UUID
+    let eventType: String
+    let metadata: [String: String]
+
+    enum CodingKeys: String, CodingKey {
+        case actorUserId = "actor_user_id"
+        case eventType = "event_type"
+        case metadata
+    }
 }

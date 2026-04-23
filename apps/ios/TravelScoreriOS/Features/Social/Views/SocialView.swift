@@ -20,13 +20,16 @@ struct SocialView: View {
 
                 ScrollView {
                     VStack(spacing: 16) {
-                        actionButtonRow
+                        actionButtonRow(contentWidth: contentWidth)
                         activitySection
                     }
                     .frame(width: contentWidth)
                     .frame(maxWidth: .infinity)
                     .padding(.top, max(geo.safeAreaInsets.top - 12, 12))
                     .padding(.bottom, max(floatingTabBarInset + 24, 112))
+                }
+                .refreshable {
+                    await feedVM.loadFeed(for: userId)
                 }
             }
         }
@@ -73,6 +76,24 @@ struct SocialView: View {
                     ProgressView()
                         .controlSize(.small)
                 }
+
+                Button {
+                    Task {
+                        await feedVM.loadFeed(for: userId)
+                    }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.black)
+                        .frame(width: 34, height: 34)
+                        .background(
+                            Circle()
+                                .fill(Color.white.opacity(0.46))
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(feedVM.isLoading)
+                .opacity(feedVM.isLoading ? 0.45 : 1)
             }
 
             if feedVM.events.isEmpty {
@@ -109,8 +130,10 @@ struct SocialView: View {
         .shadow(color: .black.opacity(0.10), radius: 10, y: 6)
     }
 
-    private var actionButtonRow: some View {
-        HStack(spacing: 12) {
+    private func actionButtonRow(contentWidth: CGFloat) -> some View {
+        let buttonSize = floor((contentWidth - 24) / 3)
+
+        return HStack(spacing: 12) {
             socialActionButton(
                 icon: "person.2.fill",
                 title: "Friends"
@@ -132,6 +155,8 @@ struct SocialView: View {
                 socialNav.push(.profile(userId))
             }
         }
+        .frame(width: contentWidth, alignment: .center)
+        .frame(height: buttonSize)
     }
 
     private func socialActionButton(
@@ -156,13 +181,13 @@ struct SocialView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
-            .frame(maxWidth: .infinity)
-            .aspectRatio(1, contentMode: .fit)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(12)
             .background(Theme.listCardBackground(corner: 24))
             .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
         .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func activityRow(for event: SocialActivityEvent) -> some View {

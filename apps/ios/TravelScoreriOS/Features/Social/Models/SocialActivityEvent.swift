@@ -1,6 +1,6 @@
 import Foundation
 
-enum SocialActivityEventType: String, Decodable {
+enum SocialActivityEventType: String, Codable {
     case bucketListAdded = "bucket_list_added"
     case countryVisited = "country_visited"
     case nextDestinationChanged = "next_destination_changed"
