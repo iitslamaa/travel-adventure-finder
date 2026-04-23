@@ -30,7 +30,7 @@ final class SocialFeedViewModel: ObservableObject {
             let fetchedEvents = try await activityService.fetchRecentFriendActivity(for: userId, requestId: loadId)
             SocialFeedDebug.log("load.success id=\(loadId) source=\(source) fetched=\(fetchedEvents.count)")
             events = fetchedEvents
-        } catch is CancellationError {
+        } catch where SocialFeedDebug.isCancellation(error) {
             SocialFeedDebug.log("load.cancelled id=\(loadId) source=\(source) keeping_existing_events=\(events.count)")
         } catch {
             SocialFeedDebug.log("load.error id=\(loadId) source=\(source) error=\(SocialFeedDebug.describe(error))")
@@ -55,5 +55,19 @@ enum SocialFeedDebug {
     static func describe(_ error: Error) -> String {
         let nsError = error as NSError
         return "\(type(of: error))(domain=\(nsError.domain), code=\(nsError.code), description=\(error.localizedDescription))"
+    }
+
+    static func isCancellation(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
+
+        if let urlError = error as? URLError,
+           urlError.code == .cancelled {
+            return true
+        }
+
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
     }
 }

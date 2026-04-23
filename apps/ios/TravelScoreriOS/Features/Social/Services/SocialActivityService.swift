@@ -80,7 +80,7 @@ final class SocialActivityService {
 
             SocialFeedDebug.log("service.query.missing_activity_events id=\(requestId) returning_empty_feed=true")
             return []
-        } catch is CancellationError {
+        } catch where SocialFeedDebug.isCancellation(error) {
             SocialFeedDebug.log("service.fetch.cancelled id=\(requestId) total_duration=\(SocialFeedDebug.duration(since: startTime))")
             throw CancellationError()
         } catch {
