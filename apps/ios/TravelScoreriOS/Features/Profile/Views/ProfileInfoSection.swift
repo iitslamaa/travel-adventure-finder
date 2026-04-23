@@ -38,10 +38,7 @@ struct ProfileInfoSection: View {
 
             countriesSection
         }
-        .padding(.top, 20)
-        .padding(.bottom, 20)
-        .padding(.horizontal, 20)
-        .background(sectionBackground)
+        .padding(.vertical, 4)
     }
 
     private var travelSnapshotSection: some View {
@@ -233,31 +230,6 @@ struct ProfileInfoSection: View {
             .allowsHitTesting(false)
         }
     }
-
-    private var sectionBackground: some View {
-        GeometryReader { proxy in
-            ZStack {
-                Image("profile_info")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .saturation(0.82)
-                    .brightness(0.04)
-                    .clipped()
-
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(red: 0.97, green: 0.92, blue: 0.82).opacity(0.34))
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(Color.white.opacity(0.22), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
-            .allowsHitTesting(false)
-        }
-    }
-
     private func sectionHeader(_ text: String) -> some View {
         Text(text)
             .font(.headline)
