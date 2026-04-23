@@ -168,10 +168,6 @@ final class SocialActivityService {
                 profilesById[userId] = inMemoryProfile
                 profileSources[userId] = "in_memory"
                 SocialFeedDebug.log("service.profile_lookup.current_user.hit id=\(requestId) source=in_memory duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
-            } else if let cachedProfile = profileService.cachedProfile(userId: userId) {
-                profilesById[userId] = cachedProfile
-                profileSources[userId] = "persisted_cache"
-                SocialFeedDebug.log("service.profile_lookup.current_user.hit id=\(requestId) source=persisted_cache duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
             } else {
                 let fallbackProfile = profileService.currentUserProfileFallback(userId: userId)
                 if let fallbackProfile {
@@ -194,6 +190,10 @@ final class SocialActivityService {
                         "service.profile_lookup.current_user.hit id=\(requestId) source=session_fallback_sanitized duration=\(SocialFeedDebug.duration(since: currentUserStartTime)) " +
                         "username=\(logField(sanitizedFallback.username)) avatar=\(logField(sanitizedFallback.avatarUrl))"
                     )
+                } else if let cachedProfile = profileService.cachedProfile(userId: userId) {
+                    profilesById[userId] = cachedProfile
+                    profileSources[userId] = "persisted_cache"
+                    SocialFeedDebug.log("service.profile_lookup.current_user.hit id=\(requestId) source=persisted_cache duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
                 } else {
                     SocialFeedDebug.log("service.profile_lookup.current_user.miss id=\(requestId) source=none duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
                 }

@@ -158,7 +158,13 @@ struct ProfileHeaderView: View {
     private func badgeToast(_ badge: ProfileBadge) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Group {
-                if badge.assetNames.isEmpty {
+                if let labelText = badge.labelText {
+                    Text(labelText)
+                        .font(.system(size: 12, weight: .black, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.84))
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                } else if badge.assetNames.isEmpty {
                     Text(badge.emoji ?? "✨")
                         .font(.system(size: 22))
                 } else if badge.assetNames.count == 1, let assetName = badge.assetNames.first {

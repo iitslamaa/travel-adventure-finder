@@ -4,6 +4,7 @@ struct ProfileBadge: Identifiable, Hashable {
     let id: String
     let emoji: String?
     let assetNames: [String]
+    let labelText: String?
     let title: String
     let subtitle: String
     let tint: Color
@@ -32,6 +33,7 @@ enum ProfileBadgeCatalog {
                     id: "milestone-2-first",
                     emoji: "✨",
                     assetNames: [],
+                    labelText: nil,
                     title: "Second Stamp",
                     subtitle: "Visited your second country",
                     tint: Color(red: 0.89, green: 0.55, blue: 0.26)
@@ -45,6 +47,7 @@ enum ProfileBadgeCatalog {
                     id: "milestone-\(threshold)",
                     emoji: milestoneEmoji(for: threshold),
                     assetNames: [],
+                    labelText: milestoneLabel(for: threshold),
                     title: threshold == 100 ? "100 Club" : "\(threshold) Countries",
                     subtitle: "Visited \(threshold) countries",
                     tint: milestoneTint(for: threshold)
@@ -62,6 +65,7 @@ enum ProfileBadgeCatalog {
                     id: "milestone-all-countries",
                     emoji: "🌍",
                     assetNames: [],
+                    labelText: nil,
                     title: "Every Country",
                     subtitle: "Visited every country in the app",
                     tint: Color(red: 0.18, green: 0.52, blue: 0.39)
@@ -72,38 +76,21 @@ enum ProfileBadgeCatalog {
         return badges
     }
 
-    private static func milestoneEmoji(for threshold: Int) -> String {
+    private static func milestoneEmoji(for threshold: Int) -> String? {
         switch threshold {
-        case 2:
-            return "🥈"
         case 5:
             return "🛫"
-        case 10:
-            return "🗺️"
-        case 20:
-            return "🧳"
-        case 30:
-            return "🛂"
-        case 40:
-            return "📍"
-        case 50:
-            return "🏅"
-        case 60:
-            return "🌍"
-        case 70:
-            return "🌎"
-        case 80:
-            return "🌏"
-        case 90:
-            return "🏝️"
-        case 100:
-            return "💯"
-        case 150:
-            return "👑"
-        case 200:
-            return "🏆"
         default:
-            return "✨"
+            return nil
+        }
+    }
+
+    private static func milestoneLabel(for threshold: Int) -> String? {
+        switch threshold {
+        case 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200:
+            return "\(threshold)"
+        default:
+            return nil
         }
     }
 
@@ -137,6 +124,7 @@ enum ProfileBadgeCatalog {
                     id: "continent-\(continent.lowercased())",
                     emoji: nil,
                     assetNames: presentation.assetNames,
+                    labelText: nil,
                     title: presentation.title,
                     subtitle: "Been to \(continent)",
                     tint: presentation.tint
@@ -210,7 +198,7 @@ struct ProfileBadgeShowcaseView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var featuredBadges: [ProfileBadge] {
-        Array(badges.prefix(isCompactLayout ? 8 : 10))
+        Array(badges.prefix(isCompactLayout ? 12 : 10))
     }
 
     private var totalCountryCount: Int {
@@ -222,11 +210,11 @@ struct ProfileBadgeShowcaseView: View {
     }
 
     private var badgeSize: CGFloat {
-        isCompactLayout ? 30 : 36
+        isCompactLayout ? 28 : 36
     }
 
     private var badgeSpacing: CGFloat {
-        isCompactLayout ? 4 : 8
+        isCompactLayout ? 5 : 8
     }
 
     private var countFontSize: CGFloat {
@@ -264,6 +252,7 @@ struct ProfileBadgeShowcaseView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, isCompactLayout ? 2 : 0)
             }
         }
         .frame(maxWidth: .infinity, alignment: .center)
@@ -289,7 +278,13 @@ struct ProfileBadgeShowcaseView: View {
 
     @ViewBuilder
     private func badgeArtwork(for badge: ProfileBadge) -> some View {
-        if badge.assetNames.isEmpty {
+        if let labelText = badge.labelText {
+            Text(labelText)
+                .font(.system(size: isCompactLayout ? 10 : 12, weight: .black, design: .rounded))
+                .foregroundStyle(.black.opacity(0.84))
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+        } else if badge.assetNames.isEmpty {
             Text(badge.emoji ?? "✨")
                 .font(.system(size: isCompactLayout ? 15 : 18))
         } else if badge.assetNames.count == 1, let assetName = badge.assetNames.first {
