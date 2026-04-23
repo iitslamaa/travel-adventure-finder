@@ -164,6 +164,7 @@ struct ProfileView: View {
                                             profile: profileVM.profile,
                                             username: username,
                                             homeCountryCodes: homeCountryCodes,
+                                            visitedCountryCodes: profileVM.orderedTraveledCountries,
                                             relationshipState: relationshipState,
                                             onToggleFriend: {
                                                 switch relationshipState {
@@ -212,7 +213,10 @@ struct ProfileView: View {
                                                 travelStyle: travelStyleLabel,
                                                 nextDestination: nextDestination,
                                                 currentCountry: profileVM.profile?.currentCountry,
-                                                favoriteCountries: profileVM.profile?.favoriteCountries ?? []
+                                                favoriteCountries: profileVM.profile?.favoriteCountries ?? [],
+                                                onOpenCountry: { isoCode in
+                                                    selectedCountry = resolveCountry(for: isoCode)
+                                                }
                                             )
                                             .padding(cardWrapperPadding)
                                             .background(

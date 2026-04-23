@@ -22,10 +22,12 @@ struct ProfileInfoSection: View {
     let nextDestination: String?
     let currentCountry: String?
     let favoriteCountries: [String]
+    let onOpenCountry: (String) -> Void
     @State private var expandedCountrySectionID: String? = nil
 
     var body: some View {
         LazyVStack(spacing: 32) {
+            travelSnapshotSection
             languagesSection
 
             if relationshipState == .friends && !mutualLanguages.isEmpty {
@@ -40,6 +42,17 @@ struct ProfileInfoSection: View {
         .padding(.bottom, 20)
         .padding(.horizontal, 20)
         .background(sectionBackground)
+    }
+
+    private var travelSnapshotSection: some View {
+        card(imageScale: 1.1, imageAnchor: .topLeading) {
+            ProfileTravelSnapshotCard(
+                currentCountry: currentCountry,
+                nextDestination: nextDestination,
+                favoriteCountries: favoriteCountries,
+                onOpenCountry: onOpenCountry
+            )
+        }
     }
 
     // MARK: - Languages

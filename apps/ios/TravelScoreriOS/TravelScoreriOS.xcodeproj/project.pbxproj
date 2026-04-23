@@ -22,6 +22,8 @@
 		170C21342F4790E00090BA78 /* CollapsibleCountrySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D02F4790E00090BA78 /* CollapsibleCountrySection.swift */; };
 		170C21352F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D12F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift */; };
 		170C21362F4790E00090BA78 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D22F4790E00090BA78 /* StatCard.swift */; };
+		E2A100022FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A100012FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift */; };
+		E2A100042FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A100032FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift */; };
 		170C21372F4790E00090BA78 /* ProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D42F4790E00090BA78 /* ProfileHeaderView.swift */; };
 		170C21382F4790E00090BA78 /* ProfileInfoSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D52F4790E00090BA78 /* ProfileInfoSection.swift */; };
 		170C21392F4790E00090BA78 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D62F4790E00090BA78 /* ProfileView.swift */; };
@@ -175,6 +177,8 @@
 		170C20D02F4790E00090BA78 /* CollapsibleCountrySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollapsibleCountrySection.swift; sourceTree = "<group>"; };
 		170C20D12F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollOffsetPreferenceKey.swift; sourceTree = "<group>"; };
 		170C20D22F4790E00090BA78 /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
+		E2A100012FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgeShowcaseView.swift; sourceTree = "<group>"; };
+		E2A100032FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileTravelSnapshotCard.swift; sourceTree = "<group>"; };
 		170C20D42F4790E00090BA78 /* ProfileHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileHeaderView.swift; sourceTree = "<group>"; };
 		170C20D52F4790E00090BA78 /* ProfileInfoSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileInfoSection.swift; sourceTree = "<group>"; };
 		170C20D62F4790E00090BA78 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
@@ -715,6 +719,8 @@
 				170C20D02F4790E00090BA78 /* CollapsibleCountrySection.swift */,
 				170C20D12F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift */,
 				170C20D22F4790E00090BA78 /* StatCard.swift */,
+				E2A100012FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift */,
+				E2A100032FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1176,6 +1182,8 @@
 				17B478C52F55FF65002B1865 /* ReviewTriggerService.swift in Sources */,
 				170C21352F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift in Sources */,
 				170C21362F4790E00090BA78 /* StatCard.swift in Sources */,
+				E2A100022FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift in Sources */,
+				E2A100042FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift in Sources */,
 				170C21372F4790E00090BA78 /* ProfileHeaderView.swift in Sources */,
 				17C1D3362F594CDA00FD768B /* PlanningView.swift in Sources */,
 				E1A111112F90000100ABCDEF /* TripPlannerUsernameSearchController.swift in Sources */,
