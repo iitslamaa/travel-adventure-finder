@@ -133,20 +133,15 @@ struct FriendRequestsView: View {
             .padding(.horizontal, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ZStack {
-                Theme.notebookListBackground(corner: 24)
-                    .allowsHitTesting(false)
-
-                ScrollView {
-                    LazyVStack(spacing: 18) {
-                        ForEach(vm.incomingRequests) { profile in
-                            requestRow(for: profile)
-                        }
+            ScrollView {
+                LazyVStack(spacing: 18) {
+                    ForEach(vm.incomingRequests) { profile in
+                        requestRow(for: profile)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.top, 14)
-                    .padding(.bottom, 28)
                 }
+                .padding(.horizontal, 4)
+                .padding(.top, 4)
+                .padding(.bottom, 28)
             }
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
