@@ -48,11 +48,11 @@ struct FriendsView: View {
     private func socialHorizontalInset(for width: CGFloat) -> CGFloat {
         switch width {
         case ..<390:
-            return 42
-        case ..<430:
-            return 38
-        case ..<520:
             return 32
+        case ..<430:
+            return 30
+        case ..<520:
+            return 28
         default:
             return max((width - 680) / 2, 32)
         }
@@ -72,7 +72,7 @@ struct FriendsView: View {
                     Theme.titleBanner(String(localized: "friends.title"))
 
                     contentView(contentWidth: contentWidth)
-                        .padding(.top, 12)
+                        .padding(.top, 4)
                         .frame(maxHeight: .infinity)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -283,7 +283,7 @@ struct FriendsView: View {
             }
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .padding(.top, 18)
+            .padding(.top, 10)
         }
     }
 
