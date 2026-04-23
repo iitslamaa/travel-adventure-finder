@@ -136,7 +136,6 @@ struct ProfileView: View {
     var body: some View {
         GeometryReader { geometry in
             let isCompactWidth = geometry.size.width < 390
-            let cardWrapperPadding: CGFloat = isCompactWidth ? 10 : 16
             let contentHorizontalPadding: CGFloat = isCompactWidth ? 14 : 20
             let bottomContentInset = max(floatingTabBarInset + 8, 28)
 
@@ -154,71 +153,63 @@ struct ProfileView: View {
 
                             ScrollView {
                                 VStack(spacing: 18) {
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                            .fill(Color.clear)
-                                            .rotationEffect(.degrees(-0.6))
-                                            .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
-
-                                        ProfileHeaderView(
-                                            profile: profileVM.profile,
-                                            username: username,
-                                            homeCountryCodes: homeCountryCodes,
-                                            relationshipState: relationshipState,
-                                            onToggleFriend: {
-                                                switch relationshipState {
-                                                case .friends:
-                                                    showFriendsDrawer = true
-                                                case .requestSent:
-                                                    showFriendsDrawer = true
-                                                case .requestReceived:
-                                                    Task { await profileVM.toggleFriend() }
-                                                case .none:
-                                                    Task { await profileVM.toggleFriend() }
-                                                case .selfProfile:
-                                                    break
-                                                }
-                                            },
-                                            onOpenCountry: { isoCode in
-                                                selectedCountry = resolveCountry(for: isoCode)
+                                    ProfileHeaderView(
+                                        profile: profileVM.profile,
+                                        username: username,
+                                        homeCountryCodes: homeCountryCodes,
+                                        visitedCountryCodes: profileVM.orderedTraveledCountries,
+                                        relationshipState: relationshipState,
+                                        onToggleFriend: {
+                                            switch relationshipState {
+                                            case .friends:
+                                                showFriendsDrawer = true
+                                            case .requestSent:
+                                                showFriendsDrawer = true
+                                            case .requestReceived:
+                                                Task { await profileVM.toggleFriend() }
+                                            case .none:
+                                                Task { await profileVM.toggleFriend() }
+                                            case .selfProfile:
+                                                break
                                             }
-                                        )
-                                        .padding(cardWrapperPadding)
-                                        .background(
-                                            Theme.profileCardBackground(corner: 22)
-                                        )
-                                    }
+                                        },
+                                        onOpenCountry: { isoCode in
+                                            selectedCountry = resolveCountry(for: isoCode)
+                                        }
+                                    )
+                                    .background(
+                                        Theme.profileCardBackground(corner: 22)
+                                            .padding(.horizontal, -10)
+                                            .padding(.vertical, -8)
+                                    )
 
                                     if relationshipState == .friends ||
                                         relationshipState == .selfProfile {
 
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                                .fill(Color.clear)
-                                                .rotationEffect(.degrees(-0.4))
-                                                .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
-
-                                            ProfileInfoSection(
-                                                relationshipState: relationshipState,
-                                                viewedTraveledCountries: profileVM.viewedTraveledCountries,
-                                                viewedBucketListCountries: profileVM.viewedBucketListCountries,
-                                                orderedTraveledCountries: profileVM.orderedTraveledCountries,
-                                                orderedBucketListCountries: profileVM.orderedBucketListCountries,
-                                                mutualTraveledCountries: profileVM.mutualTraveledCountries,
-                                                mutualBucketCountries: profileVM.mutualBucketCountries,
-                                                mutualLanguages: mutualLanguageLabels,
-                                                languages: languages,
-                                                travelMode: travelModeLabel,
-                                                travelStyle: travelStyleLabel,
-                                                nextDestination: nextDestination,
-                                                currentCountry: profileVM.profile?.currentCountry,
-                                                favoriteCountries: profileVM.profile?.favoriteCountries ?? []
-                                            )
-                                            .padding(cardWrapperPadding)
-                                            .background(
-                                                Theme.profileCardBackground(corner: 22)
-                                            )
-                                        }
+                                        ProfileInfoSection(
+                                            relationshipState: relationshipState,
+                                            viewedTraveledCountries: profileVM.viewedTraveledCountries,
+                                            viewedBucketListCountries: profileVM.viewedBucketListCountries,
+                                            orderedTraveledCountries: profileVM.orderedTraveledCountries,
+                                            orderedBucketListCountries: profileVM.orderedBucketListCountries,
+                                            mutualTraveledCountries: profileVM.mutualTraveledCountries,
+                                            mutualBucketCountries: profileVM.mutualBucketCountries,
+                                            mutualLanguages: mutualLanguageLabels,
+                                            languages: languages,
+                                            travelMode: travelModeLabel,
+                                            travelStyle: travelStyleLabel,
+                                            nextDestination: nextDestination,
+                                            currentCountry: profileVM.profile?.currentCountry,
+                                            favoriteCountries: profileVM.profile?.favoriteCountries ?? [],
+                                            onOpenCountry: { isoCode in
+                                                selectedCountry = resolveCountry(for: isoCode)
+                                            }
+                                        )
+                                        .background(
+                                            Theme.profileCardBackground(corner: 22)
+                                                .padding(.horizontal, -10)
+                                                .padding(.vertical, -8)
+                                        )
 
                                     } else {
                                         LockedProfileView()

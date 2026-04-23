@@ -13,6 +13,7 @@ extension ProfileViewModel {
     // MARK: - Bucket Toggle
 
     func toggleBucket(_ countryId: String) async {
+        SocialFeedDebug.log("profile.bucket.toggle.start user=\(userId) country=\(countryId) guest=\(isGuestMode)")
         if isGuestMode {
             let wasInBucket = viewedBucketListCountries.contains(countryId)
             if wasInBucket {
@@ -21,6 +22,7 @@ extension ProfileViewModel {
                 viewedBucketListCountries.insert(countryId)
             }
             computeOrderedLists()
+            SocialFeedDebug.log("profile.bucket.toggle.guest.end user=\(userId) country=\(countryId) was_in_bucket=\(wasInBucket) new_count=\(viewedBucketListCountries.count)")
             return
         }
 
@@ -30,6 +32,7 @@ extension ProfileViewModel {
         }
 
         let wasInBucket = viewedBucketListCountries.contains(countryId)
+        SocialFeedDebug.log("profile.bucket.toggle.optimistic user=\(userId) country=\(countryId) was_in_bucket=\(wasInBucket)")
 
         // Optimistic UI update
         if wasInBucket {
@@ -59,6 +62,7 @@ extension ProfileViewModel {
                 )
             }
 
+            SocialFeedDebug.log("profile.bucket.toggle.notification user=\(userId) country=\(countryId) posting=socialActivityUpdated")
             NotificationCenter.default.post(name: .socialActivityUpdated, object: nil)
         } catch {
             // Rollback if server write fails
@@ -71,6 +75,7 @@ extension ProfileViewModel {
             computeOrderedLists()
 
             print("❌ toggleBucket rolled back due to error:", error)
+            SocialFeedDebug.log("profile.bucket.toggle.error user=\(userId) country=\(countryId) error=\(SocialFeedDebug.describe(error))")
             errorMessage = error.localizedDescription
         }
     }
@@ -78,6 +83,7 @@ extension ProfileViewModel {
     // MARK: - Traveled Toggle
 
     func toggleTraveled(_ countryId: String) async {
+        SocialFeedDebug.log("profile.traveled.toggle.start user=\(userId) country=\(countryId) guest=\(isGuestMode)")
         if isGuestMode {
             let wasVisited = viewedTraveledCountries.contains(countryId)
             if wasVisited {
@@ -86,12 +92,14 @@ extension ProfileViewModel {
                 viewedTraveledCountries.insert(countryId)
             }
             computeOrderedLists()
+            SocialFeedDebug.log("profile.traveled.toggle.guest.end user=\(userId) country=\(countryId) was_visited=\(wasVisited) new_count=\(viewedTraveledCountries.count)")
             return
         }
 
         let currentUserId = self.userId
 
         let wasVisited = viewedTraveledCountries.contains(countryId)
+        SocialFeedDebug.log("profile.traveled.toggle.optimistic user=\(userId) country=\(countryId) was_visited=\(wasVisited)")
 
         // Optimistic UI update
         if wasVisited {
@@ -126,6 +134,7 @@ extension ProfileViewModel {
                 )
             }
 
+            SocialFeedDebug.log("profile.traveled.toggle.notification user=\(userId) country=\(countryId) posting=socialActivityUpdated")
             NotificationCenter.default.post(name: .socialActivityUpdated, object: nil)
         } catch {
             // Rollback on failure
@@ -138,6 +147,7 @@ extension ProfileViewModel {
             computeOrderedLists()
 
             print("❌ toggleTraveled rolled back due to error:", error)
+            SocialFeedDebug.log("profile.traveled.toggle.error user=\(userId) country=\(countryId) error=\(SocialFeedDebug.describe(error))")
             errorMessage = error.localizedDescription
         }
     }

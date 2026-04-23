@@ -6,19 +6,16 @@ struct ProfileHeaderView: View {
     let profile: Profile?
     let username: String
     let homeCountryCodes: [String]
+    let visitedCountryCodes: [String]
     let relationshipState: RelationshipState?
     let onToggleFriend: () -> Void
     let onOpenCountry: (String) -> Void
-    @State private var showFavoriteTripsSheet = false
     @State private var showHomeFlagsSheet = false
+    @State private var selectedBadge: ProfileBadge?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var effectiveState: RelationshipState {
         relationshipState ?? .none
-    }
-
-    private var favoriteCountries: [String] {
-        profile?.favoriteCountries ?? []
     }
 
     private var isCompactLayout: Bool {
@@ -26,11 +23,15 @@ struct ProfileHeaderView: View {
     }
 
     private var headerSpacing: CGFloat {
-        isCompactLayout ? 18 : 28
+        isCompactLayout ? 8 : 16
     }
 
     private var identityColumnWidth: CGFloat {
-        isCompactLayout ? 128 : 140
+        isCompactLayout ? 112 : 140
+    }
+
+    private var badgeRailWidth: CGFloat {
+        isCompactLayout ? 152 : 210
     }
 
     private var visibleHomeCountryCodes: [String] {
@@ -41,182 +42,206 @@ struct ProfileHeaderView: View {
         homeCountryCodes.count > visibleHomeCountryCodes.count
     }
 
-    private var visibleFavoriteCountries: [String] {
-        Array(favoriteCountries.prefix(4))
+    private var earnedBadges: [ProfileBadge] {
+        ProfileBadgeCatalog.badges(for: visitedCountryCodes)
     }
 
-    private var showsFavoriteTripsOverflow: Bool {
-        favoriteCountries.count > visibleFavoriteCountries.count
+    private var hasGoldBadgeState: Bool {
+        visitedCountryCodes.count >= 100
+    }
+
+    private var goldBadgeTint: Color {
+        Color(red: 0.84, green: 0.67, blue: 0.20)
     }
 
     var body: some View {
         HStack(alignment: .center, spacing: headerSpacing) {
+            identitySection
+                .frame(width: identityColumnWidth)
 
-            // LEFT COLUMN — Identity
-            VStack(alignment: .center, spacing: 12) {
-
-                avatarView
-                    .frame(width: 104, height: 104)
-
-                VStack(alignment: .center, spacing: 6) {
-
-                    Text(profile?.formattedFullName ?? "")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.black)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.72)
-                        .multilineTextAlignment(.center)
-
-                    if effectiveState != .selfProfile, !username.isEmpty {
-                        ctaButton
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    } else if !username.isEmpty {
-                        Text("@\(username)")
-                            .font(.subheadline)
-                            .foregroundColor(.black)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    if !homeCountryCodes.isEmpty {
-                        HStack(spacing: 6) {
-                            ForEach(visibleHomeCountryCodes, id: \.self) { code in
-                                Button {
-                                    onOpenCountry(code)
-                                } label: {
-                                    Text(flagEmoji(for: code))
-                                        .font(.title3)
-                                }
-                                .buttonStyle(.plain)
-                            }
-
-                            if showsHomeFlagsOverflow {
-                                Button {
-                                    showHomeFlagsSheet = true
-                                } label: {
-                                    Image(systemName: "chevron.right.circle.fill")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(.black.opacity(0.65))
-                                }
-                                .buttonStyle(.plain)
-
-                                if homeCountryCodes.count - visibleHomeCountryCodes.count > 0 {
-                                    Text("+\(homeCountryCodes.count - visibleHomeCountryCodes.count)")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundColor(.black)
-                                }
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    }
-                }
+            ProfileBadgeShowcaseView(
+                badges: earnedBadges,
+                visitedCountryCount: visitedCountryCodes.count,
+                onSelectBadge: presentBadgeToast
+            )
+            .frame(width: badgeRailWidth, alignment: .center)
+            .layoutPriority(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.top, 14)
+        .padding(.bottom, 12)
+        .background(headerBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+        .overlay(alignment: .bottomTrailing) {
+            if let selectedBadge {
+                badgeToast(selectedBadge)
+                    .padding(.trailing, 14)
+                    .padding(.bottom, 12)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
             }
-            .frame(width: identityColumnWidth)
-            .frame(maxHeight: .infinity, alignment: .center)
+        }
+        .animation(.spring(response: 0.32, dampingFraction: 0.82), value: selectedBadge?.id)
+        .sheet(isPresented: $showHomeFlagsSheet) {
+            CountryCodesSheet(title: String(localized: "profile.header.home_flags"), countryCodes: homeCountryCodes, onOpenCountry: onOpenCountry)
+        }
+    }
 
-            // RIGHT COLUMN — Improved countries block (always show fields with fallback)
-                VStack(alignment: .leading, spacing: 20) {
+    private var identitySection: some View {
+        VStack(alignment: .center, spacing: 12) {
+            avatarView
+                .frame(width: 104, height: 104)
 
-                // Current Country
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("profile.header.current")
-                        .font(.callout.weight(.semibold))
+            VStack(alignment: .center, spacing: 6) {
+                Text(profile?.formattedFullName ?? "")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.black)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.72)
+                    .multilineTextAlignment(.center)
+
+                if effectiveState != .selfProfile, !username.isEmpty {
+                    ctaButton
+                        .frame(maxWidth: .infinity, alignment: .center)
+                } else if !username.isEmpty {
+                    Text("@\(username)")
+                        .font(.subheadline)
                         .foregroundColor(.black)
-
-                    if let country = profile?.currentCountry,
-                       !country.isEmpty {
-                        countryLink(code: country)
-                    } else {
-                        Text("profile.header.not_set")
-                            .font(.subheadline)
-                            .foregroundColor(.black)
-                    }
+                        .multilineTextAlignment(.center)
                 }
 
-                // Next Destination
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("profile.header.next")
-                        .font(.callout.weight(.semibold))
-                        .foregroundColor(.black)
-
-                    if let destination = profile?.nextDestination,
-                       !destination.isEmpty {
-                        countryLink(code: destination)
-                    } else {
-                        Text("profile.header.not_set")
-                            .font(.subheadline)
-                            .foregroundColor(.black)
-                    }
-                }
-
-                // Favorites
-                VStack(alignment: .leading, spacing: 4) {
+                if !homeCountryCodes.isEmpty {
                     HStack(spacing: 6) {
-                        Text("profile.header.favorite_trips")
-                            .font(.callout.weight(.semibold))
-                            .foregroundColor(.black)
-
-                        if showsFavoriteTripsOverflow {
+                        ForEach(visibleHomeCountryCodes, id: \.self) { code in
                             Button {
-                                showFavoriteTripsSheet = true
+                                onOpenCountry(code)
+                            } label: {
+                                Text(flagEmoji(for: code))
+                                    .font(.title3)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        if showsHomeFlagsOverflow {
+                            Button {
+                                showHomeFlagsSheet = true
                             } label: {
                                 Image(systemName: "chevron.right.circle.fill")
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(.black.opacity(0.65))
                             }
                             .buttonStyle(.plain)
-                        }
-                    }
 
-                    if !favoriteCountries.isEmpty {
-                        HStack(spacing: 6) {
-                            ForEach(visibleFavoriteCountries, id: \.self) { code in
-                                Button {
-                                    onOpenCountry(code)
-                                } label: {
-                                    Text(flagEmoji(for: code.uppercased()))
-                                        .font(.title3)
-                                }
-                                .buttonStyle(.plain)
-                            }
-
-                            if showsFavoriteTripsOverflow {
-                                Text("+\(favoriteCountries.count - visibleFavoriteCountries.count)")
+                            if homeCountryCodes.count - visibleHomeCountryCodes.count > 0 {
+                                Text("+\(homeCountryCodes.count - visibleHomeCountryCodes.count)")
                                     .font(.caption.weight(.semibold))
                                     .foregroundColor(.black)
                             }
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    } else {
-                        Text("profile.header.not_set")
-                            .font(.subheadline)
-                            .foregroundColor(.black)
                     }
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(maxHeight: .infinity, alignment: .center)
-            .layoutPriority(1)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
-        .background(
+    }
+
+    private var headerBackground: some View {
+        GeometryReader { proxy in
             Image("profile_header")
                 .resizable()
                 .scaledToFill()
-                .clipped()
+                .frame(
+                    width: proxy.size.width * 1.9,
+                    height: proxy.size.height * 1.36
+                )
+                .offset(
+                    x: -proxy.size.width * 0.34,
+                    y: -proxy.size.height * 0.04
+                )
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
+        }
+    }
+
+    private func presentBadgeToast(_ badge: ProfileBadge) {
+        selectedBadge = badge
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_300_000_000)
+            if selectedBadge?.id == badge.id {
+                selectedBadge = nil
+            }
+        }
+    }
+
+    private func badgeToast(_ badge: ProfileBadge) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Group {
+                if let labelText = badge.labelText {
+                    Text(labelText)
+                        .font(.system(size: 12, weight: .black, design: .rounded))
+                        .foregroundStyle(badgeArtworkForegroundStyle)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                } else if badge.assetNames.isEmpty {
+                    Text(badge.emoji ?? "✨")
+                        .font(.system(size: 22))
+                        .foregroundStyle(badgeArtworkForegroundStyle)
+                } else if badge.assetNames.count == 1, let assetName = badge.assetNames.first {
+                    Image(assetName)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundStyle(badgeArtworkForegroundStyle)
+                        .padding(5)
+                } else {
+                    HStack(spacing: 2) {
+                        ForEach(badge.assetNames, id: \.self) { assetName in
+                            Image(assetName)
+                                .renderingMode(.template)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 10, height: 10)
+                                .foregroundStyle(badgeArtworkForegroundStyle)
+                        }
+                    }
+                }
+            }
+            .frame(width: 30, height: 30)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(badge.title)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.black)
+
+                Text(badge.subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.black.opacity(0.72))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: 220, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.94))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(displayTint(for: badge).opacity(hasGoldBadgeState ? 0.62 : 0.34), lineWidth: hasGoldBadgeState ? 1.3 : 1)
+                )
         )
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
-        .sheet(isPresented: $showFavoriteTripsSheet) {
-            CountryCodesSheet(title: String(localized: "profile.header.favorite_trips"), countryCodes: favoriteCountries, onOpenCountry: onOpenCountry)
-        }
-        .sheet(isPresented: $showHomeFlagsSheet) {
-            CountryCodesSheet(title: String(localized: "profile.header.home_flags"), countryCodes: homeCountryCodes, onOpenCountry: onOpenCountry)
-        }
+        .shadow(color: .black.opacity(0.12), radius: 10, y: 5)
+    }
+
+    private func displayTint(for badge: ProfileBadge) -> Color {
+        hasGoldBadgeState ? goldBadgeTint : badge.tint
+    }
+
+    private var badgeArtworkForegroundStyle: Color {
+        hasGoldBadgeState ? Color(red: 0.38, green: 0.25, blue: 0.04) : Color.black.opacity(0.84)
     }
 
     private var ctaButton: some View {
@@ -375,28 +400,6 @@ struct ProfileHeaderView: View {
         return locale.localizedString(forRegionCode: upper) ?? upper
     }
 
-    private func countryLink(code: String) -> some View {
-        Button {
-            onOpenCountry(code)
-        } label: {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(countryName(for: code))
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.black)
-                    .lineLimit(1)
-                    .minimumScaleFactor(1)
-                    .multilineTextAlignment(.leading)
-                    .layoutPriority(1)
-
-                Text(flagEmoji(for: code))
-                    .font(.system(size: 18))
-                    .fixedSize()
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
 }
 
 private struct CountryCodesSheet: View {

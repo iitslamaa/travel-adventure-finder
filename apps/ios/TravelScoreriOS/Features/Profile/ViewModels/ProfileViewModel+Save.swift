@@ -151,6 +151,9 @@ extension ProfileViewModel {
             favoriteCountries: normalizedFavoriteCountries,
             avatarUrl: avatarUrl
         ) {
+            SocialFeedDebug.log(
+                "profile.save.notification user=\(userId) posting=socialActivityUpdated next=\(nextDestination ?? "nil") current=\(normalizedCurrentCountry ?? "nil") homes=\((homeCountries ?? existingProfile?.livedCountries ?? []).count) favorites=\((normalizedFavoriteCountries ?? []).count) avatar_changed=\((existingProfile?.avatarUrl ?? "nil") != (avatarUrl == "" ? nil : avatarUrl ?? existingProfile?.avatarUrl))"
+            )
             NotificationCenter.default.post(name: .socialActivityUpdated, object: nil)
         }
     }
@@ -180,11 +183,17 @@ extension ProfileViewModel {
         let normalizedCurrent = currentCountry?.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedAvatar = avatarUrl == "" ? nil : avatarUrl
         let normalizedFavorites = favoriteCountries ?? normalizedExistingFavorites
+        let homesChanged = normalizedExistingHomes != homeCountries.sorted()
+        let favoritesChanged = normalizedExistingFavorites != normalizedFavorites
+        let nextChanged = existingProfile?.nextDestination != normalizedNext
+        let currentChanged = existingProfile?.currentCountry != normalizedCurrent
+        let avatarChanged = existingProfile?.avatarUrl != normalizedAvatar
+        let didChange = homesChanged || favoritesChanged || nextChanged || currentChanged || avatarChanged
 
-        return normalizedExistingHomes != homeCountries.sorted()
-            || normalizedExistingFavorites != normalizedFavorites
-            || existingProfile?.nextDestination != normalizedNext
-            || existingProfile?.currentCountry != normalizedCurrent
-            || existingProfile?.avatarUrl != normalizedAvatar
+        SocialFeedDebug.log(
+            "profile.save.diff user=\(userId) homes_changed=\(homesChanged) favorites_changed=\(favoritesChanged) next_changed=\(nextChanged) current_changed=\(currentChanged) avatar_changed=\(avatarChanged) did_change=\(didChange)"
+        )
+
+        return didChange
     }
 }
