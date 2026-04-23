@@ -50,7 +50,10 @@ final class SocialFeedViewModel: ObservableObject {
 }
 
 enum SocialFeedDebug {
-    static func log(_ message: String) {}
+    static func log(_ message: String) {
+        let timestamp = timestampFormatter.string(from: Date())
+        print("[SocialActivity][\(timestamp)] \(message)")
+    }
 
     static func duration(since startTime: Date) -> String {
         let milliseconds = Int(Date().timeIntervalSince(startTime) * 1_000)
@@ -75,4 +78,11 @@ enum SocialFeedDebug {
         let nsError = error as NSError
         return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
     }
+
+    private static let timestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        return formatter
+    }()
 }

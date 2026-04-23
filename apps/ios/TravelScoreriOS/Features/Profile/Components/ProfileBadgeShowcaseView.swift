@@ -2,9 +2,9 @@ import SwiftUI
 
 struct ProfileBadge: Identifiable, Hashable {
     let id: String
+    let emoji: String
     let title: String
     let subtitle: String
-    let systemImage: String
     let tint: Color
 }
 
@@ -29,9 +29,9 @@ enum ProfileBadgeCatalog {
             badges.append(
                 ProfileBadge(
                     id: "milestone-2-first",
+                    emoji: "✨",
                     title: "Second Stamp",
                     subtitle: "Visited your second country",
-                    systemImage: "sparkles",
                     tint: Color(red: 0.89, green: 0.55, blue: 0.26)
                 )
             )
@@ -41,16 +41,15 @@ enum ProfileBadgeCatalog {
             badges.append(
                 ProfileBadge(
                     id: "milestone-\(threshold)",
+                    emoji: milestoneEmoji(for: threshold),
                     title: threshold == 100 ? "100 Club" : "\(threshold) Countries",
                     subtitle: "Visited \(threshold) countries",
-                    systemImage: threshold >= 100 ? "globe.americas.fill" : "airplane.circle.fill",
                     tint: milestoneTint(for: threshold)
                 )
             )
         }
 
-        let visitedContinents = continentBadges(for: normalizedCodes)
-        badges.append(contentsOf: visitedContinents)
+        badges.append(contentsOf: continentBadges(for: normalizedCodes))
 
         if let allCountriesCount = CountryAPI.loadCachedCountries()?.count,
            allCountriesCount > 0,
@@ -58,15 +57,48 @@ enum ProfileBadgeCatalog {
             badges.append(
                 ProfileBadge(
                     id: "milestone-all-countries",
+                    emoji: "🌍",
                     title: "Every Country",
                     subtitle: "Visited every country in the app",
-                    systemImage: "globe.europe.africa.fill",
                     tint: Color(red: 0.18, green: 0.52, blue: 0.39)
                 )
             )
         }
 
         return badges
+    }
+
+    private static func milestoneEmoji(for threshold: Int) -> String {
+        switch threshold {
+        case 5:
+            return "✈️"
+        case 10:
+            return "🧭"
+        case 20:
+            return "🎒"
+        case 30:
+            return "🚀"
+        case 40:
+            return "🌤️"
+        case 50:
+            return "🏝️"
+        case 60:
+            return "🎟️"
+        case 70:
+            return "🗺️"
+        case 80:
+            return "🎉"
+        case 90:
+            return "💫"
+        case 100:
+            return "👑"
+        case 150:
+            return "🏆"
+        case 200:
+            return "🌈"
+        default:
+            return "✨"
+        }
     }
 
     private static func milestoneTint(for threshold: Int) -> Color {
@@ -97,9 +129,9 @@ enum ProfileBadgeCatalog {
                 guard let presentation = continentPresentation(for: continent) else { return nil }
                 return ProfileBadge(
                     id: "continent-\(continent.lowercased())",
+                    emoji: presentation.emoji,
                     title: presentation.title,
                     subtitle: "Been to \(continent)",
-                    systemImage: presentation.systemImage,
                     tint: presentation.tint
                 )
             }
@@ -127,20 +159,20 @@ enum ProfileBadgeCatalog {
         }
     }
 
-    private static func continentPresentation(for continent: String) -> (title: String, systemImage: String, tint: Color)? {
+    private static func continentPresentation(for continent: String) -> (title: String, emoji: String, tint: Color)? {
         switch continent {
         case "Africa":
-            return ("Africa Touched", "sun.max.fill", Color(red: 0.82, green: 0.47, blue: 0.16))
+            return ("Africa Touched", "🦁", Color(red: 0.82, green: 0.47, blue: 0.16))
         case "Americas":
-            return ("Americas Touched", "globe.americas.fill", Color(red: 0.21, green: 0.57, blue: 0.44))
+            return ("Americas Touched", "🗽", Color(red: 0.21, green: 0.57, blue: 0.44))
         case "Antarctica":
-            return ("Polar Passport", "snowflake", Color(red: 0.34, green: 0.59, blue: 0.86))
+            return ("Polar Passport", "🐧", Color(red: 0.34, green: 0.59, blue: 0.86))
         case "Asia":
-            return ("Asia Touched", "sparkles", Color(red: 0.77, green: 0.34, blue: 0.44))
+            return ("Asia Touched", "🏯", Color(red: 0.77, green: 0.34, blue: 0.44))
         case "Europe":
-            return ("Europe Touched", "building.columns.fill", Color(red: 0.27, green: 0.43, blue: 0.83))
+            return ("Europe Touched", "🏛️", Color(red: 0.27, green: 0.43, blue: 0.83))
         case "Oceania":
-            return ("Oceania Touched", "water.waves", Color(red: 0.14, green: 0.60, blue: 0.78))
+            return ("Oceania Touched", "🐠", Color(red: 0.14, green: 0.60, blue: 0.78))
         default:
             return nil
         }
@@ -150,130 +182,75 @@ enum ProfileBadgeCatalog {
 struct ProfileBadgeShowcaseView: View {
     let badges: [ProfileBadge]
     let visitedCountryCount: Int
+    let onSelectBadge: (ProfileBadge) -> Void
 
     private var featuredBadges: [ProfileBadge] {
-        Array(badges.prefix(4))
+        Array(badges.prefix(6))
+    }
+
+    private var columns: [GridItem] {
+        [
+            GridItem(.adaptive(minimum: 46, maximum: 46), spacing: 10, alignment: .leading)
+        ]
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Passport shelf")
-                        .font(.headline.weight(.semibold))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Badges")
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(.black)
 
-                    if badges.isEmpty {
-                        Text(visitedCountryCount == 1 ? "One more country unlocks your first badge." : "Start collecting badges as you travel.")
-                            .font(.subheadline)
-                            .foregroundStyle(.black.opacity(0.72))
-                    } else {
-                        Text("\(badges.count) badge\(badges.count == 1 ? "" : "s") unlocked")
-                            .font(.subheadline)
-                            .foregroundStyle(.black.opacity(0.72))
-                    }
+                    Text("\(visitedCountryCount) visited")
+                        .font(.caption)
+                        .foregroundStyle(.black.opacity(0.62))
                 }
 
                 Spacer()
-
-                Text("\(visitedCountryCount)")
-                    .font(.system(size: 26, weight: .black, design: .rounded))
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .fill(Color.white.opacity(0.64))
-                    )
             }
 
             if featuredBadges.isEmpty {
-                emptyState
+                Text("✨")
+                    .font(.system(size: 24))
+                    .frame(width: 46, height: 46)
+                    .background(
+                        Circle()
+                            .fill(Color.white.opacity(0.52))
+                    )
             } else {
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible(), spacing: 10),
-                        GridItem(.flexible(), spacing: 10)
-                    ],
-                    spacing: 10
-                ) {
+                LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
                     ForEach(featuredBadges) { badge in
-                        ProfileBadgeCard(badge: badge)
+                        Button {
+                            onSelectBadge(badge)
+                        } label: {
+                            Text(badge.emoji)
+                                .font(.system(size: 22))
+                                .frame(width: 46, height: 46)
+                                .background(
+                                    Circle()
+                                        .fill(badge.tint.opacity(0.18))
+                                )
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white.opacity(0.72), lineWidth: 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 14)
+        .frame(maxWidth: 178, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.26))
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.white.opacity(0.28))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(Color.white.opacity(0.36), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.white.opacity(0.38), lineWidth: 1)
                 )
-        )
-    }
-
-    private var emptyState: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "seal")
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(Color(red: 0.85, green: 0.50, blue: 0.21))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("First badge is waiting")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.black)
-
-                Text("Hit two visited countries to unlock your second-stamp badge.")
-                    .font(.footnote)
-                    .foregroundStyle(.black.opacity(0.68))
-            }
-
-            Spacer()
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.48))
-        )
-    }
-}
-
-private struct ProfileBadgeCard: View {
-    let badge: ProfileBadge
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: badge.systemImage)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(badge.tint)
-                .frame(width: 34, height: 34)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(badge.tint.opacity(0.16))
-                )
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(badge.title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.black)
-                    .lineLimit(2)
-
-                Text(badge.subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.black.opacity(0.7))
-                    .lineLimit(2)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 78, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.56))
         )
     }
 }

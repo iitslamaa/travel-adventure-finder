@@ -8,11 +8,21 @@ import Supabase
 import PostgREST
 
 private enum FriendServiceDebugLog {
-    static func message(_ text: String) {}
+    static func message(_ text: String) {
+        let timestamp = timestampFormatter.string(from: Date())
+        print("[FriendService][\(timestamp)] \(text)")
+    }
 
     static func duration(since start: Date) -> String {
         "\(Int(Date().timeIntervalSince(start) * 1000))ms"
     }
+
+    private static let timestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        return formatter
+    }()
 }
 
 private struct FriendRow: Decodable {

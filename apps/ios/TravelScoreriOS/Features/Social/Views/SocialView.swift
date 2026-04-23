@@ -30,6 +30,7 @@ struct SocialView: View {
                             .padding(.bottom, max(floatingTabBarInset + 24, 112))
                     }
                     .refreshable {
+                        SocialFeedDebug.log("view.refresh.start user=\(userId)")
                         await feedVM.loadFeed(for: userId, source: "pull-to-refresh")
                     }
                 }
@@ -39,15 +40,20 @@ struct SocialView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .task(id: userId) {
+            SocialFeedDebug.log("view.task.initial user=\(userId)")
             await feedVM.loadFeed(for: userId, source: "initial-task")
         }
         .onReceive(NotificationCenter.default.publisher(for: .socialActivityUpdated)) { _ in
+            SocialFeedDebug.log("view.notification.received name=socialActivityUpdated user=\(userId)")
             Task {
+                SocialFeedDebug.log("view.notification.task.start name=socialActivityUpdated user=\(userId)")
                 await feedVM.loadFeed(for: userId, source: "social-activity-updated")
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .friendshipUpdated)) { _ in
+            SocialFeedDebug.log("view.notification.received name=friendshipUpdated user=\(userId)")
             Task {
+                SocialFeedDebug.log("view.notification.task.start name=friendshipUpdated user=\(userId)")
                 await feedVM.loadFeed(for: userId, source: "friendship-updated")
             }
         }

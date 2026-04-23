@@ -124,16 +124,24 @@ final class SocialActivityService {
         eventType: SocialActivityEventType,
         metadata: [String: String]
     ) async throws {
+        let startTime = Date()
+        SocialFeedDebug.log("record.start actor=\(actorUserId) event=\(eventType.rawValue) metadata=\(metadata)")
         let payload = SocialActivityInsert(
             actorUserId: actorUserId,
             eventType: eventType.rawValue,
             metadata: metadata
         )
 
-        try await supabase.client
-            .from("activity_events")
-            .insert(payload)
-            .execute()
+        do {
+            try await supabase.client
+                .from("activity_events")
+                .insert(payload)
+                .execute()
+            SocialFeedDebug.log("record.success actor=\(actorUserId) event=\(eventType.rawValue) duration=\(SocialFeedDebug.duration(since: startTime))")
+        } catch {
+            SocialFeedDebug.log("record.error actor=\(actorUserId) event=\(eventType.rawValue) error=\(SocialFeedDebug.describe(error)) duration=\(SocialFeedDebug.duration(since: startTime))")
+            throw error
+        }
     }
 
     private func buildActorProfiles(for userId: UUID, friends: [Profile], requestId: String) async throws -> [UUID: Profile] {

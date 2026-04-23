@@ -11,6 +11,7 @@ struct ProfileHeaderView: View {
     let onToggleFriend: () -> Void
     let onOpenCountry: (String) -> Void
     @State private var showHomeFlagsSheet = false
+    @State private var selectedBadge: ProfileBadge?
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var effectiveState: RelationshipState {
@@ -46,25 +47,27 @@ struct ProfileHeaderView: View {
             if isCompactLayout {
                 VStack(alignment: .leading, spacing: 18) {
                     identitySection
-                        .frame(maxWidth: .infinity, alignment: .center)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
                     ProfileBadgeShowcaseView(
                         badges: earnedBadges,
-                        visitedCountryCount: visitedCountryCodes.count
+                        visitedCountryCount: visitedCountryCodes.count,
+                        onSelectBadge: presentBadgeToast
                     )
                 }
             } else {
-                HStack(alignment: .center, spacing: headerSpacing) {
+                HStack(alignment: .top, spacing: headerSpacing) {
                     identitySection
                         .frame(width: identityColumnWidth)
-                        .frame(maxHeight: .infinity, alignment: .center)
+                        .frame(maxHeight: .infinity, alignment: .topLeading)
 
                     ProfileBadgeShowcaseView(
                         badges: earnedBadges,
-                        visitedCountryCount: visitedCountryCodes.count
+                        visitedCountryCount: visitedCountryCodes.count,
+                        onSelectBadge: presentBadgeToast
                     )
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(maxHeight: .infinity, alignment: .center)
+                    .frame(maxHeight: .infinity, alignment: .topTrailing)
                     .layoutPriority(1)
                 }
             }
@@ -81,6 +84,15 @@ struct ProfileHeaderView: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+        .overlay(alignment: .bottomTrailing) {
+            if let selectedBadge {
+                badgeToast(selectedBadge)
+                    .padding(.trailing, 14)
+                    .padding(.bottom, 12)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.32, dampingFraction: 0.82), value: selectedBadge?.id)
         .sheet(isPresented: $showHomeFlagsSheet) {
             CountryCodesSheet(title: String(localized: "profile.header.home_flags"), countryCodes: homeCountryCodes, onOpenCountry: onOpenCountry)
         }
@@ -143,6 +155,47 @@ struct ProfileHeaderView: View {
                 }
             }
         }
+    }
+
+    private func presentBadgeToast(_ badge: ProfileBadge) {
+        selectedBadge = badge
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_300_000_000)
+            if selectedBadge?.id == badge.id {
+                selectedBadge = nil
+            }
+        }
+    }
+
+    private func badgeToast(_ badge: ProfileBadge) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(badge.emoji)
+                .font(.system(size: 22))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(badge.title)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.black)
+
+                Text(badge.subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.black.opacity(0.72))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: 220, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.94))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(badge.tint.opacity(0.34), lineWidth: 1)
+                )
+        )
+        .shadow(color: .black.opacity(0.12), radius: 10, y: 5)
     }
 
     private var ctaButton: some View {
