@@ -175,28 +175,38 @@ struct SocialView: View {
     }
 
     private func activityRow(for event: SocialActivityEvent) -> some View {
-        HStack(spacing: 12) {
-            avatarView(for: event.actorProfile)
+        Button {
+            socialNav.push(.profile(event.actorUserId))
+        } label: {
+            HStack(spacing: 12) {
+                avatarView(for: event.actorProfile)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("\(activityEmoji(for: event)) Update")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.black.opacity(0.5))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(activityEyebrow(for: event))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.5))
 
-                Text(activityText(for: event))
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.black)
-                    .fixedSize(horizontal: false, vertical: true)
+                    Text(activityText(for: event))
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.black)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                Text(event.createdAt, style: .relative)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.black.opacity(0.62))
+                    Text(activityTimestamp(for: event.createdAt))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.black.opacity(0.62))
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.28))
             }
-
-            Spacer(minLength: 0)
         }
+        .buttonStyle(.plain)
         .padding(.horizontal, 4)
         .padding(.vertical, 10)
+        .contentShape(Rectangle())
     }
 
     private func avatarView(for profile: Profile?) -> some View {
@@ -230,54 +240,66 @@ struct SocialView: View {
     }
 
     private func activityText(for event: SocialActivityEvent) -> String {
-        let subject = activityPossessiveSubject(for: event.actorProfile)
         let country = countryDisplayName(for: event)
         let destination = destinationDisplayName(for: event)
 
         switch event.eventType {
         case .bucketListAdded:
-            return "Bucket List: \(country ?? "Somewhere new")"
+            return "Bucket List: \(country ?? "Somewhere new")\(flagSuffix(for: event))"
         case .countryVisited:
-            return "\(subject) visited \(country ?? "somewhere new")"
+            return "Visited: \(country ?? "Somewhere new")\(flagSuffix(for: event))"
         case .nextDestinationChanged:
-            return "\(subject) next destination is \(destination ?? country ?? "somewhere new")"
+            return "Next Destination: \(destination ?? country ?? "Somewhere new")\(flagSuffix(for: event))"
         case .profilePhotoUpdated:
-            return "\(subject) profile photo is updated"
+            return "Profile Photo Updated"
         case .currentCountryChanged:
-            return "\(subject) current country is \(country ?? "somewhere new")"
+            return "Current Country: \(country ?? "Somewhere new")\(flagSuffix(for: event))"
         case .homeCountryChanged:
-            return "Home Country: \(country ?? "Updated")"
+            return "Home Country: \(country ?? "Updated")\(flagSuffix(for: event))"
         }
     }
 
-    private func activityPossessiveSubject(for profile: Profile?) -> String {
-        if let fullName = profile?.fullName.trimmingCharacters(in: .whitespacesAndNewlines),
-           !fullName.isEmpty {
-            return possessive(fullName)
+    private func activityEyebrow(for event: SocialActivityEvent) -> String {
+        let username = usernameText(for: event.actorProfile)
+        guard !username.isEmpty else {
+            return "\(activityEmoji(for: event)) Update"
         }
 
-        let nameParts = [profile?.firstName, profile?.lastName]
-            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+        return "\(activityEmoji(for: event)) Update · \(username)"
+    }
 
-        if !nameParts.isEmpty {
-            return possessive(nameParts.joined(separator: " "))
-        }
-
+    private func usernameText(for profile: Profile?) -> String {
         if let username = profile?.username.trimmingCharacters(in: .whitespacesAndNewlines),
            !username.isEmpty {
-            return possessive("@\(username)")
+            return "@\(username)"
         }
 
-        return "Their"
+        return ""
     }
 
-    private func possessive(_ subject: String) -> String {
-        if subject.hasSuffix("s") || subject.hasSuffix("S") {
-            return "\(subject)'"
+    private func activityTimestamp(for date: Date) -> String {
+        let elapsed = max(Int(Date().timeIntervalSince(date)), 0)
+
+        if elapsed < 60 {
+            return "Just now"
         }
 
-        return "\(subject)'s"
+        let minutes = elapsed / 60
+        if minutes < 60 {
+            return "\(minutes)m ago"
+        }
+
+        let hours = minutes / 60
+        if hours < 24 {
+            return "\(hours)h ago"
+        }
+
+        let days = hours / 24
+        if days < 7 {
+            return "\(days)d ago"
+        }
+
+        return date.formatted(.dateTime.month(.abbreviated).day())
     }
 
     private func activityEmoji(for event: SocialActivityEvent) -> String {
@@ -300,7 +322,7 @@ struct SocialView: View {
     private func countryDisplayName(for event: SocialActivityEvent) -> String? {
         if let countryName = event.metadata["country_name"]?.stringValue,
            !countryName.isEmpty {
-            return flagPrefix(for: event) + countryName
+            return countryName
         }
 
         guard let countryCode = event.metadata["country_code"]?.stringValue
@@ -309,13 +331,13 @@ struct SocialView: View {
 
         let code = countryCode.uppercased()
         let name = Locale.current.localizedString(forRegionCode: code) ?? code
-        return flagPrefix(for: code) + name
+        return name
     }
 
     private func destinationDisplayName(for event: SocialActivityEvent) -> String? {
         if let destinationName = event.metadata["destination_name"]?.stringValue,
            !destinationName.isEmpty {
-            return flagPrefix(for: event) + destinationName
+            return destinationName
         }
 
         guard let destination = event.metadata["destination"]?.stringValue else {
@@ -324,19 +346,22 @@ struct SocialView: View {
 
         let code = destination.uppercased()
         let name = Locale.current.localizedString(forRegionCode: code) ?? destination
-        return flagPrefix(for: code) + name
+        return name
     }
 
-    private func flagPrefix(for event: SocialActivityEvent) -> String {
+    private func flagSuffix(for event: SocialActivityEvent) -> String {
         guard let countryCode = event.metadata["country_code"]?.stringValue
             ?? event.metadata["country"]?.stringValue
             ?? event.metadata["destination"]?.stringValue
         else { return "" }
 
-        return flagPrefix(for: countryCode)
+        let flag = flag(for: countryCode)
+        guard !flag.isEmpty else { return "" }
+
+        return " \(flag)"
     }
 
-    private func flagPrefix(for code: String) -> String {
+    private func flag(for code: String) -> String {
         let upper = code.uppercased()
         guard upper.count == 2, upper.allSatisfy(\.isLetter) else { return "" }
 
@@ -346,6 +371,6 @@ struct SocialView: View {
             .map { String($0) }
             .joined()
 
-        return "\(flag) "
+        return flag
     }
 }

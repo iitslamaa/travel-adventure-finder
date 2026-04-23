@@ -31,6 +31,11 @@ final class SocialActivityService {
         let friends = try await friendService.fetchFriends(for: userId)
         SocialFeedDebug.log("service.friends.success id=\(requestId) count=\(friends.count) duration=\(SocialFeedDebug.duration(since: friendsStartTime)) cancelled=\(Task.isCancelled)")
 
+        var profileLookup = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })
+        if let currentUserProfile = ProfileService(supabase: supabase).cachedProfile(userId: userId) {
+            profileLookup[userId] = currentUserProfile
+        }
+
         let actorIds = Array(Set(friends.map(\.id) + [userId]))
         let actorPreview = actorIds.prefix(6).map(\.uuidString).joined(separator: ",")
         let cutoffDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
@@ -49,16 +54,7 @@ final class SocialActivityService {
                     actor_user_id,
                     event_type,
                     metadata,
-                    created_at,
-                    profiles!activity_events_actor_user_id_fkey (
-                        id,
-                        username,
-                        full_name,
-                        first_name,
-                        last_name,
-                        avatar_url,
-                        friend_count
-                    )
+                    created_at
                 """)
                 .in("actor_user_id", values: actorIds)
                 .gte("created_at", value: cutoffValue)
@@ -66,11 +62,22 @@ final class SocialActivityService {
                 .limit(limit)
                 .execute()
 
-            let eventPreview = response.value.prefix(5)
+            let events = response.value.map { event in
+                SocialActivityEvent(
+                    id: event.id,
+                    actorUserId: event.actorUserId,
+                    eventType: event.eventType,
+                    metadata: event.metadata,
+                    createdAt: event.createdAt,
+                    actorProfile: profileLookup[event.actorUserId] ?? event.actorProfile
+                )
+            }
+
+            let eventPreview = events.prefix(5)
                 .map { "\($0.id.uuidString.prefix(8)):\($0.eventType.rawValue):\($0.actorUserId.uuidString.prefix(8))" }
                 .joined(separator: ",")
-            SocialFeedDebug.log("service.query.success id=\(requestId) rows=\(response.value.count) duration=\(SocialFeedDebug.duration(since: queryStartTime)) preview=[\(eventPreview)] total_duration=\(SocialFeedDebug.duration(since: startTime))")
-            return response.value
+            SocialFeedDebug.log("service.query.success id=\(requestId) rows=\(events.count) duration=\(SocialFeedDebug.duration(since: queryStartTime)) preview=[\(eventPreview)] total_duration=\(SocialFeedDebug.duration(since: startTime))")
+            return events
         } catch let error as PostgrestError {
             SocialFeedDebug.log("service.query.postgrest_error id=\(requestId) message=\(error.message) code=\(error.code ?? "nil") detail=\(error.detail ?? "nil") hint=\(error.hint ?? "nil")")
 

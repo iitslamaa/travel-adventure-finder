@@ -17,6 +17,22 @@ struct SocialActivityEvent: Identifiable, Decodable {
     let createdAt: Date
     let actorProfile: Profile?
 
+    init(
+        id: UUID,
+        actorUserId: UUID,
+        eventType: SocialActivityEventType,
+        metadata: [String: SocialActivityMetadataValue],
+        createdAt: Date,
+        actorProfile: Profile?
+    ) {
+        self.id = id
+        self.actorUserId = actorUserId
+        self.eventType = eventType
+        self.metadata = metadata
+        self.createdAt = createdAt
+        self.actorProfile = actorProfile
+    }
+
     enum CodingKeys: String, CodingKey {
         case id
         case actorUserId = "actor_user_id"
