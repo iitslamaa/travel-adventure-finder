@@ -131,7 +131,7 @@ struct SocialView: View {
     }
 
     private func actionButtonRow(contentWidth: CGFloat) -> some View {
-        let buttonSize = floor((contentWidth - 24) / 3)
+        let buttonSize = max(floor((contentWidth - 24) / 3), 1)
 
         return HStack(spacing: 12) {
             socialActionButton(
