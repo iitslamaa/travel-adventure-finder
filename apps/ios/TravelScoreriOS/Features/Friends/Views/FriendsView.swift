@@ -68,13 +68,9 @@ struct FriendsView: View {
             let contentWidth = socialContentWidth(for: geo.size.width)
 
             ZStack {
-                VStack(spacing: 0) {
-                    Theme.titleBanner(String(localized: "friends.title"))
-
-                    contentView(contentWidth: contentWidth)
-                        .padding(.top, 12)
-                        .padding(.bottom, 12)
-                }
+                contentView(contentWidth: contentWidth)
+                    .padding(.top, max(geo.safeAreaInsets.top + (showsBackButton ? 44 : 12), 18))
+                    .padding(.bottom, 12)
 
                 VStack {
                     HStack {
@@ -99,40 +95,6 @@ struct FriendsView: View {
 
                     Spacer()
                 }
-
-                if isOwnFriendsPage {
-                    VStack {
-                        HStack {
-                            Spacer()
-
-                            NavigationLink(value: SocialRoute.friendRequests) {
-                                ZStack {
-                                    Theme.chromeIconButtonBackground(size: 40)
-
-                                    Image(systemName: "person.crop.circle.badge.plus")
-                                        .font(TAFTypography.title(.bold))
-                                        .foregroundStyle(.black)
-
-                                    if friendsVM.incomingRequestCount > 0 {
-                                        Text(AppNumberFormatting.integerString(min(friendsVM.incomingRequestCount, 9)))
-                                            .font(TAFTypography.caption(.bold))
-                                            .foregroundStyle(.white)
-                                            .frame(width: 18, height: 18)
-                                            .background(Circle().fill(.red))
-                                            .offset(x: 12, y: -12)
-                                    }
-                                }
-                                .frame(width: 40, height: 40)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .padding(.horizontal, horizontalInset)
-                        .padding(.top, 12)
-
-                        Spacer()
-                    }
-                }
             }
             .background(
                 Theme.pageBackground("travel3")
@@ -152,19 +114,11 @@ struct FriendsView: View {
                 Text(friendsVM.errorMessage ?? "")
             }
             .task(id: userId) {
-                let shouldLoadRequestCount = isOwnFriendsPage
                 let startedAt = Date()
-
-                if shouldLoadRequestCount {
-                    async let friendsLoad: Void = friendsVM.loadFriends(for: userId, forceRefresh: false)
-                    async let requestCountLoad: Void = friendsVM.loadIncomingRequestCount()
-                    _ = await (friendsLoad, requestCountLoad)
-                } else {
-                    await friendsVM.loadFriends(for: userId, forceRefresh: false)
-                }
+                await friendsVM.loadFriends(for: userId, forceRefresh: false)
 
                 FriendsScreenDebugLog.message(
-                    "Initial task finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) requestCount=\(friendsVM.incomingRequestCount) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                    "Initial task finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
                 )
             }
             .onReceive(NotificationCenter.default.publisher(for: .friendshipUpdated)) { _ in
@@ -172,12 +126,8 @@ struct FriendsView: View {
                     let startedAt = Date()
                     await friendsVM.loadFriends(for: userId, forceRefresh: true)
 
-                    if isOwnFriendsPage {
-                        await friendsVM.loadIncomingRequestCount()
-                    }
-
                     FriendsScreenDebugLog.message(
-                        "Friendship refresh finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) requestCount=\(friendsVM.incomingRequestCount) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                        "Friendship refresh finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
                     )
                 }
             }
@@ -306,17 +256,12 @@ struct FriendsView: View {
                     }
                     .refreshable {
                         await friendsVM.loadFriends(for: userId, forceRefresh: true)
-                        if isOwnFriendsPage {
-                            await friendsVM.loadIncomingRequestCount()
-                        }
                     }
                 }
                 }
             }
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .padding(.top, 18)
-            .padding(.bottom, floatingTabBarInset + 18)
         }
     }
 
