@@ -6,19 +6,23 @@ import Supabase
 final class SocialActivityService {
     private let supabase: SupabaseManager
     private let friendService: FriendService
+    private let profileService: ProfileService
 
     init(
         supabase: SupabaseManager,
-        friendService: FriendService
+        friendService: FriendService,
+        profileService: ProfileService
     ) {
         self.supabase = supabase
         self.friendService = friendService
+        self.profileService = profileService
     }
 
     convenience init() {
         self.init(
             supabase: .shared,
-            friendService: FriendService()
+            friendService: FriendService(),
+            profileService: ProfileService(supabase: .shared)
         )
     }
 
@@ -34,22 +38,14 @@ final class SocialActivityService {
         let prequeryStartTime = Date()
         SocialFeedDebug.log("service.prequery.start id=\(requestId) total_duration=\(SocialFeedDebug.duration(since: startTime)) cancelled=\(Task.isCancelled)")
 
-        let lookupStartTime = Date()
-        var profileLookup = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })
-        SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
-
-        let profileService = ProfileService(supabase: supabase)
-        let currentProfileStartTime = Date()
-        SocialFeedDebug.log("service.prequery.current_profile_memory_cache.start id=\(requestId)")
-        if let currentUserProfile = profileService.currentUserProfileFallback(userId: userId) {
-            profileLookup[userId] = currentUserProfile
-        }
-        SocialFeedDebug.log("service.prequery.current_profile_memory_cache.end id=\(requestId) hit=\(profileLookup[userId] != nil) duration=\(SocialFeedDebug.duration(since: currentProfileStartTime)) total_duration=\(SocialFeedDebug.duration(since: startTime))")
-
         let actorsStartTime = Date()
         let actorIds = Array(Set(friends.map(\.id) + [userId]))
         let actorPreview = actorIds.prefix(6).map(\.uuidString).joined(separator: ",")
         SocialFeedDebug.log("service.prequery.actors.end id=\(requestId) actors=\(actorIds.count) duration=\(SocialFeedDebug.duration(since: actorsStartTime))")
+
+        let lookupStartTime = Date()
+        let profileLookup = try await fetchActorProfiles(for: actorIds)
+        SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
 
         let cutoffStartTime = Date()
         let cutoffDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
@@ -127,6 +123,33 @@ final class SocialActivityService {
             .insert(payload)
             .execute()
     }
+
+    private func fetchActorProfiles(for actorIds: [UUID]) async throws -> [UUID: Profile] {
+        var profilesById: [UUID: Profile] = [:]
+
+        for actorId in actorIds {
+            if let cached = profileService.cachedProfile(userId: actorId) {
+                profilesById[actorId] = cached
+            }
+        }
+
+        let missingIds = actorIds.filter { profilesById[$0] == nil }
+        guard !missingIds.isEmpty else {
+            return profilesById
+        }
+
+        let response: PostgrestResponse<[SocialActorProfileRow]> = try await supabase.client
+            .from("profiles")
+            .select(SocialActorProfileRow.selectColumns)
+            .in("id", values: missingIds)
+            .execute()
+
+        for row in response.value {
+            profilesById[row.id] = row.profile
+        }
+
+        return profilesById
+    }
 }
 
 private struct SocialActivityInsert: Encodable {
@@ -138,5 +161,56 @@ private struct SocialActivityInsert: Encodable {
         case actorUserId = "actor_user_id"
         case eventType = "event_type"
         case metadata
+    }
+}
+
+private struct SocialActorProfileRow: Decodable {
+    static let selectColumns = """
+        id,
+        username,
+        full_name,
+        first_name,
+        last_name,
+        avatar_url,
+        friend_count
+    """
+
+    let id: UUID
+    let username: String?
+    let fullName: String?
+    let firstName: String?
+    let lastName: String?
+    let avatarUrl: String?
+    let friendCount: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case username
+        case fullName = "full_name"
+        case firstName = "first_name"
+        case lastName = "last_name"
+        case avatarUrl = "avatar_url"
+        case friendCount = "friend_count"
+    }
+
+    var profile: Profile {
+        Profile(
+            id: id,
+            username: username ?? "",
+            fullName: fullName ?? "",
+            firstName: firstName,
+            lastName: lastName,
+            avatarUrl: avatarUrl,
+            languages: [],
+            livedCountries: [],
+            travelStyle: [],
+            travelMode: [],
+            nextDestination: nil,
+            defaultCurrencyCode: nil,
+            currentCountry: nil,
+            favoriteCountries: nil,
+            onboardingCompleted: nil,
+            friendCount: friendCount ?? 0
+        )
     }
 }
