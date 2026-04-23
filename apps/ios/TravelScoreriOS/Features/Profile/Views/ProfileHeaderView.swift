@@ -23,7 +23,7 @@ struct ProfileHeaderView: View {
     }
 
     private var headerSpacing: CGFloat {
-        isCompactLayout ? 16 : 24
+        isCompactLayout ? 14 : 20
     }
 
     private var identityColumnWidth: CGFloat {
@@ -51,14 +51,12 @@ struct ProfileHeaderView: View {
             identitySection
                 .frame(width: identityColumnWidth)
 
-            Spacer(minLength: 0)
-
             ProfileBadgeShowcaseView(
                 badges: earnedBadges,
                 visitedCountryCount: visitedCountryCodes.count,
                 onSelectBadge: presentBadgeToast
             )
-            .frame(width: badgeRailWidth, alignment: .trailing)
+            .frame(width: badgeRailWidth, alignment: .leading)
             .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
