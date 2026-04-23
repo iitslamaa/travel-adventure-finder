@@ -39,11 +39,11 @@ final class SocialActivityService {
         SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
 
         let currentProfileStartTime = Date()
-        SocialFeedDebug.log("service.prequery.current_profile_cache.start id=\(requestId)")
-        if let currentUserProfile = ProfileService(supabase: supabase).cachedProfile(userId: userId) {
+        SocialFeedDebug.log("service.prequery.current_profile_memory_cache.start id=\(requestId)")
+        if let currentUserProfile = ProfileService(supabase: supabase).inMemoryProfile(userId: userId) {
             profileLookup[userId] = currentUserProfile
         }
-        SocialFeedDebug.log("service.prequery.current_profile_cache.end id=\(requestId) hit=\(profileLookup[userId] != nil) duration=\(SocialFeedDebug.duration(since: currentProfileStartTime)) total_duration=\(SocialFeedDebug.duration(since: startTime))")
+        SocialFeedDebug.log("service.prequery.current_profile_memory_cache.end id=\(requestId) hit=\(profileLookup[userId] != nil) duration=\(SocialFeedDebug.duration(since: currentProfileStartTime)) total_duration=\(SocialFeedDebug.duration(since: startTime))")
 
         let actorsStartTime = Date()
         let actorIds = Array(Set(friends.map(\.id) + [userId]))

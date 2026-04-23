@@ -156,6 +156,10 @@ final class ProfileService {
         self.supabase = supabase
     }
 
+    func inMemoryProfile(userId: UUID) -> Profile? {
+        Self.profileCache[userId]
+    }
+
     func cachedProfile(userId: UUID) -> Profile? {
         if let cachedProfile = Self.profileCache[userId] {
             return cachedProfile
