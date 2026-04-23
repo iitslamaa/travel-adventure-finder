@@ -18,18 +18,20 @@ struct SocialView: View {
                 Theme.pageBackground("travel3")
                     .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 16) {
-                        actionButtonRow(contentWidth: contentWidth)
+                VStack(spacing: 16) {
+                    actionButtonRow(contentWidth: contentWidth)
+                        .frame(width: contentWidth)
+                        .padding(.top, max(geo.safeAreaInsets.top - 12, 12))
+
+                    ScrollView {
                         activitySection
+                            .frame(width: contentWidth)
+                            .frame(maxWidth: .infinity)
+                            .padding(.bottom, max(floatingTabBarInset + 24, 112))
                     }
-                    .frame(width: contentWidth)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, max(geo.safeAreaInsets.top - 12, 12))
-                    .padding(.bottom, max(floatingTabBarInset + 24, 112))
-                }
-                .refreshable {
-                    await feedVM.loadFeed(for: userId)
+                    .refreshable {
+                        await feedVM.loadFeed(for: userId)
+                    }
                 }
             }
         }
