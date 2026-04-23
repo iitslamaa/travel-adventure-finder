@@ -15,6 +15,11 @@ final class SocialFeedViewModel: ObservableObject {
     }
 
     func loadFeed(for userId: UUID, source: String = "unspecified") async {
+        if isLoading, lastRequestedUserId == userId {
+            SocialFeedDebug.log("load.skipped source=\(source) user=\(userId) reason=already_loading_same_user")
+            return
+        }
+
         let loadId = String(UUID().uuidString.prefix(8))
         let startTime = Date()
 

@@ -18,6 +18,10 @@ enum SocialRoute: Hashable {
 final class SocialNavigationController: ObservableObject {
     @Published var path = NavigationPath()
 
+    var hasActiveRoute: Bool {
+        !path.isEmpty
+    }
+
     func push(_ route: SocialRoute) {
         path.append(route)
     }
@@ -210,7 +214,7 @@ struct RootTabView: View {
         isProcessingTabInteraction = true
 
         if selectedTab == tab {
-            resetPath(for: tab)
+            resetPathIfNeeded(for: tab)
         } else {
             selectedTab = tab
         }
@@ -221,20 +225,20 @@ struct RootTabView: View {
         }
     }
 
-    private func resetPath(for tab: Tab) {
+    private func resetPathIfNeeded(for tab: Tab) {
         switch tab {
         case .discovery:
+            guard !discoveryPath.isEmpty else { return }
             discoveryPath = NavigationPath()
-            discoveryRootID = UUID()
         case .planning:
+            guard !planningPath.isEmpty else { return }
             planningPath = NavigationPath()
-            planningRootID = UUID()
         case .social:
+            guard socialNav.hasActiveRoute else { return }
             socialNav.reset()
-            socialRootID = UUID()
         case .more:
+            guard !morePath.isEmpty else { return }
             morePath = NavigationPath()
-            moreRootID = UUID()
         }
     }
 
