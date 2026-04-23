@@ -18,7 +18,7 @@ private enum DiscoveryDebugLog {
 
 struct DiscoveryCountryListView: View {
 
-    @EnvironmentObject private var profileVM: ProfileViewModel
+    @EnvironmentObject private var traveledStore: TraveledStore
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
 
@@ -26,12 +26,19 @@ struct DiscoveryCountryListView: View {
     @FocusState private var isSearchFocused: Bool
     @State private var sort: CountrySort = .name
     @State private var sortOrder: SortOrder = .ascending
-    @State private var countries: [Country] = CountryAPI.loadCachedCountries() ?? []
+    @State private var baseCountries: [Country] = CountryAPI.loadCachedCountries() ?? []
     @State private var didRunInitialLoad = false
     @State private var refreshTask: Task<Void, Never>?
 
-    private func applyCurrentWeights(to countries: [Country]) -> [Country] {
-        countries.map {
+    private var countries: [Country] {
+        let filteredCountries: [Country]
+        if weightsStore.excludeVisitedCountries {
+            filteredCountries = baseCountries.filter { !traveledStore.ids.contains($0.id) }
+        } else {
+            filteredCountries = baseCountries
+        }
+
+        return filteredCountries.map {
             $0.applyingOverallScore(
                 using: weightsStore.weights,
                 selectedMonth: weightsStore.selectedMonth
@@ -47,13 +54,13 @@ struct DiscoveryCountryListView: View {
 
         if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
             displayedBaseCountries = cached
-            countries = applyCurrentWeights(to: cached)
+            baseCountries = cached
             DiscoveryDebugLog.message(
                 "Country list refresh immediate source=cache countries=\(cached.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
             )
         } else if let fetched = try? await CountryAPI.fetchCountries(), !fetched.isEmpty {
             displayedBaseCountries = fetched
-            countries = applyCurrentWeights(to: fetched)
+            baseCountries = fetched
             DiscoveryDebugLog.message(
                 "Country list refresh immediate source=fetch countries=\(fetched.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
             )
@@ -82,7 +89,7 @@ struct DiscoveryCountryListView: View {
             guard !Task.isCancelled else { return }
 
             await MainActor.run {
-                countries = applyCurrentWeights(to: refreshed)
+                baseCountries = refreshed
                 DiscoveryDebugLog.message(
                     "Country list refresh background source=refreshIfNeeded countries=\(refreshed.count) duration=\(Int(Date().timeIntervalSince(remoteStart) * 1000))ms"
                 )
@@ -138,15 +145,15 @@ struct DiscoveryCountryListView: View {
             guard !didRunInitialLoad else { return }
             didRunInitialLoad = true
             let startedAt = Date()
-            if countries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
-                countries = applyCurrentWeights(to: cached)
-            } else if countries.isEmpty,
+            if baseCountries.isEmpty, let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
+                baseCountries = cached
+            } else if baseCountries.isEmpty,
                       let fetched = try? await CountryAPI.fetchCountries(),
                       !fetched.isEmpty {
-                countries = applyCurrentWeights(to: fetched)
+                baseCountries = fetched
             }
 
-            let initialCountryCount = countries.count
+            let initialCountryCount = baseCountries.count
 
             refreshTask?.cancel()
             refreshTask = Task {
@@ -157,7 +164,7 @@ struct DiscoveryCountryListView: View {
                 guard !Task.isCancelled else { return }
 
                 await MainActor.run {
-                    countries = applyCurrentWeights(to: refreshed)
+                    baseCountries = refreshed
                     DiscoveryDebugLog.message(
                         "Country list initial refresh countries=\(refreshed.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
                     )
@@ -167,22 +174,6 @@ struct DiscoveryCountryListView: View {
             DiscoveryDebugLog.message(
                 "Country list initial render countries=\(initialCountryCount) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
             )
-        }
-        .onReceive(weightsStore.$weights) { _ in
-            countries = countries.map {
-                $0.applyingOverallScore(
-                    using: weightsStore.weights,
-                    selectedMonth: weightsStore.selectedMonth
-                )
-            }
-        }
-        .onReceive(weightsStore.$selectedMonth) { _ in
-            countries = countries.map {
-                $0.applyingOverallScore(
-                    using: weightsStore.weights,
-                    selectedMonth: weightsStore.selectedMonth
-                )
-            }
         }
         .onDisappear {
             refreshTask?.cancel()
@@ -195,12 +186,20 @@ struct DiscoveryView: View {
 
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
     @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var traveledStore: TraveledStore
     @State private var showingWeights = false
     @State private var baseCountries: [Country] = CountryAPI.loadCachedCountries() ?? []
     @State private var didLoadCountries = false
 
     private var countries: [Country] {
-        baseCountries.map {
+        let filteredCountries: [Country]
+        if weightsStore.excludeVisitedCountries {
+            filteredCountries = baseCountries.filter { !traveledStore.ids.contains($0.id) }
+        } else {
+            filteredCountries = baseCountries
+        }
+
+        return filteredCountries.map {
             $0.applyingOverallScore(
                 using: weightsStore.weights,
                 selectedMonth: weightsStore.selectedMonth
@@ -326,7 +325,8 @@ struct DiscoveryView: View {
                 CustomWeightsView(
                     userId: sessionManager.userId,
                     initialWeights: weightsStore.weights,
-                    initialSelectedMonth: weightsStore.selectedMonth
+                    initialSelectedMonth: weightsStore.selectedMonth,
+                    initialExcludeVisitedCountries: weightsStore.excludeVisitedCountries
                 )
                     .environmentObject(weightsStore)
             }

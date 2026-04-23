@@ -13,6 +13,7 @@ final class ScoreWeightsStore: ObservableObject {
     private struct StoredPreferences: Codable {
         let weights: ScoreWeights
         let selectedMonth: Int
+        let excludeVisitedCountries: Bool
     }
 
     @Published var weights: ScoreWeights {
@@ -32,6 +33,12 @@ final class ScoreWeightsStore: ObservableObject {
         }
     }
 
+    @Published var excludeVisitedCountries: Bool {
+        didSet {
+            save()
+        }
+    }
+
     private let key = "score_preferences"
     private let legacyWeightsKey = "score_weights"
     
@@ -42,33 +49,39 @@ final class ScoreWeightsStore: ObservableObject {
            let decoded = try? JSONDecoder().decode(StoredPreferences.self, from: data) {
             self.weights = decoded.weights
             self.selectedMonth = Self.clampMonth(decoded.selectedMonth)
+            self.excludeVisitedCountries = decoded.excludeVisitedCountries
         } else if let data = UserDefaults.standard.data(forKey: legacyWeightsKey),
                   let decoded = try? JSONDecoder().decode(ScoreWeights.self, from: data) {
             self.weights = decoded
             self.selectedMonth = currentMonth
+            self.excludeVisitedCountries = false
         } else {
             self.weights = .default
             self.selectedMonth = currentMonth
+            self.excludeVisitedCountries = false
         }
     }
     
     func resetToDefault() {
         weights = .default
+        excludeVisitedCountries = false
     }
 
     func applyPreset(_ preset: WeightPreset) {
         weights = preset.weights
     }
 
-    func updatePreferences(weights: ScoreWeights, selectedMonth: Int) {
+    func updatePreferences(weights: ScoreWeights, selectedMonth: Int, excludeVisitedCountries: Bool) {
         self.weights = weights
         self.selectedMonth = Self.clampMonth(selectedMonth)
+        self.excludeVisitedCountries = excludeVisitedCountries
     }
     
     private func save() {
         let payload = StoredPreferences(
             weights: weights,
-            selectedMonth: Self.clampMonth(selectedMonth)
+            selectedMonth: Self.clampMonth(selectedMonth),
+            excludeVisitedCountries: excludeVisitedCountries
         )
 
         if let data = try? JSONEncoder().encode(payload) {
