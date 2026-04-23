@@ -179,6 +179,10 @@ struct SocialView: View {
             avatarView(for: event.actorProfile)
 
             VStack(alignment: .leading, spacing: 4) {
+                Text("\(activityEmoji(for: event)) Update")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.5))
+
                 Text(activityText(for: event))
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.black)
@@ -226,30 +230,30 @@ struct SocialView: View {
     }
 
     private func activityText(for event: SocialActivityEvent) -> String {
-        let subject = activitySubject(for: event.actorProfile)
+        let subject = activityPossessiveSubject(for: event.actorProfile)
         let country = countryDisplayName(for: event)
         let destination = destinationDisplayName(for: event)
 
         switch event.eventType {
         case .bucketListAdded:
-            return "\(subject) added \(country ?? "a country") to their bucket list"
+            return "Bucket List: \(country ?? "Somewhere new")"
         case .countryVisited:
-            return "\(subject) marked \(country ?? "a country") as visited"
+            return "\(subject) visited \(country ?? "somewhere new")"
         case .nextDestinationChanged:
-            return "\(subject) changed their next destination to \(destination ?? country ?? "somewhere new")"
+            return "\(subject) next destination is \(destination ?? country ?? "somewhere new")"
         case .profilePhotoUpdated:
-            return "\(subject) updated their profile photo"
+            return "\(subject) profile photo is updated"
         case .currentCountryChanged:
-            return "\(subject) changed their current country to \(country ?? "somewhere new")"
+            return "\(subject) current country is \(country ?? "somewhere new")"
         case .homeCountryChanged:
-            return "\(subject) updated their home country"
+            return "Home Country: \(country ?? "Updated")"
         }
     }
 
-    private func activitySubject(for profile: Profile?) -> String {
+    private func activityPossessiveSubject(for profile: Profile?) -> String {
         if let fullName = profile?.fullName.trimmingCharacters(in: .whitespacesAndNewlines),
            !fullName.isEmpty {
-            return fullName
+            return possessive(fullName)
         }
 
         let nameParts = [profile?.firstName, profile?.lastName]
@@ -257,15 +261,40 @@ struct SocialView: View {
             .filter { !$0.isEmpty }
 
         if !nameParts.isEmpty {
-            return nameParts.joined(separator: " ")
+            return possessive(nameParts.joined(separator: " "))
         }
 
         if let username = profile?.username.trimmingCharacters(in: .whitespacesAndNewlines),
            !username.isEmpty {
-            return "@\(username)"
+            return possessive("@\(username)")
         }
 
-        return "A friend"
+        return "Their"
+    }
+
+    private func possessive(_ subject: String) -> String {
+        if subject.hasSuffix("s") || subject.hasSuffix("S") {
+            return "\(subject)'"
+        }
+
+        return "\(subject)'s"
+    }
+
+    private func activityEmoji(for event: SocialActivityEvent) -> String {
+        switch event.eventType {
+        case .bucketListAdded:
+            return "📝"
+        case .countryVisited:
+            return "✅"
+        case .nextDestinationChanged:
+            return "✈️"
+        case .profilePhotoUpdated:
+            return "📸"
+        case .currentCountryChanged:
+            return "🗺️"
+        case .homeCountryChanged:
+            return "📍"
+        }
     }
 
     private func countryDisplayName(for event: SocialActivityEvent) -> String? {
