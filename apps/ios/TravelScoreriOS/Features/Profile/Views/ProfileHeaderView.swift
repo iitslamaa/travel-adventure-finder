@@ -46,6 +46,14 @@ struct ProfileHeaderView: View {
         ProfileBadgeCatalog.badges(for: visitedCountryCodes)
     }
 
+    private var hasGoldBadgeState: Bool {
+        visitedCountryCodes.count >= 100
+    }
+
+    private var goldBadgeTint: Color {
+        Color(red: 0.84, green: 0.67, blue: 0.20)
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: headerSpacing) {
             identitySection
@@ -161,18 +169,19 @@ struct ProfileHeaderView: View {
                 if let labelText = badge.labelText {
                     Text(labelText)
                         .font(.system(size: 12, weight: .black, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.84))
+                        .foregroundStyle(badgeArtworkForegroundStyle)
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
                 } else if badge.assetNames.isEmpty {
                     Text(badge.emoji ?? "✨")
                         .font(.system(size: 22))
+                        .foregroundStyle(badgeArtworkForegroundStyle)
                 } else if badge.assetNames.count == 1, let assetName = badge.assetNames.first {
                     Image(assetName)
                         .renderingMode(.template)
                         .resizable()
                         .scaledToFit()
-                        .foregroundStyle(.black.opacity(0.82))
+                        .foregroundStyle(badgeArtworkForegroundStyle)
                         .padding(5)
                 } else {
                     HStack(spacing: 2) {
@@ -182,7 +191,7 @@ struct ProfileHeaderView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 10, height: 10)
-                                .foregroundStyle(.black.opacity(0.82))
+                                .foregroundStyle(badgeArtworkForegroundStyle)
                         }
                     }
                 }
@@ -208,10 +217,18 @@ struct ProfileHeaderView: View {
                 .fill(Color.white.opacity(0.94))
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(badge.tint.opacity(0.34), lineWidth: 1)
+                        .stroke(displayTint(for: badge).opacity(hasGoldBadgeState ? 0.62 : 0.34), lineWidth: hasGoldBadgeState ? 1.3 : 1)
                 )
         )
         .shadow(color: .black.opacity(0.12), radius: 10, y: 5)
+    }
+
+    private func displayTint(for badge: ProfileBadge) -> Color {
+        hasGoldBadgeState ? goldBadgeTint : badge.tint
+    }
+
+    private var badgeArtworkForegroundStyle: Color {
+        hasGoldBadgeState ? Color(red: 0.38, green: 0.25, blue: 0.04) : Color.black.opacity(0.84)
     }
 
     private var ctaButton: some View {

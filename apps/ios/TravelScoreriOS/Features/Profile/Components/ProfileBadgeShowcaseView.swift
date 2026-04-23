@@ -220,6 +220,14 @@ struct ProfileBadgeShowcaseView: View {
         Array(repeating: GridItem(.fixed(badgeSize), spacing: badgeSpacing), count: isCompactLayout ? 4 : 5)
     }
 
+    private var hasGoldBadgeState: Bool {
+        visitedCountryCount >= 100
+    }
+
+    private var goldBadgeTint: Color {
+        Color(red: 0.84, green: 0.67, blue: 0.20)
+    }
+
     var body: some View {
         VStack(alignment: .center, spacing: isCompactLayout ? 8 : 10) {
             Text("\(visitedCountryCount)/\(totalCountryCount)")
@@ -261,14 +269,18 @@ struct ProfileBadgeShowcaseView: View {
                 .frame(width: badgeSize, height: badgeSize)
                 .background(
                     Circle()
-                        .fill(badge.tint.opacity(0.18))
+                        .fill(displayTint(for: badge).opacity(hasGoldBadgeState ? 0.32 : 0.18))
                 )
                 .overlay(
                     Circle()
-                        .stroke(Color.white.opacity(0.72), lineWidth: 1)
+                        .stroke(
+                            hasGoldBadgeState ? displayTint(for: badge).opacity(0.72) : Color.white.opacity(0.72),
+                            lineWidth: hasGoldBadgeState ? 1.4 : 1
+                        )
                 )
         }
         .buttonStyle(.plain)
+        .shadow(color: hasGoldBadgeState ? displayTint(for: badge).opacity(0.24) : .clear, radius: 5, y: 2)
     }
 
     @ViewBuilder
@@ -276,18 +288,19 @@ struct ProfileBadgeShowcaseView: View {
         if let labelText = badge.labelText {
             Text(labelText)
                 .font(.system(size: isCompactLayout ? 10 : 12, weight: .black, design: .rounded))
-                .foregroundStyle(.black.opacity(0.84))
+                .foregroundStyle(artworkForegroundStyle)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
         } else if badge.assetNames.isEmpty {
             Text(badge.emoji ?? "✨")
                 .font(.system(size: isCompactLayout ? 15 : 18))
+                .foregroundStyle(artworkForegroundStyle)
         } else if badge.assetNames.count == 1, let assetName = badge.assetNames.first {
             Image(assetName)
                 .renderingMode(.template)
                 .resizable()
                 .scaledToFit()
-                .foregroundStyle(.black.opacity(0.82))
+                .foregroundStyle(artworkForegroundStyle)
                 .padding(isCompactLayout ? 6 : 7)
         } else {
             HStack(spacing: 1) {
@@ -297,9 +310,17 @@ struct ProfileBadgeShowcaseView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: badgeSize * 0.32, height: badgeSize * 0.32)
-                        .foregroundStyle(.black.opacity(0.82))
+                        .foregroundStyle(artworkForegroundStyle)
                 }
             }
         }
+    }
+
+    private func displayTint(for badge: ProfileBadge) -> Color {
+        hasGoldBadgeState ? goldBadgeTint : badge.tint
+    }
+
+    private var artworkForegroundStyle: Color {
+        hasGoldBadgeState ? Color(red: 0.38, green: 0.25, blue: 0.04) : Color.black.opacity(0.84)
     }
 }
