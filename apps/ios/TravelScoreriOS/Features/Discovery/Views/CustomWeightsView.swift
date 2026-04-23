@@ -122,7 +122,7 @@ struct CustomWeightsView: View {
                             }
                         }
 
-                        sectionCard(title: "Discovery Mode") {
+                        sectionCard(title: String(localized: "discovery.weights.discovery_mode")) {
                             discoveryModeToggle
                         }
 
@@ -346,11 +346,11 @@ struct CustomWeightsView: View {
         } label: {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Go someplace new!")
+                    Text(String(localized: "Go someplace new!"))
                         .font(.headline)
                         .foregroundStyle(.black)
 
-                    Text("Hide countries you've already visited across Discovery so the list, map, and seasonality views focus on new places.")
+                    Text(String(localized: "Hide countries you've already visited across Discovery so the list, map, and seasonality views focus on new places."))
                         .font(.subheadline)
                         .foregroundStyle(Color.black.opacity(0.6))
                         .multilineTextAlignment(.leading)
