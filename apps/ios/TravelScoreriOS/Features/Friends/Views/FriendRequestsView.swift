@@ -139,8 +139,8 @@ struct FriendRequestsView: View {
                         requestRow(for: profile)
                     }
                 }
-                .padding(.horizontal, 4)
-                .padding(.top, 4)
+                .padding(.horizontal, 14)
+                .padding(.top, 14)
                 .padding(.bottom, 28)
             }
             .frame(width: contentWidth)
