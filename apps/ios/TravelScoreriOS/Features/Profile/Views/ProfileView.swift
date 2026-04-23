@@ -179,6 +179,8 @@ struct ProfileView: View {
                                     )
                                     .background(
                                         Theme.profileCardBackground(corner: 22)
+                                            .padding(.horizontal, -10)
+                                            .padding(.vertical, -8)
                                     )
 
                                     if relationshipState == .friends ||
@@ -205,6 +207,8 @@ struct ProfileView: View {
                                         )
                                         .background(
                                             Theme.profileCardBackground(corner: 22)
+                                                .padding(.horizontal, -10)
+                                                .padding(.vertical, -8)
                                         )
 
                                     } else {

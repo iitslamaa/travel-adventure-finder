@@ -77,10 +77,10 @@ struct ProfileHeaderView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(
-                        width: proxy.size.width * 1.24,
-                        height: proxy.size.height * 1.1
+                        width: proxy.size.width * 1.34,
+                        height: proxy.size.height * 1.14
                     )
-                    .offset(x: proxy.size.width * 0.16)
+                    .offset(x: proxy.size.width * 0.24)
                     .frame(width: proxy.size.width, height: proxy.size.height)
                     .clipped()
             }
