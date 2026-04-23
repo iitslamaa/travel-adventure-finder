@@ -216,7 +216,7 @@ struct ProfileBadgeShowcaseView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: isCompactLayout ? 8 : 10) {
+        VStack(alignment: .center, spacing: isCompactLayout ? 8 : 10) {
             Text("\(visitedCountryCount)/\(totalCountryCount)")
                 .font(.system(size: countFontSize, weight: .black, design: .rounded))
                 .foregroundStyle(.black)
@@ -241,9 +241,10 @@ struct ProfileBadgeShowcaseView: View {
                         badgeButton(badge)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private func badgeButton(_ badge: ProfileBadge) -> some View {

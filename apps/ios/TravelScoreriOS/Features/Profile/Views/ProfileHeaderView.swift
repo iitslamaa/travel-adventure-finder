@@ -56,7 +56,7 @@ struct ProfileHeaderView: View {
                 visitedCountryCount: visitedCountryCodes.count,
                 onSelectBadge: presentBadgeToast
             )
-            .frame(width: badgeRailWidth, alignment: .leading)
+            .frame(width: badgeRailWidth, alignment: .center)
             .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
