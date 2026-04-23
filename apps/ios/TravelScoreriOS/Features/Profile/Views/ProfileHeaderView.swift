@@ -12,23 +12,13 @@ struct ProfileHeaderView: View {
     let onOpenCountry: (String) -> Void
     @State private var showHomeFlagsSheet = false
     @State private var selectedBadge: ProfileBadge?
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-
     private var effectiveState: RelationshipState {
         relationshipState ?? .none
     }
 
-    private var isCompactLayout: Bool {
-        horizontalSizeClass == .compact
-    }
+    private var headerSpacing: CGFloat { 24 }
 
-    private var headerSpacing: CGFloat {
-        isCompactLayout ? 18 : 28
-    }
-
-    private var identityColumnWidth: CGFloat {
-        isCompactLayout ? 128 : 140
-    }
+    private var identityColumnWidth: CGFloat { 148 }
 
     private var visibleHomeCountryCodes: [String] {
         Array(homeCountryCodes.prefix(3))
@@ -43,39 +33,24 @@ struct ProfileHeaderView: View {
     }
 
     var body: some View {
-        Group {
-            if isCompactLayout {
-                VStack(alignment: .leading, spacing: 18) {
-                    identitySection
-                        .frame(maxWidth: .infinity, alignment: .leading)
+        HStack(alignment: .center, spacing: headerSpacing) {
+            identitySection
+                .frame(width: identityColumnWidth)
+                .frame(maxHeight: .infinity, alignment: .center)
 
-                    ProfileBadgeShowcaseView(
-                        badges: earnedBadges,
-                        visitedCountryCount: visitedCountryCodes.count,
-                        onSelectBadge: presentBadgeToast
-                    )
-                }
-            } else {
-                HStack(alignment: .top, spacing: headerSpacing) {
-                    identitySection
-                        .frame(width: identityColumnWidth)
-                        .frame(maxHeight: .infinity, alignment: .topLeading)
-
-                    ProfileBadgeShowcaseView(
-                        badges: earnedBadges,
-                        visitedCountryCount: visitedCountryCodes.count,
-                        onSelectBadge: presentBadgeToast
-                    )
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(maxHeight: .infinity, alignment: .topTrailing)
-                    .layoutPriority(1)
-                }
-            }
+            ProfileBadgeShowcaseView(
+                badges: earnedBadges,
+                visitedCountryCount: visitedCountryCodes.count,
+                onSelectBadge: presentBadgeToast
+            )
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .frame(maxHeight: .infinity, alignment: .center)
+            .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
         .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.bottom, 12)
         .background(
             Image("profile_header")
                 .resizable()

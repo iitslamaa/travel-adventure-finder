@@ -188,14 +188,8 @@ struct ProfileBadgeShowcaseView: View {
         Array(badges.prefix(6))
     }
 
-    private var columns: [GridItem] {
-        [
-            GridItem(.adaptive(minimum: 46, maximum: 46), spacing: 10, alignment: .leading)
-        ]
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Badges")
@@ -213,44 +207,56 @@ struct ProfileBadgeShowcaseView: View {
             if featuredBadges.isEmpty {
                 Text("✨")
                     .font(.system(size: 24))
-                    .frame(width: 46, height: 46)
+                    .frame(width: 42, height: 42)
                     .background(
                         Circle()
                             .fill(Color.white.opacity(0.52))
                     )
             } else {
-                LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
-                    ForEach(featuredBadges) { badge in
-                        Button {
-                            onSelectBadge(badge)
-                        } label: {
-                            Text(badge.emoji)
-                                .font(.system(size: 22))
-                                .frame(width: 46, height: 46)
-                                .background(
-                                    Circle()
-                                        .fill(badge.tint.opacity(0.18))
-                                )
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.white.opacity(0.72), lineWidth: 1)
-                                )
-                        }
-                        .buttonStyle(.plain)
+                VStack(alignment: .leading, spacing: 8) {
+                    badgeRow(Array(featuredBadges.prefix(3)))
+
+                    if featuredBadges.count > 3 {
+                        badgeRow(Array(featuredBadges.dropFirst(3).prefix(3)))
                     }
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 14)
-        .frame(maxWidth: 178, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: 220, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.28))
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.22))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(Color.white.opacity(0.38), lineWidth: 1)
                 )
         )
+    }
+
+    private func badgeRow(_ badges: [ProfileBadge]) -> some View {
+        HStack(spacing: 10) {
+            ForEach(badges) { badge in
+                Button {
+                    onSelectBadge(badge)
+                } label: {
+                    Text(badge.emoji)
+                        .font(.system(size: 20))
+                        .frame(width: 42, height: 42)
+                        .background(
+                            Circle()
+                                .fill(badge.tint.opacity(0.18))
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.72), lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+
+            Spacer(minLength: 0)
+        }
     }
 }
