@@ -9,12 +9,7 @@ import Foundation
 import Supabase
 
 private enum CountryAPIDebugLog {
-    static func message(_ text: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("🌐 [CountryAPI] \(timestamp) \(text)")
-#endif
-    }
+    static func message(_ text: String) {}
 }
 
 enum CountryAPI {

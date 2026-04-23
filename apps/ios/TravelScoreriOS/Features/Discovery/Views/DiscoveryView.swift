@@ -8,12 +8,7 @@
 import SwiftUI
 
 private enum DiscoveryDebugLog {
-    static func message(_ text: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("🧭 [Discovery] \(timestamp) \(text)")
-#endif
-    }
+    static func message(_ text: String) {}
 }
 
 struct DiscoveryCountryListView: View {

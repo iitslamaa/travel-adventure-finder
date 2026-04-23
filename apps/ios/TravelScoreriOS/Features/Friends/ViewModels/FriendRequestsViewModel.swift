@@ -10,12 +10,7 @@ import Combine
 import Supabase
 
 private enum FriendRequestsDebugLog {
-    static func message(_ text: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("🙋 [FriendRequests] \(timestamp) \(text)")
-#endif
-    }
+    static func message(_ text: String) {}
 
     static func duration(since start: Date) -> String {
         "\(Int(Date().timeIntervalSince(start) * 1000))ms"

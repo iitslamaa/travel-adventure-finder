@@ -50,12 +50,7 @@ final class SocialFeedViewModel: ObservableObject {
 }
 
 enum SocialFeedDebug {
-    static func log(_ message: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("📰 [SocialFeed] \(timestamp) \(message)")
-#endif
-    }
+    static func log(_ message: String) {}
 
     static func duration(since startTime: Date) -> String {
         let milliseconds = Int(Date().timeIntervalSince(startTime) * 1_000)
