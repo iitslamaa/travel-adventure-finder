@@ -48,11 +48,11 @@ struct FriendsView: View {
     private func socialHorizontalInset(for width: CGFloat) -> CGFloat {
         switch width {
         case ..<390:
-            return 42
+            return 14
         case ..<430:
-            return 38
+            return 14
         case ..<520:
-            return 32
+            return 16
         default:
             return max((width - 680) / 2, 32)
         }
@@ -66,15 +66,19 @@ struct FriendsView: View {
         GeometryReader { geo in
             let horizontalInset = socialHorizontalInset(for: geo.size.width)
             let contentWidth = socialContentWidth(for: geo.size.width)
+            let tabOcclusionHeight = floatingTabBarInset + 20
 
             ZStack {
                 VStack(spacing: 0) {
                     Theme.titleBanner(String(localized: "friends.title"))
 
                     contentView(contentWidth: contentWidth)
-                        .padding(.top, 12)
-                        .padding(.bottom, 12)
+                        .padding(.top, -4)
+                        .frame(maxHeight: .infinity)
+                        .padding(.bottom, tabOcclusionHeight)
+                        .clipped()
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 VStack {
                     HStack {
@@ -98,40 +102,6 @@ struct FriendsView: View {
                     .padding(.top, 12)
 
                     Spacer()
-                }
-
-                if isOwnFriendsPage {
-                    VStack {
-                        HStack {
-                            Spacer()
-
-                            NavigationLink(value: SocialRoute.friendRequests) {
-                                ZStack {
-                                    Theme.chromeIconButtonBackground(size: 40)
-
-                                    Image(systemName: "person.crop.circle.badge.plus")
-                                        .font(TAFTypography.title(.bold))
-                                        .foregroundStyle(.black)
-
-                                    if friendsVM.incomingRequestCount > 0 {
-                                        Text(AppNumberFormatting.integerString(min(friendsVM.incomingRequestCount, 9)))
-                                            .font(TAFTypography.caption(.bold))
-                                            .foregroundStyle(.white)
-                                            .frame(width: 18, height: 18)
-                                            .background(Circle().fill(.red))
-                                            .offset(x: 12, y: -12)
-                                    }
-                                }
-                                .frame(width: 40, height: 40)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .padding(.horizontal, horizontalInset)
-                        .padding(.top, 12)
-
-                        Spacer()
-                    }
                 }
             }
             .background(
@@ -186,7 +156,7 @@ struct FriendsView: View {
     private func contentView(contentWidth: CGFloat) -> some View {
         ScrollViewReader { proxy in
             ZStack {
-                Theme.notebookListBackground(corner: 22)
+                friendsNotebookBackground(corner: 22)
                     .allowsHitTesting(false)
 
                 if friendsVM.isLoading && displayedProfiles.isEmpty {
@@ -302,7 +272,7 @@ struct FriendsView: View {
                         .id("friendsListTop")
                         .padding(.horizontal, 16)
                         .padding(.top, 6)
-                        .padding(.bottom, floatingTabBarInset + 20)
+                        .padding(.bottom, floatingTabBarInset + 76)
                     }
                     .refreshable {
                         await friendsVM.loadFriends(for: userId, forceRefresh: true)
@@ -310,14 +280,41 @@ struct FriendsView: View {
                             await friendsVM.loadIncomingRequestCount()
                         }
                     }
+                    .frame(maxHeight: .infinity)
                 }
                 }
             }
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .padding(.top, 18)
-            .padding(.bottom, floatingTabBarInset + 18)
+            .padding(.top, 2)
         }
+    }
+
+    private func friendsNotebookBackground(corner: CGFloat = 22) -> some View {
+        GeometryReader { geo in
+            ZStack {
+                Image("friends-scroll")
+                    .resizable(
+                        capInsets: EdgeInsets(top: 140, leading: 90, bottom: 180, trailing: 90),
+                        resizingMode: .stretch
+                    )
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.white.opacity(0.16), Color.clear]),
+                    startPoint: .top,
+                    endPoint: .center
+                )
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: corner, style: .continuous)
+                .stroke(.white.opacity(0.18), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
     }
 
     private var searchBar: some View {

@@ -50,15 +50,10 @@ struct RootTabView: View {
     private enum Tab: Hashable {
         case discovery
         case planning
-        case friends
-        case profile
+        case social
         case more
     }
 
-    private enum GuestLockedSection {
-        case friends
-        case profile
-    }
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var profileVM: ProfileViewModel
     @EnvironmentObject private var weightsStore: ScoreWeightsStore
@@ -67,8 +62,7 @@ struct RootTabView: View {
 
     @State private var countries: [Country] = []
     @State private var hasLoadedCountries = false
-    @StateObject private var friendsSocialNav = SocialNavigationController()
-    @StateObject private var profileSocialNav = SocialNavigationController()
+    @StateObject private var socialNav = SocialNavigationController()
     @StateObject private var sharedTripInbox = SharedTripInboxStore()
 
     @State private var discoveryPath = NavigationPath()
@@ -76,8 +70,7 @@ struct RootTabView: View {
     @State private var morePath = NavigationPath()
     @State private var discoveryRootID = UUID()
     @State private var planningRootID = UUID()
-    @State private var friendsRootID = UUID()
-    @State private var profileRootID = UUID()
+    @State private var socialRootID = UUID()
     @State private var moreRootID = UUID()
 
     @State private var selectedTab: Tab = .discovery
@@ -101,51 +94,25 @@ struct RootTabView: View {
         .id(planningRootID)
         .tag(Tab.planning)
 
-        // Friends (auth required)
-        NavigationStack(path: $friendsSocialNav.path) {
+        // Social (auth required)
+        NavigationStack(path: $socialNav.path) {
             Group {
                 if sessionManager.isAuthenticated,
                    let userId = sessionManager.userId {
-                    FriendsView(userId: userId)
-                        .environmentObject(friendsSocialNav)
+                    SocialView(userId: userId)
+                        .environmentObject(socialNav)
                 } else {
                     guestLockedState(
-                        section: .friends,
                         backgroundImage: "travel3"
                     )
                 }
             }
             .navigationDestination(for: SocialRoute.self) { route in
-                socialDestination(route, navigator: friendsSocialNav)
+                socialDestination(route, navigator: socialNav)
             }
         }
-        .id(friendsRootID)
-        .tag(Tab.friends)
-
-        // Profile (auth required)
-        NavigationStack(path: $profileSocialNav.path) {
-            Group {
-                if sessionManager.isAuthenticated,
-                   let userId = sessionManager.userId {
-                    ProfileView(
-                        userId: userId,
-                        profileViewModel: profileVM
-                    )
-                        .id(userId)
-                        .environmentObject(profileSocialNav)
-                } else {
-                    guestLockedState(
-                        section: .profile,
-                        backgroundImage: "travel4"
-                    )
-                }
-            }
-            .navigationDestination(for: SocialRoute.self) { route in
-                socialDestination(route, navigator: profileSocialNav)
-            }
-        }
-        .id(profileRootID)
-        .tag(Tab.profile)
+        .id(socialRootID)
+        .tag(Tab.social)
 
         // More
         NavigationStack(path: $morePath) {
@@ -228,8 +195,7 @@ struct RootTabView: View {
         discoveryPath = NavigationPath()
         planningPath = NavigationPath()
         morePath = NavigationPath()
-        friendsSocialNav.reset()
-        profileSocialNav.reset()
+        socialNav.reset()
     }
 
     private func selectTab(_ tab: Tab) {
@@ -263,12 +229,9 @@ struct RootTabView: View {
         case .planning:
             planningPath = NavigationPath()
             planningRootID = UUID()
-        case .friends:
-            friendsSocialNav.reset()
-            friendsRootID = UUID()
-        case .profile:
-            profileSocialNav.reset()
-            profileRootID = UUID()
+        case .social:
+            socialNav.reset()
+            socialRootID = UUID()
         case .more:
             morePath = NavigationPath()
             moreRootID = UUID()
@@ -279,8 +242,7 @@ struct RootTabView: View {
         HStack(spacing: 10) {
             tabButton(.discovery, title: String(localized: "tab.discovery"), systemImage: "globe.americas.fill")
             tabButton(.planning, title: String(localized: "tab.planning"), systemImage: "list.bullet", badgeCount: sharedTripInbox.pendingCount)
-            tabButton(.friends, title: String(localized: "tab.friends"), systemImage: "person.2.fill")
-            tabButton(.profile, title: String(localized: "tab.profile"), systemImage: "person.crop.circle")
+            tabButton(.social, title: "Social", systemImage: "person.2.fill")
             tabButton(.more, title: String(localized: "tab.more"), systemImage: "ellipsis")
         }
         .padding(.horizontal, 10)
@@ -303,10 +265,10 @@ struct RootTabView: View {
         .shadow(color: .black.opacity(0.18), radius: 14, y: 8)
     }
 
-    private func guestLockedState(section: GuestLockedSection, backgroundImage: String) -> some View {
-        let bannerTitle = String(localized: section == .friends ? "guest.friends.banner_title" : "guest.profile.banner_title")
-        let cardTitle = String(localized: section == .friends ? "guest.friends.card_title" : "guest.profile.card_title")
-        let message = String(localized: section == .friends ? "guest.friends.message" : "guest.profile.message")
+    private func guestLockedState(backgroundImage: String) -> some View {
+        let bannerTitle = "Social"
+        let cardTitle = String(localized: "guest.friends.card_title")
+        let message = String(localized: "guest.friends.message")
 
         return ZStack {
             Theme.pageBackground(backgroundImage)
@@ -319,7 +281,7 @@ struct RootTabView: View {
 
                 VStack(spacing: 24) {
                     Theme.featureCard(
-                        icon: section == .friends ? "person.2.fill" : "person.crop.circle",
+                        icon: "person.2.fill",
                         title: cardTitle,
                         subtitle: message,
                         minHeight: 138
@@ -364,8 +326,13 @@ struct RootTabView: View {
     private func socialDestination(_ route: SocialRoute, navigator: SocialNavigationController) -> some View {
         switch route {
         case .profile(let userId):
-            ProfileView(userId: userId, showsBackButton: true)
-                .environmentObject(navigator)
+            if sessionManager.userId == userId {
+                ProfileView(userId: userId, showsBackButton: true, profileViewModel: profileVM)
+                    .environmentObject(navigator)
+            } else {
+                ProfileView(userId: userId, showsBackButton: true)
+                    .environmentObject(navigator)
+            }
         case .friends(let userId):
             FriendsView(userId: userId, showsBackButton: true)
                 .environmentObject(navigator)

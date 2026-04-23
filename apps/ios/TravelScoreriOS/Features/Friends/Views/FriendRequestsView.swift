@@ -26,11 +26,11 @@ struct FriendRequestsView: View {
     private func socialHorizontalInset(for width: CGFloat) -> CGFloat {
         switch width {
         case ..<390:
-            return 42
+            return 24
         case ..<430:
-            return 38
+            return 22
         case ..<520:
-            return 32
+            return 20
         default:
             return max((width - 680) / 2, 32)
         }
@@ -53,7 +53,7 @@ struct FriendRequestsView: View {
                     Theme.titleBanner(String(localized: "friend_requests.title"))
 
                     contentView(contentWidth: contentWidth)
-                        .padding(.top, 14)
+                        .padding(.top, 4)
                         .padding(.bottom, 16)
                 }
 
@@ -133,29 +133,23 @@ struct FriendRequestsView: View {
             .padding(.horizontal, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ZStack {
-                Theme.notebookListBackground(corner: 24)
-                    .allowsHitTesting(false)
-
-                ScrollView {
-                    LazyVStack(spacing: 18) {
-                        ForEach(vm.incomingRequests) { profile in
-                            requestRow(for: profile)
-                        }
+            ScrollView {
+                LazyVStack(spacing: 18) {
+                    ForEach(vm.incomingRequests) { profile in
+                        requestRow(for: profile, width: contentWidth)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.top, 14)
-                    .padding(.bottom, 28)
                 }
+                .padding(.top, 6)
+                .padding(.bottom, 28)
             }
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .padding(.top, 14)
+            .padding(.top, 4)
             .padding(.bottom, 24)
         }
     }
 
-    private func requestRow(for profile: Profile) -> some View {
+    private func requestRow(for profile: Profile, width: CGFloat) -> some View {
         VStack(spacing: 16) {
             NavigationLink(value: SocialRoute.profile(profile.id)) {
                 HStack(spacing: 14) {
@@ -211,7 +205,7 @@ struct FriendRequestsView: View {
             }
         }
         .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(width: width, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Color(red: 0.97, green: 0.95, blue: 0.90).opacity(0.94))

@@ -141,7 +141,6 @@ extension ProfileViewModel {
             nationalityCountryCodes: normalizedPassportNationalities,
             passportCountryCode: normalizedVisaPassportCountryCode
         )
-
         
     }
     

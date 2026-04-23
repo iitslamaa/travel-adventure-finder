@@ -14,6 +14,10 @@ private enum FriendServiceDebugLog {
         print("🤝 [FriendService] \(timestamp) \(text)")
 #endif
     }
+
+    static func duration(since start: Date) -> String {
+        "\(Int(Date().timeIntervalSince(start) * 1000))ms"
+    }
 }
 
 private struct FriendRow: Decodable {
@@ -100,6 +104,7 @@ final class FriendService {
             let friendshipStartedAt = Date()
 
             // These queries are independent, so fetch both directions in parallel.
+            let sentStartedAt = Date()
             async let sentResponse: PostgrestResponse<[FriendRow]> = supabase.client
                 .from("friends")
                 .select("user_id, friend_id")
@@ -107,6 +112,7 @@ final class FriendService {
                 .limit(1000)
                 .execute()
 
+            let receivedStartedAt = Date()
             async let receivedResponse: PostgrestResponse<[FriendRow]> = supabase.client
                 .from("friends")
                 .select("user_id, friend_id")
@@ -114,15 +120,29 @@ final class FriendService {
                 .limit(1000)
                 .execute()
 
-            let rows = try await sentResponse.value + receivedResponse.value
+            let sentRows = try await sentResponse.value
             FriendServiceDebugLog.message(
-                "Friend rows fetched user=\(userId.uuidString) rows=\(rows.count) duration=\(Int(Date().timeIntervalSince(friendshipStartedAt) * 1000))ms"
+                "Friend sent rows fetched user=\(userId.uuidString) rows=\(sentRows.count) duration=\(FriendServiceDebugLog.duration(since: sentStartedAt))"
             )
 
+            let receivedRows = try await receivedResponse.value
+            FriendServiceDebugLog.message(
+                "Friend received rows fetched user=\(userId.uuidString) rows=\(receivedRows.count) duration=\(FriendServiceDebugLog.duration(since: receivedStartedAt))"
+            )
+
+            let rows = sentRows + receivedRows
+            FriendServiceDebugLog.message(
+                "Friend rows fetched user=\(userId.uuidString) rows=\(rows.count) duration=\(FriendServiceDebugLog.duration(since: friendshipStartedAt)) total_duration=\(FriendServiceDebugLog.duration(since: startedAt))"
+            )
+
+            let dedupeStartedAt = Date()
             let friendIds: [UUID] = rows.map { row in
                 row.user_id == userId ? row.friend_id : row.user_id
             }
             let uniqueFriendIds = Array(NSOrderedSet(array: friendIds)) as? [UUID] ?? []
+            FriendServiceDebugLog.message(
+                "Friend ids deduped user=\(userId.uuidString) raw=\(friendIds.count) unique=\(uniqueFriendIds.count) duration=\(FriendServiceDebugLog.duration(since: dedupeStartedAt))"
+            )
 
             guard !uniqueFriendIds.isEmpty else {
                 return []
@@ -136,11 +156,16 @@ final class FriendService {
                 .execute()
             let profiles = profilesResponse.value.map(\.profile)
             FriendServiceDebugLog.message(
-                "Friend profiles fetched user=\(userId.uuidString) ids=\(uniqueFriendIds.count) profiles=\(profiles.count) duration=\(Int(Date().timeIntervalSince(profilesStartedAt) * 1000))ms"
+                "Friend profiles fetched user=\(userId.uuidString) ids=\(uniqueFriendIds.count) profiles=\(profiles.count) duration=\(FriendServiceDebugLog.duration(since: profilesStartedAt)) total_duration=\(FriendServiceDebugLog.duration(since: startedAt))"
             )
 
+            let orderingStartedAt = Date()
             let profilesById = Dictionary(uniqueKeysWithValues: profiles.map { ($0.id, $0) })
-            return uniqueFriendIds.compactMap { profilesById[$0] }
+            let orderedProfiles = uniqueFriendIds.compactMap { profilesById[$0] }
+            FriendServiceDebugLog.message(
+                "Friend profiles ordered user=\(userId.uuidString) ordered=\(orderedProfiles.count) duration=\(FriendServiceDebugLog.duration(since: orderingStartedAt))"
+            )
+            return orderedProfiles
         }
 
         Self.inFlightFriendFetches[userId] = fetchTask
@@ -152,7 +177,7 @@ final class FriendService {
                 Self.inFlightFriendFetches[userId] = nil
             }
             FriendServiceDebugLog.message(
-                "Friends fetched user=\(userId.uuidString) count=\(orderedProfiles.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                "Friends fetched user=\(userId.uuidString) count=\(orderedProfiles.count) duration=\(FriendServiceDebugLog.duration(since: startedAt))"
             )
             return orderedProfiles
         } catch {
