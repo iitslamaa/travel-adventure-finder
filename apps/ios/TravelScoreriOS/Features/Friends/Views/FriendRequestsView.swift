@@ -26,11 +26,11 @@ struct FriendRequestsView: View {
     private func socialHorizontalInset(for width: CGFloat) -> CGFloat {
         switch width {
         case ..<390:
-            return 42
+            return 24
         case ..<430:
-            return 38
+            return 22
         case ..<520:
-            return 32
+            return 20
         default:
             return max((width - 680) / 2, 32)
         }
