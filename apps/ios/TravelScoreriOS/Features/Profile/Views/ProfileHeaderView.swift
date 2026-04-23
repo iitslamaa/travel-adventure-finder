@@ -157,8 +157,31 @@ struct ProfileHeaderView: View {
 
     private func badgeToast(_ badge: ProfileBadge) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Text(badge.emoji)
-                .font(.system(size: 22))
+            Group {
+                if badge.assetNames.isEmpty {
+                    Text(badge.emoji ?? "✨")
+                        .font(.system(size: 22))
+                } else if badge.assetNames.count == 1, let assetName = badge.assetNames.first {
+                    Image(assetName)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundStyle(.black.opacity(0.82))
+                        .padding(5)
+                } else {
+                    HStack(spacing: 2) {
+                        ForEach(badge.assetNames, id: \.self) { assetName in
+                            Image(assetName)
+                                .renderingMode(.template)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 10, height: 10)
+                                .foregroundStyle(.black.opacity(0.82))
+                        }
+                    }
+                }
+            }
+            .frame(width: 30, height: 30)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(badge.title)

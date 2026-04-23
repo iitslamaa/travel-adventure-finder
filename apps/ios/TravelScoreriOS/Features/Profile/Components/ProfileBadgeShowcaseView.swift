@@ -2,7 +2,8 @@ import SwiftUI
 
 struct ProfileBadge: Identifiable, Hashable {
     let id: String
-    let emoji: String
+    let emoji: String?
+    let assetNames: [String]
     let title: String
     let subtitle: String
     let tint: Color
@@ -30,6 +31,7 @@ enum ProfileBadgeCatalog {
                 ProfileBadge(
                     id: "milestone-2-first",
                     emoji: "✨",
+                    assetNames: [],
                     title: "Second Stamp",
                     subtitle: "Visited your second country",
                     tint: Color(red: 0.89, green: 0.55, blue: 0.26)
@@ -42,6 +44,7 @@ enum ProfileBadgeCatalog {
                 ProfileBadge(
                     id: "milestone-\(threshold)",
                     emoji: milestoneEmoji(for: threshold),
+                    assetNames: [],
                     title: threshold == 100 ? "100 Club" : "\(threshold) Countries",
                     subtitle: "Visited \(threshold) countries",
                     tint: milestoneTint(for: threshold)
@@ -58,6 +61,7 @@ enum ProfileBadgeCatalog {
                 ProfileBadge(
                     id: "milestone-all-countries",
                     emoji: "🌍",
+                    assetNames: [],
                     title: "Every Country",
                     subtitle: "Visited every country in the app",
                     tint: Color(red: 0.18, green: 0.52, blue: 0.39)
@@ -131,7 +135,8 @@ enum ProfileBadgeCatalog {
                 guard let presentation = continentPresentation(for: continent) else { return nil }
                 return ProfileBadge(
                     id: "continent-\(continent.lowercased())",
-                    emoji: presentation.emoji,
+                    emoji: nil,
+                    assetNames: presentation.assetNames,
                     title: presentation.title,
                     subtitle: "Been to \(continent)",
                     tint: presentation.tint
@@ -161,20 +166,24 @@ enum ProfileBadgeCatalog {
         }
     }
 
-    private static func continentPresentation(for continent: String) -> (title: String, emoji: String, tint: Color)? {
+    private static func continentPresentation(for continent: String) -> (title: String, assetNames: [String], tint: Color)? {
         switch continent {
         case "Africa":
-            return ("Africa Touched", "🌍", Color(red: 0.82, green: 0.47, blue: 0.16))
+            return ("Africa Touched", ["badge-continent-africa"], Color(red: 0.82, green: 0.47, blue: 0.16))
         case "Americas":
-            return ("Americas Touched", "🌎", Color(red: 0.21, green: 0.57, blue: 0.44))
+            return (
+                "Americas Touched",
+                ["badge-continent-north-america", "badge-continent-south-america"],
+                Color(red: 0.21, green: 0.57, blue: 0.44)
+            )
         case "Antarctica":
-            return ("Polar Passport", "🧊", Color(red: 0.34, green: 0.59, blue: 0.86))
+            return ("Polar Passport", ["badge-continent-antarctica"], Color(red: 0.34, green: 0.59, blue: 0.86))
         case "Asia":
-            return ("Asia Touched", "🌏", Color(red: 0.77, green: 0.34, blue: 0.44))
+            return ("Asia Touched", ["badge-continent-asia"], Color(red: 0.77, green: 0.34, blue: 0.44))
         case "Europe":
-            return ("Europe Touched", "🏰", Color(red: 0.27, green: 0.43, blue: 0.83))
+            return ("Europe Touched", ["badge-continent-europe"], Color(red: 0.27, green: 0.43, blue: 0.83))
         case "Oceania":
-            return ("Oceania Touched", "🌊", Color(red: 0.14, green: 0.60, blue: 0.78))
+            return ("Oceania Touched", ["badge-continent-oceania"], Color(red: 0.14, green: 0.60, blue: 0.78))
         default:
             return nil
         }
@@ -251,8 +260,7 @@ struct ProfileBadgeShowcaseView: View {
         Button {
             onSelectBadge(badge)
         } label: {
-            Text(badge.emoji)
-                .font(.system(size: isCompactLayout ? 15 : 18))
+            badgeArtwork(for: badge)
                 .frame(width: badgeSize, height: badgeSize)
                 .background(
                     Circle()
@@ -264,5 +272,31 @@ struct ProfileBadgeShowcaseView: View {
                 )
         }
         .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func badgeArtwork(for badge: ProfileBadge) -> some View {
+        if badge.assetNames.isEmpty {
+            Text(badge.emoji ?? "✨")
+                .font(.system(size: isCompactLayout ? 15 : 18))
+        } else if badge.assetNames.count == 1, let assetName = badge.assetNames.first {
+            Image(assetName)
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(.black.opacity(0.82))
+                .padding(isCompactLayout ? 6 : 7)
+        } else {
+            HStack(spacing: 1) {
+                ForEach(badge.assetNames, id: \.self) { assetName in
+                    Image(assetName)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: badgeSize * 0.32, height: badgeSize * 0.32)
+                        .foregroundStyle(.black.opacity(0.82))
+                }
+            }
+        }
     }
 }
