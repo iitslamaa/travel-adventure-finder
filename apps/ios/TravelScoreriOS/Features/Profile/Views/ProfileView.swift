@@ -30,6 +30,7 @@ struct LockedProfileView: View {
 
 extension Notification.Name {
     static let friendshipUpdated = Notification.Name("friendshipUpdated")
+    static let socialActivityUpdated = Notification.Name("socialActivityUpdated")
 }
 
 struct ProfileView: View {

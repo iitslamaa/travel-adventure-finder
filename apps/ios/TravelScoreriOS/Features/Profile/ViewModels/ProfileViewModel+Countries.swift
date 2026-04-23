@@ -51,7 +51,15 @@ extension ProfileViewModel {
                     userId: currentUserId,
                     countryCode: countryId
                 )
+
+                try? await SocialActivityService().recordActivity(
+                    actorUserId: currentUserId,
+                    eventType: .bucketListAdded,
+                    metadata: ["country_code": countryId.uppercased()]
+                )
             }
+
+            NotificationCenter.default.post(name: .socialActivityUpdated, object: nil)
         } catch {
             // Rollback if server write fails
             if wasInBucket {
@@ -110,7 +118,15 @@ extension ProfileViewModel {
                         "country_id": countryId
                     ])
                     .execute()
+
+                try? await SocialActivityService().recordActivity(
+                    actorUserId: currentUserId,
+                    eventType: .countryVisited,
+                    metadata: ["country_code": countryId.uppercased()]
+                )
             }
+
+            NotificationCenter.default.post(name: .socialActivityUpdated, object: nil)
         } catch {
             // Rollback on failure
             if wasVisited {
