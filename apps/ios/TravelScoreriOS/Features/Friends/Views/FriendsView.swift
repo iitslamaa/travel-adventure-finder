@@ -48,11 +48,11 @@ struct FriendsView: View {
     private func socialHorizontalInset(for width: CGFloat) -> CGFloat {
         switch width {
         case ..<390:
-            return 24
+            return 14
         case ..<430:
-            return 22
+            return 14
         case ..<520:
-            return 20
+            return 16
         default:
             return max((width - 680) / 2, 32)
         }
@@ -66,6 +66,7 @@ struct FriendsView: View {
         GeometryReader { geo in
             let horizontalInset = socialHorizontalInset(for: geo.size.width)
             let contentWidth = socialContentWidth(for: geo.size.width)
+            let tabOcclusionHeight = floatingTabBarInset + 122
 
             ZStack {
                 VStack(spacing: 0) {
@@ -74,6 +75,8 @@ struct FriendsView: View {
                     contentView(contentWidth: contentWidth)
                         .padding(.top, -4)
                         .frame(maxHeight: .infinity)
+                        .padding(.bottom, tabOcclusionHeight)
+                        .clipped()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
@@ -269,7 +272,7 @@ struct FriendsView: View {
                         .id("friendsListTop")
                         .padding(.horizontal, 16)
                         .padding(.top, 6)
-                        .padding(.bottom, floatingTabBarInset + 96)
+                        .padding(.bottom, floatingTabBarInset + 148)
                     }
                     .refreshable {
                         await friendsVM.loadFriends(for: userId, forceRefresh: true)
