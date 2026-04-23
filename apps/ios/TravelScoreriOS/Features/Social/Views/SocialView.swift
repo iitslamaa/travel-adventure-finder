@@ -362,7 +362,7 @@ struct SocialView: View {
         case .profilePhotoUpdated:
             return "📸"
         case .currentCountryChanged:
-            return "🗺️"
+            return "📍"
         case .homeCountryChanged:
             return "📍"
         case .favoriteCountryAdded:
