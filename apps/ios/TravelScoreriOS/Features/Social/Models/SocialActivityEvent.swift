@@ -7,6 +7,7 @@ enum SocialActivityEventType: String, Codable {
     case profilePhotoUpdated = "profile_photo_updated"
     case currentCountryChanged = "current_country_changed"
     case homeCountryChanged = "home_country_changed"
+    case favoriteCountryAdded = "favorite_country_added"
 }
 
 struct SocialActivityEvent: Identifiable, Decodable {

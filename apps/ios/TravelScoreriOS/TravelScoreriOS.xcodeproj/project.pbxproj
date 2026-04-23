@@ -152,11 +152,11 @@
 		17F2E1602F4C3C27009A7E6D /* CountryScoreSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F2E15F2F4C3C27009A7E6D /* CountryScoreSection.swift */; };
 		17F9A0012F60000100AA0001 /* VisaRequirementsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */; };
 		17F9A0012F70000100000001 /* CountryOverviewDescriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */; };
+		E1A111112F90000100ABCDEF /* TripPlannerUsernameSearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A111102F90000100ABCDEF /* TripPlannerUsernameSearchController.swift */; };
 		E1B200062FA0000100ABCDEF /* SocialActivityEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B200012FA0000100ABCDEF /* SocialActivityEvent.swift */; };
 		E1B200072FA0000100ABCDEF /* SocialActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B200022FA0000100ABCDEF /* SocialActivityService.swift */; };
 		E1B200082FA0000100ABCDEF /* SocialFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B200032FA0000100ABCDEF /* SocialFeedViewModel.swift */; };
 		E1B200092FA0000100ABCDEF /* SocialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B200042FA0000100ABCDEF /* SocialView.swift */; };
-		E1A111112F90000100ABCDEF /* TripPlannerUsernameSearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A111102F90000100ABCDEF /* TripPlannerUsernameSearchController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -304,11 +304,11 @@
 		17F2E15F2F4C3C27009A7E6D /* CountryScoreSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryScoreSection.swift; sourceTree = "<group>"; };
 		17F9A0002F60000100AA0001 /* VisaRequirementsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisaRequirementsStore.swift; sourceTree = "<group>"; };
 		17F9A0002F70000100000001 /* CountryOverviewDescriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryOverviewDescriptionStore.swift; sourceTree = "<group>"; };
+		E1A111102F90000100ABCDEF /* TripPlannerUsernameSearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlannerUsernameSearchController.swift; sourceTree = "<group>"; };
 		E1B200012FA0000100ABCDEF /* SocialActivityEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialActivityEvent.swift; sourceTree = "<group>"; };
 		E1B200022FA0000100ABCDEF /* SocialActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialActivityService.swift; sourceTree = "<group>"; };
 		E1B200032FA0000100ABCDEF /* SocialFeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialFeedViewModel.swift; sourceTree = "<group>"; };
 		E1B200042FA0000100ABCDEF /* SocialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialView.swift; sourceTree = "<group>"; };
-		E1A111102F90000100ABCDEF /* TripPlannerUsernameSearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripPlannerUsernameSearchController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -612,49 +612,6 @@
 			children = (
 			);
 			path = Support;
-			sourceTree = "<group>";
-		};
-		E1B200002FA0000100ABCDEF /* Social */ = {
-			isa = PBXGroup;
-			children = (
-				E1B2000D2FA0000100ABCDEF /* Models */,
-				E1B2000C2FA0000100ABCDEF /* Services */,
-				E1B2000B2FA0000100ABCDEF /* ViewModels */,
-				E1B2000A2FA0000100ABCDEF /* Views */,
-			);
-			path = Social;
-			sourceTree = "<group>";
-		};
-		E1B2000A2FA0000100ABCDEF /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				E1B200042FA0000100ABCDEF /* SocialView.swift */,
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
-		E1B2000B2FA0000100ABCDEF /* ViewModels */ = {
-			isa = PBXGroup;
-			children = (
-				E1B200032FA0000100ABCDEF /* SocialFeedViewModel.swift */,
-			);
-			path = ViewModels;
-			sourceTree = "<group>";
-		};
-		E1B2000C2FA0000100ABCDEF /* Services */ = {
-			isa = PBXGroup;
-			children = (
-				E1B200022FA0000100ABCDEF /* SocialActivityService.swift */,
-			);
-			path = Services;
-			sourceTree = "<group>";
-		};
-		E1B2000D2FA0000100ABCDEF /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				E1B200012FA0000100ABCDEF /* SocialActivityEvent.swift */,
-			);
-			path = Models;
 			sourceTree = "<group>";
 		};
 		170C22622F479BFF0090BA78 /* Views */ = {
@@ -1057,6 +1014,49 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		E1B200002FA0000100ABCDEF /* Social */ = {
+			isa = PBXGroup;
+			children = (
+				E1B2000D2FA0000100ABCDEF /* Models */,
+				E1B2000C2FA0000100ABCDEF /* Services */,
+				E1B2000B2FA0000100ABCDEF /* ViewModels */,
+				E1B2000A2FA0000100ABCDEF /* Views */,
+			);
+			path = Social;
+			sourceTree = "<group>";
+		};
+		E1B2000A2FA0000100ABCDEF /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E1B200042FA0000100ABCDEF /* SocialView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E1B2000B2FA0000100ABCDEF /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				E1B200032FA0000100ABCDEF /* SocialFeedViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		E1B2000C2FA0000100ABCDEF /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E1B200022FA0000100ABCDEF /* SocialActivityService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E1B2000D2FA0000100ABCDEF /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E1B200012FA0000100ABCDEF /* SocialActivityEvent.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1419,7 +1419,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TravelScorerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SVZL633CJV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1435,7 +1435,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1455,7 +1455,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TravelScorerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SVZL633CJV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1471,7 +1471,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

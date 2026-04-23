@@ -25,10 +25,6 @@ final class FriendsViewModel: ObservableObject {
 
     // MARK: - Published state
     @Published var searchText: String = ""
-    @Published var searchResults: [Profile] = [] {
-        didSet {
-        }
-    }
     @Published var isLoading: Bool = false {
         didSet {
         }
@@ -137,44 +133,10 @@ final class FriendsViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Search
-
-    func searchUsers() async {
-        let query = searchText
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !query.isEmpty else {
-            searchResults = []
-            return
-        }
-
-        isLoading = true
-        errorMessage = nil
-        let startedAt = Date()
-
-        do {
-            searchResults = try await supabase.searchUsers(byUsername: query)
-            FriendsDebugLog.message(
-                "Search completed query=\(query) results=\(searchResults.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
-            )
-        } catch {
-            if (error as? URLError)?.code == .cancelled || Task.isCancelled {
-                return
-            }
-
-            print("❌ [FriendsVM:", instanceId, "] searchUsers failed:", error)
-            errorMessage = error.localizedDescription
-            searchResults = []
-        }
-
-        isLoading = false
-    }
-
     // MARK: - Helpers
 
     func clearSearch() {
         searchText = ""
-        searchResults = []
         errorMessage = nil
     }
 }

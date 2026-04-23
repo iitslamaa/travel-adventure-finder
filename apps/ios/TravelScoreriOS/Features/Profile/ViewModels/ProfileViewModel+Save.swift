@@ -32,6 +32,7 @@ extension ProfileViewModel {
     ) async throws {
         let userId = self.userId
         errorMessage = nil
+        let existingProfile = profile
         
         let trimmedFirstName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedLastName = lastName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -141,7 +142,17 @@ extension ProfileViewModel {
             nationalityCountryCodes: normalizedPassportNationalities,
             passportCountryCode: normalizedVisaPassportCountryCode
         )
-        
+
+        if didChangeSocialActivityFields(
+            from: existingProfile,
+            nextDestination: nextDestination,
+            currentCountry: normalizedCurrentCountry,
+            homeCountries: homeCountries ?? existingProfile?.livedCountries ?? [],
+            favoriteCountries: normalizedFavoriteCountries,
+            avatarUrl: avatarUrl
+        ) {
+            NotificationCenter.default.post(name: .socialActivityUpdated, object: nil)
+        }
     }
     
     func uploadAvatar(data: Data, fileName: String) async throws -> String {
@@ -153,5 +164,27 @@ extension ProfileViewModel {
         )
         
         return try profileService.publicAvatarURL(path: path)
+    }
+
+    private func didChangeSocialActivityFields(
+        from existingProfile: Profile?,
+        nextDestination: String?,
+        currentCountry: String?,
+        homeCountries: [String],
+        favoriteCountries: [String]?,
+        avatarUrl: String?
+    ) -> Bool {
+        let normalizedExistingHomes = (existingProfile?.livedCountries ?? []).sorted()
+        let normalizedExistingFavorites = (existingProfile?.favoriteCountries ?? []).sorted()
+        let normalizedNext = nextDestination?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedCurrent = currentCountry?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedAvatar = avatarUrl == "" ? nil : avatarUrl
+        let normalizedFavorites = favoriteCountries ?? normalizedExistingFavorites
+
+        return normalizedExistingHomes != homeCountries.sorted()
+            || normalizedExistingFavorites != normalizedFavorites
+            || existingProfile?.nextDestination != normalizedNext
+            || existingProfile?.currentCountry != normalizedCurrent
+            || existingProfile?.avatarUrl != normalizedAvatar
     }
 }

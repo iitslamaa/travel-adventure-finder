@@ -41,6 +41,11 @@ struct SocialView: View {
         .task(id: userId) {
             await feedVM.loadFeed(for: userId, source: "initial-task")
         }
+        .onReceive(NotificationCenter.default.publisher(for: .socialActivityUpdated)) { _ in
+            Task {
+                await feedVM.loadFeed(for: userId, source: "social-activity-updated")
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .friendshipUpdated)) { _ in
             Task {
                 await feedVM.loadFeed(for: userId, source: "friendship-updated")
@@ -74,13 +79,24 @@ struct SocialView: View {
 
                 Spacer()
 
-                if feedVM.isLoading {
+                if feedVM.isLoading, !feedVM.events.isEmpty {
                     ProgressView()
                         .controlSize(.small)
                 }
             }
 
-            if feedVM.events.isEmpty {
+            if feedVM.isLoading && feedVM.events.isEmpty {
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .controlSize(.regular)
+
+                    Text(localizedString("social.activity.empty.loading", defaultValue: "Loading friend activity"))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.74))
+                }
+                .frame(maxWidth: .infinity, minHeight: 156)
+                .background(Theme.listCardBackground(corner: 20))
+            } else if feedVM.events.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(
                         feedVM.hasAttemptedLoad
@@ -93,7 +109,7 @@ struct SocialView: View {
                     Text(
                         localizedString(
                             "social.activity.empty.description",
-                            defaultValue: "When friends update travel lists, destinations, or profile details, those lightweight updates will appear here."
+                            defaultValue: "When friends update travel lists, favorite countries, destinations, or profile details, those updates will appear here."
                         )
                     )
                         .font(.system(size: 14, weight: .medium))
@@ -129,21 +145,21 @@ struct SocialView: View {
         return HStack(spacing: 12) {
             socialActionButton(
                 icon: "person.2.fill",
-                title: "Friends"
+                title: String(localized: "friends.title")
             ) {
                 socialNav.push(.friends(userId))
             }
 
             socialActionButton(
                 icon: "person.crop.circle.badge.plus",
-                title: "Requests"
+                title: localizedString("social.requests.short", defaultValue: "Requests")
             ) {
                 socialNav.push(.friendRequests)
             }
 
             socialActionButton(
                 icon: "person.crop.circle",
-                title: "Profile"
+                title: String(localized: "profile.title")
             ) {
                 socialNav.push(.profile(userId))
             }
@@ -206,10 +222,6 @@ struct SocialView: View {
                 }
 
                 Spacer(minLength: 0)
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.28))
             }
         }
         .buttonStyle(.plain)
@@ -258,26 +270,26 @@ struct SocialView: View {
         case .bucketListAdded:
             return localizedFormat(
                 "social.activity.bucket_list_format",
-                defaultValue: "Bucket List: %@%@",
+                defaultValue: "Added %@%@ to their bucket list",
                 country ?? fallbackCountry,
                 flagSuffix(for: event)
             )
         case .countryVisited:
             return localizedFormat(
                 "social.activity.visited_format",
-                defaultValue: "Visited: %@%@",
+                defaultValue: "Visited %@%@",
                 country ?? fallbackCountry,
                 flagSuffix(for: event)
             )
         case .nextDestinationChanged:
             return localizedFormat(
                 "social.activity.next_format",
-                defaultValue: "Next: %@%@",
+                defaultValue: "Going Next: %@%@",
                 destination ?? country ?? fallbackCountry,
                 flagSuffix(for: event)
             )
         case .profilePhotoUpdated:
-            return localizedString("social.activity.profile_photo_updated", defaultValue: "Profile Photo Updated")
+            return localizedString("social.activity.profile_photo_updated", defaultValue: "Updated their profile photo")
         case .currentCountryChanged:
             return localizedFormat(
                 "social.activity.current_country_format",
@@ -288,8 +300,15 @@ struct SocialView: View {
         case .homeCountryChanged:
             return localizedFormat(
                 "social.activity.home_country_format",
-                defaultValue: "Home Country: %@%@",
+                defaultValue: "Updated home country to %@%@",
                 country ?? fallbackUpdated,
+                flagSuffix(for: event)
+            )
+        case .favoriteCountryAdded:
+            return localizedFormat(
+                "social.activity.favorite_country_format",
+                defaultValue: "Added %@%@ to favorite countries",
+                country ?? fallbackCountry,
                 flagSuffix(for: event)
             )
         }
@@ -323,25 +342,10 @@ struct SocialView: View {
     }
 
     private func activityTimestamp(for date: Date) -> String {
-        let elapsed = max(Int(Date().timeIntervalSince(date)), 0)
+        let elapsed = max(Date().timeIntervalSince(date), 0)
 
-        if elapsed < 60 {
-            return "Just now"
-        }
-
-        let minutes = elapsed / 60
-        if minutes < 60 {
-            return "\(minutes)m ago"
-        }
-
-        let hours = minutes / 60
-        if hours < 24 {
-            return "\(hours)h ago"
-        }
-
-        let days = hours / 24
-        if days < 7 {
-            return "\(days)d ago"
+        if elapsed < 7 * 24 * 60 * 60 {
+            return Self.relativeTimestampFormatter.localizedString(for: date, relativeTo: Date())
         }
 
         return date.formatted(.dateTime.month(.abbreviated).day())
@@ -358,9 +362,11 @@ struct SocialView: View {
         case .profilePhotoUpdated:
             return "📸"
         case .currentCountryChanged:
-            return "🗺️"
+            return "📍"
         case .homeCountryChanged:
             return "📍"
+        case .favoriteCountryAdded:
+            return "⭐️"
         }
     }
 
@@ -430,4 +436,10 @@ struct SocialView: View {
             arguments: arguments
         )
     }
+
+    private static let relativeTimestampFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter
+    }()
 }

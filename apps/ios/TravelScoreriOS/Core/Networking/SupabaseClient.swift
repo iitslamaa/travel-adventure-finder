@@ -4,6 +4,19 @@ import Foundation
 import Combine
 import Supabase
 
+private enum SupabaseSearchDebugLog {
+    static func message(_ text: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("🔎 [UserSearch] \(timestamp) \(text)")
+#endif
+    }
+
+    static func duration(since start: Date) -> String {
+        "\(Int(Date().timeIntervalSince(start) * 1000))ms"
+    }
+}
+
 private struct PublicProfileRow: Decodable {
     let id: UUID
     let username: String
@@ -181,14 +194,28 @@ final class SupabaseManager {
     }
 
     /// Search users by username (case-insensitive, partial match)
-    func searchUsers(byUsername query: String) async throws -> [Profile] {
+    func searchUsers(byUsername query: String, debugContext: String = "general") async throws -> [Profile] {
+        let startedAt = Date()
+        let normalizedQuery = query
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "@", with: "")
+        SupabaseSearchDebugLog.message(
+            "search.start context=\(debugContext) raw=\(query.debugDescription) normalized=\(normalizedQuery.debugDescription)"
+        )
+
         let response: PostgrestResponse<[PublicProfileRow]> = try await client
             .from("profiles")
             .select(Self.publicProfileSelect)
-            .ilike("username", pattern: "%\(query)%")
+            .ilike("username", pattern: "%\(normalizedQuery)%")
             .limit(20)
             .execute()
-        return response.value.map(\.profile)
+
+        let profiles = response.value.map(\.profile)
+        let preview = profiles.prefix(5).map(\.username).joined(separator: ",")
+        SupabaseSearchDebugLog.message(
+            "search.success context=\(debugContext) normalized=\(normalizedQuery.debugDescription) rows=\(profiles.count) preview=[\(preview)] duration=\(SupabaseSearchDebugLog.duration(since: startedAt))"
+        )
+        return profiles
     }
     deinit {
     }

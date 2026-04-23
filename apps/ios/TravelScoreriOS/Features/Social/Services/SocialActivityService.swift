@@ -6,19 +6,23 @@ import Supabase
 final class SocialActivityService {
     private let supabase: SupabaseManager
     private let friendService: FriendService
+    private let profileService: ProfileService
 
     init(
         supabase: SupabaseManager,
-        friendService: FriendService
+        friendService: FriendService,
+        profileService: ProfileService
     ) {
         self.supabase = supabase
         self.friendService = friendService
+        self.profileService = profileService
     }
 
     convenience init() {
         self.init(
             supabase: .shared,
-            friendService: FriendService()
+            friendService: FriendService(),
+            profileService: ProfileService(supabase: .shared)
         )
     }
 
@@ -34,22 +38,16 @@ final class SocialActivityService {
         let prequeryStartTime = Date()
         SocialFeedDebug.log("service.prequery.start id=\(requestId) total_duration=\(SocialFeedDebug.duration(since: startTime)) cancelled=\(Task.isCancelled)")
 
-        let lookupStartTime = Date()
-        var profileLookup = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })
-        SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
-
-        let profileService = ProfileService(supabase: supabase)
-        let currentProfileStartTime = Date()
-        SocialFeedDebug.log("service.prequery.current_profile_memory_cache.start id=\(requestId)")
-        if let currentUserProfile = profileService.currentUserProfileFallback(userId: userId) {
-            profileLookup[userId] = currentUserProfile
-        }
-        SocialFeedDebug.log("service.prequery.current_profile_memory_cache.end id=\(requestId) hit=\(profileLookup[userId] != nil) duration=\(SocialFeedDebug.duration(since: currentProfileStartTime)) total_duration=\(SocialFeedDebug.duration(since: startTime))")
-
         let actorsStartTime = Date()
         let actorIds = Array(Set(friends.map(\.id) + [userId]))
         let actorPreview = actorIds.prefix(6).map(\.uuidString).joined(separator: ",")
-        SocialFeedDebug.log("service.prequery.actors.end id=\(requestId) actors=\(actorIds.count) duration=\(SocialFeedDebug.duration(since: actorsStartTime))")
+        let duplicateActors = (friends.count + 1) - actorIds.count
+        SocialFeedDebug.log("service.prequery.actors.end id=\(requestId) actors=\(actorIds.count) duplicate_actors=\(max(duplicateActors, 0)) duration=\(SocialFeedDebug.duration(since: actorsStartTime))")
+
+        let lookupStartTime = Date()
+        SocialFeedDebug.log("service.prequery.friend_lookup.start id=\(requestId) actors=\(actorIds.count)")
+        let profileLookup = try await buildActorProfiles(for: userId, friends: friends, requestId: requestId)
+        SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) missing_profiles=\(max(actorIds.count - profileLookup.count, 0)) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
 
         let cutoffStartTime = Date()
         let cutoffDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
@@ -77,20 +75,30 @@ final class SocialActivityService {
                 .limit(limit)
                 .execute()
 
-            let events = response.value.map { event in
-                SocialActivityEvent(
+            let mappingStartTime = Date()
+            var omittedCurrentUserEvents = 0
+            let events: [SocialActivityEvent] = response.value.compactMap { event -> SocialActivityEvent? in
+                let actorProfile = profileLookup[event.actorUserId] ?? event.actorProfile
+                if event.actorUserId == userId, actorProfile == nil {
+                    omittedCurrentUserEvents += 1
+                    return nil
+                }
+
+                return SocialActivityEvent(
                     id: event.id,
                     actorUserId: event.actorUserId,
                     eventType: event.eventType,
                     metadata: event.metadata,
                     createdAt: event.createdAt,
-                    actorProfile: profileLookup[event.actorUserId] ?? event.actorProfile
+                    actorProfile: actorProfile
                 )
             }
+            let unmatchedProfiles = events.filter { $0.actorProfile == nil }.count
 
             let eventPreview = events.prefix(5)
                 .map { "\($0.id.uuidString.prefix(8)):\($0.eventType.rawValue):\($0.actorUserId.uuidString.prefix(8))" }
                 .joined(separator: ",")
+            SocialFeedDebug.log("service.query.map.end id=\(requestId) rows=\(events.count) unmatched_profiles=\(unmatchedProfiles) omitted_current_user_events=\(omittedCurrentUserEvents) duration=\(SocialFeedDebug.duration(since: mappingStartTime))")
             SocialFeedDebug.log("service.query.success id=\(requestId) rows=\(events.count) duration=\(SocialFeedDebug.duration(since: queryStartTime)) preview=[\(eventPreview)] total_duration=\(SocialFeedDebug.duration(since: startTime))")
             return events
         } catch let error as PostgrestError {
@@ -127,6 +135,34 @@ final class SocialActivityService {
             .insert(payload)
             .execute()
     }
+
+    private func buildActorProfiles(for userId: UUID, friends: [Profile], requestId: String) async throws -> [UUID: Profile] {
+        let friendSeedStartTime = Date()
+        var profilesById = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })
+        SocialFeedDebug.log("service.profile_lookup.friend_seed.end id=\(requestId) seeded=\(profilesById.count) duration=\(SocialFeedDebug.duration(since: friendSeedStartTime))")
+
+        let currentUserStartTime = Date()
+        if profilesById[userId] == nil {
+            if let inMemoryProfile = profileService.inMemoryProfile(userId: userId) {
+                profilesById[userId] = inMemoryProfile
+                SocialFeedDebug.log("service.profile_lookup.current_user.hit id=\(requestId) source=in_memory duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
+            } else {
+                SocialFeedDebug.log("service.profile_lookup.current_user.network.start id=\(requestId)")
+                do {
+                    let fetchedProfile = try await profileService.fetchMyProfile(userId: userId)
+                    profilesById[userId] = fetchedProfile
+                    SocialFeedDebug.log("service.profile_lookup.current_user.network.end id=\(requestId) duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
+                } catch {
+                    SocialFeedDebug.log("service.profile_lookup.current_user.network.failed id=\(requestId) error=\(SocialFeedDebug.describe(error)) duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
+                }
+            }
+        } else {
+            SocialFeedDebug.log("service.profile_lookup.current_user.skipped id=\(requestId) reason=already_seeded")
+        }
+
+        SocialFeedDebug.log("service.profile_lookup.complete id=\(requestId) total_profiles=\(profilesById.count)")
+        return profilesById
+    }
 }
 
 private struct SocialActivityInsert: Encodable {
@@ -138,5 +174,56 @@ private struct SocialActivityInsert: Encodable {
         case actorUserId = "actor_user_id"
         case eventType = "event_type"
         case metadata
+    }
+}
+
+private struct SocialActorProfileRow: Decodable {
+    static let selectColumns = """
+        id,
+        username,
+        full_name,
+        first_name,
+        last_name,
+        avatar_url,
+        friend_count
+    """
+
+    let id: UUID
+    let username: String?
+    let fullName: String?
+    let firstName: String?
+    let lastName: String?
+    let avatarUrl: String?
+    let friendCount: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case username
+        case fullName = "full_name"
+        case firstName = "first_name"
+        case lastName = "last_name"
+        case avatarUrl = "avatar_url"
+        case friendCount = "friend_count"
+    }
+
+    var profile: Profile {
+        Profile(
+            id: id,
+            username: username ?? "",
+            fullName: fullName ?? "",
+            firstName: firstName,
+            lastName: lastName,
+            avatarUrl: avatarUrl,
+            languages: [],
+            livedCountries: [],
+            travelStyle: [],
+            travelMode: [],
+            nextDestination: nil,
+            defaultCurrencyCode: nil,
+            currentCountry: nil,
+            favoriteCountries: nil,
+            onboardingCompleted: nil,
+            friendCount: friendCount ?? 0
+        )
     }
 }
