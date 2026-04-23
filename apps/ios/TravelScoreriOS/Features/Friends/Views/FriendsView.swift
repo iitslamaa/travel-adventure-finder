@@ -66,9 +66,6 @@ struct FriendsView: View {
         GeometryReader { geo in
             let horizontalInset = socialHorizontalInset(for: geo.size.width)
             let contentWidth = socialContentWidth(for: geo.size.width)
-            let titleHeight: CGFloat = 110
-            let bottomReserve = max(floatingTabBarInset + 104, 136)
-            let listHeight = max(geo.size.height - titleHeight - 12 - bottomReserve, 340)
 
             ZStack {
                 VStack(spacing: 0) {
@@ -76,11 +73,8 @@ struct FriendsView: View {
 
                     contentView(contentWidth: contentWidth)
                         .padding(.top, 12)
-                        .frame(height: listHeight)
-
-                    Spacer(minLength: 0)
+                        .padding(.bottom, 12)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 VStack {
                     HStack {
@@ -288,6 +282,7 @@ struct FriendsView: View {
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .padding(.top, 18)
+            .padding(.bottom, 8)
         }
     }
 

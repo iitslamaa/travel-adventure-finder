@@ -30,29 +30,37 @@ final class SocialActivityService {
             return []
         }
 
-        let response: PostgrestResponse<[SocialActivityEvent]> = try await supabase.client
-            .from("activity_events")
-            .select("""
-                id,
-                actor_user_id,
-                event_type,
-                metadata,
-                created_at,
-                profiles!activity_events_actor_user_id_fkey (
+        do {
+            let response: PostgrestResponse<[SocialActivityEvent]> = try await supabase.client
+                .from("activity_events")
+                .select("""
                     id,
-                    username,
-                    full_name,
-                    first_name,
-                    last_name,
-                    avatar_url,
-                    friend_count
-                )
-            """)
-            .in("actor_user_id", values: friendIds)
-            .order("created_at", ascending: false)
-            .limit(limit)
-            .execute()
+                    actor_user_id,
+                    event_type,
+                    metadata,
+                    created_at,
+                    profiles!activity_events_actor_user_id_fkey (
+                        id,
+                        username,
+                        full_name,
+                        first_name,
+                        last_name,
+                        avatar_url,
+                        friend_count
+                    )
+                """)
+                .in("actor_user_id", values: friendIds)
+                .order("created_at", ascending: false)
+                .limit(limit)
+                .execute()
 
-        return response.value
+            return response.value
+        } catch let error as PostgrestError {
+            guard error.message.localizedCaseInsensitiveContains("activity_events") else {
+                throw error
+            }
+
+            return []
+        }
     }
 }
