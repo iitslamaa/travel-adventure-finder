@@ -95,7 +95,7 @@ struct SocialView: View {
                 .padding(16)
                 .background(Theme.listCardBackground(corner: 20))
             } else {
-                VStack(spacing: 10) {
+                VStack(spacing: 2) {
                     ForEach(feedVM.events) { event in
                         activityRow(for: event)
                     }
@@ -191,8 +191,8 @@ struct SocialView: View {
 
             Spacer(minLength: 0)
         }
-        .padding(14)
-        .background(Theme.listCardBackground(corner: 20))
+        .padding(.horizontal, 4)
+        .padding(.vertical, 10)
     }
 
     private func avatarView(for profile: Profile?) -> some View {
