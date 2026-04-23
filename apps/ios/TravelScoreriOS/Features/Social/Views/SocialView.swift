@@ -152,7 +152,7 @@ struct SocialView: View {
 
             socialActionButton(
                 icon: "person.crop.circle.badge.plus",
-                title: String(localized: "friend_requests.title")
+                title: localizedString("social.requests.short", defaultValue: "Requests")
             ) {
                 socialNav.push(.friendRequests)
             }

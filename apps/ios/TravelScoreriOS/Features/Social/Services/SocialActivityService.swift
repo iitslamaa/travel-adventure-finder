@@ -138,14 +138,14 @@ final class SocialActivityService {
             return profilesById
         }
 
-        let response: PostgrestResponse<[Profile]> = try await supabase.client
+        let response: PostgrestResponse<[SocialActorProfileRow]> = try await supabase.client
             .from("profiles")
-            .select(ProfileSelect.columns)
+            .select(SocialActorProfileRow.selectColumns)
             .in("id", values: missingIds)
             .execute()
 
-        for profile in response.value {
-            profilesById[profile.id] = profile
+        for row in response.value {
+            profilesById[row.id] = row.profile
         }
 
         return profilesById
@@ -164,23 +164,53 @@ private struct SocialActivityInsert: Encodable {
     }
 }
 
-private enum ProfileSelect {
-    static let columns = """
+private struct SocialActorProfileRow: Decodable {
+    static let selectColumns = """
         id,
         username,
         full_name,
         first_name,
         last_name,
         avatar_url,
-        friend_count,
-        languages,
-        lived_countries,
-        travel_style,
-        travel_mode,
-        next_destination,
-        default_currency_code,
-        current_country,
-        favorite_countries,
-        onboarding_completed
+        friend_count
     """
+
+    let id: UUID
+    let username: String?
+    let fullName: String?
+    let firstName: String?
+    let lastName: String?
+    let avatarUrl: String?
+    let friendCount: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case username
+        case fullName = "full_name"
+        case firstName = "first_name"
+        case lastName = "last_name"
+        case avatarUrl = "avatar_url"
+        case friendCount = "friend_count"
+    }
+
+    var profile: Profile {
+        Profile(
+            id: id,
+            username: username ?? "",
+            fullName: fullName ?? "",
+            firstName: firstName,
+            lastName: lastName,
+            avatarUrl: avatarUrl,
+            languages: [],
+            livedCountries: [],
+            travelStyle: [],
+            travelMode: [],
+            nextDestination: nil,
+            defaultCurrencyCode: nil,
+            currentCountry: nil,
+            favoriteCountries: nil,
+            onboardingCompleted: nil,
+            friendCount: friendCount ?? 0
+        )
+    }
 }
