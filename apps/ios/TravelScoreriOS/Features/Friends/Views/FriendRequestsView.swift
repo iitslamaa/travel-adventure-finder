@@ -53,7 +53,7 @@ struct FriendRequestsView: View {
                     Theme.titleBanner(String(localized: "friend_requests.title"))
 
                     contentView(contentWidth: contentWidth)
-                        .padding(.top, 14)
+                        .padding(.top, 4)
                         .padding(.bottom, 16)
                 }
 
@@ -139,12 +139,12 @@ struct FriendRequestsView: View {
                         requestRow(for: profile, width: contentWidth)
                     }
                 }
-                .padding(.top, 14)
+                .padding(.top, 6)
                 .padding(.bottom, 28)
             }
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .padding(.top, 14)
+            .padding(.top, 4)
             .padding(.bottom, 24)
         }
     }
