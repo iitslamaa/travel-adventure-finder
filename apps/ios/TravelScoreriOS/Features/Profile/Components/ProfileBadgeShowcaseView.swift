@@ -145,7 +145,9 @@ enum ProfileBadgeCatalog {
     }
 
     private static func canonicalContinent(region: String?, subregion: String?) -> String? {
-        let raw = (region ?? subregion ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let rawRegion = (region ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let rawSubregion = (subregion ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let raw = (!rawRegion.isEmpty ? rawRegion : rawSubregion)
         guard !raw.isEmpty else { return nil }
 
         switch raw.lowercased() {
@@ -159,8 +161,21 @@ enum ProfileBadgeCatalog {
             return "Europe"
         case "oceania":
             return "Oceania"
-        case "americas", "north america", "south america", "latin america and the caribbean", "caribbean", "central america":
-            return "Americas"
+        case "north america", "caribbean", "central america":
+            return "North America"
+        case "south america":
+            return "South America"
+        case "americas":
+            switch rawSubregion.lowercased() {
+            case "south america":
+                return "South America"
+            case "caribbean", "central america", "north america":
+                return "North America"
+            default:
+                return "North America"
+            }
+        case "latin america and the caribbean":
+            return "North America"
         default:
             return nil
         }
@@ -170,12 +185,10 @@ enum ProfileBadgeCatalog {
         switch continent {
         case "Africa":
             return ("Africa Touched", ["badge-continent-africa"], Color(red: 0.82, green: 0.47, blue: 0.16))
-        case "Americas":
-            return (
-                "Americas Touched",
-                ["badge-continent-north-america", "badge-continent-south-america"],
-                Color(red: 0.21, green: 0.57, blue: 0.44)
-            )
+        case "North America":
+            return ("North America Touched", ["badge-continent-north-america"], Color(red: 0.21, green: 0.57, blue: 0.44))
+        case "South America":
+            return ("South America Touched", ["badge-continent-south-america"], Color(red: 0.18, green: 0.63, blue: 0.49))
         case "Antarctica":
             return ("Polar Passport", ["badge-continent-antarctica"], Color(red: 0.34, green: 0.59, blue: 0.86))
         case "Asia":
