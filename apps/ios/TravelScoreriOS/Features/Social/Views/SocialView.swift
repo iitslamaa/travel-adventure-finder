@@ -358,7 +358,7 @@ struct SocialView: View {
         let flag = flag(for: countryCode)
         guard !flag.isEmpty else { return "" }
 
-        return " \(flag)"
+        return "\u{00A0}\(flag)"
     }
 
     private func flag(for code: String) -> String {

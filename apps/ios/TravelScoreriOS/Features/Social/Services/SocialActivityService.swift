@@ -31,17 +31,31 @@ final class SocialActivityService {
         let friends = try await friendService.fetchFriends(for: userId)
         SocialFeedDebug.log("service.friends.success id=\(requestId) count=\(friends.count) duration=\(SocialFeedDebug.duration(since: friendsStartTime)) cancelled=\(Task.isCancelled)")
 
+        let prequeryStartTime = Date()
+        SocialFeedDebug.log("service.prequery.start id=\(requestId) total_duration=\(SocialFeedDebug.duration(since: startTime)) cancelled=\(Task.isCancelled)")
+
+        let lookupStartTime = Date()
         var profileLookup = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })
+        SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
+
+        let currentProfileStartTime = Date()
+        SocialFeedDebug.log("service.prequery.current_profile_cache.start id=\(requestId)")
         if let currentUserProfile = ProfileService(supabase: supabase).cachedProfile(userId: userId) {
             profileLookup[userId] = currentUserProfile
         }
+        SocialFeedDebug.log("service.prequery.current_profile_cache.end id=\(requestId) hit=\(profileLookup[userId] != nil) duration=\(SocialFeedDebug.duration(since: currentProfileStartTime)) total_duration=\(SocialFeedDebug.duration(since: startTime))")
 
+        let actorsStartTime = Date()
         let actorIds = Array(Set(friends.map(\.id) + [userId]))
         let actorPreview = actorIds.prefix(6).map(\.uuidString).joined(separator: ",")
+        SocialFeedDebug.log("service.prequery.actors.end id=\(requestId) actors=\(actorIds.count) duration=\(SocialFeedDebug.duration(since: actorsStartTime))")
+
+        let cutoffStartTime = Date()
         let cutoffDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
         let cutoffValue = ISO8601DateFormatter().string(from: cutoffDate)
+        SocialFeedDebug.log("service.prequery.cutoff.end id=\(requestId) duration=\(SocialFeedDebug.duration(since: cutoffStartTime)) cutoff=\(cutoffValue)")
 
-        SocialFeedDebug.log("service.query.prepare id=\(requestId) actors=\(actorIds.count) actor_preview=[\(actorPreview)] cutoff=\(cutoffValue)")
+        SocialFeedDebug.log("service.query.prepare id=\(requestId) actors=\(actorIds.count) actor_preview=[\(actorPreview)] cutoff=\(cutoffValue) prequery_duration=\(SocialFeedDebug.duration(since: prequeryStartTime)) total_duration=\(SocialFeedDebug.duration(since: startTime))")
 
         do {
             let queryStartTime = Date()
