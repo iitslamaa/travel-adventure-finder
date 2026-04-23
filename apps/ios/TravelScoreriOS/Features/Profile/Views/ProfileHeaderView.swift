@@ -72,10 +72,18 @@ struct ProfileHeaderView: View {
         .padding(.top, 14)
         .padding(.bottom, 12)
         .background(
-            Image("profile_header")
-                .resizable()
-                .scaledToFill()
-                .clipped()
+            GeometryReader { proxy in
+                Image("profile_header")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(
+                        width: proxy.size.width * 1.16,
+                        height: proxy.size.height * 1.06
+                    )
+                    .offset(x: proxy.size.width * 0.09)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+            }
         )
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
