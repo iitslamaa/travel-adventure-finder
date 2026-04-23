@@ -73,8 +73,9 @@ struct FriendsView: View {
 
                     contentView(contentWidth: contentWidth)
                         .padding(.top, 12)
-                        .padding(.bottom, 12)
+                        .frame(maxHeight: .infinity)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 VStack {
                     HStack {
@@ -152,7 +153,7 @@ struct FriendsView: View {
     private func contentView(contentWidth: CGFloat) -> some View {
         ScrollViewReader { proxy in
             ZStack {
-                Theme.notebookListBackground(corner: 22)
+                friendsNotebookBackground(corner: 22)
                     .allowsHitTesting(false)
 
                 if friendsVM.isLoading && displayedProfiles.isEmpty {
@@ -276,14 +277,41 @@ struct FriendsView: View {
                             await friendsVM.loadIncomingRequestCount()
                         }
                     }
+                    .frame(maxHeight: .infinity)
                 }
                 }
             }
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .padding(.top, 18)
-            .padding(.bottom, 8)
         }
+    }
+
+    private func friendsNotebookBackground(corner: CGFloat = 22) -> some View {
+        GeometryReader { geo in
+            ZStack {
+                Image("friends-scroll")
+                    .resizable(
+                        capInsets: EdgeInsets(top: 140, leading: 90, bottom: 180, trailing: 90),
+                        resizingMode: .stretch
+                    )
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.white.opacity(0.16), Color.clear]),
+                    startPoint: .top,
+                    endPoint: .center
+                )
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: corner, style: .continuous)
+                .stroke(.white.opacity(0.18), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
     }
 
     private var searchBar: some View {
