@@ -41,11 +41,13 @@ final class SocialActivityService {
         let actorsStartTime = Date()
         let actorIds = Array(Set(friends.map(\.id) + [userId]))
         let actorPreview = actorIds.prefix(6).map(\.uuidString).joined(separator: ",")
-        SocialFeedDebug.log("service.prequery.actors.end id=\(requestId) actors=\(actorIds.count) duration=\(SocialFeedDebug.duration(since: actorsStartTime))")
+        let duplicateActors = (friends.count + 1) - actorIds.count
+        SocialFeedDebug.log("service.prequery.actors.end id=\(requestId) actors=\(actorIds.count) duplicate_actors=\(max(duplicateActors, 0)) duration=\(SocialFeedDebug.duration(since: actorsStartTime))")
 
         let lookupStartTime = Date()
-        let profileLookup = try await fetchActorProfiles(for: actorIds)
-        SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
+        SocialFeedDebug.log("service.prequery.friend_lookup.start id=\(requestId) actors=\(actorIds.count)")
+        let profileLookup = try await buildActorProfiles(for: userId, friends: friends, requestId: requestId)
+        SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) missing_profiles=\(max(actorIds.count - profileLookup.count, 0)) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
 
         let cutoffStartTime = Date()
         let cutoffDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
@@ -73,20 +75,30 @@ final class SocialActivityService {
                 .limit(limit)
                 .execute()
 
-            let events = response.value.map { event in
-                SocialActivityEvent(
+            let mappingStartTime = Date()
+            var omittedCurrentUserEvents = 0
+            let events: [SocialActivityEvent] = response.value.compactMap { event -> SocialActivityEvent? in
+                let actorProfile = profileLookup[event.actorUserId] ?? event.actorProfile
+                if event.actorUserId == userId, actorProfile == nil {
+                    omittedCurrentUserEvents += 1
+                    return nil
+                }
+
+                return SocialActivityEvent(
                     id: event.id,
                     actorUserId: event.actorUserId,
                     eventType: event.eventType,
                     metadata: event.metadata,
                     createdAt: event.createdAt,
-                    actorProfile: profileLookup[event.actorUserId] ?? event.actorProfile
+                    actorProfile: actorProfile
                 )
             }
+            let unmatchedProfiles = events.filter { $0.actorProfile == nil }.count
 
             let eventPreview = events.prefix(5)
                 .map { "\($0.id.uuidString.prefix(8)):\($0.eventType.rawValue):\($0.actorUserId.uuidString.prefix(8))" }
                 .joined(separator: ",")
+            SocialFeedDebug.log("service.query.map.end id=\(requestId) rows=\(events.count) unmatched_profiles=\(unmatchedProfiles) omitted_current_user_events=\(omittedCurrentUserEvents) duration=\(SocialFeedDebug.duration(since: mappingStartTime))")
             SocialFeedDebug.log("service.query.success id=\(requestId) rows=\(events.count) duration=\(SocialFeedDebug.duration(since: queryStartTime)) preview=[\(eventPreview)] total_duration=\(SocialFeedDebug.duration(since: startTime))")
             return events
         } catch let error as PostgrestError {
@@ -124,30 +136,31 @@ final class SocialActivityService {
             .execute()
     }
 
-    private func fetchActorProfiles(for actorIds: [UUID]) async throws -> [UUID: Profile] {
-        var profilesById: [UUID: Profile] = [:]
+    private func buildActorProfiles(for userId: UUID, friends: [Profile], requestId: String) async throws -> [UUID: Profile] {
+        let friendSeedStartTime = Date()
+        var profilesById = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })
+        SocialFeedDebug.log("service.profile_lookup.friend_seed.end id=\(requestId) seeded=\(profilesById.count) duration=\(SocialFeedDebug.duration(since: friendSeedStartTime))")
 
-        for actorId in actorIds {
-            if let cached = profileService.cachedProfile(userId: actorId) {
-                profilesById[actorId] = cached
+        let currentUserStartTime = Date()
+        if profilesById[userId] == nil {
+            if let inMemoryProfile = profileService.inMemoryProfile(userId: userId) {
+                profilesById[userId] = inMemoryProfile
+                SocialFeedDebug.log("service.profile_lookup.current_user.hit id=\(requestId) source=in_memory duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
+            } else {
+                SocialFeedDebug.log("service.profile_lookup.current_user.network.start id=\(requestId)")
+                do {
+                    let fetchedProfile = try await profileService.fetchMyProfile(userId: userId)
+                    profilesById[userId] = fetchedProfile
+                    SocialFeedDebug.log("service.profile_lookup.current_user.network.end id=\(requestId) duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
+                } catch {
+                    SocialFeedDebug.log("service.profile_lookup.current_user.network.failed id=\(requestId) error=\(SocialFeedDebug.describe(error)) duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
+                }
             }
+        } else {
+            SocialFeedDebug.log("service.profile_lookup.current_user.skipped id=\(requestId) reason=already_seeded")
         }
 
-        let missingIds = actorIds.filter { profilesById[$0] == nil }
-        guard !missingIds.isEmpty else {
-            return profilesById
-        }
-
-        let response: PostgrestResponse<[SocialActorProfileRow]> = try await supabase.client
-            .from("profiles")
-            .select(SocialActorProfileRow.selectColumns)
-            .in("id", values: missingIds)
-            .execute()
-
-        for row in response.value {
-            profilesById[row.id] = row.profile
-        }
-
+        SocialFeedDebug.log("service.profile_lookup.complete id=\(requestId) total_profiles=\(profilesById.count)")
         return profilesById
     }
 }

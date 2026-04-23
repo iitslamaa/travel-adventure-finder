@@ -20,26 +20,31 @@ final class SocialFeedViewModel: ObservableObject {
 
         SocialFeedDebug.log("load.start id=\(loadId) source=\(source) user=\(userId) existing_events=\(events.count)")
         if lastRequestedUserId != userId {
+            SocialFeedDebug.log("load.user_change id=\(loadId) previous_user=\(lastRequestedUserId?.uuidString ?? "nil") new_user=\(userId.uuidString) clearing_existing_events=\(!events.isEmpty)")
             events = []
             lastRequestedUserId = userId
         }
         isLoading = true
         hasAttemptedLoad = true
+        SocialFeedDebug.log("load.state id=\(loadId) source=\(source) isLoading=\(isLoading) hasAttemptedLoad=\(hasAttemptedLoad)")
 
         defer {
             isLoading = false
-            SocialFeedDebug.log("load.finish id=\(loadId) source=\(source) duration=\(SocialFeedDebug.duration(since: startTime)) events=\(events.count) cancelled=\(Task.isCancelled)")
+            SocialFeedDebug.log("load.finish id=\(loadId) source=\(source) duration=\(SocialFeedDebug.duration(since: startTime)) events=\(events.count) isLoading=\(isLoading) cancelled=\(Task.isCancelled)")
         }
 
         do {
             let fetchedEvents = try await activityService.fetchRecentFriendActivity(for: userId, requestId: loadId)
-            SocialFeedDebug.log("load.success id=\(loadId) source=\(source) fetched=\(fetchedEvents.count)")
+            let previousCount = events.count
+            SocialFeedDebug.log("load.success id=\(loadId) source=\(source) fetched=\(fetchedEvents.count) previous_events=\(previousCount)")
             events = fetchedEvents
+            SocialFeedDebug.log("load.state_updated id=\(loadId) source=\(source) new_events=\(events.count)")
         } catch where SocialFeedDebug.isCancellation(error) {
             SocialFeedDebug.log("load.cancelled id=\(loadId) source=\(source) keeping_existing_events=\(events.count)")
         } catch {
             SocialFeedDebug.log("load.error id=\(loadId) source=\(source) error=\(SocialFeedDebug.describe(error))")
             events = []
+            SocialFeedDebug.log("load.state_updated id=\(loadId) source=\(source) new_events=0 reason=error")
         }
     }
 }
