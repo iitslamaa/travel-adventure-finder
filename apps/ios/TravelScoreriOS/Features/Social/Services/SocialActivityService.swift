@@ -24,11 +24,7 @@ final class SocialActivityService {
 
     func fetchRecentFriendActivity(for userId: UUID, limit: Int = 20) async throws -> [SocialActivityEvent] {
         let friends = try await friendService.fetchFriends(for: userId)
-        let friendIds = friends.map(\.id)
-
-        guard !friendIds.isEmpty else {
-            return []
-        }
+        let actorIds = Array(Set(friends.map(\.id) + [userId]))
 
         do {
             let response: PostgrestResponse<[SocialActivityEvent]> = try await supabase.client
@@ -49,7 +45,7 @@ final class SocialActivityService {
                         friend_count
                     )
                 """)
-                .in("actor_user_id", values: friendIds)
+                .in("actor_user_id", values: actorIds)
                 .order("created_at", ascending: false)
                 .limit(limit)
                 .execute()
