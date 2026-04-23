@@ -68,9 +68,13 @@ struct FriendsView: View {
             let contentWidth = socialContentWidth(for: geo.size.width)
 
             ZStack {
-                contentView(contentWidth: contentWidth)
-                    .padding(.top, max(geo.safeAreaInsets.top + (showsBackButton ? 44 : 12), 18))
-                    .padding(.bottom, 12)
+                VStack(spacing: 0) {
+                    Theme.titleBanner(String(localized: "friends.title"))
+
+                    contentView(contentWidth: contentWidth)
+                        .padding(.top, 12)
+                        .padding(.bottom, 12)
+                }
 
                 VStack {
                     HStack {
@@ -114,11 +118,19 @@ struct FriendsView: View {
                 Text(friendsVM.errorMessage ?? "")
             }
             .task(id: userId) {
+                let shouldLoadRequestCount = isOwnFriendsPage
                 let startedAt = Date()
-                await friendsVM.loadFriends(for: userId, forceRefresh: false)
+
+                if shouldLoadRequestCount {
+                    async let friendsLoad: Void = friendsVM.loadFriends(for: userId, forceRefresh: false)
+                    async let requestCountLoad: Void = friendsVM.loadIncomingRequestCount()
+                    _ = await (friendsLoad, requestCountLoad)
+                } else {
+                    await friendsVM.loadFriends(for: userId, forceRefresh: false)
+                }
 
                 FriendsScreenDebugLog.message(
-                    "Initial task finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                    "Initial task finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) requestCount=\(friendsVM.incomingRequestCount) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
                 )
             }
             .onReceive(NotificationCenter.default.publisher(for: .friendshipUpdated)) { _ in
@@ -126,8 +138,12 @@ struct FriendsView: View {
                     let startedAt = Date()
                     await friendsVM.loadFriends(for: userId, forceRefresh: true)
 
+                    if isOwnFriendsPage {
+                        await friendsVM.loadIncomingRequestCount()
+                    }
+
                     FriendsScreenDebugLog.message(
-                        "Friendship refresh finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                        "Friendship refresh finished user=\(userId.uuidString) ownPage=\(isOwnFriendsPage) friends=\(friendsVM.friends.count) requestCount=\(friendsVM.incomingRequestCount) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
                     )
                 }
             }
@@ -256,12 +272,17 @@ struct FriendsView: View {
                     }
                     .refreshable {
                         await friendsVM.loadFriends(for: userId, forceRefresh: true)
+                        if isOwnFriendsPage {
+                            await friendsVM.loadIncomingRequestCount()
+                        }
                     }
                 }
                 }
             }
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.top, 18)
+            .padding(.bottom, 8)
         }
     }
 
