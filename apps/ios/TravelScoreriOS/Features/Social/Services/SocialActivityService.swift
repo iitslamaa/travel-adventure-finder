@@ -38,9 +38,10 @@ final class SocialActivityService {
         var profileLookup = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })
         SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
 
+        let profileService = ProfileService(supabase: supabase)
         let currentProfileStartTime = Date()
         SocialFeedDebug.log("service.prequery.current_profile_memory_cache.start id=\(requestId)")
-        if let currentUserProfile = ProfileService(supabase: supabase).inMemoryProfile(userId: userId) {
+        if let currentUserProfile = profileService.currentUserProfileFallback(userId: userId) {
             profileLookup[userId] = currentUserProfile
         }
         SocialFeedDebug.log("service.prequery.current_profile_memory_cache.end id=\(requestId) hit=\(profileLookup[userId] != nil) duration=\(SocialFeedDebug.duration(since: currentProfileStartTime)) total_duration=\(SocialFeedDebug.duration(since: startTime))")

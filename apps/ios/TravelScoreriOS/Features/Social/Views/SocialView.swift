@@ -68,7 +68,7 @@ struct SocialView: View {
     private var activitySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Activity", systemImage: "sparkles")
+                Label(localizedString("social.activity.title", defaultValue: "Activity"), systemImage: "sparkles")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.black)
 
@@ -82,11 +82,20 @@ struct SocialView: View {
 
             if feedVM.events.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(feedVM.hasAttemptedLoad ? "No recent friend activity yet" : "Loading friend activity")
+                    Text(
+                        feedVM.hasAttemptedLoad
+                            ? localizedString("social.activity.empty.none", defaultValue: "No recent friend activity yet")
+                            : localizedString("social.activity.empty.loading", defaultValue: "Loading friend activity")
+                    )
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.black)
 
-                    Text("When friends update travel lists, destinations, or profile details, those lightweight updates will appear here.")
+                    Text(
+                        localizedString(
+                            "social.activity.empty.description",
+                            defaultValue: "When friends update travel lists, destinations, or profile details, those lightweight updates will appear here."
+                        )
+                    )
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.black.opacity(0.72))
                         .fixedSize(horizontal: false, vertical: true)
@@ -242,30 +251,66 @@ struct SocialView: View {
     private func activityText(for event: SocialActivityEvent) -> String {
         let country = countryDisplayName(for: event)
         let destination = destinationDisplayName(for: event)
+        let fallbackCountry = localizedString("social.activity.fallback.country", defaultValue: "Somewhere new")
+        let fallbackUpdated = localizedString("social.activity.fallback.updated", defaultValue: "Updated")
 
         switch event.eventType {
         case .bucketListAdded:
-            return "Bucket List: \(country ?? "Somewhere new")\(flagSuffix(for: event))"
+            return localizedFormat(
+                "social.activity.bucket_list_format",
+                defaultValue: "Bucket List: %@%@",
+                country ?? fallbackCountry,
+                flagSuffix(for: event)
+            )
         case .countryVisited:
-            return "Visited: \(country ?? "Somewhere new")\(flagSuffix(for: event))"
+            return localizedFormat(
+                "social.activity.visited_format",
+                defaultValue: "Visited: %@%@",
+                country ?? fallbackCountry,
+                flagSuffix(for: event)
+            )
         case .nextDestinationChanged:
-            return "Next: \(destination ?? country ?? "Somewhere new")\(flagSuffix(for: event))"
+            return localizedFormat(
+                "social.activity.next_format",
+                defaultValue: "Next: %@%@",
+                destination ?? country ?? fallbackCountry,
+                flagSuffix(for: event)
+            )
         case .profilePhotoUpdated:
-            return "Profile Photo Updated"
+            return localizedString("social.activity.profile_photo_updated", defaultValue: "Profile Photo Updated")
         case .currentCountryChanged:
-            return "Currently In: \(country ?? "Somewhere new")\(flagSuffix(for: event))"
+            return localizedFormat(
+                "social.activity.current_country_format",
+                defaultValue: "Currently In: %@%@",
+                country ?? fallbackCountry,
+                flagSuffix(for: event)
+            )
         case .homeCountryChanged:
-            return "Home Country: \(country ?? "Updated")\(flagSuffix(for: event))"
+            return localizedFormat(
+                "social.activity.home_country_format",
+                defaultValue: "Home Country: %@%@",
+                country ?? fallbackUpdated,
+                flagSuffix(for: event)
+            )
         }
     }
 
     private func activityEyebrow(for event: SocialActivityEvent) -> String {
         let username = usernameText(for: event.actorProfile)
         guard !username.isEmpty else {
-            return "\(activityEmoji(for: event)) Update"
+            return localizedFormat(
+                "social.activity.eyebrow.no_username_format",
+                defaultValue: "%@ Update",
+                activityEmoji(for: event)
+            )
         }
 
-        return "\(activityEmoji(for: event)) Update · \(username)"
+        return localizedFormat(
+            "social.activity.eyebrow.username_format",
+            defaultValue: "%@ Update · %@",
+            activityEmoji(for: event),
+            username
+        )
     }
 
     private func usernameText(for profile: Profile?) -> String {
@@ -372,5 +417,17 @@ struct SocialView: View {
             .joined()
 
         return flag
+    }
+
+    private func localizedString(_ key: String, defaultValue: String) -> String {
+        NSLocalizedString(key, tableName: nil, bundle: .main, value: defaultValue, comment: "")
+    }
+
+    private func localizedFormat(_ key: String, defaultValue: String, _ arguments: CVarArg...) -> String {
+        String(
+            format: localizedString(key, defaultValue: defaultValue),
+            locale: Locale.current,
+            arguments: arguments
+        )
     }
 }

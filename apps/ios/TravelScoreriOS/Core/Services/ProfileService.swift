@@ -160,6 +160,44 @@ final class ProfileService {
         Self.profileCache[userId]
     }
 
+    func currentUserProfileFallback(userId: UUID) -> Profile? {
+        if let cachedProfile = Self.profileCache[userId] {
+            return cachedProfile
+        }
+
+        guard userId == supabase.currentUserId,
+              let user = supabase.client.auth.currentUser else {
+            return nil
+        }
+
+        let metadata = user.userMetadata
+        let identity = resolvedIdentity(from: user)
+        let fallbackUsername =
+            metadata["username"]?.stringValue?.nilIfEmpty ??
+            metadata["preferred_username"]?.stringValue?.nilIfEmpty ??
+            metadata["user_name"]?.stringValue?.nilIfEmpty ??
+            "user_\(userId.uuidString.replacingOccurrences(of: "-", with: "").prefix(6).lowercased())"
+
+        return Profile(
+            id: userId,
+            username: fallbackUsername,
+            fullName: identity.fullName,
+            firstName: identity.firstName,
+            lastName: identity.lastName,
+            avatarUrl: identity.avatarURL,
+            languages: [],
+            livedCountries: [],
+            travelStyle: [],
+            travelMode: [],
+            nextDestination: nil,
+            defaultCurrencyCode: nil,
+            currentCountry: nil,
+            favoriteCountries: nil,
+            onboardingCompleted: nil,
+            friendCount: 0
+        )
+    }
+
     func cachedProfile(userId: UUID) -> Profile? {
         if let cachedProfile = Self.profileCache[userId] {
             return cachedProfile
