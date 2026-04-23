@@ -18,19 +18,15 @@ struct SocialView: View {
                 Theme.pageBackground("travel3")
                     .ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    Theme.titleBanner("Social")
-
-                    ScrollView {
-                        VStack(spacing: 14) {
-                            actionButtonRow
-                            activitySection
-                        }
-                        .frame(width: contentWidth)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 12)
-                        .padding(.bottom, max(floatingTabBarInset + 24, 112))
+                ScrollView {
+                    VStack(spacing: 16) {
+                        actionButtonRow
+                        activitySection
                     }
+                    .frame(width: contentWidth)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, geo.safeAreaInsets.top + 18)
+                    .padding(.bottom, max(floatingTabBarInset + 24, 112))
                 }
             }
         }
@@ -50,11 +46,11 @@ struct SocialView: View {
     private func socialHorizontalInset(for width: CGFloat) -> CGFloat {
         switch width {
         case ..<390:
-            return 42
+            return 30
         case ..<430:
-            return 38
+            return 28
         case ..<520:
-            return 32
+            return 26
         default:
             return max((width - 680) / 2, 32)
         }
@@ -114,7 +110,7 @@ struct SocialView: View {
     }
 
     private var actionButtonRow: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             socialActionButton(
                 icon: "person.2.fill",
                 title: "Friends"
@@ -144,27 +140,27 @@ struct SocialView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            VStack(spacing: 10) {
+            VStack(spacing: 12) {
                 Image(systemName: icon)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 28, weight: .bold))
                     .foregroundStyle(Theme.accent)
-                    .frame(width: 44, height: 44)
+                    .frame(width: 52, height: 52)
                     .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .fill(Color(red: 0.96, green: 0.93, blue: 0.87).opacity(0.92))
                     )
 
                 Text(title)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.black)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
             .frame(maxWidth: .infinity)
             .aspectRatio(1, contentMode: .fit)
-            .padding(10)
-            .background(Theme.listCardBackground(corner: 22))
-            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .padding(12)
+            .background(Theme.listCardBackground(corner: 24))
+            .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
         .buttonStyle(.plain)
     }
