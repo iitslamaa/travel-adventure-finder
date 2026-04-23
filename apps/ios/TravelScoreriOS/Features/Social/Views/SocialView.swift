@@ -30,7 +30,7 @@ struct SocialView: View {
                             .padding(.bottom, max(floatingTabBarInset + 24, 112))
                     }
                     .refreshable {
-                        await feedVM.loadFeed(for: userId)
+                        await feedVM.loadFeed(for: userId, source: "pull-to-refresh")
                     }
                 }
             }
@@ -39,11 +39,11 @@ struct SocialView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .task(id: userId) {
-            await feedVM.loadFeed(for: userId)
+            await feedVM.loadFeed(for: userId, source: "initial-task")
         }
         .onReceive(NotificationCenter.default.publisher(for: .friendshipUpdated)) { _ in
             Task {
-                await feedVM.loadFeed(for: userId)
+                await feedVM.loadFeed(for: userId, source: "friendship-updated")
             }
         }
     }

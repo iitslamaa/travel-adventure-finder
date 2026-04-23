@@ -13,19 +13,47 @@ final class SocialFeedViewModel: ObservableObject {
         self.activityService = activityService ?? SocialActivityService()
     }
 
-    func loadFeed(for userId: UUID) async {
+    func loadFeed(for userId: UUID, source: String = "unspecified") async {
+        let loadId = String(UUID().uuidString.prefix(8))
+        let startTime = Date()
+
+        SocialFeedDebug.log("load.start id=\(loadId) source=\(source) user=\(userId) existing_events=\(events.count)")
         isLoading = true
         hasAttemptedLoad = true
 
-        do {
-            events = try await activityService.fetchRecentFriendActivity(for: userId)
-        } catch {
-#if DEBUG
-            print("Failed to load social activity feed:", error.localizedDescription)
-#endif
-            events = []
+        defer {
+            isLoading = false
+            SocialFeedDebug.log("load.finish id=\(loadId) source=\(source) duration=\(SocialFeedDebug.duration(since: startTime)) events=\(events.count) cancelled=\(Task.isCancelled)")
         }
 
-        isLoading = false
+        do {
+            let fetchedEvents = try await activityService.fetchRecentFriendActivity(for: userId, requestId: loadId)
+            SocialFeedDebug.log("load.success id=\(loadId) source=\(source) fetched=\(fetchedEvents.count)")
+            events = fetchedEvents
+        } catch is CancellationError {
+            SocialFeedDebug.log("load.cancelled id=\(loadId) source=\(source) keeping_existing_events=\(events.count)")
+        } catch {
+            SocialFeedDebug.log("load.error id=\(loadId) source=\(source) error=\(SocialFeedDebug.describe(error))")
+            events = []
+        }
+    }
+}
+
+enum SocialFeedDebug {
+    static func log(_ message: String) {
+#if DEBUG
+        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
+        print("📰 [SocialFeed] \(timestamp) \(message)")
+#endif
+    }
+
+    static func duration(since startTime: Date) -> String {
+        let milliseconds = Int(Date().timeIntervalSince(startTime) * 1_000)
+        return "\(milliseconds)ms"
+    }
+
+    static func describe(_ error: Error) -> String {
+        let nsError = error as NSError
+        return "\(type(of: error))(domain=\(nsError.domain), code=\(nsError.code), description=\(error.localizedDescription))"
     }
 }
