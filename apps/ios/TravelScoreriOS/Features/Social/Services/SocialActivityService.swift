@@ -138,14 +138,14 @@ final class SocialActivityService {
             return profilesById
         }
 
-        let response: PostgrestResponse<[SocialActivityProfileRow]> = try await supabase.client
+        let response: PostgrestResponse<[Profile]> = try await supabase.client
             .from("profiles")
-            .select(SocialActivityProfileRow.selectColumns)
+            .select(ProfileSelect.columns)
             .in("id", values: missingIds)
             .execute()
 
-        for row in response.value {
-            profilesById[row.id] = row.profile
+        for profile in response.value {
+            profilesById[profile.id] = profile
         }
 
         return profilesById
@@ -164,8 +164,8 @@ private struct SocialActivityInsert: Encodable {
     }
 }
 
-private struct SocialActivityProfileRow: Decodable {
-    static let selectColumns = """
+private enum ProfileSelect {
+    static let columns = """
         id,
         username,
         full_name,
@@ -183,61 +183,4 @@ private struct SocialActivityProfileRow: Decodable {
         favorite_countries,
         onboarding_completed
     """
-
-    let id: UUID
-    let username: String
-    let fullName: String
-    let firstName: String?
-    let lastName: String?
-    let avatarUrl: String?
-    let languages: [Profile.LanguageJSON]
-    let livedCountries: [String]
-    let travelStyle: [String]
-    let travelMode: [String]
-    let nextDestination: String?
-    let defaultCurrencyCode: String?
-    let currentCountry: String?
-    let favoriteCountries: [String]?
-    let onboardingCompleted: Bool?
-    let friendCount: Int?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case username
-        case fullName = "full_name"
-        case firstName = "first_name"
-        case lastName = "last_name"
-        case avatarUrl = "avatar_url"
-        case languages
-        case livedCountries = "lived_countries"
-        case travelStyle = "travel_style"
-        case travelMode = "travel_mode"
-        case nextDestination = "next_destination"
-        case defaultCurrencyCode = "default_currency_code"
-        case currentCountry = "current_country"
-        case favoriteCountries = "favorite_countries"
-        case onboardingCompleted = "onboarding_completed"
-        case friendCount = "friend_count"
-    }
-
-    var profile: Profile {
-        Profile(
-            id: id,
-            username: username,
-            fullName: fullName,
-            firstName: firstName,
-            lastName: lastName,
-            avatarUrl: avatarUrl,
-            languages: languages,
-            livedCountries: livedCountries,
-            travelStyle: travelStyle,
-            travelMode: travelMode,
-            nextDestination: nextDestination,
-            defaultCurrencyCode: defaultCurrencyCode,
-            currentCountry: currentCountry,
-            favoriteCountries: favoriteCountries,
-            onboardingCompleted: onboardingCompleted,
-            friendCount: friendCount ?? 0
-        )
-    }
 }
