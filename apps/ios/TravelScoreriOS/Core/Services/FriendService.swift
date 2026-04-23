@@ -289,6 +289,28 @@ final class FriendService {
         }
     }
 
+    func fetchOutgoingRequests(for myUserId: UUID) async throws -> [Profile] {
+        let startedAt = Date()
+        let response: PostgrestResponse<[OutgoingRequestJoinedRow]> = try await supabase.client
+            .from("friend_requests")
+            .select("""
+                id,
+                receiver_id,
+                profiles!friend_requests_receiver_id_fkey (
+                    \(Self.friendProfileSelect)
+                )
+            """)
+            .eq("sender_id", value: myUserId)
+            .eq("status", value: "pending")
+            .execute()
+
+        let profiles = response.value.map(\.profile)
+        FriendServiceDebugLog.message(
+            "Outgoing requests fetched user=\(myUserId.uuidString) count=\(profiles.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+        )
+        return profiles
+    }
+
     func incomingRequestCount(for myUserId: UUID) async throws -> Int {
         if let cachedCount = Self.incomingRequestCountCache[myUserId] {
             FriendServiceDebugLog.message("Incoming request count cache hit user=\(myUserId.uuidString) count=\(cachedCount)")
@@ -539,6 +561,20 @@ final class FriendService {
 }
 
 private struct IncomingRequestJoinedRow: Decodable {
+    let profileRow: FriendProfileRow
+    enum CodingKeys: String, CodingKey { case profile = "profiles" }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        profileRow = try container.decode(FriendProfileRow.self, forKey: .profile)
+    }
+
+    var profile: Profile {
+        profileRow.profile
+    }
+}
+
+private struct OutgoingRequestJoinedRow: Decodable {
     let profileRow: FriendProfileRow
     enum CodingKeys: String, CodingKey { case profile = "profiles" }
 
