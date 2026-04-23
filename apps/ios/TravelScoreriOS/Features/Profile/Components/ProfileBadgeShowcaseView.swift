@@ -70,32 +70,34 @@ enum ProfileBadgeCatalog {
 
     private static func milestoneEmoji(for threshold: Int) -> String {
         switch threshold {
+        case 2:
+            return "🥈"
         case 5:
-            return "✈️"
+            return "🛫"
         case 10:
-            return "🧭"
-        case 20:
-            return "🎒"
-        case 30:
-            return "🚀"
-        case 40:
-            return "🌤️"
-        case 50:
-            return "🏝️"
-        case 60:
-            return "🎟️"
-        case 70:
             return "🗺️"
+        case 20:
+            return "🧳"
+        case 30:
+            return "🛂"
+        case 40:
+            return "📍"
+        case 50:
+            return "🏅"
+        case 60:
+            return "🌍"
+        case 70:
+            return "🌎"
         case 80:
-            return "🎉"
+            return "🌏"
         case 90:
-            return "💫"
+            return "🏝️"
         case 100:
-            return "👑"
+            return "💯"
         case 150:
-            return "🏆"
+            return "👑"
         case 200:
-            return "🌈"
+            return "🏆"
         default:
             return "✨"
         }
@@ -162,7 +164,7 @@ enum ProfileBadgeCatalog {
     private static func continentPresentation(for continent: String) -> (title: String, emoji: String, tint: Color)? {
         switch continent {
         case "Africa":
-            return ("Africa Touched", "🦁", Color(red: 0.82, green: 0.47, blue: 0.16))
+            return ("Africa Touched", "🐘", Color(red: 0.82, green: 0.47, blue: 0.16))
         case "Americas":
             return ("Americas Touched", "🗽", Color(red: 0.21, green: 0.57, blue: 0.44))
         case "Antarctica":
@@ -188,21 +190,21 @@ struct ProfileBadgeShowcaseView: View {
         Array(badges.prefix(6))
     }
 
+    private var totalCountryCount: Int {
+        CountryAPI.loadCachedCountries()?.count ?? 220
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Badges")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.black)
-
-                    Text("\(visitedCountryCount) visited")
-                        .font(.caption)
-                        .foregroundStyle(.black.opacity(0.62))
-                }
-
-                Spacer()
-            }
+        VStack(alignment: .trailing, spacing: 10) {
+            Text("\(visitedCountryCount)/\(totalCountryCount)")
+                .font(.system(size: 15, weight: .black, design: .rounded))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(Color.white.opacity(0.60))
+                )
 
             if featuredBadges.isEmpty {
                 Text("✨")
@@ -213,7 +215,7 @@ struct ProfileBadgeShowcaseView: View {
                             .fill(Color.white.opacity(0.52))
                     )
             } else {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .trailing, spacing: 8) {
                     badgeRow(Array(featuredBadges.prefix(3)))
 
                     if featuredBadges.count > 3 {
@@ -222,21 +224,13 @@ struct ProfileBadgeShowcaseView: View {
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(maxWidth: 220, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.22))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color.white.opacity(0.38), lineWidth: 1)
-                )
-        )
+        .frame(maxWidth: 188, alignment: .trailing)
     }
 
     private func badgeRow(_ badges: [ProfileBadge]) -> some View {
         HStack(spacing: 10) {
+            Spacer(minLength: 0)
+
             ForEach(badges) { badge in
                 Button {
                     onSelectBadge(badge)
@@ -255,8 +249,6 @@ struct ProfileBadgeShowcaseView: View {
                 }
                 .buttonStyle(.plain)
             }
-
-            Spacer(minLength: 0)
         }
     }
 }

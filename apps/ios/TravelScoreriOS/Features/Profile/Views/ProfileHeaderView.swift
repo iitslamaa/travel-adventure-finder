@@ -16,9 +16,9 @@ struct ProfileHeaderView: View {
         relationshipState ?? .none
     }
 
-    private var headerSpacing: CGFloat { 24 }
+    private var headerSpacing: CGFloat { 18 }
 
-    private var identityColumnWidth: CGFloat { 148 }
+    private var identityColumnWidth: CGFloat { 172 }
 
     private var visibleHomeCountryCodes: [String] {
         Array(homeCountryCodes.prefix(3))
@@ -51,6 +51,7 @@ struct ProfileHeaderView: View {
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 12)
+        .frame(minHeight: 196, alignment: .center)
         .background(
             Image("profile_header")
                 .resizable()
@@ -130,6 +131,7 @@ struct ProfileHeaderView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
     private func presentBadgeToast(_ badge: ProfileBadge) {
