@@ -284,7 +284,7 @@ struct SocialView: View {
         case .nextDestinationChanged:
             return localizedFormat(
                 "social.activity.next_format",
-                defaultValue: "Set a new next destination: %@%@",
+                defaultValue: "Going Next: %@%@",
                 destination ?? country ?? fallbackCountry,
                 flagSuffix(for: event)
             )
@@ -293,7 +293,7 @@ struct SocialView: View {
         case .currentCountryChanged:
             return localizedFormat(
                 "social.activity.current_country_format",
-                defaultValue: "Is currently in %@%@",
+                defaultValue: "Currently In: %@%@",
                 country ?? fallbackCountry,
                 flagSuffix(for: event)
             )
