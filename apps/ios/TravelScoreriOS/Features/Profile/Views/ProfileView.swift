@@ -177,6 +177,11 @@ struct ProfileView: View {
                                             selectedCountry = resolveCountry(for: isoCode)
                                         }
                                     )
+                                    .background(
+                                        Theme.profileCardBackground(corner: 22)
+                                            .padding(.horizontal, -10)
+                                            .padding(.vertical, -8)
+                                    )
 
                                     if relationshipState == .friends ||
                                         relationshipState == .selfProfile {
