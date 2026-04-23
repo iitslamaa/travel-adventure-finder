@@ -71,20 +71,7 @@ struct ProfileHeaderView: View {
         .padding(.horizontal, 14)
         .padding(.top, 14)
         .padding(.bottom, 12)
-        .background(
-            GeometryReader { proxy in
-                Image("profile_header")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(
-                        width: proxy.size.width * 1.64,
-                        height: proxy.size.height * 1.3
-                    )
-                    .offset(x: proxy.size.width * 0.42, y: -proxy.size.height * 0.03)
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-            }
-        )
+        .background(headerBackground)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
         .overlay(alignment: .bottomTrailing) {
@@ -157,6 +144,55 @@ struct ProfileHeaderView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
+        }
+    }
+
+    private var headerBackground: some View {
+        GeometryReader { proxy in
+            ZStack {
+                if let urlString = profile?.avatarUrl,
+                   let url = URL(string: urlString) {
+                    LazyImage(url: url) { state in
+                        if let image = state.image {
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        } else {
+                            Color(red: 0.90, green: 0.87, blue: 0.82)
+                        }
+                    }
+                    .processors([
+                        ImageProcessors.Resize(size: CGSize(width: 1600, height: 1200))
+                    ])
+                    .priority(.high)
+                    .frame(
+                        width: proxy.size.width * 2.05,
+                        height: proxy.size.height * 1.75
+                    )
+                    .offset(x: -proxy.size.width * 0.36, y: -proxy.size.height * 0.24)
+                } else {
+                    Image("profile_header")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(
+                            width: proxy.size.width * 1.45,
+                            height: proxy.size.height * 1.2
+                        )
+                        .offset(x: proxy.size.width * 0.3)
+                }
+
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.34),
+                        Color.white.opacity(0.18),
+                        Color.white.opacity(0.28)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
         }
     }
 
