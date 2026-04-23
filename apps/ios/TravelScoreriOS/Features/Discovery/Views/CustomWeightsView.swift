@@ -17,13 +17,20 @@ struct CustomWeightsView: View {
     @State private var isSaving: Bool = false
     @State private var draftWeights: ScoreWeights
     @State private var draftSelectedMonth: Int
+    @State private var draftExcludeVisitedCountries: Bool
     @State private var hasSaved: Bool = false
 
-    init(userId: UUID?, initialWeights: ScoreWeights, initialSelectedMonth: Int) {
+    init(
+        userId: UUID?,
+        initialWeights: ScoreWeights,
+        initialSelectedMonth: Int,
+        initialExcludeVisitedCountries: Bool
+    ) {
         self.userId = userId
         self.originalWeights = initialWeights
         _draftWeights = State(initialValue: initialWeights)
         _draftSelectedMonth = State(initialValue: initialSelectedMonth)
+        _draftExcludeVisitedCountries = State(initialValue: initialExcludeVisitedCountries)
     }
     
     // MARK: - Derived State
@@ -46,7 +53,8 @@ struct CustomWeightsView: View {
         originalWeights.affordability != draftWeights.affordability ||
         originalWeights.seasonality != draftWeights.seasonality ||
         originalWeights.language != draftWeights.language ||
-        weightsStore.selectedMonth != draftSelectedMonth
+        weightsStore.selectedMonth != draftSelectedMonth ||
+        weightsStore.excludeVisitedCountries != draftExcludeVisitedCountries
     }
     
     var body: some View {
@@ -114,6 +122,10 @@ struct CustomWeightsView: View {
                             }
                         }
 
+                        sectionCard(title: String(localized: "discovery.weights.discovery_mode")) {
+                            discoveryModeToggle
+                        }
+
                         sectionCard(title: String(localized: "discovery.weights.actions")) {
                             VStack(spacing: 12) {
                                 Button {
@@ -134,7 +146,8 @@ struct CustomWeightsView: View {
                                 Button {
                                     let defaults = ScoreWeights.default
                                     draftWeights = defaults
-                                    draftSelectedMonth = weightsStore.selectedMonth
+                                    draftSelectedMonth = Calendar.current.component(.month, from: Date())
+                                    draftExcludeVisitedCountries = false
                                 } label: {
                                     Text("discovery.weights.reset_default")
                                         .font(.headline)
@@ -325,6 +338,44 @@ struct CustomWeightsView: View {
         .background(cardSurface(corner: 28))
     }
 
+    private var discoveryModeToggle: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                draftExcludeVisitedCountries.toggle()
+            }
+        } label: {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(String(localized: "Go someplace new!"))
+                        .font(.headline)
+                        .foregroundStyle(.black)
+
+                    Text(String(localized: "Hide countries you've already visited across Discovery so the list, map, and seasonality views focus on new places."))
+                        .font(.subheadline)
+                        .foregroundStyle(Color.black.opacity(0.6))
+                        .multilineTextAlignment(.leading)
+                }
+
+                Spacer(minLength: 12)
+
+                Toggle("", isOn: $draftExcludeVisitedCountries)
+                    .labelsHidden()
+                    .tint(Color(red: 0.76, green: 0.48, blue: 0.31))
+                    .allowsHitTesting(false)
+            }
+            .padding(18)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(draftExcludeVisitedCountries ? Color.white.opacity(0.65) : Color.black.opacity(0.04))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(draftExcludeVisitedCountries ? Color.black.opacity(0.12) : Color.black.opacity(0.05), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
     private func sectionCard<Content: View>(
         title: String,
         @ViewBuilder content: () -> Content
@@ -359,7 +410,8 @@ struct CustomWeightsView: View {
 
         weightsStore.updatePreferences(
             weights: draftWeights,
-            selectedMonth: draftSelectedMonth
+            selectedMonth: draftSelectedMonth,
+            excludeVisitedCountries: draftExcludeVisitedCountries
         )
         hasSaved = true
 

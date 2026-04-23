@@ -10,12 +10,7 @@ import NukeUI
 import Nuke
 
 private enum FriendRequestsScreenDebugLog {
-    static func message(_ text: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("📨 [FriendRequestsView] \(timestamp) \(text)")
-#endif
-    }
+    static func message(_ text: String) {}
 }
 
 struct FriendRequestsView: View {

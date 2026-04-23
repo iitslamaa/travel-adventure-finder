@@ -3,12 +3,7 @@ import NukeUI
 import Nuke
 
 private enum FriendsScreenDebugLog {
-    static func message(_ text: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("📇 [FriendsView] \(timestamp) \(text)")
-#endif
-    }
+    static func message(_ text: String) {}
 }
 
 struct FriendsView: View {

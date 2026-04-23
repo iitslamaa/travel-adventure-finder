@@ -5,12 +5,7 @@ import Combine
 import Supabase
 
 private enum SupabaseSearchDebugLog {
-    static func message(_ text: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("🔎 [UserSearch] \(timestamp) \(text)")
-#endif
-    }
+    static func message(_ text: String) {}
 
     static func duration(since start: Date) -> String {
         "\(Int(Date().timeIntervalSince(start) * 1000))ms"

@@ -17,12 +17,7 @@ import Translation
 #endif
 
 private enum CountryDetailDebugLog {
-    nonisolated static func message(_ text: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("🌍 [CountryDetail] \(timestamp) \(text)")
-#endif
-    }
+    nonisolated static func message(_ text: String) {}
 
     nonisolated static func durationText(since startTime: TimeInterval) -> String {
         String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)

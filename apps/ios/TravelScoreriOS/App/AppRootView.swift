@@ -10,12 +10,7 @@ import SwiftUI
 import Combine
 
 private enum AppRootDebugLog {
-    static func message(_ text: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("🏠 [AppRoot] \(timestamp) \(text)")
-#endif
-    }
+    static func message(_ text: String) {}
 }
 
 struct AppRootView: View {

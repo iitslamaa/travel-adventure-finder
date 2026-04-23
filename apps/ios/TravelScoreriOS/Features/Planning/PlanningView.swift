@@ -16,12 +16,7 @@ import Supabase
 import PostgREST
 
 private enum TripPlannerDebugLog {
-    nonisolated static func message(_ text: String) {
-#if DEBUG
-        let timestamp = String(format: "%.3f", Date().timeIntervalSince1970)
-        print("🧭 [TripPlanner] \(timestamp) \(text)")
-#endif
-    }
+    nonisolated static func message(_ text: String) {}
 
     nonisolated static func userLabel(_ userId: UUID?) -> String {
         userId?.uuidString ?? "nil-user"
@@ -39,10 +34,7 @@ private enum TripPlannerDebugLog {
         String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)
     }
 
-    nonisolated static func probe(_ name: String, _ detail: String = "") {
-        let suffix = detail.isEmpty ? "" : " \(detail)"
-        message("PROBE \(name)\(suffix)")
-    }
+    nonisolated static func probe(_ name: String, _ detail: String = "") {}
 
     nonisolated static func tripCardState(
         trip: TripPlannerTrip,
