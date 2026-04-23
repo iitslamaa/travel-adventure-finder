@@ -22,34 +22,9 @@ struct SocialView: View {
                     Theme.titleBanner("Social")
 
                     ScrollView {
-                        VStack(spacing: 16) {
+                        VStack(spacing: 14) {
+                            actionButtonRow
                             activitySection
-
-                            socialActionCard(
-                                icon: "person.2.fill",
-                                title: "Friends",
-                                subtitle: "Browse your travel circle and find people."
-                            ) {
-                                socialNav.push(.friends(userId))
-                            }
-
-                            socialActionCard(
-                                icon: "person.crop.circle.badge.plus",
-                                title: "Friend requests",
-                                subtitle: "Review pending invites and new connections."
-                            ) {
-                                socialNav.push(.friendRequests)
-                            }
-
-                            socialActionCard(
-                                icon: "person.crop.circle",
-                                title: "My profile",
-                                subtitle: "See your travel identity the way friends do."
-                            ) {
-                                socialNav.push(.profile(userId))
-                            }
-
-                            futureCommunityCard
                         }
                         .frame(width: contentWidth)
                         .frame(maxWidth: .infinity)
@@ -138,51 +113,60 @@ struct SocialView: View {
         .shadow(color: .black.opacity(0.10), radius: 10, y: 6)
     }
 
-    private func socialActionCard(
+    private var actionButtonRow: some View {
+        HStack(spacing: 10) {
+            socialActionButton(
+                icon: "person.2.fill",
+                title: "Friends"
+            ) {
+                socialNav.push(.friends(userId))
+            }
+
+            socialActionButton(
+                icon: "person.crop.circle.badge.plus",
+                title: "Requests"
+            ) {
+                socialNav.push(.friendRequests)
+            }
+
+            socialActionButton(
+                icon: "person.crop.circle",
+                title: "Profile"
+            ) {
+                socialNav.push(.profile(userId))
+            }
+        }
+    }
+
+    private func socialActionButton(
         icon: String,
         title: String,
-        subtitle: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Theme.featureCard(
-                icon: icon,
-                title: title,
-                subtitle: subtitle
-            ) {
-                Image(systemName: "chevron.right")
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var futureCommunityCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                Image(systemName: "mic.fill")
-                    .font(.system(size: 20, weight: .bold))
+            VStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(Theme.accent)
-                    .frame(width: 42, height: 42)
+                    .frame(width: 44, height: 44)
                     .background(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .fill(Color(red: 0.96, green: 0.93, blue: 0.87).opacity(0.92))
                     )
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Community")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(.black)
-
-                    Text("Podcast and community updates can live here later without adding another tab.")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.black.opacity(0.76))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text(title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.black)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
+            .frame(maxWidth: .infinity)
+            .aspectRatio(1, contentMode: .fit)
+            .padding(10)
+            .background(Theme.listCardBackground(corner: 22))
+            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.listCardBackground(corner: 24))
+        .buttonStyle(.plain)
     }
 
     private func activityRow(for event: SocialActivityEvent) -> some View {
