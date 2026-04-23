@@ -185,22 +185,39 @@ struct ProfileBadgeShowcaseView: View {
     let badges: [ProfileBadge]
     let visitedCountryCount: Int
     let onSelectBadge: (ProfileBadge) -> Void
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var featuredBadges: [ProfileBadge] {
-        Array(badges.prefix(6))
+        Array(badges.prefix(isCompactLayout ? 4 : 6))
     }
 
     private var totalCountryCount: Int {
         CountryAPI.loadCachedCountries()?.count ?? 220
     }
 
+    private var isCompactLayout: Bool {
+        horizontalSizeClass == .compact
+    }
+
+    private var badgeSize: CGFloat {
+        isCompactLayout ? 38 : 40
+    }
+
+    private var badgeSpacing: CGFloat {
+        isCompactLayout ? 8 : 10
+    }
+
+    private var countFontSize: CGFloat {
+        isCompactLayout ? 14 : 15
+    }
+
     var body: some View {
         VStack(alignment: .trailing, spacing: 10) {
             Text("\(visitedCountryCount)/\(totalCountryCount)")
-                .font(.system(size: 15, weight: .black, design: .rounded))
+                .font(.system(size: countFontSize, weight: .black, design: .rounded))
                 .foregroundStyle(.black)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
                 .background(
                     Capsule()
                         .fill(Color.white.opacity(0.60))
@@ -209,26 +226,26 @@ struct ProfileBadgeShowcaseView: View {
             if featuredBadges.isEmpty {
                 Text("✨")
                     .font(.system(size: 24))
-                    .frame(width: 42, height: 42)
+                    .frame(width: badgeSize, height: badgeSize)
                     .background(
                         Circle()
                             .fill(Color.white.opacity(0.52))
                     )
             } else {
                 VStack(alignment: .trailing, spacing: 8) {
-                    badgeRow(Array(featuredBadges.prefix(3)))
+                    badgeRow(Array(featuredBadges.prefix(isCompactLayout ? 2 : 3)))
 
-                    if featuredBadges.count > 3 {
-                        badgeRow(Array(featuredBadges.dropFirst(3).prefix(3)))
+                    if featuredBadges.count > (isCompactLayout ? 2 : 3) {
+                        badgeRow(Array(featuredBadges.dropFirst(isCompactLayout ? 2 : 3).prefix(isCompactLayout ? 2 : 3)))
                     }
                 }
             }
         }
-        .frame(maxWidth: 188, alignment: .trailing)
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     private func badgeRow(_ badges: [ProfileBadge]) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: badgeSpacing) {
             Spacer(minLength: 0)
 
             ForEach(badges) { badge in
@@ -236,8 +253,8 @@ struct ProfileBadgeShowcaseView: View {
                     onSelectBadge(badge)
                 } label: {
                     Text(badge.emoji)
-                        .font(.system(size: 20))
-                        .frame(width: 42, height: 42)
+                        .font(.system(size: isCompactLayout ? 18 : 19))
+                        .frame(width: badgeSize, height: badgeSize)
                         .background(
                             Circle()
                                 .fill(badge.tint.opacity(0.18))

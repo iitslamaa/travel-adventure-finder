@@ -12,13 +12,27 @@ struct ProfileHeaderView: View {
     let onOpenCountry: (String) -> Void
     @State private var showHomeFlagsSheet = false
     @State private var selectedBadge: ProfileBadge?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     private var effectiveState: RelationshipState {
         relationshipState ?? .none
     }
 
-    private var headerSpacing: CGFloat { 18 }
+    private var isCompactLayout: Bool {
+        horizontalSizeClass == .compact
+    }
 
-    private var identityColumnWidth: CGFloat { 172 }
+    private var headerSpacing: CGFloat {
+        isCompactLayout ? 16 : 24
+    }
+
+    private var identityColumnWidth: CGFloat {
+        isCompactLayout ? 138 : 150
+    }
+
+    private var badgeRailWidth: CGFloat {
+        isCompactLayout ? 122 : 156
+    }
 
     private var visibleHomeCountryCodes: [String] {
         Array(homeCountryCodes.prefix(3))
@@ -36,22 +50,21 @@ struct ProfileHeaderView: View {
         HStack(alignment: .center, spacing: headerSpacing) {
             identitySection
                 .frame(width: identityColumnWidth)
-                .frame(maxHeight: .infinity, alignment: .center)
+
+            Spacer(minLength: 0)
 
             ProfileBadgeShowcaseView(
                 badges: earnedBadges,
                 visitedCountryCount: visitedCountryCodes.count,
                 onSelectBadge: presentBadgeToast
             )
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .frame(maxHeight: .infinity, alignment: .center)
+            .frame(width: badgeRailWidth, alignment: .trailing)
             .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 20)
-        .padding(.top, 12)
+        .padding(.top, 14)
         .padding(.bottom, 12)
-        .frame(minHeight: 196, alignment: .center)
         .background(
             Image("profile_header")
                 .resizable()
@@ -131,7 +144,6 @@ struct ProfileHeaderView: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
     private func presentBadgeToast(_ badge: ProfileBadge) {
