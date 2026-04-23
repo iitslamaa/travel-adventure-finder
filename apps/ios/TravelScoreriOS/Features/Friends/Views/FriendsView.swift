@@ -48,11 +48,11 @@ struct FriendsView: View {
     private func socialHorizontalInset(for width: CGFloat) -> CGFloat {
         switch width {
         case ..<390:
-            return 32
+            return 24
         case ..<430:
-            return 30
+            return 22
         case ..<520:
-            return 28
+            return 20
         default:
             return max((width - 680) / 2, 32)
         }
@@ -72,7 +72,7 @@ struct FriendsView: View {
                     Theme.titleBanner(String(localized: "friends.title"))
 
                     contentView(contentWidth: contentWidth)
-                        .padding(.top, 4)
+                        .padding(.top, -4)
                         .frame(maxHeight: .infinity)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -269,7 +269,7 @@ struct FriendsView: View {
                         .id("friendsListTop")
                         .padding(.horizontal, 16)
                         .padding(.top, 6)
-                        .padding(.bottom, floatingTabBarInset + 20)
+                        .padding(.bottom, floatingTabBarInset + 96)
                     }
                     .refreshable {
                         await friendsVM.loadFriends(for: userId, forceRefresh: true)
@@ -283,7 +283,7 @@ struct FriendsView: View {
             }
             .frame(width: contentWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .padding(.top, 10)
+            .padding(.top, 2)
         }
     }
 
