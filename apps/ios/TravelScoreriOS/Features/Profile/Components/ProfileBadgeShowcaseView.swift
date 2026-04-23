@@ -188,7 +188,7 @@ struct ProfileBadgeShowcaseView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var featuredBadges: [ProfileBadge] {
-        Array(badges.prefix(isCompactLayout ? 4 : 6))
+        Array(badges.prefix(isCompactLayout ? 8 : 10))
     }
 
     private var totalCountryCount: Int {
@@ -200,19 +200,23 @@ struct ProfileBadgeShowcaseView: View {
     }
 
     private var badgeSize: CGFloat {
-        isCompactLayout ? 38 : 40
+        isCompactLayout ? 34 : 36
     }
 
     private var badgeSpacing: CGFloat {
-        isCompactLayout ? 8 : 10
+        isCompactLayout ? 6 : 8
     }
 
     private var countFontSize: CGFloat {
         isCompactLayout ? 14 : 15
     }
 
+    private var badgeColumns: [GridItem] {
+        Array(repeating: GridItem(.fixed(badgeSize), spacing: badgeSpacing), count: isCompactLayout ? 4 : 5)
+    }
+
     var body: some View {
-        VStack(alignment: .trailing, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("\(visitedCountryCount)/\(totalCountryCount)")
                 .font(.system(size: countFontSize, weight: .black, design: .rounded))
                 .foregroundStyle(.black)
@@ -232,40 +236,32 @@ struct ProfileBadgeShowcaseView: View {
                             .fill(Color.white.opacity(0.52))
                     )
             } else {
-                VStack(alignment: .trailing, spacing: 8) {
-                    badgeRow(Array(featuredBadges.prefix(isCompactLayout ? 2 : 3)))
-
-                    if featuredBadges.count > (isCompactLayout ? 2 : 3) {
-                        badgeRow(Array(featuredBadges.dropFirst(isCompactLayout ? 2 : 3).prefix(isCompactLayout ? 2 : 3)))
+                LazyVGrid(columns: badgeColumns, alignment: .leading, spacing: badgeSpacing) {
+                    ForEach(featuredBadges) { badge in
+                        badgeButton(badge)
                     }
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func badgeRow(_ badges: [ProfileBadge]) -> some View {
-        HStack(spacing: badgeSpacing) {
-            Spacer(minLength: 0)
-
-            ForEach(badges) { badge in
-                Button {
-                    onSelectBadge(badge)
-                } label: {
-                    Text(badge.emoji)
-                        .font(.system(size: isCompactLayout ? 18 : 19))
-                        .frame(width: badgeSize, height: badgeSize)
-                        .background(
-                            Circle()
-                                .fill(badge.tint.opacity(0.18))
-                        )
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.72), lineWidth: 1)
-                        )
-                }
-                .buttonStyle(.plain)
-            }
+    private func badgeButton(_ badge: ProfileBadge) -> some View {
+        Button {
+            onSelectBadge(badge)
+        } label: {
+            Text(badge.emoji)
+                .font(.system(size: isCompactLayout ? 17 : 18))
+                .frame(width: badgeSize, height: badgeSize)
+                .background(
+                    Circle()
+                        .fill(badge.tint.opacity(0.18))
+                )
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(0.72), lineWidth: 1)
+                )
         }
+        .buttonStyle(.plain)
     }
 }

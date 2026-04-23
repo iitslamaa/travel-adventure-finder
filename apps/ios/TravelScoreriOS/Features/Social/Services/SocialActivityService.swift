@@ -46,7 +46,7 @@ final class SocialActivityService {
 
         let lookupStartTime = Date()
         SocialFeedDebug.log("service.prequery.friend_lookup.start id=\(requestId) actors=\(actorIds.count)")
-        let profileLookup = try await buildActorProfiles(for: userId, friends: friends, requestId: requestId)
+        let (profileLookup, profileSources) = try await buildActorProfiles(for: userId, friends: friends, requestId: requestId)
         SocialFeedDebug.log("service.prequery.friend_lookup.end id=\(requestId) profiles=\(profileLookup.count) missing_profiles=\(max(actorIds.count - profileLookup.count, 0)) duration=\(SocialFeedDebug.duration(since: lookupStartTime))")
 
         let cutoffStartTime = Date()
@@ -79,10 +79,18 @@ final class SocialActivityService {
             var omittedCurrentUserEvents = 0
             let events: [SocialActivityEvent] = response.value.compactMap { event -> SocialActivityEvent? in
                 let actorProfile = profileLookup[event.actorUserId] ?? event.actorProfile
+                let actorSource = profileSources[event.actorUserId] ?? (event.actorProfile != nil ? "decoded_event_profile" : "missing")
                 if event.actorUserId == userId, actorProfile == nil {
                     omittedCurrentUserEvents += 1
+                    SocialFeedDebug.log("service.query.map.omit_current_user id=\(requestId) event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString) source=\(actorSource)")
                     return nil
                 }
+
+                SocialFeedDebug.log(
+                    "service.query.map.event id=\(requestId) event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString) " +
+                    "source=\(actorSource) chosen_username=\(logField(actorProfile?.username)) chosen_avatar=\(logField(actorProfile?.avatarUrl)) " +
+                    "event_username=\(logField(event.actorProfile?.username)) event_avatar=\(logField(event.actorProfile?.avatarUrl)) metadata_keys=\(event.metadata.keys.sorted())"
+                )
 
                 return SocialActivityEvent(
                     id: event.id,
@@ -144,30 +152,50 @@ final class SocialActivityService {
         }
     }
 
-    private func buildActorProfiles(for userId: UUID, friends: [Profile], requestId: String) async throws -> [UUID: Profile] {
+    private func buildActorProfiles(for userId: UUID, friends: [Profile], requestId: String) async throws -> ([UUID: Profile], [UUID: String]) {
         let friendSeedStartTime = Date()
         var profilesById = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })
+        var profileSources = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, "friend_service") })
         SocialFeedDebug.log("service.profile_lookup.friend_seed.end id=\(requestId) seeded=\(profilesById.count) duration=\(SocialFeedDebug.duration(since: friendSeedStartTime))")
+        let friendPreview = friends.prefix(6).map { profile in
+            "\(profile.id.uuidString.prefix(8)):\(logField(profile.username)):\(logField(profile.avatarUrl))"
+        }.joined(separator: ",")
+        SocialFeedDebug.log("service.profile_lookup.friend_seed.preview id=\(requestId) values=[\(friendPreview)]")
 
         let currentUserStartTime = Date()
         if profilesById[userId] == nil {
             if let inMemoryProfile = profileService.inMemoryProfile(userId: userId) {
                 profilesById[userId] = inMemoryProfile
+                profileSources[userId] = "in_memory"
                 SocialFeedDebug.log("service.profile_lookup.current_user.hit id=\(requestId) source=in_memory duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
-            } else if let fallbackProfile = profileService.currentUserProfileFallback(userId: userId) {
-                profilesById[userId] = fallbackProfile
-                SocialFeedDebug.log("service.profile_lookup.current_user.hit id=\(requestId) source=session_fallback duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
             } else if let cachedProfile = profileService.cachedProfile(userId: userId) {
                 profilesById[userId] = cachedProfile
+                profileSources[userId] = "persisted_cache"
                 SocialFeedDebug.log("service.profile_lookup.current_user.hit id=\(requestId) source=persisted_cache duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
             } else {
-                SocialFeedDebug.log("service.profile_lookup.current_user.network.start id=\(requestId)")
-                do {
-                    let fetchedProfile = try await profileService.fetchMyProfile(userId: userId)
+                let fallbackProfile = profileService.currentUserProfileFallback(userId: userId)
+                if let fallbackProfile {
+                    SocialFeedDebug.log(
+                        "service.profile_lookup.current_user.fallback_candidate id=\(requestId) username=\(logField(fallbackProfile.username)) " +
+                        "avatar=\(logField(fallbackProfile.avatarUrl)) synthetic_username=\(isSyntheticCurrentUserUsername(fallbackProfile.username))"
+                    )
+                } else {
+                    SocialFeedDebug.log("service.profile_lookup.current_user.fallback_candidate id=\(requestId) username=nil avatar=nil synthetic_username=false")
+                }
+
+                if let fetchedProfile = await fetchCurrentUserProfileWithTimeout(userId: userId, requestId: requestId, startedAt: currentUserStartTime) {
                     profilesById[userId] = fetchedProfile
-                    SocialFeedDebug.log("service.profile_lookup.current_user.network.end id=\(requestId) duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
-                } catch {
-                    SocialFeedDebug.log("service.profile_lookup.current_user.network.failed id=\(requestId) error=\(SocialFeedDebug.describe(error)) duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
+                    profileSources[userId] = "network_timeout_race"
+                } else if let fallbackProfile {
+                    let sanitizedFallback = sanitizedFallbackProfile(fallbackProfile)
+                    profilesById[userId] = sanitizedFallback
+                    profileSources[userId] = "session_fallback_sanitized"
+                    SocialFeedDebug.log(
+                        "service.profile_lookup.current_user.hit id=\(requestId) source=session_fallback_sanitized duration=\(SocialFeedDebug.duration(since: currentUserStartTime)) " +
+                        "username=\(logField(sanitizedFallback.username)) avatar=\(logField(sanitizedFallback.avatarUrl))"
+                    )
+                } else {
+                    SocialFeedDebug.log("service.profile_lookup.current_user.miss id=\(requestId) source=none duration=\(SocialFeedDebug.duration(since: currentUserStartTime))")
                 }
             }
         } else {
@@ -175,7 +203,75 @@ final class SocialActivityService {
         }
 
         SocialFeedDebug.log("service.profile_lookup.complete id=\(requestId) total_profiles=\(profilesById.count)")
-        return profilesById
+        let sourcePreview = profileSources.prefix(8).map { key, value in
+            "\(key.uuidString.prefix(8)):\(value)"
+        }.joined(separator: ",")
+        SocialFeedDebug.log("service.profile_lookup.sources id=\(requestId) values=[\(sourcePreview)]")
+        return (profilesById, profileSources)
+    }
+
+    private func fetchCurrentUserProfileWithTimeout(userId: UUID, requestId: String, startedAt: Date) async -> Profile? {
+        SocialFeedDebug.log("service.profile_lookup.current_user.network_race.start id=\(requestId) timeout_ms=450")
+        return await withTaskGroup(of: Profile?.self) { group in
+            group.addTask { [profileService] in
+                do {
+                    return try await profileService.fetchMyProfile(userId: userId)
+                } catch {
+                    return nil
+                }
+            }
+
+            group.addTask {
+                try? await Task.sleep(nanoseconds: 450_000_000)
+                return nil
+            }
+
+            for await result in group {
+                if let result {
+                    group.cancelAll()
+                    SocialFeedDebug.log(
+                        "service.profile_lookup.current_user.network_race.hit id=\(requestId) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
+                        "username=\(logField(result.username)) avatar=\(logField(result.avatarUrl))"
+                    )
+                    return result
+                }
+            }
+
+            SocialFeedDebug.log("service.profile_lookup.current_user.network_race.timeout id=\(requestId) duration=\(SocialFeedDebug.duration(since: startedAt))")
+            return nil
+        }
+    }
+
+    private func sanitizedFallbackProfile(_ profile: Profile) -> Profile {
+        let syntheticUsername = isSyntheticCurrentUserUsername(profile.username)
+        return Profile(
+            id: profile.id,
+            username: syntheticUsername ? "" : profile.username,
+            fullName: profile.fullName,
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            avatarUrl: syntheticUsername ? nil : profile.avatarUrl,
+            languages: profile.languages,
+            livedCountries: profile.livedCountries,
+            travelStyle: profile.travelStyle,
+            travelMode: profile.travelMode,
+            nextDestination: profile.nextDestination,
+            defaultCurrencyCode: profile.defaultCurrencyCode,
+            currentCountry: profile.currentCountry,
+            favoriteCountries: profile.favoriteCountries,
+            onboardingCompleted: profile.onboardingCompleted,
+            friendCount: profile.friendCount
+        )
+    }
+
+    private func isSyntheticCurrentUserUsername(_ username: String) -> Bool {
+        let normalized = username.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return normalized.hasPrefix("user_")
+    }
+
+    private func logField(_ value: String?) -> String {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "nil" : trimmed
     }
 }
 
