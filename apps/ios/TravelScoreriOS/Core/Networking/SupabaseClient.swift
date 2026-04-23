@@ -4,10 +4,51 @@ import Foundation
 import Combine
 import Supabase
 
+private struct PublicProfileRow: Decodable {
+    let id: UUID
+    let username: String
+    let full_name: String?
+    let first_name: String?
+    let last_name: String?
+    let avatar_url: String?
+    let friend_count: Int?
+
+    var profile: Profile {
+        Profile(
+            id: id,
+            username: username,
+            fullName: full_name ?? "",
+            firstName: first_name,
+            lastName: last_name,
+            avatarUrl: avatar_url,
+            languages: [],
+            livedCountries: [],
+            travelStyle: [],
+            travelMode: [],
+            nextDestination: nil,
+            defaultCurrencyCode: nil,
+            currentCountry: nil,
+            favoriteCountries: nil,
+            onboardingCompleted: nil,
+            friendCount: friend_count ?? 0
+        )
+    }
+}
+
 /// Low-level Supabase wrapper.
 /// ❗️Not MainActor. Not UI. No SwiftUI state.
 final class SupabaseManager {
     private let instanceId = UUID()
+    private static let publicProfileSelect = """
+        id,
+        username,
+        full_name,
+        first_name,
+        last_name,
+        avatar_url,
+        friend_count
+    """
+
     static let shared = SupabaseManager()
 
     let client: SupabaseClient
@@ -141,13 +182,13 @@ final class SupabaseManager {
 
     /// Search users by username (case-insensitive, partial match)
     func searchUsers(byUsername query: String) async throws -> [Profile] {
-        let response: PostgrestResponse<[Profile]> = try await client
+        let response: PostgrestResponse<[PublicProfileRow]> = try await client
             .from("profiles")
-            .select("*")
+            .select(Self.publicProfileSelect)
             .ilike("username", pattern: "%\(query)%")
             .limit(20)
             .execute()
-        return response.value
+        return response.value.map(\.profile)
     }
     deinit {
     }

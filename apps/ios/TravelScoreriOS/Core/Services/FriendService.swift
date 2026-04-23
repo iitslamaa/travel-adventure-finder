@@ -21,8 +21,49 @@ private struct FriendRow: Decodable {
     let friend_id: UUID
 }
 
+private struct FriendProfileRow: Decodable {
+    let id: UUID
+    let username: String
+    let full_name: String?
+    let first_name: String?
+    let last_name: String?
+    let avatar_url: String?
+    let friend_count: Int?
+
+    var profile: Profile {
+        Profile(
+            id: id,
+            username: username,
+            fullName: full_name ?? "",
+            firstName: first_name,
+            lastName: last_name,
+            avatarUrl: avatar_url,
+            languages: [],
+            livedCountries: [],
+            travelStyle: [],
+            travelMode: [],
+            nextDestination: nil,
+            defaultCurrencyCode: nil,
+            currentCountry: nil,
+            favoriteCountries: nil,
+            onboardingCompleted: nil,
+            friendCount: friend_count ?? 0
+        )
+    }
+}
+
 @MainActor
 final class FriendService {
+    private static let friendProfileSelect = """
+        id,
+        username,
+        full_name,
+        first_name,
+        last_name,
+        avatar_url,
+        friend_count
+    """
+
     private static var friendsCache: [UUID: [Profile]] = [:]
     private static var inFlightFriendFetches: [UUID: Task<[Profile], Error>] = [:]
     private static var incomingRequestsCache: [UUID: [Profile]] = [:]
@@ -56,6 +97,8 @@ final class FriendService {
 
         let startedAt = Date()
         let fetchTask = Task<[Profile], Error> {
+            let friendshipStartedAt = Date()
+
             // These queries are independent, so fetch both directions in parallel.
             async let sentResponse: PostgrestResponse<[FriendRow]> = supabase.client
                 .from("friends")
@@ -72,6 +115,9 @@ final class FriendService {
                 .execute()
 
             let rows = try await sentResponse.value + receivedResponse.value
+            FriendServiceDebugLog.message(
+                "Friend rows fetched user=\(userId.uuidString) rows=\(rows.count) duration=\(Int(Date().timeIntervalSince(friendshipStartedAt) * 1000))ms"
+            )
 
             let friendIds: [UUID] = rows.map { row in
                 row.user_id == userId ? row.friend_id : row.user_id
@@ -82,13 +128,18 @@ final class FriendService {
                 return []
             }
 
-            let profilesResponse: PostgrestResponse<[Profile]> = try await supabase.client
+            let profilesStartedAt = Date()
+            let profilesResponse: PostgrestResponse<[FriendProfileRow]> = try await supabase.client
                 .from("profiles")
-                .select("*")
+                .select(Self.friendProfileSelect)
                 .in("id", values: uniqueFriendIds)
                 .execute()
+            let profiles = profilesResponse.value.map(\.profile)
+            FriendServiceDebugLog.message(
+                "Friend profiles fetched user=\(userId.uuidString) ids=\(uniqueFriendIds.count) profiles=\(profiles.count) duration=\(Int(Date().timeIntervalSince(profilesStartedAt) * 1000))ms"
+            )
 
-            let profilesById = Dictionary(uniqueKeysWithValues: profilesResponse.value.map { ($0.id, $0) })
+            let profilesById = Dictionary(uniqueKeysWithValues: profiles.map { ($0.id, $0) })
             return uniqueFriendIds.compactMap { profilesById[$0] }
         }
 
@@ -181,7 +232,9 @@ final class FriendService {
                 .select("""
                     id,
                     sender_id,
-                    profiles!friend_requests_sender_id_fkey (*)
+                    profiles!friend_requests_sender_id_fkey (
+                        \(Self.friendProfileSelect)
+                    )
                 """)
                 .eq("receiver_id", value: myUserId)
                 .eq("status", value: "pending")
@@ -461,6 +514,15 @@ final class FriendService {
 }
 
 private struct IncomingRequestJoinedRow: Decodable {
-    let profile: Profile
+    let profileRow: FriendProfileRow
     enum CodingKeys: String, CodingKey { case profile = "profiles" }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        profileRow = try container.decode(FriendProfileRow.self, forKey: .profile)
+    }
+
+    var profile: Profile {
+        profileRow.profile
+    }
 }
