@@ -8,6 +8,7 @@ final class SocialFeedViewModel: ObservableObject {
     @Published private(set) var hasAttemptedLoad = false
 
     private let activityService: SocialActivityService
+    private var lastRequestedUserId: UUID?
 
     init(activityService: SocialActivityService? = nil) {
         self.activityService = activityService ?? SocialActivityService()
@@ -18,6 +19,10 @@ final class SocialFeedViewModel: ObservableObject {
         let startTime = Date()
 
         SocialFeedDebug.log("load.start id=\(loadId) source=\(source) user=\(userId) existing_events=\(events.count)")
+        if lastRequestedUserId != userId {
+            events = []
+            lastRequestedUserId = userId
+        }
         isLoading = true
         hasAttemptedLoad = true
 

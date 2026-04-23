@@ -79,13 +79,24 @@ struct SocialView: View {
 
                 Spacer()
 
-                if feedVM.isLoading {
+                if feedVM.isLoading, !feedVM.events.isEmpty {
                     ProgressView()
                         .controlSize(.small)
                 }
             }
 
-            if feedVM.events.isEmpty {
+            if feedVM.isLoading && feedVM.events.isEmpty {
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .controlSize(.regular)
+
+                    Text(localizedString("social.activity.empty.loading", defaultValue: "Loading friend activity"))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.74))
+                }
+                .frame(maxWidth: .infinity, minHeight: 156)
+                .background(Theme.listCardBackground(corner: 20))
+            } else if feedVM.events.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(
                         feedVM.hasAttemptedLoad
@@ -211,10 +222,6 @@ struct SocialView: View {
                 }
 
                 Spacer(minLength: 0)
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.28))
             }
         }
         .buttonStyle(.plain)
