@@ -155,10 +155,12 @@ struct FriendsView: View {
                 let shouldLoadRequestCount = isOwnFriendsPage
                 let startedAt = Date()
 
-                await friendsVM.loadFriends(for: userId, forceRefresh: false)
-
                 if shouldLoadRequestCount {
-                    await friendsVM.loadIncomingRequestCount()
+                    async let friendsLoad: Void = friendsVM.loadFriends(for: userId, forceRefresh: false)
+                    async let requestCountLoad: Void = friendsVM.loadIncomingRequestCount()
+                    _ = await (friendsLoad, requestCountLoad)
+                } else {
+                    await friendsVM.loadFriends(for: userId, forceRefresh: false)
                 }
 
                 FriendsScreenDebugLog.message(
