@@ -200,15 +200,15 @@ struct ProfileBadgeShowcaseView: View {
     }
 
     private var badgeSize: CGFloat {
-        isCompactLayout ? 34 : 36
+        isCompactLayout ? 30 : 36
     }
 
     private var badgeSpacing: CGFloat {
-        isCompactLayout ? 6 : 8
+        isCompactLayout ? 4 : 8
     }
 
     private var countFontSize: CGFloat {
-        isCompactLayout ? 14 : 15
+        isCompactLayout ? 13 : 15
     }
 
     private var badgeColumns: [GridItem] {
@@ -216,12 +216,12 @@ struct ProfileBadgeShowcaseView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: isCompactLayout ? 8 : 10) {
             Text("\(visitedCountryCount)/\(totalCountryCount)")
                 .font(.system(size: countFontSize, weight: .black, design: .rounded))
                 .foregroundStyle(.black)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
+                .padding(.horizontal, isCompactLayout ? 8 : 10)
+                .padding(.vertical, isCompactLayout ? 5 : 6)
                 .background(
                     Capsule()
                         .fill(Color.white.opacity(0.60))
@@ -251,7 +251,7 @@ struct ProfileBadgeShowcaseView: View {
             onSelectBadge(badge)
         } label: {
             Text(badge.emoji)
-                .font(.system(size: isCompactLayout ? 17 : 18))
+                .font(.system(size: isCompactLayout ? 15 : 18))
                 .frame(width: badgeSize, height: badgeSize)
                 .background(
                     Circle()

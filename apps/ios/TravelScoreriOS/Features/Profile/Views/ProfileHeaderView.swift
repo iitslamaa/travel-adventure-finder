@@ -23,15 +23,15 @@ struct ProfileHeaderView: View {
     }
 
     private var headerSpacing: CGFloat {
-        isCompactLayout ? 10 : 18
+        isCompactLayout ? 8 : 16
     }
 
     private var identityColumnWidth: CGFloat {
-        isCompactLayout ? 128 : 146
+        isCompactLayout ? 112 : 140
     }
 
     private var badgeRailWidth: CGFloat {
-        isCompactLayout ? 188 : 220
+        isCompactLayout ? 152 : 210
     }
 
     private var visibleHomeCountryCodes: [String] {
@@ -60,7 +60,7 @@ struct ProfileHeaderView: View {
             .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 14)
         .padding(.top, 14)
         .padding(.bottom, 12)
         .background(
