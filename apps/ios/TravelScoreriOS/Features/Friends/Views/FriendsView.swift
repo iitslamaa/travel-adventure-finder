@@ -66,7 +66,7 @@ struct FriendsView: View {
         GeometryReader { geo in
             let horizontalInset = socialHorizontalInset(for: geo.size.width)
             let contentWidth = socialContentWidth(for: geo.size.width)
-            let tabOcclusionHeight = floatingTabBarInset + 122
+            let tabOcclusionHeight = floatingTabBarInset + 20
 
             ZStack {
                 VStack(spacing: 0) {
@@ -272,7 +272,7 @@ struct FriendsView: View {
                         .id("friendsListTop")
                         .padding(.horizontal, 16)
                         .padding(.top, 6)
-                        .padding(.bottom, floatingTabBarInset + 148)
+                        .padding(.bottom, floatingTabBarInset + 76)
                     }
                     .refreshable {
                         await friendsVM.loadFriends(for: userId, forceRefresh: true)
