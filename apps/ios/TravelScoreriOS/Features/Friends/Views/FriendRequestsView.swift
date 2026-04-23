@@ -136,7 +136,7 @@ struct FriendRequestsView: View {
             ScrollView {
                 LazyVStack(spacing: 18) {
                     ForEach(vm.incomingRequests) { profile in
-                        requestRow(for: profile, width: contentWidth - 28)
+                        requestRow(for: profile, width: contentWidth)
                     }
                 }
                 .padding(.top, 14)
