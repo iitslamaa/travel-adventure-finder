@@ -346,7 +346,7 @@ struct CustomWeightsView: View {
         } label: {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Try something new!")
+                    Text("Go someplace new!")
                         .font(.headline)
                         .foregroundStyle(.black)
 
