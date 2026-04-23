@@ -164,17 +164,17 @@ enum ProfileBadgeCatalog {
     private static func continentPresentation(for continent: String) -> (title: String, emoji: String, tint: Color)? {
         switch continent {
         case "Africa":
-            return ("Africa Touched", "🐘", Color(red: 0.82, green: 0.47, blue: 0.16))
+            return ("Africa Touched", "🌍", Color(red: 0.82, green: 0.47, blue: 0.16))
         case "Americas":
-            return ("Americas Touched", "🗽", Color(red: 0.21, green: 0.57, blue: 0.44))
+            return ("Americas Touched", "🌎", Color(red: 0.21, green: 0.57, blue: 0.44))
         case "Antarctica":
-            return ("Polar Passport", "🐧", Color(red: 0.34, green: 0.59, blue: 0.86))
+            return ("Polar Passport", "🧊", Color(red: 0.34, green: 0.59, blue: 0.86))
         case "Asia":
-            return ("Asia Touched", "🏯", Color(red: 0.77, green: 0.34, blue: 0.44))
+            return ("Asia Touched", "🌏", Color(red: 0.77, green: 0.34, blue: 0.44))
         case "Europe":
-            return ("Europe Touched", "🏛️", Color(red: 0.27, green: 0.43, blue: 0.83))
+            return ("Europe Touched", "🏰", Color(red: 0.27, green: 0.43, blue: 0.83))
         case "Oceania":
-            return ("Oceania Touched", "🐠", Color(red: 0.14, green: 0.60, blue: 0.78))
+            return ("Oceania Touched", "🌊", Color(red: 0.14, green: 0.60, blue: 0.78))
         default:
             return nil
         }
