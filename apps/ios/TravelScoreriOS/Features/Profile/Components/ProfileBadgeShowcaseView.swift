@@ -31,10 +31,10 @@ enum ProfileBadgeCatalog {
             badges.append(
                 ProfileBadge(
                     id: "milestone-2-first",
-                    emoji: "✨",
+                    emoji: "👶",
                     assetNames: [],
                     labelText: nil,
-                    title: "Second Stamp",
+                    title: "Travel Newbie",
                     subtitle: "Visited your second country",
                     tint: Color(red: 0.89, green: 0.55, blue: 0.26)
                 )
@@ -77,17 +77,12 @@ enum ProfileBadgeCatalog {
     }
 
     private static func milestoneEmoji(for threshold: Int) -> String? {
-        switch threshold {
-        case 5:
-            return "🛫"
-        default:
-            return nil
-        }
+        nil
     }
 
     private static func milestoneLabel(for threshold: Int) -> String? {
         switch threshold {
-        case 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200:
+        case 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200:
             return "\(threshold)"
         default:
             return nil
