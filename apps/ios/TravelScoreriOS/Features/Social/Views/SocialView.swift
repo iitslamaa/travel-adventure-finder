@@ -249,11 +249,11 @@ struct SocialView: View {
         case .countryVisited:
             return "Visited: \(country ?? "Somewhere new")\(flagSuffix(for: event))"
         case .nextDestinationChanged:
-            return "Next Destination: \(destination ?? country ?? "Somewhere new")\(flagSuffix(for: event))"
+            return "Next: \(destination ?? country ?? "Somewhere new")\(flagSuffix(for: event))"
         case .profilePhotoUpdated:
             return "Profile Photo Updated"
         case .currentCountryChanged:
-            return "Current Country: \(country ?? "Somewhere new")\(flagSuffix(for: event))"
+            return "Currently In: \(country ?? "Somewhere new")\(flagSuffix(for: event))"
         case .homeCountryChanged:
             return "Home Country: \(country ?? "Updated")\(flagSuffix(for: event))"
         }
