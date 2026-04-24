@@ -34,6 +34,20 @@ enum ProfileBadgeCatalog {
         let visitedCount = normalizedCodes.count
         var badges: [ProfileBadge] = []
 
+        if visitedCount >= 2 {
+            badges.append(
+                ProfileBadge(
+                    id: "milestone-2-first",
+                    emoji: "👶",
+                    assetNames: [],
+                    labelText: nil,
+                    title: "Travel Newbie",
+                    subtitle: "Visited your second country",
+                    tint: Color(red: 0.89, green: 0.55, blue: 0.26)
+                )
+            )
+        }
+
         for threshold in milestoneThresholds where visitedCount >= threshold {
             badges.append(
                 ProfileBadge(
@@ -275,6 +289,11 @@ struct ProfileBadgeShowcaseView: View {
         return min(max(progress, 0), 1)
     }
 
+    private var countriesUntilNextRank: Int? {
+        guard let nextThreshold = travelRank.nextThreshold else { return nil }
+        return max(nextThreshold - visitedCountryCount, 0)
+    }
+
     var body: some View {
         VStack(alignment: .center, spacing: isCompactLayout ? 10 : 12) {
             VStack(alignment: .center, spacing: 6) {
@@ -284,23 +303,38 @@ struct ProfileBadgeShowcaseView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
-                if let nextThreshold = travelRank.nextThreshold {
+                if travelRank.nextThreshold != nil {
                     VStack(alignment: .leading, spacing: 4) {
                         GeometryReader { proxy in
                             ZStack(alignment: .leading) {
                                 Capsule()
-                                    .fill(Color.white.opacity(0.46))
+                                    .fill(Color.black.opacity(0.14))
 
                                 Capsule()
-                                    .fill(travelRank.tint.opacity(hasGoldBadgeState ? 0.9 : 0.75))
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                travelRank.tint.opacity(0.98),
+                                                travelRank.tint.opacity(0.72)
+                                            ],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
                                     .frame(width: max(proxy.size.width * rankProgress, 8))
                             }
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.52), lineWidth: 0.8)
+                            )
                         }
-                        .frame(width: isCompactLayout ? 132 : 168, height: 6)
+                        .frame(width: isCompactLayout ? 132 : 168, height: 8)
 
-                        Text("\(visitedCountryCount)/\(nextThreshold)")
-                            .font(.system(size: isCompactLayout ? 10 : 11, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.black.opacity(0.58))
+                        if let countriesUntilNextRank {
+                            Text("\(countriesUntilNextRank) to next rank")
+                                .font(.system(size: isCompactLayout ? 10 : 11, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.black.opacity(0.66))
+                        }
                     }
                 }
             }
