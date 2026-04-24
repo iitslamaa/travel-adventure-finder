@@ -12,16 +12,6 @@ struct ProfileTravelSnapshotCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Travel Snapshot")
-                    .font(.headline)
-                    .foregroundStyle(.black)
-
-                Text("Current plans and favorite places, without crowding the header.")
-                    .font(.subheadline)
-                    .foregroundStyle(.black.opacity(0.72))
-            }
-
             VStack(spacing: 12) {
                 snapshotRow(
                     title: "Currently In",
@@ -100,10 +90,6 @@ struct ProfileTravelSnapshotCard: View {
                             .lineLimit(1)
 
                         Spacer(minLength: 0)
-
-                        Image(systemName: "arrow.up.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.black.opacity(0.55))
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
