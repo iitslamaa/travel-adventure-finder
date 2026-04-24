@@ -23,11 +23,11 @@ struct ProfileHeaderView: View {
     }
 
     private var headerSpacing: CGFloat {
-        isCompactLayout ? 14 : 22
+        isCompactLayout ? 10 : 22
     }
 
     private var identityColumnWidth: CGFloat {
-        isCompactLayout ? 124 : 150
+        isCompactLayout ? 116 : 150
     }
 
     private var visibleHomeCountryCodes: [String] {
@@ -65,7 +65,7 @@ struct ProfileHeaderView: View {
             .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, isCompactLayout ? 18 : 20)
+        .padding(.horizontal, isCompactLayout ? 14 : 20)
         .padding(.top, isCompactLayout ? 18 : 20)
         .padding(.bottom, isCompactLayout ? 16 : 18)
         .background(headerBackground)

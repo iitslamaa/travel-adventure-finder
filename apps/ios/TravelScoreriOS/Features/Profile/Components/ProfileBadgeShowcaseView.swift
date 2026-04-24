@@ -217,7 +217,7 @@ struct ProfileBadgeShowcaseView: View {
     }
 
     private var badgeColumns: [GridItem] {
-        Array(repeating: GridItem(.fixed(badgeSize), spacing: badgeSpacing), count: isCompactLayout ? 5 : 6)
+        Array(repeating: GridItem(.fixed(badgeSize), spacing: badgeSpacing), count: isCompactLayout ? 4 : 6)
     }
 
     private var hasGoldBadgeState: Bool {
