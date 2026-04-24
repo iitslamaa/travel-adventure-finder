@@ -20,7 +20,7 @@ struct FriendsSection: View {
 
     var body: some View {
         drawerView
-            .presentationDetents([.medium])
+            .presentationDetents([.height(drawerHeight)])
             .presentationBackground(.clear)
             .presentationCornerRadius(30)
     }
@@ -87,11 +87,9 @@ struct FriendsSection: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
-
-            Spacer()
         }
         .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .top)
         .foregroundStyle(.black)
         .background(
             Theme.themedSheetBackground(corner: 30)
@@ -112,5 +110,14 @@ struct FriendsSection: View {
         }
 
         return trimmedUsername.hasPrefix("@") ? trimmedUsername : "@\(trimmedUsername)"
+    }
+
+    private var drawerHeight: CGFloat {
+        switch relationshipState {
+        case .friends, .requestSent:
+            return 280
+        default:
+            return 190
+        }
     }
 }
