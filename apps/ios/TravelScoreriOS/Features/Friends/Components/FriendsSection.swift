@@ -10,6 +10,7 @@ import SwiftUI
 
 struct FriendsSection: View {
     let relationshipState: RelationshipState
+    let username: String
     let friendCount: Int
     let onToggleFriend: () -> Void
     let onCancelRequest: () -> Void
@@ -27,8 +28,10 @@ struct FriendsSection: View {
     private var drawerView: some View {
         VStack(spacing: 20) {
 
-            Text("friends.section.title")
+            Text(drawerTitle)
                 .font(.title2.bold())
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             // View Friends Row
@@ -100,5 +103,14 @@ struct FriendsSection: View {
                 onToggleFriend()
             }
         }
+    }
+
+    private var drawerTitle: String {
+        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedUsername.isEmpty else {
+            return String(localized: "friends.section.title")
+        }
+
+        return trimmedUsername.hasPrefix("@") ? trimmedUsername : "@\(trimmedUsername)"
     }
 }

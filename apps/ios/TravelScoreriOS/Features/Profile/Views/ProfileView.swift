@@ -220,6 +220,7 @@ struct ProfileView: View {
                             .sheet(isPresented: $showFriendsDrawer) {
                                 FriendsSection(
                                     relationshipState: relationshipState,
+                                    username: username,
                                     friendCount: friendCount,
                                     onToggleFriend: {
                                         Task {
