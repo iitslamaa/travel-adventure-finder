@@ -202,6 +202,11 @@ struct ProfileInfoSection: View {
                     imageAnchor: imageAnchor
                 )
             )
+            .background(
+                Theme.profileCardBackground(corner: 22)
+                    .padding(.horizontal, -10)
+                    .padding(.vertical, -8)
+            )
     }
 
     private func innerCardBackground(

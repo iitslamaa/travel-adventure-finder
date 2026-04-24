@@ -152,7 +152,7 @@ struct ProfileView: View {
                             Theme.titleBanner(navigationTitle)
 
                             ScrollView {
-                                VStack(spacing: 18) {
+                                VStack(spacing: 26) {
                                     ProfileHeaderView(
                                         profile: profileVM.profile,
                                         username: username,
@@ -204,11 +204,6 @@ struct ProfileView: View {
                                             onOpenCountry: { isoCode in
                                                 selectedCountry = resolveCountry(for: isoCode)
                                             }
-                                        )
-                                        .background(
-                                            Theme.profileCardBackground(corner: 22)
-                                                .padding(.horizontal, -10)
-                                                .padding(.vertical, -8)
                                         )
 
                                     } else {

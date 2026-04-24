@@ -23,15 +23,11 @@ struct ProfileHeaderView: View {
     }
 
     private var headerSpacing: CGFloat {
-        isCompactLayout ? 8 : 16
+        isCompactLayout ? 10 : 22
     }
 
     private var identityColumnWidth: CGFloat {
-        isCompactLayout ? 112 : 140
-    }
-
-    private var badgeRailWidth: CGFloat {
-        isCompactLayout ? 152 : 210
+        isCompactLayout ? 116 : 150
     }
 
     private var visibleHomeCountryCodes: [String] {
@@ -55,7 +51,7 @@ struct ProfileHeaderView: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: headerSpacing) {
+        HStack(alignment: .top, spacing: headerSpacing) {
             identitySection
                 .frame(width: identityColumnWidth)
 
@@ -64,13 +60,14 @@ struct ProfileHeaderView: View {
                 visitedCountryCount: visitedCountryCodes.count,
                 onSelectBadge: presentBadgeToast
             )
-            .frame(width: badgeRailWidth, alignment: .center)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, isCompactLayout ? 8 : 6)
             .layoutPriority(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 14)
-        .padding(.top, 14)
-        .padding(.bottom, 12)
+        .padding(.horizontal, isCompactLayout ? 14 : 20)
+        .padding(.top, isCompactLayout ? 18 : 20)
+        .padding(.bottom, isCompactLayout ? 16 : 18)
         .background(headerBackground)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8, y: 4)

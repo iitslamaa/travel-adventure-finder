@@ -10,6 +10,13 @@ struct ProfileBadge: Identifiable, Hashable {
     let tint: Color
 }
 
+private struct ProfileTravelRank {
+    let title: String
+    let start: Int
+    let nextThreshold: Int?
+    let tint: Color
+}
+
 enum ProfileBadgeCatalog {
     private static let milestoneThresholds = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200]
 
@@ -167,19 +174,19 @@ enum ProfileBadgeCatalog {
     private static func continentPresentation(for continent: String) -> (title: String, assetNames: [String], tint: Color)? {
         switch continent {
         case "Africa":
-            return ("Africa Touched", ["badge-continent-africa"], Color(red: 0.82, green: 0.47, blue: 0.16))
+            return ("Africa Explorer", ["badge-continent-africa"], Color(red: 0.82, green: 0.47, blue: 0.16))
         case "North America":
-            return ("North America Touched", ["badge-continent-north-america"], Color(red: 0.21, green: 0.57, blue: 0.44))
+            return ("North America Explorer", ["badge-continent-north-america"], Color(red: 0.21, green: 0.57, blue: 0.44))
         case "South America":
-            return ("South America Touched", ["badge-continent-south-america"], Color(red: 0.18, green: 0.63, blue: 0.49))
+            return ("South America Explorer", ["badge-continent-south-america"], Color(red: 0.18, green: 0.63, blue: 0.49))
         case "Antarctica":
             return ("Polar Passport", ["badge-continent-antarctica"], Color(red: 0.34, green: 0.59, blue: 0.86))
         case "Asia":
-            return ("Asia Touched", ["badge-continent-asia"], Color(red: 0.77, green: 0.34, blue: 0.44))
+            return ("Asia Explorer", ["badge-continent-asia"], Color(red: 0.77, green: 0.34, blue: 0.44))
         case "Europe":
-            return ("Europe Touched", ["badge-continent-europe"], Color(red: 0.27, green: 0.43, blue: 0.83))
+            return ("Europe Explorer", ["badge-continent-europe"], Color(red: 0.27, green: 0.43, blue: 0.83))
         case "Oceania":
-            return ("Oceania Touched", ["badge-continent-oceania"], Color(red: 0.14, green: 0.60, blue: 0.78))
+            return ("Oceania Explorer", ["badge-continent-oceania"], Color(red: 0.14, green: 0.60, blue: 0.78))
         default:
             return nil
         }
@@ -193,7 +200,7 @@ struct ProfileBadgeShowcaseView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var featuredBadges: [ProfileBadge] {
-        Array(badges.prefix(isCompactLayout ? 12 : 10))
+        Array(badges.prefix(12))
     }
 
     private var totalCountryCount: Int {
@@ -205,19 +212,19 @@ struct ProfileBadgeShowcaseView: View {
     }
 
     private var badgeSize: CGFloat {
-        isCompactLayout ? 28 : 36
+        isCompactLayout ? 36 : 44
     }
 
     private var badgeSpacing: CGFloat {
-        isCompactLayout ? 5 : 8
+        isCompactLayout ? 8 : 10
     }
 
     private var countFontSize: CGFloat {
-        isCompactLayout ? 13 : 15
+        isCompactLayout ? 18 : 22
     }
 
     private var badgeColumns: [GridItem] {
-        Array(repeating: GridItem(.fixed(badgeSize), spacing: badgeSpacing), count: isCompactLayout ? 4 : 5)
+        Array(repeating: GridItem(.fixed(badgeSize), spacing: badgeSpacing), count: isCompactLayout ? 4 : 6)
     }
 
     private var hasGoldBadgeState: Bool {
@@ -228,13 +235,115 @@ struct ProfileBadgeShowcaseView: View {
         Color(red: 0.84, green: 0.67, blue: 0.20)
     }
 
+    private var travelRank: ProfileTravelRank {
+        switch visitedCountryCount {
+        case ..<5:
+            return ProfileTravelRank(
+                title: "Travel Newbie",
+                start: 0,
+                nextThreshold: 5,
+                tint: Color(red: 0.89, green: 0.55, blue: 0.26)
+            )
+        case 5..<20:
+            return ProfileTravelRank(
+                title: "Passport Starter",
+                start: 5,
+                nextThreshold: 20,
+                tint: Color(red: 0.84, green: 0.63, blue: 0.26)
+            )
+        case 20..<40:
+            return ProfileTravelRank(
+                title: "Frequent Flyer",
+                start: 20,
+                nextThreshold: 40,
+                tint: Color(red: 0.25, green: 0.55, blue: 0.87)
+            )
+        case 40..<60:
+            return ProfileTravelRank(
+                title: "World Hopper",
+                start: 40,
+                nextThreshold: 60,
+                tint: Color(red: 0.21, green: 0.59, blue: 0.53)
+            )
+        case 60..<100:
+            return ProfileTravelRank(
+                title: "Global Explorer",
+                start: 60,
+                nextThreshold: 100,
+                tint: Color(red: 0.48, green: 0.39, blue: 0.84)
+            )
+        default:
+            return ProfileTravelRank(
+                title: "100 Club",
+                start: 100,
+                nextThreshold: nil,
+                tint: goldBadgeTint
+            )
+        }
+    }
+
+    private var rankProgress: Double {
+        guard let nextThreshold = travelRank.nextThreshold else { return 1 }
+        let span = max(nextThreshold - travelRank.start, 1)
+        let progress = Double(visitedCountryCount - travelRank.start) / Double(span)
+        return min(max(progress, 0), 1)
+    }
+
+    private var countriesUntilNextRank: Int? {
+        guard let nextThreshold = travelRank.nextThreshold else { return nil }
+        return max(nextThreshold - visitedCountryCount, 0)
+    }
+
     var body: some View {
-        VStack(alignment: .center, spacing: isCompactLayout ? 8 : 10) {
+        VStack(alignment: .center, spacing: isCompactLayout ? 10 : 12) {
+            VStack(alignment: .center, spacing: 6) {
+                Text(travelRank.title)
+                    .font(.system(size: isCompactLayout ? 13 : 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(.black.opacity(0.88))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                if travelRank.nextThreshold != nil {
+                    VStack(alignment: .leading, spacing: 4) {
+                        GeometryReader { proxy in
+                            ZStack(alignment: .leading) {
+                                Capsule()
+                                    .fill(Color.black.opacity(0.14))
+
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                travelRank.tint.opacity(0.98),
+                                                travelRank.tint.opacity(0.72)
+                                            ],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: max(proxy.size.width * rankProgress, 8))
+                            }
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.52), lineWidth: 0.8)
+                            )
+                        }
+                        .frame(width: isCompactLayout ? 132 : 168, height: 8)
+
+                        if let countriesUntilNextRank {
+                            Text("\(countriesUntilNextRank) to next rank")
+                                .font(.system(size: isCompactLayout ? 10 : 11, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.black.opacity(0.66))
+                        }
+                    }
+                }
+            }
+
             Text("\(visitedCountryCount)/\(totalCountryCount)")
                 .font(.system(size: countFontSize, weight: .black, design: .rounded))
                 .foregroundStyle(.black)
-                .padding(.horizontal, isCompactLayout ? 8 : 10)
-                .padding(.vertical, isCompactLayout ? 5 : 6)
+                .padding(.horizontal, isCompactLayout ? 10 : 12)
+                .padding(.vertical, isCompactLayout ? 6 : 7)
                 .background(
                     Capsule()
                         .fill(Color.white.opacity(0.60))
@@ -255,7 +364,7 @@ struct ProfileBadgeShowcaseView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, isCompactLayout ? 2 : 0)
+                .padding(.vertical, isCompactLayout ? 4 : 2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .center)
@@ -287,13 +396,13 @@ struct ProfileBadgeShowcaseView: View {
     private func badgeArtwork(for badge: ProfileBadge) -> some View {
         if let labelText = badge.labelText {
             Text(labelText)
-                .font(.system(size: isCompactLayout ? 10 : 12, weight: .black, design: .rounded))
+                .font(.system(size: isCompactLayout ? 13 : 15, weight: .black, design: .rounded))
                 .foregroundStyle(artworkForegroundStyle)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
         } else if badge.assetNames.isEmpty {
             Text(badge.emoji ?? "✨")
-                .font(.system(size: isCompactLayout ? 15 : 18))
+                .font(.system(size: isCompactLayout ? 18 : 22))
                 .foregroundStyle(artworkForegroundStyle)
         } else if badge.assetNames.count == 1, let assetName = badge.assetNames.first {
             Image(assetName)
@@ -301,7 +410,7 @@ struct ProfileBadgeShowcaseView: View {
                 .resizable()
                 .scaledToFit()
                 .foregroundStyle(artworkForegroundStyle)
-                .padding(isCompactLayout ? 6 : 7)
+                .padding(isCompactLayout ? 7 : 8)
         } else {
             HStack(spacing: 1) {
                 ForEach(badge.assetNames, id: \.self) { assetName in

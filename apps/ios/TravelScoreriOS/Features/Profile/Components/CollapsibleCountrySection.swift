@@ -152,6 +152,11 @@ struct CollapsibleCountrySection: View {
         }
         .padding(16)
         .background(cardBackground(corner: 20))
+        .background(
+            Theme.profileCardBackground(corner: 18)
+                .padding(.horizontal, -10)
+                .padding(.vertical, -8)
+        )
         .onAppear {
         }
         .onDisappear {
