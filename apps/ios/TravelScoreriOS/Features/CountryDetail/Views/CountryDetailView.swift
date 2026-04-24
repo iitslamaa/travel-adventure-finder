@@ -778,8 +778,6 @@ private struct CountryFriendEngagementCard: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Theme.scrapbookBack(corner: 24)
-
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
