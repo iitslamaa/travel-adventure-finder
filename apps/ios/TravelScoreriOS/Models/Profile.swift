@@ -166,6 +166,10 @@ struct Profile: Codable, Identifiable {
         return trimmedUsername.isEmpty ? "User" : trimmedUsername
     }
 
+    var homeCountryCodes: [String] {
+        livedCountries
+    }
+
     var tripDisplayName: String {
         if let firstName, !firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return firstName

@@ -600,8 +600,8 @@ private struct CountryFriendEngagementService {
 
         let fromHere = friends
             .filter { profile in
-                profile.livedCountries.contains { livedCountry in
-                    livedCountry.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == normalizedCountryCode
+                profile.homeCountryCodes.contains { homeCountryCode in
+                    homeCountryCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == normalizedCountryCode
                 }
             }
             .sorted(by: profileSort)
