@@ -15,7 +15,6 @@ struct ProfileInfoSection: View {
     let orderedBucketListCountries: [String]
     let mutualTraveledCountries: [String]
     let mutualBucketCountries: [String]
-    let mutualLanguages: [String]
     let languages: [String]
     let travelMode: String?
     let travelStyle: String?
@@ -29,10 +28,6 @@ struct ProfileInfoSection: View {
         LazyVStack(spacing: 32) {
             travelSnapshotSection
             languagesSection
-
-            if relationshipState == .friends && !mutualLanguages.isEmpty {
-                sharedLanguagesSection
-            }
 
             combinedPreferencesSection
 
@@ -66,20 +61,6 @@ struct ProfileInfoSection: View {
                         ForEach(languages, id: \.self) { language in
                             languageRow(language)
                         }
-                    }
-                }
-            }
-        }
-    }
-
-    private var sharedLanguagesSection: some View {
-        card(imageScale: 1.18, imageAnchor: .trailing) {
-            VStack(alignment: .leading, spacing: 16) {
-                sectionHeader(String(localized: "profile.info.shared_languages"))
-
-                VStack(spacing: 14) {
-                    ForEach(mutualLanguages, id: \.self) { language in
-                        sharedLanguageRow(language)
                     }
                 }
             }
@@ -256,24 +237,6 @@ struct ProfileInfoSection: View {
     }
 
     private func languageRow(_ text: String) -> some View {
-        let components = text.split(separator: "—").map { $0.trimmingCharacters(in: .whitespaces) }
-
-        return HStack {
-            Text(components.first ?? "")
-                .font(.subheadline.weight(.semibold))
-                .foregroundColor(.black)
-
-            Spacer()
-
-            if components.count > 1 {
-                Text(components[1])
-                    .font(.subheadline)
-                    .foregroundColor(.black)
-            }
-        }
-    }
-
-    private func sharedLanguageRow(_ text: String) -> some View {
         let components = text.split(separator: "—").map { $0.trimmingCharacters(in: .whitespaces) }
 
         return HStack {

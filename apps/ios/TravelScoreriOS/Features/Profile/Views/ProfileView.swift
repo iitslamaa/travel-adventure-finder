@@ -78,11 +78,6 @@ struct ProfileView: View {
             return "\(displayName) — \(proficiency)"
         }
     }
-    private var mutualLanguageLabels: [String] {
-        profileVM.mutualLanguages.map { code in
-            LanguageRepository.shared.localizedDisplayName(for: code)
-        }
-    }
     private var friendCount: Int {
         profileVM.profile?.friendCount ?? 0
     }
@@ -194,7 +189,6 @@ struct ProfileView: View {
                                             orderedBucketListCountries: profileVM.orderedBucketListCountries,
                                             mutualTraveledCountries: profileVM.mutualTraveledCountries,
                                             mutualBucketCountries: profileVM.mutualBucketCountries,
-                                            mutualLanguages: mutualLanguageLabels,
                                             languages: languages,
                                             travelMode: travelModeLabel,
                                             travelStyle: travelStyleLabel,
@@ -226,6 +220,7 @@ struct ProfileView: View {
                             .sheet(isPresented: $showFriendsDrawer) {
                                 FriendsSection(
                                     relationshipState: relationshipState,
+                                    username: username,
                                     friendCount: friendCount,
                                     onToggleFriend: {
                                         Task {

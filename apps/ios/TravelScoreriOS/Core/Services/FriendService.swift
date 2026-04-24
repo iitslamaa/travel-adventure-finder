@@ -37,7 +37,19 @@ private struct FriendProfileRow: Decodable {
     let first_name: String?
     let last_name: String?
     let avatar_url: String?
+    let homeCountryCodes: [String]?
     let friend_count: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case username
+        case full_name
+        case first_name
+        case last_name
+        case avatar_url
+        case homeCountryCodes = "lived_countries"
+        case friend_count
+    }
 
     var profile: Profile {
         Profile(
@@ -48,7 +60,7 @@ private struct FriendProfileRow: Decodable {
             lastName: last_name,
             avatarUrl: avatar_url,
             languages: [],
-            livedCountries: [],
+            livedCountries: homeCountryCodes ?? [],
             travelStyle: [],
             travelMode: [],
             nextDestination: nil,
@@ -70,6 +82,7 @@ final class FriendService {
         first_name,
         last_name,
         avatar_url,
+        lived_countries,
         friend_count
     """
 

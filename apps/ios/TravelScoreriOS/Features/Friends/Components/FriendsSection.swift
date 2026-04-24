@@ -10,6 +10,7 @@ import SwiftUI
 
 struct FriendsSection: View {
     let relationshipState: RelationshipState
+    let username: String
     let friendCount: Int
     let onToggleFriend: () -> Void
     let onCancelRequest: () -> Void
@@ -19,7 +20,7 @@ struct FriendsSection: View {
 
     var body: some View {
         drawerView
-            .presentationDetents([.medium])
+            .presentationDetents([.height(drawerHeight)])
             .presentationBackground(.clear)
             .presentationCornerRadius(30)
     }
@@ -27,8 +28,10 @@ struct FriendsSection: View {
     private var drawerView: some View {
         VStack(spacing: 20) {
 
-            Text("friends.section.title")
+            Text(drawerTitle)
                 .font(.title2.bold())
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             // View Friends Row
@@ -84,11 +87,9 @@ struct FriendsSection: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
-
-            Spacer()
         }
         .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .top)
         .foregroundStyle(.black)
         .background(
             Theme.themedSheetBackground(corner: 30)
@@ -99,6 +100,24 @@ struct FriendsSection: View {
             Button(String(localized: "common.confirm"), role: .destructive) {
                 onToggleFriend()
             }
+        }
+    }
+
+    private var drawerTitle: String {
+        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedUsername.isEmpty else {
+            return String(localized: "friends.section.title")
+        }
+
+        return trimmedUsername.hasPrefix("@") ? trimmedUsername : "@\(trimmedUsername)"
+    }
+
+    private var drawerHeight: CGFloat {
+        switch relationshipState {
+        case .friends, .requestSent:
+            return 280
+        default:
+            return 190
         }
     }
 }

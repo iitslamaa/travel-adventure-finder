@@ -54,6 +54,7 @@ struct RootTabView: View {
     private enum Tab: Hashable {
         case discovery
         case planning
+        case media
         case social
         case more
     }
@@ -71,9 +72,11 @@ struct RootTabView: View {
 
     @State private var discoveryPath = NavigationPath()
     @State private var planningPath = NavigationPath()
+    @State private var mediaPath = NavigationPath()
     @State private var morePath = NavigationPath()
     @State private var discoveryRootID = UUID()
     @State private var planningRootID = UUID()
+    @State private var mediaRootID = UUID()
     @State private var socialRootID = UUID()
     @State private var moreRootID = UUID()
 
@@ -97,6 +100,13 @@ struct RootTabView: View {
         }
         .id(planningRootID)
         .tag(Tab.planning)
+
+        // Media
+        NavigationStack(path: $mediaPath) {
+            MediaView()
+        }
+        .id(mediaRootID)
+        .tag(Tab.media)
 
         // Social (auth required)
         NavigationStack(path: $socialNav.path) {
@@ -198,6 +208,7 @@ struct RootTabView: View {
         selectedTab = .discovery
         discoveryPath = NavigationPath()
         planningPath = NavigationPath()
+        mediaPath = NavigationPath()
         morePath = NavigationPath()
         socialNav.reset()
     }
@@ -233,6 +244,9 @@ struct RootTabView: View {
         case .planning:
             guard !planningPath.isEmpty else { return }
             planningPath = NavigationPath()
+        case .media:
+            guard !mediaPath.isEmpty else { return }
+            mediaPath = NavigationPath()
         case .social:
             guard socialNav.hasActiveRoute else { return }
             socialNav.reset()
@@ -246,6 +260,7 @@ struct RootTabView: View {
         HStack(spacing: 10) {
             tabButton(.discovery, title: String(localized: "tab.discovery"), systemImage: "globe.americas.fill")
             tabButton(.planning, title: String(localized: "tab.planning"), systemImage: "list.bullet", badgeCount: sharedTripInbox.pendingCount)
+            tabButton(.media, title: "Media", systemImage: "newspaper.fill")
             tabButton(.social, title: "Social", systemImage: "person.2.fill")
             tabButton(.more, title: String(localized: "tab.more"), systemImage: "ellipsis")
         }
@@ -382,6 +397,111 @@ struct RootTabView: View {
             }
         }
         .buttonStyle(.plain)
+    }
+}
+
+struct MediaView: View {
+    var body: some View {
+        ZStack {
+            Theme.pageBackground("travel5")
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Theme.titleBanner("Media")
+
+                ScrollView {
+                    VStack(spacing: 24) {
+                        MediaSection(
+                            title: "Travel Articles & Guides",
+                            subtitle: "A home for destination stories, travel advice, itineraries, and practical guides.",
+                            cards: [
+                                MediaCardContent(
+                                    title: "Featured travel articles",
+                                    subtitle: "Publish long-form stories and announcements here.",
+                                    icon: "newspaper.fill"
+                                ),
+                                MediaCardContent(
+                                    title: "Destination guides",
+                                    subtitle: "Collect city, country, and trip-planning guides in one place.",
+                                    icon: "map.fill"
+                                )
+                            ]
+                        )
+
+                        MediaSection(
+                            title: "Podcast",
+                            subtitle: "A future spot for episode links, show notes, and listening platforms.",
+                            cards: [
+                                MediaCardContent(
+                                    title: "Podcast links",
+                                    subtitle: "Connect Apple Podcasts, Spotify, or your show page when ready.",
+                                    icon: "mic.fill"
+                                )
+                            ]
+                        )
+                    }
+                    .padding(.horizontal, Theme.pageHorizontalInset)
+                    .padding(.top, 18)
+                    .padding(.bottom, 120)
+                }
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+private struct MediaSection: View {
+    let title: String
+    let subtitle: String
+    let cards: [MediaCardContent]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(.black)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(subtitle)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.78))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 4)
+
+            VStack(spacing: 14) {
+                ForEach(cards) { card in
+                    MediaCard(content: card)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct MediaCardContent: Identifiable {
+    let id = UUID()
+    let title: String
+    let subtitle: String
+    let icon: String
+}
+
+private struct MediaCard: View {
+    let content: MediaCardContent
+
+    var body: some View {
+        Theme.featureCard(
+            icon: content.icon,
+            title: content.title,
+            subtitle: content.subtitle,
+            minHeight: 118
+        ) {
+            Image(systemName: "plus")
+                .foregroundStyle(Theme.textPrimary)
+        }
     }
 }
 
