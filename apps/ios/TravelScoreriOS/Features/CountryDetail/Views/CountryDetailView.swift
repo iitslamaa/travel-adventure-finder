@@ -779,28 +779,6 @@ private struct CountryFriendEngagementCard: View {
     var body: some View {
         ZStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("country_detail.friends.see_who")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer()
-
-                    if engagement.totalFriends > 0 {
-                        Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.friends.friend_count_format"), locale: AppDisplayLocale.current, engagement.totalFriends)))
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(
-                                Capsule()
-                                    .fill(Color(red: 0.88, green: 0.84, blue: 0.77).opacity(0.78))
-                            )
-                    }
-                }
-
                 VStack(alignment: .leading, spacing: 14) {
                     engagementGroup(
                         title: String(localized: "country_detail.friends.visited"),
@@ -826,10 +804,10 @@ private struct CountryFriendEngagementCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(red: 0.95, green: 0.91, blue: 0.84).opacity(0.68))
+                    .fill(Color(red: 0.95, green: 0.91, blue: 0.84).opacity(0.46))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .fill(Color.white.opacity(0.14))
+                            .fill(Color.white.opacity(0.08))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
