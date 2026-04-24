@@ -152,7 +152,7 @@ struct ProfileView: View {
                             Theme.titleBanner(navigationTitle)
 
                             ScrollView {
-                                VStack(spacing: 18) {
+                                VStack(spacing: 26) {
                                     ProfileHeaderView(
                                         profile: profileVM.profile,
                                         username: username,

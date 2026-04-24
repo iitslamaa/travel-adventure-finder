@@ -193,7 +193,7 @@ struct ProfileBadgeShowcaseView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var featuredBadges: [ProfileBadge] {
-        Array(badges.prefix(isCompactLayout ? 12 : 10))
+        Array(badges.prefix(12))
     }
 
     private var totalCountryCount: Int {
@@ -205,19 +205,19 @@ struct ProfileBadgeShowcaseView: View {
     }
 
     private var badgeSize: CGFloat {
-        isCompactLayout ? 28 : 36
+        isCompactLayout ? 36 : 44
     }
 
     private var badgeSpacing: CGFloat {
-        isCompactLayout ? 5 : 8
+        isCompactLayout ? 8 : 10
     }
 
     private var countFontSize: CGFloat {
-        isCompactLayout ? 13 : 15
+        isCompactLayout ? 18 : 22
     }
 
     private var badgeColumns: [GridItem] {
-        Array(repeating: GridItem(.fixed(badgeSize), spacing: badgeSpacing), count: isCompactLayout ? 4 : 5)
+        Array(repeating: GridItem(.fixed(badgeSize), spacing: badgeSpacing), count: isCompactLayout ? 5 : 6)
     }
 
     private var hasGoldBadgeState: Bool {
@@ -229,12 +229,12 @@ struct ProfileBadgeShowcaseView: View {
     }
 
     var body: some View {
-        VStack(alignment: .center, spacing: isCompactLayout ? 8 : 10) {
+        VStack(alignment: .center, spacing: isCompactLayout ? 10 : 12) {
             Text("\(visitedCountryCount)/\(totalCountryCount)")
                 .font(.system(size: countFontSize, weight: .black, design: .rounded))
                 .foregroundStyle(.black)
-                .padding(.horizontal, isCompactLayout ? 8 : 10)
-                .padding(.vertical, isCompactLayout ? 5 : 6)
+                .padding(.horizontal, isCompactLayout ? 10 : 12)
+                .padding(.vertical, isCompactLayout ? 6 : 7)
                 .background(
                     Capsule()
                         .fill(Color.white.opacity(0.60))
@@ -255,7 +255,7 @@ struct ProfileBadgeShowcaseView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, isCompactLayout ? 2 : 0)
+                .padding(.vertical, isCompactLayout ? 4 : 2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .center)
@@ -287,13 +287,13 @@ struct ProfileBadgeShowcaseView: View {
     private func badgeArtwork(for badge: ProfileBadge) -> some View {
         if let labelText = badge.labelText {
             Text(labelText)
-                .font(.system(size: isCompactLayout ? 10 : 12, weight: .black, design: .rounded))
+                .font(.system(size: isCompactLayout ? 13 : 15, weight: .black, design: .rounded))
                 .foregroundStyle(artworkForegroundStyle)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
         } else if badge.assetNames.isEmpty {
             Text(badge.emoji ?? "✨")
-                .font(.system(size: isCompactLayout ? 15 : 18))
+                .font(.system(size: isCompactLayout ? 18 : 22))
                 .foregroundStyle(artworkForegroundStyle)
         } else if badge.assetNames.count == 1, let assetName = badge.assetNames.first {
             Image(assetName)
@@ -301,7 +301,7 @@ struct ProfileBadgeShowcaseView: View {
                 .resizable()
                 .scaledToFit()
                 .foregroundStyle(artworkForegroundStyle)
-                .padding(isCompactLayout ? 6 : 7)
+                .padding(isCompactLayout ? 7 : 8)
         } else {
             HStack(spacing: 1) {
                 ForEach(badge.assetNames, id: \.self) { assetName in
