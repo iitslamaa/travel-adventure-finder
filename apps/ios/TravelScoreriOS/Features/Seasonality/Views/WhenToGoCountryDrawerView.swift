@@ -129,6 +129,7 @@ struct WhenToGoCountryDrawerView: View {
                     Text(CountrySeasonalityHelpers.body(for: country.country, selectedMonth: weightsStore.selectedMonth))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
