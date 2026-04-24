@@ -10,6 +10,13 @@ struct ProfileBadge: Identifiable, Hashable {
     let tint: Color
 }
 
+private struct ProfileTravelRank {
+    let title: String
+    let start: Int
+    let nextThreshold: Int?
+    let tint: Color
+}
+
 enum ProfileBadgeCatalog {
     private static let milestoneThresholds = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200]
 
@@ -26,20 +33,6 @@ enum ProfileBadgeCatalog {
 
         let visitedCount = normalizedCodes.count
         var badges: [ProfileBadge] = []
-
-        if visitedCount >= 2 {
-            badges.append(
-                ProfileBadge(
-                    id: "milestone-2-first",
-                    emoji: "👶",
-                    assetNames: [],
-                    labelText: nil,
-                    title: "Travel Newbie",
-                    subtitle: "Visited your second country",
-                    tint: Color(red: 0.89, green: 0.55, blue: 0.26)
-                )
-            )
-        }
 
         for threshold in milestoneThresholds where visitedCount >= threshold {
             badges.append(
@@ -228,8 +221,90 @@ struct ProfileBadgeShowcaseView: View {
         Color(red: 0.84, green: 0.67, blue: 0.20)
     }
 
+    private var travelRank: ProfileTravelRank {
+        switch visitedCountryCount {
+        case ..<5:
+            return ProfileTravelRank(
+                title: "Travel Newbie",
+                start: 0,
+                nextThreshold: 5,
+                tint: Color(red: 0.89, green: 0.55, blue: 0.26)
+            )
+        case 5..<20:
+            return ProfileTravelRank(
+                title: "Passport Starter",
+                start: 5,
+                nextThreshold: 20,
+                tint: Color(red: 0.84, green: 0.63, blue: 0.26)
+            )
+        case 20..<40:
+            return ProfileTravelRank(
+                title: "Frequent Flyer",
+                start: 20,
+                nextThreshold: 40,
+                tint: Color(red: 0.25, green: 0.55, blue: 0.87)
+            )
+        case 40..<60:
+            return ProfileTravelRank(
+                title: "World Hopper",
+                start: 40,
+                nextThreshold: 60,
+                tint: Color(red: 0.21, green: 0.59, blue: 0.53)
+            )
+        case 60..<100:
+            return ProfileTravelRank(
+                title: "Global Explorer",
+                start: 60,
+                nextThreshold: 100,
+                tint: Color(red: 0.48, green: 0.39, blue: 0.84)
+            )
+        default:
+            return ProfileTravelRank(
+                title: "100 Club",
+                start: 100,
+                nextThreshold: nil,
+                tint: goldBadgeTint
+            )
+        }
+    }
+
+    private var rankProgress: Double {
+        guard let nextThreshold = travelRank.nextThreshold else { return 1 }
+        let span = max(nextThreshold - travelRank.start, 1)
+        let progress = Double(visitedCountryCount - travelRank.start) / Double(span)
+        return min(max(progress, 0), 1)
+    }
+
     var body: some View {
         VStack(alignment: .center, spacing: isCompactLayout ? 10 : 12) {
+            VStack(alignment: .center, spacing: 6) {
+                Text(travelRank.title)
+                    .font(.system(size: isCompactLayout ? 13 : 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(.black.opacity(0.88))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                if let nextThreshold = travelRank.nextThreshold {
+                    VStack(alignment: .leading, spacing: 4) {
+                        GeometryReader { proxy in
+                            ZStack(alignment: .leading) {
+                                Capsule()
+                                    .fill(Color.white.opacity(0.46))
+
+                                Capsule()
+                                    .fill(travelRank.tint.opacity(hasGoldBadgeState ? 0.9 : 0.75))
+                                    .frame(width: max(proxy.size.width * rankProgress, 8))
+                            }
+                        }
+                        .frame(width: isCompactLayout ? 132 : 168, height: 6)
+
+                        Text("\(visitedCountryCount)/\(nextThreshold)")
+                            .font(.system(size: isCompactLayout ? 10 : 11, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.black.opacity(0.58))
+                    }
+                }
+            }
+
             Text("\(visitedCountryCount)/\(totalCountryCount)")
                 .font(.system(size: countFontSize, weight: .black, design: .rounded))
                 .foregroundStyle(.black)
