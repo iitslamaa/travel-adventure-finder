@@ -1,5 +1,15 @@
 import SwiftUI
 
+private enum ProfileTravelSnapshotLocalized {
+    static func string(_ key: String, fallback: String) -> String {
+        let localized = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        guard localized != key else {
+            return fallback
+        }
+        return localized
+    }
+}
+
 struct ProfileTravelSnapshotCard: View {
     let currentCountry: String?
     let nextDestination: String?
@@ -14,25 +24,47 @@ struct ProfileTravelSnapshotCard: View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(spacing: 12) {
                 snapshotRow(
-                    title: "Currently In",
+                    title: ProfileTravelSnapshotLocalized.string(
+                        "profile.travel_snapshot.currently_in",
+                        fallback: "Currently in"
+                    ),
                     code: currentCountry,
-                    emptyText: "No current country yet"
+                    emptyText: ProfileTravelSnapshotLocalized.string(
+                        "profile.travel_snapshot.no_current_country",
+                        fallback: "No current country yet"
+                    )
                 )
 
                 snapshotRow(
-                    title: "Next Stop",
+                    title: ProfileTravelSnapshotLocalized.string(
+                        "profile.travel_snapshot.next_stop",
+                        fallback: "Next stop"
+                    ),
                     code: nextDestination,
-                    emptyText: "No next destination yet"
+                    emptyText: ProfileTravelSnapshotLocalized.string(
+                        "profile.travel_snapshot.no_next_destination",
+                        fallback: "No next destination yet"
+                    )
                 )
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("Favorite Countries")
+                Text(
+                    ProfileTravelSnapshotLocalized.string(
+                        "profile.travel_snapshot.favorite_countries",
+                        fallback: "Favorite countries"
+                    )
+                )
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.black)
 
                 if favoriteCountries.isEmpty {
-                    Text("No favorites picked yet")
+                    Text(
+                        ProfileTravelSnapshotLocalized.string(
+                            "profile.travel_snapshot.no_favorites",
+                            fallback: "No favorites picked yet"
+                        )
+                    )
                         .font(.subheadline)
                         .foregroundStyle(.black.opacity(0.72))
                 } else {
@@ -74,7 +106,9 @@ struct ProfileTravelSnapshotCard: View {
             Text(title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.black)
-                .frame(width: 88, alignment: .leading)
+                .lineLimit(2)
+                .minimumScaleFactor(0.82)
+                .frame(width: 128, alignment: .leading)
 
             if let code, !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 Button {

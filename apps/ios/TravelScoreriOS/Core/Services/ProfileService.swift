@@ -289,15 +289,22 @@ final class ProfileService {
 
     // MARK: - Fetch
 
-    func fetchMyProfile(userId: UUID) async throws -> Profile {
-        if let cachedProfile = Self.profileCache[userId] {
+    func fetchMyProfile(userId: UUID, useCache: Bool = true) async throws -> Profile {
+        if useCache, let cachedProfile = Self.profileCache[userId] {
+            SocialFeedDebug.log(
+                "profile.service.fetch.cache_hit user=\(userId.uuidString) " +
+                "username=\(logField(cachedProfile.username)) avatar=\(logField(cachedProfile.avatarUrl))"
+            )
             return cachedProfile
         }
 
-        if let inFlightFetch = Self.inFlightProfileFetches[userId] {
+        if useCache, let inFlightFetch = Self.inFlightProfileFetches[userId] {
+            SocialFeedDebug.log("profile.service.fetch.in_flight_hit user=\(userId.uuidString)")
             return try await inFlightFetch.value
         }
 
+        let startedAt = Date()
+        SocialFeedDebug.log("profile.service.fetch.network.start user=\(userId.uuidString) use_cache=\(useCache)")
         let fetchTask = Task<Profile, Error> { [supabase] in
             let response: PostgrestResponse<[Profile]> = try await supabase.client
                 .from("profiles")
@@ -326,11 +333,19 @@ final class ProfileService {
             if Self.inFlightProfileFetches[userId] == fetchTask {
                 Self.inFlightProfileFetches[userId] = nil
             }
+            SocialFeedDebug.log(
+                "profile.service.fetch.network.success user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
+                "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl))"
+            )
             return profile
         } catch {
             if Self.inFlightProfileFetches[userId] == fetchTask {
                 Self.inFlightProfileFetches[userId] = nil
             }
+            SocialFeedDebug.log(
+                "profile.service.fetch.network.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
+                "error=\(SocialFeedDebug.describe(error))"
+            )
             throw error
         }
     }
@@ -440,20 +455,24 @@ final class ProfileService {
         defaultUsername: String? = nil,
         defaultAvatarUrl: String? = nil
     ) async throws -> Profile {
+        SocialFeedDebug.log("profile.service.fetch_or_create.start user=\(userId.uuidString)")
         do {
             let profile = try await fetchMyProfile(userId: userId)
             hydrateProfileIdentityFromAuthMetadataIfNeededInBackground(
                 userId: userId,
                 profile: profile
             )
+            SocialFeedDebug.log("profile.service.fetch_or_create.success user=\(userId.uuidString) source=fetch")
             return profile
         } catch let error as NSError where error.code == 404 {
+            SocialFeedDebug.log("profile.service.fetch_or_create.ensure user=\(userId.uuidString) reason=not_found")
             try await ensureProfileExists(
                 userId: userId,
                 defaultUsername: defaultUsername,
                 defaultAvatarUrl: defaultAvatarUrl
             )
             let profile = try await fetchMyProfile(userId: userId)
+            SocialFeedDebug.log("profile.service.fetch_or_create.success user=\(userId.uuidString) source=create")
             hydrateProfileIdentityFromAuthMetadataIfNeededInBackground(
                 userId: userId,
                 profile: profile
@@ -488,8 +507,17 @@ final class ProfileService {
     }
 
     func cacheProfile(_ profile: Profile) {
+        SocialFeedDebug.log(
+            "profile.service.cache.write user=\(profile.id.uuidString) " +
+            "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl))"
+        )
         Self.profileCache[profile.id] = profile
         Self.persistCachedValue(profile, forKey: Self.profileCacheKey(for: profile.id))
+    }
+
+    private func logField(_ value: String?) -> String {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "nil" : trimmed
     }
 
     func fetchPassportPreferences(userId: UUID) async throws -> PassportPreferences {

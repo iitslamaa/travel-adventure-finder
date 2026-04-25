@@ -110,6 +110,11 @@ struct ProfileView: View {
         String(localized: "profile.title")
     }
 
+    private func logField(_ value: String?) -> String {
+        guard let value, !value.isEmpty else { return "nil" }
+        return value
+    }
+
     private func resolveCountry(for isoCode: String) -> Country {
         let normalizedISO = isoCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
 
@@ -139,6 +144,18 @@ struct ProfileView: View {
 
                 if !isReadyToRenderProfile {
                     ProfileLoadingView()
+                        .onAppear {
+                            SocialFeedDebug.log(
+                                "profile.view.loading.appear user=\(userId.uuidString) " +
+                                "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading)"
+                            )
+                        }
+                        .onDisappear {
+                            SocialFeedDebug.log(
+                                "profile.view.loading.disappear user=\(userId.uuidString) " +
+                                "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading)"
+                            )
+                        }
                 } else {
                     let relationshipState = profileVM.relationshipState
 
@@ -300,12 +317,27 @@ struct ProfileView: View {
             }
         }
         .onAppear {
-            guard profileVM.profile == nil else {
+            SocialFeedDebug.log(
+                "profile.view.appear user=\(userId.uuidString) vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
+                "ready=\(isReadyToRenderProfile) is_loading=\(profileVM.isLoading) has_loaded_core=\(profileVM.hasLoadedCoreData)"
+            )
+            socialNav.profileRouteDidAppear(userId: userId)
+
+            guard profileVM.profile?.id != userId else {
+                SocialFeedDebug.log(
+                    "profile.view.load.skip user=\(userId.uuidString) reason=profile_present " +
+                    "vm_profile=\(logField(profileVM.profile?.id.uuidString))"
+                )
                 return
             }
 
             Task {
+                SocialFeedDebug.log("profile.view.load.task.start user=\(userId.uuidString)")
                 await profileVM.loadIfNeeded()
+                SocialFeedDebug.log(
+                    "profile.view.load.task.end user=\(userId.uuidString) vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
+                    "ready=\(isReadyToRenderProfile) is_loading=\(profileVM.isLoading)"
+                )
             }
         }
     }

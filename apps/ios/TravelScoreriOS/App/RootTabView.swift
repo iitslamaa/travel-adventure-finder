@@ -17,17 +17,91 @@ enum SocialRoute: Hashable {
 @MainActor
 final class SocialNavigationController: ObservableObject {
     @Published var path = NavigationPath()
+    @Published var pendingProfileLoadUserId: UUID?
 
     var hasActiveRoute: Bool {
         !path.isEmpty
     }
 
     func push(_ route: SocialRoute) {
+        SocialFeedDebug.log(
+            "navigation.push.request route=\(debugDescription(for: route)) path_active=\(hasActiveRoute) " +
+            "pending_profile=\(logField(pendingProfileLoadUserId?.uuidString))"
+        )
+
+        if case .profile(let userId) = route {
+            showProfileLoadingScreen(for: userId, reason: "push")
+        }
+
         path.append(route)
+        SocialFeedDebug.log(
+            "navigation.push.appended route=\(debugDescription(for: route)) path_active=\(hasActiveRoute) " +
+            "pending_profile=\(logField(pendingProfileLoadUserId?.uuidString))"
+        )
     }
 
     func reset() {
+        SocialFeedDebug.log(
+            "navigation.reset path_active=\(hasActiveRoute) pending_profile=\(logField(pendingProfileLoadUserId?.uuidString))"
+        )
+        pendingProfileLoadUserId = nil
         path = NavigationPath()
+    }
+
+    func profileRouteDidAppear(userId: UUID) {
+        SocialFeedDebug.log(
+            "navigation.profile.appear user=\(userId.uuidString) pending_profile=\(logField(pendingProfileLoadUserId?.uuidString))"
+        )
+
+        if pendingProfileLoadUserId == userId {
+            pendingProfileLoadUserId = nil
+            SocialFeedDebug.log("navigation.profile.loading.clear user=\(userId.uuidString)")
+        } else if let pendingProfileLoadUserId {
+            SocialFeedDebug.log(
+                "navigation.profile.loading.keep appeared_user=\(userId.uuidString) pending_user=\(pendingProfileLoadUserId.uuidString)"
+            )
+        }
+    }
+
+    func showProfileLoadingScreen(for userId: UUID, reason: String) {
+        let previous = pendingProfileLoadUserId
+        pendingProfileLoadUserId = userId
+        SocialFeedDebug.log(
+            "navigation.profile.loading.show user=\(userId.uuidString) reason=\(reason) " +
+            "previous=\(logField(previous?.uuidString))"
+        )
+    }
+
+    private func debugDescription(for route: SocialRoute) -> String {
+        switch route {
+        case .profile(let userId):
+            return "profile:\(userId.uuidString)"
+        case .friends(let userId):
+            return "friends:\(userId.uuidString)"
+        case .friendRequests:
+            return "friendRequests"
+        }
+    }
+
+    private func logField(_ value: String?) -> String {
+        guard let value, !value.isEmpty else { return "nil" }
+        return value
+    }
+}
+
+private struct SocialProfileLoadingOverlay: View {
+    let userId: UUID
+
+    var body: some View {
+        ProfileLoadingView()
+            .transition(.opacity)
+            .zIndex(10)
+            .onAppear {
+                SocialFeedDebug.log("navigation.profile.loading.overlay.appear user=\(userId.uuidString)")
+            }
+            .onDisappear {
+                SocialFeedDebug.log("navigation.profile.loading.overlay.disappear user=\(userId.uuidString)")
+            }
     }
 }
 
@@ -125,6 +199,12 @@ struct RootTabView: View {
                 socialDestination(route, navigator: socialNav)
             }
         }
+        .overlay {
+            if let pendingProfileLoadUserId = socialNav.pendingProfileLoadUserId {
+                SocialProfileLoadingOverlay(userId: pendingProfileLoadUserId)
+            }
+        }
+        .animation(.easeInOut(duration: 0.18), value: socialNav.pendingProfileLoadUserId)
         .id(socialRootID)
         .tag(Tab.social)
 
@@ -348,16 +428,28 @@ struct RootTabView: View {
             if sessionManager.userId == userId {
                 ProfileView(userId: userId, showsBackButton: true, profileViewModel: profileVM)
                     .environmentObject(navigator)
+                    .onAppear {
+                        SocialFeedDebug.log("navigation.destination.profile.own.appear user=\(userId.uuidString)")
+                    }
             } else {
                 ProfileView(userId: userId, showsBackButton: true)
                     .environmentObject(navigator)
+                    .onAppear {
+                        SocialFeedDebug.log("navigation.destination.profile.other.appear user=\(userId.uuidString)")
+                    }
             }
         case .friends(let userId):
             FriendsView(userId: userId, showsBackButton: true)
                 .environmentObject(navigator)
+                .onAppear {
+                    SocialFeedDebug.log("navigation.destination.friends.appear user=\(userId.uuidString)")
+                }
         case .friendRequests:
             FriendRequestsView()
                 .environmentObject(navigator)
+                .onAppear {
+                    SocialFeedDebug.log("navigation.destination.friend_requests.appear")
+                }
         }
     }
 
@@ -401,40 +493,80 @@ struct RootTabView: View {
 }
 
 struct MediaView: View {
+    private enum LocalizedText {
+        static func string(_ key: String, fallback: String) -> String {
+            let localized = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+            guard localized != key else {
+                return fallback
+            }
+            return localized
+        }
+    }
+
     var body: some View {
         ZStack {
             Theme.pageBackground("travel5")
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Media")
+                Theme.titleBanner(LocalizedText.string("media.title", fallback: "Media"))
 
                 ScrollView {
                     VStack(spacing: 24) {
                         MediaSection(
-                            title: "Travel Articles & Guides",
-                            subtitle: "A home for destination stories, travel advice, itineraries, and practical guides.",
+                            title: LocalizedText.string(
+                                "media.articles.title",
+                                fallback: "Articles"
+                            ),
+                            subtitle: LocalizedText.string(
+                                "media.articles.subtitle",
+                                fallback: "Stories, guides, and inspiration for your next trip."
+                            ),
                             cards: [
                                 MediaCardContent(
-                                    title: "Featured travel articles",
-                                    subtitle: "Publish long-form stories and announcements here.",
+                                    title: LocalizedText.string(
+                                        "media.articles.featured.title",
+                                        fallback: "Featured travel articles"
+                                    ),
+                                    subtitle: LocalizedText.string(
+                                        "media.articles.featured.subtitle",
+                                        fallback: "Hand-picked reads from the Travel AF team."
+                                    ),
                                     icon: "newspaper.fill"
                                 ),
                                 MediaCardContent(
-                                    title: "Destination guides",
-                                    subtitle: "Collect city, country, and trip-planning guides in one place.",
+                                    title: LocalizedText.string(
+                                        "media.articles.guides.title",
+                                        fallback: "Destination guides"
+                                    ),
+                                    subtitle: LocalizedText.string(
+                                        "media.articles.guides.subtitle",
+                                        fallback: "Practical tips for choosing where to go next."
+                                    ),
                                     icon: "map.fill"
                                 )
                             ]
                         )
 
                         MediaSection(
-                            title: "Podcast",
-                            subtitle: "A future spot for episode links, show notes, and listening platforms.",
+                            title: LocalizedText.string(
+                                "media.podcast.title",
+                                fallback: "Podcast"
+                            ),
+                            subtitle: LocalizedText.string(
+                                "media.podcast.subtitle",
+                                fallback: "Listen to conversations about travel planning and discovery."
+                            ),
                             cards: [
                                 MediaCardContent(
-                                    title: "Podcast links",
-                                    subtitle: "Connect Apple Podcasts, Spotify, or your show page when ready.",
+                                    title: LocalizedText.string(
+                                        "media.podcast.links.title",
+                                        fallback: "Podcast links"
+                                    ),
+                                    subtitle: LocalizedText.string(
+                                        "media.podcast.links.subtitle",
+                                        fallback: "Find the latest episodes and listening options."
+                                    ),
                                     icon: "mic.fill"
                                 )
                             ]

@@ -136,6 +136,10 @@ extension ProfileViewModel {
 
             profile = current
             profileService.cacheProfile(current)
+            let changedFriendCacheEntries = friendService.refreshCachedProfile(current)
+            SocialFeedDebug.log(
+                "profile.save.cache_reconciled user=\(userId) friend_cache_changes=\(changedFriendCacheEntries) avatar=\(current.avatarUrl ?? "nil")"
+            )
         }
 
         passportPreferences = PassportPreferences(

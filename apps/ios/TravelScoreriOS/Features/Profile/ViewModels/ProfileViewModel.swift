@@ -136,10 +136,25 @@ final class ProfileViewModel: ObservableObject {
     // MARK: - Identity-Safe Lifecycle
 
     func loadIfNeeded() async {
-        guard !hasLoadedCoreData || profile?.id != userId else { return }
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.enter user=\(userId.uuidString) profile=\(debugLogField(profile?.id.uuidString)) " +
+            "has_loaded_core=\(hasLoadedCoreData) is_loading=\(isLoading) has_task=\(loadTask != nil)"
+        )
+
+        guard !hasLoadedCoreData || profile?.id != userId else {
+            SocialFeedDebug.log(
+                "profile.vm.load_if_needed.skip user=\(userId.uuidString) reason=already_loaded " +
+                "profile=\(debugLogField(profile?.id.uuidString))"
+            )
+            return
+        }
 
         if let existingTask = loadTask {
+            SocialFeedDebug.log("profile.vm.load_if_needed.await_existing user=\(userId.uuidString)")
             await existingTask.value
+            SocialFeedDebug.log(
+                "profile.vm.load_if_needed.existing_done user=\(userId.uuidString) profile=\(debugLogField(profile?.id.uuidString))"
+            )
             return
         }
 
@@ -150,6 +165,10 @@ final class ProfileViewModel: ObservableObject {
         let cachedProfile = profileService.cachedProfile(userId: userId)
         let cachedTraveled = profileService.cachedTraveledCountries(userId: userId)
         let cachedBucket = profileService.cachedBucketListCountries(userId: userId)
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.cache_state user=\(userId.uuidString) switching=\(isSwitchingUsers) " +
+            "cached_profile=\(cachedProfile != nil) cached_traveled=\(cachedTraveled != nil) cached_bucket=\(cachedBucket != nil)"
+        )
         if let cachedProfile {
             profile = cachedProfile
         } else if isSwitchingUsers {
@@ -188,6 +207,10 @@ final class ProfileViewModel: ObservableObject {
 
         let generation = UUID()
         loadGeneration = generation
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.start_task user=\(userId.uuidString) generation=\(generation.uuidString) " +
+            "is_loading=\(isLoading)"
+        )
 
         loadTask = Task { [weak self] in
             await self?.load(generation: generation)
@@ -195,6 +218,15 @@ final class ProfileViewModel: ObservableObject {
 
         await loadTask?.value
         isRelationshipLoading = false
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.complete user=\(userId.uuidString) generation=\(generation.uuidString) " +
+            "profile=\(debugLogField(profile?.id.uuidString)) is_loading=\(isLoading) has_loaded_core=\(hasLoadedCoreData)"
+        )
+    }
+
+    private func debugLogField(_ value: String?) -> String {
+        guard let value, !value.isEmpty else { return "nil" }
+        return value
     }
 
     func warmSessionCachesIfNeeded() async {

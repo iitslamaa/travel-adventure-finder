@@ -162,6 +162,54 @@ final class SocialActivityService {
         }.joined(separator: ",")
         SocialFeedDebug.log("service.profile_lookup.friend_seed.preview id=\(requestId) values=[\(friendPreview)]")
 
+        let actorIds = Array(Set(friends.map(\.id) + [userId]))
+        let freshProfilesStartTime = Date()
+        let freshRows: [SocialActorProfileRow]
+        if actorIds.isEmpty {
+            freshRows = []
+        } else {
+            let response: PostgrestResponse<[SocialActorProfileRow]> = try await supabase.client
+                .from("profiles")
+                .select(SocialActorProfileRow.selectColumns)
+                .in("id", values: actorIds)
+                .execute()
+            freshRows = response.value
+        }
+
+        let freshProfiles = freshRows.map(\.profile)
+        let staleAvatarProfiles = freshProfiles.filter { freshProfile in
+            let seededAvatar = profilesById[freshProfile.id]?.avatarUrl?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let freshAvatar = freshProfile.avatarUrl?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return seededAvatar != nil && seededAvatar != freshAvatar
+        }
+        let staleUsernameProfiles = freshProfiles.filter { freshProfile in
+            let seededUsername = profilesById[freshProfile.id]?.username.trimmingCharacters(in: .whitespacesAndNewlines)
+            let freshUsername = freshProfile.username.trimmingCharacters(in: .whitespacesAndNewlines)
+            return seededUsername != nil && seededUsername != freshUsername
+        }
+        for freshProfile in freshProfiles {
+            let source = profilesById[freshProfile.id] == nil ? "profile_query" : "profile_query_refreshed"
+            profilesById[freshProfile.id] = freshProfile
+            profileSources[freshProfile.id] = source
+        }
+
+        SocialFeedDebug.log(
+            "service.profile_lookup.fresh_profiles.end id=\(requestId) actors=\(actorIds.count) rows=\(freshProfiles.count) " +
+            "stale_avatar_profiles=\(staleAvatarProfiles.count) stale_username_profiles=\(staleUsernameProfiles.count) " +
+            "duration=\(SocialFeedDebug.duration(since: freshProfilesStartTime))"
+        )
+        if !staleAvatarProfiles.isEmpty {
+            let stalePreview = staleAvatarProfiles.prefix(6).map { freshProfile in
+                let seededAvatar = logField(friends.first(where: { $0.id == freshProfile.id })?.avatarUrl)
+                return "\(freshProfile.id.uuidString.prefix(8)):\(logField(freshProfile.username)):seed=\(seededAvatar):fresh=\(logField(freshProfile.avatarUrl))"
+            }.joined(separator: ",")
+            SocialFeedDebug.log("service.profile_lookup.fresh_profiles.stale_avatar_preview id=\(requestId) values=[\(stalePreview)]")
+        }
+        let freshPreview = freshProfiles.prefix(6).map { profile in
+            "\(profile.id.uuidString.prefix(8)):\(logField(profile.username)):\(logField(profile.avatarUrl))"
+        }.joined(separator: ",")
+        SocialFeedDebug.log("service.profile_lookup.fresh_profiles.preview id=\(requestId) values=[\(freshPreview)]")
+
         let currentUserStartTime = Date()
         if profilesById[userId] == nil {
             if let inMemoryProfile = profileService.inMemoryProfile(userId: userId) {
