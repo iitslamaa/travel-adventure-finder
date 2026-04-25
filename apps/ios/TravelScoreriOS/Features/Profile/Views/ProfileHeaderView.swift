@@ -319,6 +319,24 @@ struct ProfileHeaderView: View {
                 .stroke(.white.opacity(0.8), lineWidth: 3)
         )
         .shadow(radius: 6)
+        .onAppear {
+            logAvatarSelection(reason: "appear")
+        }
+        .onChange(of: profile?.avatarUrl) { _, _ in
+            logAvatarSelection(reason: "avatar_url_changed")
+        }
+    }
+
+    private func logAvatarSelection(reason: String) {
+        SocialFeedDebug.log(
+            "profile.header.avatar.selection reason=\(reason) user=\(profile?.id.uuidString ?? "nil") " +
+            "username=\(logField(username.isEmpty ? profile?.username : username)) avatar=\(logField(profile?.avatarUrl))"
+        )
+    }
+
+    private func logField(_ value: String?) -> String {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "nil" : trimmed
     }
 
     private func buttonLabel(for state: RelationshipState) -> String {

@@ -362,7 +362,7 @@ struct ProfileSettingsView: View {
                             }
                         }
                     }
-                    .navigationTitle("Default currency")
+                    .navigationTitle(String(localized: "profile.settings.default_currency"))
                     .navigationBarTitleDisplayMode(.inline)
                 }
                 .presentationDetents([.large])
@@ -594,7 +594,7 @@ struct SettingsScrollContent: View {
                                 "",
                                 text: $firstName,
                                 prompt:
-                                    (Text("First name")
+                                    (Text("profile.settings.first_name")
                                         .foregroundStyle(.secondary)
                                      +
                                      Text(" *")
@@ -613,7 +613,7 @@ struct SettingsScrollContent: View {
                             TextField(
                                 "",
                                 text: $lastName,
-                                prompt: Text("Last name")
+                                prompt: Text("profile.settings.last_name")
                                     .foregroundStyle(.secondary)
                             )
                             .font(.system(size: 16))

@@ -153,6 +153,7 @@ struct SocialView: View {
                 icon: "person.2.fill",
                 title: String(localized: "friends.title")
             ) {
+                SocialFeedDebug.log("view.action.friends.tap user=\(userId.uuidString)")
                 socialNav.push(.friends(userId))
             }
 
@@ -160,6 +161,7 @@ struct SocialView: View {
                 icon: "person.crop.circle.badge.plus",
                 title: localizedString("social.requests.short", defaultValue: "Requests")
             ) {
+                SocialFeedDebug.log("view.action.friend_requests.tap user=\(userId.uuidString)")
                 socialNav.push(.friendRequests)
             }
 
@@ -167,6 +169,7 @@ struct SocialView: View {
                 icon: "person.crop.circle",
                 title: String(localized: "profile.title")
             ) {
+                SocialFeedDebug.log("view.action.own_profile.tap user=\(userId.uuidString)")
                 socialNav.push(.profile(userId))
             }
         }
@@ -207,7 +210,18 @@ struct SocialView: View {
 
     private func activityRow(for event: SocialActivityEvent) -> some View {
         Button {
+            SocialFeedDebug.log(
+                "view.activity.row.tap event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString) " +
+                "username=\(logField(event.actorProfile?.username)) avatar=\(logField(event.actorProfile?.avatarUrl))"
+            )
+            socialNav.showProfileLoadingScreen(for: event.actorUserId, reason: "activity_row_tap")
+            SocialFeedDebug.log(
+                "view.activity.row.push.start event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString)"
+            )
             socialNav.push(.profile(event.actorUserId))
+            SocialFeedDebug.log(
+                "view.activity.row.push.end event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString)"
+            )
         } label: {
             HStack(spacing: 12) {
                 avatarView(for: event.actorProfile)
@@ -234,6 +248,12 @@ struct SocialView: View {
         .padding(.horizontal, 4)
         .padding(.vertical, 10)
         .contentShape(Rectangle())
+        .onAppear {
+            SocialFeedDebug.log(
+                "view.activity.row.appear event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString) " +
+                "username=\(logField(event.actorProfile?.username)) avatar=\(logField(event.actorProfile?.avatarUrl))"
+            )
+        }
     }
 
     private func avatarView(for profile: Profile?) -> some View {
@@ -264,6 +284,11 @@ struct SocialView: View {
         }
         .frame(width: 44, height: 44)
         .clipShape(Circle())
+    }
+
+    private func logField(_ value: String?) -> String {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "nil" : trimmed
     }
 
     private func activityText(for event: SocialActivityEvent) -> String {

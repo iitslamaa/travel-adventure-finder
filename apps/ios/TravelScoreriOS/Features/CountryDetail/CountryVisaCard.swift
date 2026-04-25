@@ -61,11 +61,11 @@ struct CountryVisaCard: View {
                         .controlSize(.small)
                 }
 
-                Text("Matching visa guidance to your passport...")
+                Text("country_detail.visa.loading.title")
                     .font(.subheadline)
                     .fontWeight(.semibold)
 
-                Text("We are loading your saved passport details so this advice is accurate the first time it appears.")
+                Text("country_detail.visa.loading.subtitle")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -153,11 +153,11 @@ struct CountryVisaCard: View {
                                 .padding(.top, 2)
 
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Using a U.S. passport for now")
+                                Text("country_detail.visa.passport_setup.using_us")
                                     .font(.system(size: 14))
                                     .foregroundStyle(.black)
 
-                                Text("Add your passports in Profile Settings for more accurate visa guidance.")
+                                Text("country_detail.visa.passport_setup.subtitle")
                                     .font(.system(size: 13))
                                     .foregroundStyle(.black.opacity(0.68))
                                     .fixedSize(horizontal: false, vertical: true)

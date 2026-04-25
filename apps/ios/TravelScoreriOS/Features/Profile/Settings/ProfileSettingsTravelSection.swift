@@ -73,7 +73,7 @@ struct ProfileSettingsTravelSection: View {
                     showDefaultCurrencyPicker = true
                 } label: {
                     HStack(spacing: 12) {
-                        Text("Default currency")
+                        Text("profile.settings.default_currency")
                             .foregroundStyle(.primary)
 
                         Spacer()

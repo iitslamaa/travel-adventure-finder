@@ -20,7 +20,7 @@ struct ProfileSettingsAccountSection: View {
                 "",
                 text: $firstName,
                 prompt:
-                    (Text("First name")
+                    (Text("profile.settings.first_name")
                         .foregroundStyle(.secondary)
                      +
                      Text(" *")
@@ -35,7 +35,7 @@ struct ProfileSettingsAccountSection: View {
             TextField(
                 "",
                 text: $lastName,
-                prompt: Text("Last name")
+                prompt: Text("profile.settings.last_name")
                     .foregroundStyle(.secondary)
             )
             .padding(12)

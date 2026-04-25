@@ -108,7 +108,8 @@ final class FriendService {
 
     func fetchFriends(for userId: UUID) async throws -> [Profile] {
         if let cachedFriends = Self.friendsCache[userId] {
-            FriendServiceDebugLog.message("Friends cache hit user=\(userId.uuidString) count=\(cachedFriends.count)")
+            let preview = Self.profilePreview(cachedFriends)
+            FriendServiceDebugLog.message("Friends cache hit user=\(userId.uuidString) count=\(cachedFriends.count) preview=[\(preview)]")
             return cachedFriends
         }
 
@@ -216,6 +217,11 @@ final class FriendService {
 
     func cachedIncomingRequestCount(for userId: UUID) -> Int? {
         Self.incomingRequestCountCache[userId]
+    }
+
+    @discardableResult
+    func refreshCachedProfile(_ profile: Profile) -> Int {
+        Self.refreshCachedProfile(profile)
     }
 
     func isFriend(currentUserId: UUID, otherUserId: UUID) async throws -> Bool {
@@ -560,10 +566,102 @@ final class FriendService {
 
     private static func invalidateFriendCaches(for userIds: [UUID]) {
         for userId in userIds {
+            let cachedCount = friendsCache[userId]?.count ?? 0
+            FriendServiceDebugLog.message("Friends cache invalidated user=\(userId.uuidString) cached_count=\(cachedCount)")
             friendsCache[userId] = nil
             inFlightFriendFetches[userId]?.cancel()
             inFlightFriendFetches[userId] = nil
         }
+    }
+
+    @discardableResult
+    private static func refreshCachedProfile(_ profile: Profile) -> Int {
+        var changedEntries = 0
+        var matchedEntries = 0
+
+        for (cacheOwnerId, profiles) in friendsCache {
+            var updatedProfiles = profiles
+            var didReplace = false
+
+            for index in updatedProfiles.indices where updatedProfiles[index].id == profile.id {
+                let previous = updatedProfiles[index]
+                updatedProfiles[index] = profile
+                didReplace = true
+                matchedEntries += 1
+
+                if cachedProfileIdentityChanged(from: previous, to: profile) {
+                    changedEntries += 1
+                    FriendServiceDebugLog.message(
+                        "Friends cache profile changed owner=\(cacheOwnerId.uuidString) profile=\(profile.id.uuidString) " +
+                        "previous_username=\(logField(previous.username)) next_username=\(logField(profile.username)) " +
+                        "previous_avatar=\(logField(previous.avatarUrl)) next_avatar=\(logField(profile.avatarUrl))"
+                    )
+                }
+            }
+
+            if didReplace {
+                friendsCache[cacheOwnerId] = updatedProfiles
+            }
+        }
+
+        for (cacheOwnerId, profiles) in incomingRequestsCache {
+            var updatedProfiles = profiles
+            var didReplace = false
+
+            for index in updatedProfiles.indices where updatedProfiles[index].id == profile.id {
+                let previous = updatedProfiles[index]
+                updatedProfiles[index] = profile
+                didReplace = true
+                matchedEntries += 1
+
+                if cachedProfileIdentityChanged(from: previous, to: profile) {
+                    changedEntries += 1
+                    FriendServiceDebugLog.message(
+                        "Incoming request cache profile changed owner=\(cacheOwnerId.uuidString) profile=\(profile.id.uuidString) " +
+                        "previous_username=\(logField(previous.username)) next_username=\(logField(profile.username)) " +
+                        "previous_avatar=\(logField(previous.avatarUrl)) next_avatar=\(logField(profile.avatarUrl))"
+                    )
+                }
+            }
+
+            if didReplace {
+                incomingRequestsCache[cacheOwnerId] = updatedProfiles
+            }
+        }
+
+        if matchedEntries == 0 {
+            FriendServiceDebugLog.message(
+                "Cached profile refresh skipped profile=\(profile.id.uuidString) reason=no_cached_entries avatar=\(logField(profile.avatarUrl))"
+            )
+        } else if changedEntries == 0 {
+            FriendServiceDebugLog.message(
+                "Cached profile refresh unchanged profile=\(profile.id.uuidString) matched_entries=\(matchedEntries) avatar=\(logField(profile.avatarUrl))"
+            )
+        }
+
+        return changedEntries
+    }
+
+    private static func cachedProfileIdentityChanged(from previous: Profile, to next: Profile) -> Bool {
+        previous.username != next.username ||
+            previous.fullName != next.fullName ||
+            previous.firstName != next.firstName ||
+            previous.lastName != next.lastName ||
+            previous.avatarUrl != next.avatarUrl ||
+            previous.friendCount != next.friendCount
+    }
+
+    private static func profilePreview(_ profiles: [Profile]) -> String {
+        profiles.prefix(6)
+            .map { profile in
+                "\(profile.id.uuidString.prefix(8)):\(logField(profile.username)):\(logField(profile.avatarUrl))"
+            }
+            .joined(separator: ",")
+    }
+
+    private static func logField(_ value: String?) -> String {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "nil" : trimmed
     }
 
     private static func invalidateRequestCaches(for userIds: [UUID]) {

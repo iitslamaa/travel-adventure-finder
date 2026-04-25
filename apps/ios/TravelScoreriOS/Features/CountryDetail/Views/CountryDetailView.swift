@@ -17,10 +17,48 @@ import Translation
 #endif
 
 private enum CountryDetailDebugLog {
-    nonisolated static func message(_ text: String) {}
+    nonisolated static func message(_ text: String) {
+        print("[CountryDetail][\(timestamp())] \(text)")
+    }
 
     nonisolated static func durationText(since startTime: TimeInterval) -> String {
         String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)
+    }
+
+    nonisolated static func languageSummary(_ languages: [CountryLanguageCoverage]) -> String {
+        languages
+            .prefix(8)
+            .map { "\($0.code):\($0.type):\(String(format: "%.2f", $0.coverage))" }
+            .joined(separator: ",")
+    }
+
+    nonisolated static func profileLanguageSummary(_ languages: [Profile.LanguageJSON]) -> String {
+        languages
+            .prefix(8)
+            .map { "\($0.code):\($0.proficiency)" }
+            .joined(separator: ",")
+    }
+
+    nonisolated private static func timestamp() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        return formatter.string(from: Date())
+    }
+}
+
+private enum CountryDetailLocalized {
+    nonisolated static func string(_ key: String, fallback: String) -> String {
+        let localized = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        guard localized != key else {
+            CountryDetailDebugLog.message("localization.missing key=\(key) fallback=\(fallback)")
+            return fallback
+        }
+
+        return localized
+    }
+
+    nonisolated static func isMissing(_ key: String) -> Bool {
+        Bundle.main.localizedString(forKey: key, value: nil, table: nil) == key
     }
 }
 
@@ -38,6 +76,7 @@ struct CountryDetailView: View {
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
     @State private var countryRefreshTask: Task<Void, Never>?
+    @State private var isLoadingLanguageCompatibility: Bool = false
 
     private var passportFallbackCountryCode: String {
         profileVM.effectivePassportCountryCode?.nilIfBlank ?? "US"
@@ -51,14 +90,59 @@ struct CountryDetailView: View {
         country.applyingOverallScore(using: weightsStore.weights, selectedMonth: weightsStore.selectedMonth)
     }
 
-    private var languageCompatibility: CountryLanguageCompatibilityResult? {
-        guard
-            let profile = profileVM.profile,
-            let countryLanguageProfile
-        else {
-            return nil
+    private var shouldShowLanguageCompatibilityLoading: Bool {
+        sessionManager.isAuthenticated
+            && (
+                (
+                    profileVM.profile == nil
+                    && (!profileVM.hasLoadedCoreData || profileVM.isLoading || isLoadingLanguageCompatibility)
+                )
+                || (isLoadingLanguageCompatibility && countryLanguageProfile == nil)
+            )
+    }
+
+    private var languageCompatibility: CountryLanguageCompatibilityResult {
+        guard let profile = profileVM.profile else {
+            CountryDetailDebugLog.message(
+                "language.compatibility.fallback reason=profile_missing iso2=\(country.iso2.uppercased()) country=\(country.localizedDisplayName) session_user=\(sessionManager.userId?.uuidString ?? "nil") profile_user=\(profileVM.userId.uuidString) authenticated=\(sessionManager.isAuthenticated) country_profile_loaded=\(countryLanguageProfile != nil) profile_languages=0 localization_headline_missing=\(CountryDetailLocalized.isMissing("country_detail.language.profile_missing.headline"))"
+            )
+            return CountryLanguageCompatibilityResult(
+                score: 0,
+                headline: CountryDetailLocalized.string(
+                    "country_detail.language.profile_missing.headline",
+                    fallback: "Add your languages to compare"
+                ),
+                detail: CountryDetailLocalized.string(
+                    "country_detail.language.profile_missing.detail",
+                    fallback: "Set up the languages you speak in your profile to see how easy communication may feel here."
+                ),
+                primaryLanguageCode: "",
+                evidence: nil
+            )
         }
 
+        guard let countryLanguageProfile else {
+            CountryDetailDebugLog.message(
+                "language.compatibility.fallback reason=country_profile_missing iso2=\(country.iso2.uppercased()) country=\(country.localizedDisplayName) session_user=\(sessionManager.userId?.uuidString ?? "nil") profile_user=\(profileVM.userId.uuidString) authenticated=\(sessionManager.isAuthenticated) profile_languages=\(profile.languages.count) profile_language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profile.languages))] localization_headline_missing=\(CountryDetailLocalized.isMissing("country_detail.language.data_missing.headline"))"
+            )
+            return CountryLanguageCompatibilityResult(
+                score: 0,
+                headline: CountryDetailLocalized.string(
+                    "country_detail.language.data_missing.headline",
+                    fallback: "Language data coming soon"
+                ),
+                detail: CountryDetailLocalized.string(
+                    "country_detail.language.data_missing.detail",
+                    fallback: "We do not have language coverage data for this country yet, so this score is not included in your match."
+                ),
+                primaryLanguageCode: "",
+                evidence: nil
+            )
+        }
+
+        CountryDetailDebugLog.message(
+            "language.compatibility.evaluate iso2=\(country.iso2.uppercased()) country=\(country.localizedDisplayName) profile_languages=\(profile.languages.count) profile_language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profile.languages))] country_languages=\(countryLanguageProfile.languages.count) country_language_preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile.languages))] source=\(countryLanguageProfile.source ?? "nil") source_version=\(countryLanguageProfile.sourceVersion ?? "nil") evidence=\(countryLanguageProfile.evidence.count)"
+        )
         return CountryLanguageCompatibilityScorer.evaluate(
             userLanguages: profile.languages,
             countryProfile: countryLanguageProfile
@@ -287,10 +371,15 @@ struct CountryDetailView: View {
                             }
                         }
 
-                        if let languageCompatibility {
-                            scrapbookSection {
+                        scrapbookSection {
+                            if shouldShowLanguageCompatibilityLoading {
+                                CountryLanguageCompatibilityLoadingCard(
+                                    weightPercentage: weightsStore.languagePercentage
+                                )
+                            } else {
                                 CountryLanguageCompatibilityCard(
                                     result: languageCompatibility,
+                                    countryLanguages: countryLanguageProfile?.languages ?? [],
                                     weightPercentage: weightsStore.languagePercentage
                                 )
                             }
@@ -350,8 +439,24 @@ struct CountryDetailView: View {
             let iso2 = country.iso2.uppercased()
             let shouldResolveVisaContext = shouldResolveVisaContextBeforeDisplay
             isResolvingVisaContext = shouldResolveVisaContext
+            isLoadingLanguageCompatibility = true
+            defer {
+                isLoadingLanguageCompatibility = false
+            }
+
+            if countryLanguageProfile?.countryISO2.uppercased() != iso2 {
+                countryLanguageProfile = nil
+                CountryDetailDebugLog.message(
+                    "screen.language_profile.cleared iso2=\(iso2) reason=different_or_empty_previous"
+                )
+            } else {
+                CountryDetailDebugLog.message(
+                    "screen.language_profile.preserved iso2=\(iso2) language_count=\(countryLanguageProfile?.languages.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile?.languages ?? []))]"
+                )
+            }
+
             CountryDetailDebugLog.message(
-                "Screen load started iso2=\(iso2) shouldResolveVisaContext=\(shouldResolveVisaContext) authenticated=\(sessionManager.isAuthenticated)"
+                "screen.load.start iso2=\(iso2) country=\(country.localizedDisplayName) raw_name=\(country.name) id=\(country.id) shouldResolveVisaContext=\(shouldResolveVisaContext) authenticated=\(sessionManager.isAuthenticated) session_user=\(sessionManager.userId?.uuidString ?? "nil") profile_user=\(profileVM.userId.uuidString) profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) passport_context_loaded=\(profileVM.hasLoadedPassportContext)"
             )
 
             engagementVM.load(
@@ -359,14 +464,22 @@ struct CountryDetailView: View {
                 currentUserId: sessionManager.userId,
                 isAuthenticated: sessionManager.isAuthenticated
             )
-            async let languageProfileLoad: CountryLanguageProfile? = try? await CountryLanguageProfileStore.shared.profile(for: country.iso2)
+            async let languageProfileLoad: CountryLanguageProfile? = loadLanguageProfileForScreen(iso2: iso2, loadStart: loadStart)
+            async let profileLoad: Void = loadCurrentUserProfileForLanguageCard(loadStart: loadStart)
 
             countryLanguageProfile = await languageProfileLoad
+            CountryDetailDebugLog.message(
+                "screen.language_profile.assigned iso2=\(iso2) loaded=\(countryLanguageProfile != nil) language_count=\(countryLanguageProfile?.languages.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile?.languages ?? []))] total_duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            await profileLoad
 
             if shouldResolveVisaContext {
+                CountryDetailDebugLog.message(
+                    "screen.passport_context.start iso2=\(iso2) profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil")"
+                )
                 await profileVM.loadPassportContextIfNeeded()
                 CountryDetailDebugLog.message(
-                    "Passport context load finished iso2=\(iso2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                    "screen.passport_context.finish iso2=\(iso2) passports=\(profileVM.passportNationalities.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
                 )
             }
 
@@ -376,10 +489,28 @@ struct CountryDetailView: View {
             isResolvingVisaContext = false
 
             CountryDetailDebugLog.message(
-                "Screen load finished iso2=\(iso2) languageProfileLoaded=\(countryLanguageProfile != nil) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                "screen.load.finish iso2=\(iso2) languageProfileLoaded=\(countryLanguageProfile != nil) profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+        }
+        .onAppear {
+            CountryDetailDebugLog.message(
+                "screen.appear iso2=\(country.iso2.uppercased()) country=\(country.localizedDisplayName) profile_loaded=\(profileVM.profile != nil) profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil") language_profile_loaded=\(countryLanguageProfile != nil)"
+            )
+        }
+        .onReceive(profileVM.$profile) { profile in
+            CountryDetailDebugLog.message(
+                "profile.publisher iso2=\(country.iso2.uppercased()) profile_loaded=\(profile != nil) profile_user=\(profileVM.userId.uuidString) language_count=\(profile?.languages.count ?? 0) language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profile?.languages ?? []))]"
+            )
+        }
+        .onChange(of: countryLanguageProfile?.countryISO2) { _, newISO2 in
+            CountryDetailDebugLog.message(
+                "language_profile.state_change current_iso2=\(country.iso2.uppercased()) profile_iso2=\(newISO2 ?? "nil") language_count=\(countryLanguageProfile?.languages.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile?.languages ?? []))]"
             )
         }
         .onDisappear {
+            CountryDetailDebugLog.message(
+                "screen.disappear iso2=\(country.iso2.uppercased()) language_profile_loaded=\(countryLanguageProfile != nil) profile_loaded=\(profileVM.profile != nil)"
+            )
             countryRefreshTask?.cancel()
             engagementVM.cancel()
         }
@@ -402,7 +533,52 @@ struct CountryDetailView: View {
             }
         }
     }
-    
+
+    private func loadLanguageProfileForScreen(iso2: String, loadStart: TimeInterval) async -> CountryLanguageProfile? {
+        let languageStart = Date().timeIntervalSinceReferenceDate
+        CountryDetailDebugLog.message(
+            "screen.language_profile.load.start iso2=\(iso2) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+
+        do {
+            let profile = try await CountryLanguageProfileStore.shared.profile(for: iso2)
+            CountryDetailDebugLog.message(
+                "screen.language_profile.load.finish iso2=\(iso2) loaded=\(profile != nil) language_count=\(profile?.languages.count ?? 0) source=\(profile?.source ?? "nil") source_version=\(profile?.sourceVersion ?? "nil") evidence=\(profile?.evidence.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(profile?.languages ?? []))] duration=\(CountryDetailDebugLog.durationText(since: languageStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            return profile
+        } catch {
+            CountryDetailDebugLog.message(
+                "screen.language_profile.load.error iso2=\(iso2) error_type=\(String(describing: type(of: error))) error=\(error.localizedDescription) duration=\(CountryDetailDebugLog.durationText(since: languageStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            return nil
+        }
+    }
+
+    private func loadCurrentUserProfileForLanguageCard(loadStart: TimeInterval) async {
+        guard sessionManager.isAuthenticated else {
+            CountryDetailDebugLog.message(
+                "screen.profile.load.skipped reason=unauthenticated total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            return
+        }
+
+        guard profileVM.profile == nil || profileVM.profile?.id != profileVM.userId else {
+            CountryDetailDebugLog.message(
+                "screen.profile.load.skipped reason=already_available profile_languages=\(profileVM.profile?.languages.count ?? 0) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            return
+        }
+
+        let profileStart = Date().timeIntervalSinceReferenceDate
+        CountryDetailDebugLog.message(
+            "screen.profile.load.start profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil") profile_loaded=\(profileVM.profile != nil) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+        await profileVM.loadIfNeeded()
+        CountryDetailDebugLog.message(
+            "screen.profile.load.finish profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profileVM.profile?.languages ?? []))] duration=\(CountryDetailDebugLog.durationText(since: profileStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+    }
+
     private func scrapbookSection<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
             .padding()
@@ -1053,6 +1229,7 @@ private struct CountryLanguageProfile: Decodable {
     let notes: String?
     let evidence: [CountryLanguageEvidence]
     let languages: [CountryLanguageCoverage]
+    let baselineSource: String?
 
     enum CodingKeys: String, CodingKey {
         case countryISO2 = "country_iso2"
@@ -1061,6 +1238,24 @@ private struct CountryLanguageProfile: Decodable {
         case notes
         case evidence
         case languages
+        case baselineSource = "baseline_source"
+    }
+
+    var sourceEvidence: CountryLanguageEvidence? {
+        let normalizedSource = source?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let normalizedBaselineSource = baselineSource?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+        if normalizedSource == "cldr_territory_language_info"
+            || normalizedBaselineSource == "cldr_territory_language_info" {
+            return CountryLanguageEvidence(
+                kind: "baseline_source",
+                title: "CLDR territory language data",
+                url: URL(string: "https://github.com/unicode-org/cldr/blob/main/common/supplemental/supplementalData.xml"),
+                note: "Baseline country language data comes from Unicode CLDR territoryInfo."
+            )
+        }
+
+        return nil
     }
 }
 
@@ -1085,23 +1280,19 @@ private struct CountryLanguageCompatibilityResult {
     let evidence: CountryLanguageEvidence?
 
     var evidenceLinkLabel: String {
-        guard let evidence else { return String(localized: "country_detail.language.why_score") }
+        guard let evidence else { return "Source" }
 
-        if let title = evidence.title, title.localizedCaseInsensitiveContains("glottolog") {
-            return String(localized: "country_detail.language.source_glottolog")
-        }
-
-        if let title = evidence.title, title.localizedCaseInsensitiveContains("britannica") {
-            return String(localized: "country_detail.language.source_britannica")
+        if let title = evidence.title?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
+            return "Source: \(title)"
         }
 
         if let host = evidence.url?.host(percentEncoded: false)?
             .replacingOccurrences(of: "www.", with: ""),
            !host.isEmpty {
-            return String(localized: "country_detail.language.why_score")
+            return "Source: \(host)"
         }
 
-        return String(localized: "country_detail.language.why_score")
+        return "Source"
     }
 }
 
@@ -1124,51 +1315,72 @@ private actor CountryLanguageProfileStore {
 
         if missingISO2.contains(normalizedISO2) {
             CountryDetailDebugLog.message(
-                "Language profile known-missing iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                "language_profile.store.known_missing iso2=\(normalizedISO2) missing_cache_count=\(missingISO2.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
             )
             return nil
         }
 
+        CountryDetailDebugLog.message(
+            "language_profile.store.remote.start iso2=\(normalizedISO2) table=country_language_profiles select=country_iso2,source,source_version,notes,evidence,languages,baseline_source cache_count=\(cache.count) missing_cache_count=\(missingISO2.count)"
+        )
         let response: PostgrestResponse<[CountryLanguageProfile]> = try await SupabaseManager.shared.client
             .from("country_language_profiles")
-            .select("country_iso2,source,source_version,notes,evidence,languages")
+            .select("country_iso2,source,source_version,notes,evidence,languages,baseline_source")
             .eq("country_iso2", value: normalizedISO2)
             .limit(1)
             .execute()
 
+        CountryDetailDebugLog.message(
+            "language_profile.store.remote.response iso2=\(normalizedISO2) rows=\(response.value.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+
         guard let profile = response.value.first else {
             missingISO2.insert(normalizedISO2)
             CountryDetailDebugLog.message(
-                "Language profile missing from remote iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                "language_profile.store.remote.missing iso2=\(normalizedISO2) inserted_missing_cache=true missing_cache_count=\(missingISO2.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
             )
             return nil
         }
 
         cache[normalizedISO2] = profile
         CountryDetailDebugLog.message(
-            "Language profile fetched iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            "language_profile.store.remote.success iso2=\(normalizedISO2) profile_iso2=\(profile.countryISO2) source=\(profile.source ?? "nil") source_version=\(profile.sourceVersion ?? "nil") languages=\(profile.languages.count) evidence=\(profile.evidence.count) preview=[\(CountryDetailDebugLog.languageSummary(profile.languages))] notes_present=\((profile.notes?.isEmpty == false)) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
         )
         return profile
     }
 
     func refreshProfile(for iso2: String) async throws -> CountryLanguageProfile? {
+        let refreshStart = Date().timeIntervalSinceReferenceDate
         let normalizedISO2 = iso2.uppercased()
 
+        CountryDetailDebugLog.message(
+            "language_profile.store.refresh.start iso2=\(normalizedISO2)"
+        )
         let response: PostgrestResponse<[CountryLanguageProfile]> = try await SupabaseManager.shared.client
             .from("country_language_profiles")
-            .select("country_iso2,source,source_version,notes,evidence,languages")
+            .select("country_iso2,source,source_version,notes,evidence,languages,baseline_source")
             .eq("country_iso2", value: normalizedISO2)
             .limit(1)
             .execute()
 
+        CountryDetailDebugLog.message(
+            "language_profile.store.refresh.response iso2=\(normalizedISO2) rows=\(response.value.count) duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
+        )
+
         guard let profile = response.value.first else {
             cache.removeValue(forKey: normalizedISO2)
             missingISO2.insert(normalizedISO2)
+            CountryDetailDebugLog.message(
+                "language_profile.store.refresh.missing iso2=\(normalizedISO2) cache_removed=true missing_cache_count=\(missingISO2.count)"
+            )
             return nil
         }
 
         missingISO2.remove(normalizedISO2)
         cache[normalizedISO2] = profile
+        CountryDetailDebugLog.message(
+            "language_profile.store.refresh.success iso2=\(normalizedISO2) languages=\(profile.languages.count) preview=[\(CountryDetailDebugLog.languageSummary(profile.languages))] duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
+        )
         return profile
     }
 }
@@ -1177,11 +1389,19 @@ private enum CountryLanguageCompatibilityScorer {
     static func evaluate(
         userLanguages: [Profile.LanguageJSON],
         countryProfile: CountryLanguageProfile
-    ) -> CountryLanguageCompatibilityResult? {
+    ) -> CountryLanguageCompatibilityResult {
         let evidence = countryProfile.evidence.first(where: { $0.url != nil && $0.kind?.lowercased() != "inference" })
             ?? countryProfile.evidence.first(where: { $0.url != nil })
+            ?? countryProfile.sourceEvidence
+
+        CountryDetailDebugLog.message(
+            "language.scorer.start country_iso2=\(countryProfile.countryISO2) user_languages=\(userLanguages.count) country_languages=\(countryProfile.languages.count) user_preview=[\(CountryDetailDebugLog.profileLanguageSummary(userLanguages))] country_preview=[\(CountryDetailDebugLog.languageSummary(countryProfile.languages))] evidence_selected=\(evidence?.title ?? "nil")"
+        )
 
         if countryProfile.languages.isEmpty {
+            CountryDetailDebugLog.message(
+                "language.scorer.empty_country_languages country_iso2=\(countryProfile.countryISO2)"
+            )
             return CountryLanguageCompatibilityResult(
                 score: 0,
                 headline: String(localized: "country_detail.language.empty.headline"),
@@ -1197,6 +1417,9 @@ private enum CountryLanguageCompatibilityScorer {
                 proficiency: LanguageProficiency(storageValue: language.proficiency)
             )
         }
+        CountryDetailDebugLog.message(
+            "language.scorer.normalized_user country_iso2=\(countryProfile.countryISO2) values=[\(normalizedUserLanguages.map { "\($0.codes.sorted().joined(separator: "/")):\($0.proficiency.storageValue)" }.joined(separator: ","))]"
+        )
 
         let exactMatches = countryProfile.languages.compactMap { countryLanguage -> ExactLanguageMatch? in
             let normalizedCodes = LanguageRepository.shared.compatibilityLanguageCodes(for: countryLanguage.code)
@@ -1225,6 +1448,9 @@ private enum CountryLanguageCompatibilityScorer {
 
             return lhs.coverage < rhs.coverage
         }) else {
+            CountryDetailDebugLog.message(
+                "language.scorer.no_exact_match country_iso2=\(countryProfile.countryISO2) exact_matches=0 user_languages=\(userLanguages.count) country_languages=\(countryProfile.languages.count)"
+            )
             return CountryLanguageCompatibilityResult(
                 score: 0,
                 headline: String(localized: "country_detail.language.barrier"),
@@ -1237,6 +1463,9 @@ private enum CountryLanguageCompatibilityScorer {
         let score = normalizedScore(for: strongestMatch.compatibility)
         let headline = headline(for: strongestMatch, score: score)
         let detail = detailText(for: strongestMatch, allMatches: exactMatches)
+        CountryDetailDebugLog.message(
+            "language.scorer.result country_iso2=\(countryProfile.countryISO2) score=\(score) strongest_code=\(strongestMatch.code) type=\(strongestMatch.type) coverage=\(String(format: "%.2f", strongestMatch.coverage)) proficiency=\(strongestMatch.proficiency.storageValue) compatibility=\(String(format: "%.2f", strongestMatch.compatibility)) exact_matches=\(exactMatches.count)"
+        )
 
         return CountryLanguageCompatibilityResult(
             score: score,
@@ -1317,12 +1546,31 @@ private enum CountryLanguageCompatibilityScorer {
 
 private struct CountryLanguageCompatibilityCard: View {
     let result: CountryLanguageCompatibilityResult
+    let countryLanguages: [CountryLanguageCoverage]
     let weightPercentage: Int
+
+    private var displayedCountryLanguages: [CountryLanguageCoverage] {
+        countryLanguages
+            .sorted {
+                if $0.coverage != $1.coverage {
+                    return $0.coverage > $1.coverage
+                }
+
+                return LanguageRepository.shared.localizedDisplayName(for: $0.code)
+                    < LanguageRepository.shared.localizedDisplayName(for: $1.code)
+            }
+            .prefix(6)
+            .map { $0 }
+    }
+
+    private var hiddenCountryLanguageCount: Int {
+        max(0, countryLanguages.count - displayedCountryLanguages.count)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("country_detail.language.title")
+                Text("Language")
                     .font(.headline)
 
                 Spacer()
@@ -1366,6 +1614,45 @@ private struct CountryLanguageCompatibilityCard: View {
                     .font(.footnote.weight(.semibold))
             }
 
+            if !displayedCountryLanguages.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Divider()
+                        .padding(.vertical, 2)
+
+                    Text(
+                        CountryDetailLocalized.string(
+                            "country_detail.language.spoken_title",
+                            fallback: "Languages spoken here"
+                        )
+                    )
+                        .font(.subheadline.weight(.semibold))
+
+                    VStack(spacing: 6) {
+                        ForEach(displayedCountryLanguages, id: \.self) { language in
+                            CountryLanguageCoverageRow(language: language)
+                        }
+                    }
+
+                    if hiddenCountryLanguageCount > 0 {
+                        Text(
+                            AppNumberFormatting.localizedDigits(
+                                in: String(
+                                    format: CountryDetailLocalized.string(
+                                        "country_detail.language.spoken_more_format",
+                                        fallback: "+%d more"
+                                    ),
+                                    locale: AppDisplayLocale.current,
+                                    hiddenCountryLanguageCount
+                                )
+                            )
+                        )
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.top, 2)
+            }
+
             Text("country_detail.language.footer")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -1375,6 +1662,148 @@ private struct CountryLanguageCompatibilityCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.countryDetailCardBackground(corner: 14))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .onAppear {
+            CountryDetailDebugLog.message(
+                "language.card.appear score=\(result.score) headline=\(result.headline) detail=\(result.detail ?? "nil") primary=\(result.primaryLanguageCode.isEmpty ? "nil" : result.primaryLanguageCode) evidence=\(result.evidence?.title ?? "nil") spoken_languages=\(countryLanguages.count) spoken_preview=[\(CountryDetailDebugLog.languageSummary(countryLanguages))]"
+            )
+        }
+    }
+}
+
+private struct CountryLanguageCoverageRow: View {
+    let language: CountryLanguageCoverage
+
+    private var languageName: String {
+        LanguageRepository.shared.localizedDisplayName(for: language.code)
+    }
+
+    private var typeLabel: String {
+        switch language.type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "official":
+            return CountryDetailLocalized.string(
+                "country_detail.language.type.official",
+                fallback: "Official"
+            )
+        case "widely_spoken":
+            return CountryDetailLocalized.string(
+                "country_detail.language.type.widely_spoken",
+                fallback: "Widely spoken"
+            )
+        case "regional":
+            return CountryDetailLocalized.string(
+                "country_detail.language.type.regional",
+                fallback: "Regional"
+            )
+        case "minority":
+            return CountryDetailLocalized.string(
+                "country_detail.language.type.minority",
+                fallback: "Minority"
+            )
+        default:
+            return language.type
+                .replacingOccurrences(of: "_", with: " ")
+                .capitalized
+        }
+    }
+
+    private var coverageText: String {
+        let percent = max(0, min(100, Int((language.coverage * 100).rounded())))
+        return AppNumberFormatting.localizedDigits(
+            in: String(
+                format: CountryDetailLocalized.string(
+                    "country_detail.language.coverage_format",
+                    fallback: "%d%%"
+                ),
+                locale: AppDisplayLocale.current,
+                percent
+            )
+        )
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(languageName)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.primary)
+
+                Text(typeLabel)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 8)
+
+            Text(coverageText)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(Color.black.opacity(0.05))
+                )
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.white.opacity(0.46))
+        )
+    }
+}
+
+private struct CountryLanguageCompatibilityLoadingCard: View {
+    let weightPercentage: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Language")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+
+                Spacer()
+
+                Text(AppNumberFormatting.localizedDigits(in: String(format: String(localized: "country_detail.language.your_languages_weight_format"), locale: AppDisplayLocale.current, weightPercentage)))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(spacing: 12) {
+                ProgressView()
+                    .controlSize(.regular)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(
+                        CountryDetailLocalized.string(
+                            "country_detail.language.loading.headline",
+                            fallback: "Loading your language match"
+                        )
+                    )
+                    .font(.subheadline.weight(.semibold))
+
+                    Text(
+                        CountryDetailLocalized.string(
+                            "country_detail.language.loading.detail",
+                            fallback: "Checking your saved languages against this country."
+                        )
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.countryDetailCardBackground(corner: 14))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .onAppear {
+            CountryDetailDebugLog.message(
+                "language.loading_card.appear weight=\(weightPercentage)"
+            )
+        }
     }
 }
 

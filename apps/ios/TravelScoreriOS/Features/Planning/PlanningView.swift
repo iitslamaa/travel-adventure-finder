@@ -2339,27 +2339,27 @@ private enum TripPlannerDeleteChoice: String, Identifiable {
     var title: String {
         switch self {
         case .justMe:
-            return "Delete for me only"
+            return String(localized: "trip_planner.delete.for_me")
         case .everyone:
-            return "Delete for everyone"
+            return String(localized: "trip_planner.delete.for_everyone")
         }
     }
 
     var confirmationTitle: String {
         switch self {
         case .justMe:
-            return "Remove This Trip For You?"
+            return String(localized: "trip_planner.delete.confirm_for_me_title")
         case .everyone:
-            return "Delete This Trip For Everyone?"
+            return String(localized: "trip_planner.delete.confirm_for_everyone_title")
         }
     }
 
     var confirmationMessage: String {
         switch self {
         case .justMe:
-            return "This removes the trip from your planner only. Everyone else keeps it."
+            return String(localized: "trip_planner.delete.confirm_for_me_message")
         case .everyone:
-            return "This deletes the trip for every participant in the group."
+            return String(localized: "trip_planner.delete.confirm_for_everyone_message")
         }
     }
 
@@ -3502,7 +3502,7 @@ struct TripPlannerView: View {
             Text(calendarError ?? "")
         }
         .confirmationDialog(
-            "Delete Trip",
+            String(localized: "trip_planner.delete.title"),
             isPresented: Binding(
                 get: { pendingDeleteTrip != nil && pendingDeleteChoice == nil },
                 set: { newValue in
@@ -3512,22 +3512,22 @@ struct TripPlannerView: View {
                 }
             )
         ) {
-            Button("Delete for me only", role: .destructive) {
+            Button(String(localized: "trip_planner.delete.for_me"), role: .destructive) {
                 pendingDeleteChoice = .justMe
             }
 
-            Button("Delete for everyone", role: .destructive) {
+            Button(String(localized: "trip_planner.delete.for_everyone"), role: .destructive) {
                 pendingDeleteChoice = .everyone
             }
 
-            Button("Cancel", role: .cancel) {
+            Button(String(localized: "common.cancel"), role: .cancel) {
                 pendingDeleteTrip = nil
             }
         } message: {
-            Text("Choose whether to remove this trip only from your planner or from the whole group.")
+            Text("trip_planner.delete.options_message")
         }
         .alert(
-            pendingDeleteChoice?.confirmationTitle ?? "Delete Trip",
+            pendingDeleteChoice?.confirmationTitle ?? String(localized: "trip_planner.delete.title"),
             isPresented: Binding(
                 get: { pendingDeleteChoice != nil },
                 set: { newValue in
@@ -3546,7 +3546,7 @@ struct TripPlannerView: View {
                 pendingDeleteChoice = nil
             }
 
-            Button("Cancel", role: .cancel) {
+            Button(String(localized: "common.cancel"), role: .cancel) {
                 pendingDeleteChoice = nil
             }
         } message: { choice in
@@ -5162,21 +5162,21 @@ private struct TripPlannerDetailView: View {
         .tripPlannerNavigationChrome {
             EmptyView()
         }
-        .confirmationDialog("Delete Trip", isPresented: $showingDeleteOptions) {
-            Button("Delete for me only", role: .destructive) {
+        .confirmationDialog(String(localized: "trip_planner.delete.title"), isPresented: $showingDeleteOptions) {
+            Button(String(localized: "trip_planner.delete.for_me"), role: .destructive) {
                 pendingDeleteChoice = .justMe
             }
 
-            Button("Delete for everyone", role: .destructive) {
+            Button(String(localized: "trip_planner.delete.for_everyone"), role: .destructive) {
                 pendingDeleteChoice = .everyone
             }
 
-            Button("Cancel", role: .cancel) {}
+            Button(String(localized: "common.cancel"), role: .cancel) {}
         } message: {
-            Text("Choose whether to remove this trip only from your planner or from the whole group.")
+            Text("trip_planner.delete.options_message")
         }
         .alert(
-            pendingDeleteChoice?.confirmationTitle ?? "Delete Trip",
+            pendingDeleteChoice?.confirmationTitle ?? String(localized: "trip_planner.delete.title"),
             isPresented: Binding(
                 get: { pendingDeleteChoice != nil },
                 set: { newValue in
@@ -5192,7 +5192,7 @@ private struct TripPlannerDetailView: View {
                 pendingDeleteChoice = nil
             }
 
-            Button("Cancel", role: .cancel) {
+            Button(String(localized: "common.cancel"), role: .cancel) {
                 pendingDeleteChoice = nil
             }
         } message: { choice in
@@ -5997,13 +5997,13 @@ private struct TripPlannerInlineAvailabilityEditor: View {
     @ViewBuilder
     private var suggestedWindowsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Suggested windows")
+            Text("trip_planner.availability.suggested_windows")
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(.black)
 
             if overlapMatches.isEmpty {
                 TripPlannerInfoCard(
-                    text: "Shared dates will highlight in gold once availability overlaps.",
+                    text: String(localized: "trip_planner.availability.shared_dates_hint"),
                     systemImage: "sparkles"
                 )
             } else {
@@ -6026,7 +6026,7 @@ private struct TripPlannerInlineAvailabilityEditor: View {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Availability by traveler")
+                Text("trip_planner.availability.by_traveler")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.black)
 
@@ -6668,12 +6668,12 @@ private struct TripPlannerBestMatchHero: View {
                     .background(Circle().fill(Color.white.opacity(0.78)))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Suggested window")
+                    Text("trip_planner.availability.suggested_window")
                         .font(.system(size: 9, weight: .black, design: .rounded))
                         .textCase(.uppercase)
                         .foregroundStyle(TripPlannerAvailabilityTheme.ink.opacity(0.48))
 
-                    Text(TripPlannerDateFormatter.rangeText(start: overlap.startDate, end: displayEndDate) ?? "Shared window")
+                    Text(TripPlannerDateFormatter.rangeText(start: overlap.startDate, end: displayEndDate) ?? String(localized: "trip_planner.availability.shared_window"))
                         .font(.system(size: 24, weight: .black, design: .rounded))
                         .foregroundStyle(TripPlannerAvailabilityTheme.ink)
                         .lineLimit(2)
@@ -6744,7 +6744,7 @@ private struct TripPlannerAvailabilityEveryoneBubble: View {
                     .frame(width: 9, height: 9)
             }
 
-            Text("Everyone")
+            Text("trip_planner.availability.everyone")
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(TripPlannerAvailabilityTheme.ink)
         }
@@ -6930,12 +6930,12 @@ private struct TripPlannerAvailabilityMatchCard: View {
                 .background(Circle().fill(TripPlannerAvailabilityTheme.gold))
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(TripPlannerDateFormatter.rangeText(start: overlap.startDate, end: displayEndDate) ?? "Shared window")
+                Text(TripPlannerDateFormatter.rangeText(start: overlap.startDate, end: displayEndDate) ?? String(localized: "trip_planner.availability.shared_window"))
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(TripPlannerAvailabilityTheme.ink)
 
                 if overlap.isFullMatch {
-                    Text("Everyone is available")
+                    Text("trip_planner.availability.everyone_available")
                         .font(.system(size: 12))
                         .foregroundStyle(TripPlannerAvailabilityTheme.ink.opacity(0.64))
                 }
@@ -7204,14 +7204,14 @@ private struct TripPlannerCountriesEditorView: View {
                                 if !recommendedCountries.isEmpty {
                                     VStack(alignment: .leading, spacing: 10) {
                                         HStack {
-                                            Text("Recommended for this trip")
+                                            Text("trip_planner.recommendations.title")
                                                 .font(.system(size: 15, weight: .bold))
                                                 .foregroundStyle(.black)
 
                                             Spacer()
 
                                             if recommendedCountries.count > 2 {
-                                                Button(showingAllRecommendations ? "Show less" : "Show more") {
+                                                Button(showingAllRecommendations ? String(localized: "trip_planner.recommendations.show_less") : String(localized: "trip_planner.recommendations.show_more")) {
                                                     showingAllRecommendations.toggle()
                                                 }
                                                 .font(.system(size: 13, weight: .bold))
@@ -7571,7 +7571,7 @@ private struct TripPlannerDayPlanEditorRow: View {
                 } label: {
                     HStack(spacing: 10) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Stay in")
+                            Text("trip_planner.route.stay_in")
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(.black.opacity(0.58))
 
@@ -7596,7 +7596,7 @@ private struct TripPlannerDayPlanEditorRow: View {
             } else {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Travel route")
+                        Text("trip_planner.route.travel_route")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.black.opacity(0.58))
 
@@ -8069,12 +8069,12 @@ private struct TripPlannerChecklistEditorView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Planning checklist")
+                Theme.titleBanner(String(localized: "trip_planner.checklist.title"))
 
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
-                            title: "Overall trip",
+                            title: String(localized: "trip_planner.checklist.overall_trip"),
                             subtitle: ""
                         ) {
                             VStack(alignment: .leading, spacing: 12) {
@@ -8088,10 +8088,15 @@ private struct TripPlannerChecklistEditorView: View {
                                     )
                                 } label: {
                                     TripPlannerNavigationSectionCard(
-                                        title: "Visas",
+                                        title: String(localized: "trip_planner.checklist.visas"),
                                         subtitle: visaItems.isEmpty
-                                            ? "No visa prep is needed right now"
-                                            : "\(visaItems.count) visa item\(visaItems.count == 1 ? "" : "s")"
+                                            ? String(localized: "trip_planner.checklist.no_visa_prep_now")
+                                            : String(
+                                                format: String(localized: "trip_planner.checklist.visa_items_format"),
+                                                locale: AppDisplayLocale.current,
+                                                visaItems.count,
+                                                visaItems.count == 1 ? "" : "s"
+                                            )
                                     ) {
                                         EmptyView()
                                     }
@@ -8103,8 +8108,8 @@ private struct TripPlannerChecklistEditorView: View {
                                         openPackingList()
                                     } label: {
                                         TripPlannerNavigationSectionCard(
-                                            title: "What to pack",
-                                            subtitle: "Shared group list plus your own personal checkoffs"
+                                            title: String(localized: "trip_planner.checklist.what_to_pack"),
+                                            subtitle: String(localized: "trip_planner.checklist.packing_subtitle")
                                         ) {
                                             EmptyView()
                                         }
@@ -8115,13 +8120,13 @@ private struct TripPlannerChecklistEditorView: View {
                         }
 
                         TripPlannerSectionCard(
-                            title: "Daily plans",
-                            subtitle: "Tap a date to edit that day’s schedule and checklist"
+                            title: String(localized: "trip_planner.checklist.daily_plans"),
+                            subtitle: String(localized: "trip_planner.checklist.daily_plans_subtitle")
                         ) {
                             VStack(alignment: .leading, spacing: 14) {
                                 if !monthsToDisplay.isEmpty {
                                     VStack(alignment: .leading, spacing: 8) {
-                                        Text("Select a day")
+                                        Text("trip_planner.checklist.select_day")
                                             .font(.system(size: 13, weight: .bold))
                                             .foregroundStyle(.black.opacity(0.72))
 
@@ -8209,7 +8214,7 @@ private struct TripPlannerChecklistEditorView: View {
                                                         .foregroundStyle(.black.opacity(0.7))
 
                                                     VStack(alignment: .leading, spacing: 4) {
-                                                        Text("Use last night's accommodation")
+                                                        Text("trip_planner.checklist.use_last_accommodation")
                                                             .font(.system(size: 14, weight: .bold))
                                                             .foregroundStyle(.black)
                                                         Text(accommodationSuggestion.notes)
@@ -8218,7 +8223,7 @@ private struct TripPlannerChecklistEditorView: View {
                                                             .lineLimit(2)
                                                         if let completedByName = accommodationSuggestion.completedByName,
                                                            accommodationSuggestion.isCompleted {
-                                                            Text("Completed by \(completedByName)")
+                                                            Text(String(format: String(localized: "trip_planner.checklist.completed_by_format"), locale: AppDisplayLocale.current, completedByName))
                                                                 .font(.system(size: 12, weight: .medium))
                                                                 .foregroundStyle(.black.opacity(0.55))
                                                         }
@@ -8226,7 +8231,7 @@ private struct TripPlannerChecklistEditorView: View {
 
                                                     Spacer()
 
-                                                    Text("Apply")
+                                                    Text("trip_planner.checklist.apply")
                                                         .font(.system(size: 13, weight: .bold))
                                                         .foregroundStyle(.black)
                                                 }
@@ -8247,7 +8252,7 @@ private struct TripPlannerChecklistEditorView: View {
                                 } else {
                                     VStack(spacing: 10) {
                                         TripPlannerInfoCard(
-                                            text: "Add trip dates to start planning day-by-day details.",
+                                            text: String(localized: "trip_planner.checklist.add_dates_for_daily"),
                                             systemImage: "calendar.badge.plus"
                                         )
                                     }
@@ -8286,7 +8291,7 @@ private struct TripPlannerChecklistEditorView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                    Text("Planning checklist saved")
+                    Text("trip_planner.checklist.saved")
                         .font(.subheadline.weight(.semibold))
                 }
                 .padding(.horizontal, 16)
@@ -8898,17 +8903,17 @@ private struct TripPlannerVisaChecklistView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Visas")
+                Theme.titleBanner(String(localized: "trip_planner.visa_checklist.title"))
 
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
-                            title: "Visa requirements",
-                            subtitle: "Each traveler and country that still needs visa prep"
+                            title: String(localized: "trip_planner.visa_checklist.requirements_title"),
+                            subtitle: String(localized: "trip_planner.visa_checklist.requirements_subtitle")
                         ) {
                             if visaItems.isEmpty {
                                 TripPlannerInfoCard(
-                                    text: "No visa prep is needed for this trip right now.",
+                                    text: String(localized: "trip_planner.visa_checklist.empty"),
                                     systemImage: "globe"
                                 )
                             } else {
@@ -8992,7 +8997,7 @@ private struct TripPlannerPackingListView: View {
 
     private var actorDisplayName: String {
         let trimmed = actorName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "You" : trimmed
+        return trimmed.isEmpty ? String(localized: "trip_planner.packing.actor_fallback") : trimmed
     }
 
     private var checkedEntryIDs: Set<UUID> {
@@ -9005,17 +9010,17 @@ private struct TripPlannerPackingListView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("What to pack")
+                Theme.titleBanner(String(localized: "trip_planner.packing.title"))
 
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
-                            title: "Packing list",
-                            subtitle: "If traveling with friends, this packing list is shared so everyone can use the same reference while packing."
+                            title: String(localized: "trip_planner.packing.list_title"),
+                            subtitle: String(localized: "trip_planner.packing.list_subtitle")
                         ) {
                             VStack(alignment: .leading, spacing: 12) {
                                 TripPlannerInfoCard(
-                                    text: "Most airports apply a 100 mL / 3.4 oz carry-on liquid limit, but rules can vary by airport, country, and airline. Check requirements before you fly, and place larger liquids in checked baggage when needed.",
+                                    text: String(localized: "trip_planner.packing.liquids_hint"),
                                     systemImage: "suitcase.rolling.fill"
                                 )
 
@@ -9037,12 +9042,12 @@ private struct TripPlannerPackingListView: View {
                         }
                         
                         TripPlannerSectionCard(
-                            title: "My packing progress",
-                            subtitle: "Only \(actorDisplayName) sees these checkmarks."
+                            title: String(localized: "trip_planner.packing.progress_title"),
+                            subtitle: String(format: String(localized: "trip_planner.packing.progress_subtitle_format"), locale: AppDisplayLocale.current, actorDisplayName)
                         ) {
                             if sharedEntries.isEmpty {
                                 TripPlannerInfoCard(
-                                    text: "Add items to the group packing list first, then check them off here as you pack.",
+                                    text: String(localized: "trip_planner.packing.progress_empty"),
                                     systemImage: "checkmark.circle"
                                 )
                             } else {
@@ -9269,32 +9274,32 @@ private struct TripPlannerChecklistItemEditorRow: View {
     private var notePlaceholder: String {
         switch item.category {
         case .accommodation:
-            return "Add hotel name, address, confirmation number, or notes"
+            return String(localized: "trip_planner.checklist.note_placeholder.accommodation")
         case .packing:
             return ""
         default:
-            return "Add notes"
+            return String(localized: "trip_planner.checklist.note_placeholder.default")
         }
     }
 
     private var titlePlaceholder: String {
         switch item.category {
         case .accommodation:
-            return "Accommodation"
+            return String(localized: "trip_planner.checklist.title_placeholder.accommodation")
         case .attractionTickets:
-            return "Book attraction tickets"
+            return String(localized: "trip_planner.checklist.title_placeholder.attraction_tickets")
         case .transportBooking:
-            return "Book transport in advance"
+            return String(localized: "trip_planner.checklist.title_placeholder.transport_booking")
         case .reservation:
-            return "Reserve a restaurant or experience"
+            return String(localized: "trip_planner.checklist.title_placeholder.reservation")
         case .visa:
-            return "Apply for visas"
+            return String(localized: "trip_planner.checklist.title_placeholder.visa")
         case .insurance:
-            return "Add insurance details"
+            return String(localized: "trip_planner.checklist.title_placeholder.insurance")
         case .packing:
-            return "What to pack"
+            return String(localized: "trip_planner.checklist.title_placeholder.packing")
         case .custom:
-            return "Add checklist item"
+            return String(localized: "trip_planner.checklist.title_placeholder.custom")
         }
     }
 
@@ -9366,7 +9371,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
                         if let completedByName = item.completedByName,
                            item.isCompleted,
                            showsCompletion {
-                            Text("Completed by \(completedByName)")
+                            Text(String(format: String(localized: "trip_planner.checklist.completed_by_format"), locale: AppDisplayLocale.current, completedByName))
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.black.opacity(0.55))
                         }
@@ -9390,13 +9395,13 @@ private struct TripPlannerChecklistItemEditorRow: View {
 
                     if item.supportsExpenseTracking {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Add a cost here and it will automatically appear in expenses.")
+                            Text("trip_planner.checklist.add_cost_hint")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.black.opacity(0.58))
 
                             HStack(alignment: .top, spacing: 10) {
                                 TripPlannerCurrencyInput(
-                                    title: "Cost",
+                                    title: String(localized: "trip_planner.checklist.cost"),
                                     currencyCode: linkedExpenseCurrencyCode,
                                     currencySelection: $linkedExpenseCurrencyCode,
                                     suggestedCurrencyCodes: [
@@ -10038,13 +10043,9 @@ private struct TripPlannerExpensesEditorView: View {
                 Button {
                     composerPresentation = TripPlannerExpenseComposerPresentation(expense: nil)
                 } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 13, weight: .bold))
-
-                        Text("+")
-                            .font(.system(size: 15, weight: .bold))
-                    }
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .bold))
+                        .frame(width: 36, height: 22)
                     .foregroundStyle(.black)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
@@ -10465,7 +10466,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
 
                         VStack(alignment: .leading, spacing: 12) {
                             TripPlannerCurrencyInput(
-                                title: "Amount",
+                                title: String(localized: "trip_planner.expenses.amount"),
                                 currencyCode: entryCurrencyCode,
                                 currencySelection: $entryCurrencyCode,
                                 suggestedCurrencyCodes: [
@@ -10476,7 +10477,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
                             )
 
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("Category")
+                                Text("trip_planner.expenses.category")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundStyle(.black.opacity(0.72))
 
@@ -10488,7 +10489,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
                                         }
                                     }
 
-                                    Button("Custom...") {
+                                    Button(String(localized: "trip_planner.expenses.custom_category")) {
                                         isShowingCustomCategoryPrompt = true
                                     }
                                 } label: {
@@ -10556,7 +10557,7 @@ private struct TripPlannerExpenseComposerOverlay: View {
                         }
 
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Who shared this expense")
+                            Text("trip_planner.expenses.shared_by")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.black.opacity(0.72))
 
@@ -10851,11 +10852,11 @@ private struct TripPlannerExpenseRow: View {
                                 size: 22
                             )
 
-                            Text("Paid by \(payer.firstName)")
+                            Text(String(format: String(localized: "trip_planner.expenses.paid_by_format"), locale: AppDisplayLocale.current, payer.firstName))
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(.black.opacity(0.74))
                         } else {
-                            Text("Paid by \(expense.paidByName)")
+                            Text(String(format: String(localized: "trip_planner.expenses.paid_by_format"), locale: AppDisplayLocale.current, expense.paidByName))
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(.black.opacity(0.74))
                         }
@@ -10909,7 +10910,7 @@ private struct TripPlannerExpenseRow: View {
             }
 
             if expense.linkedChecklistItemId != nil {
-                Label("Linked to planning checklist", systemImage: "arrow.triangle.branch")
+                Label(String(localized: "trip_planner.expenses.linked_checklist"), systemImage: "arrow.triangle.branch")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(.black.opacity(0.62))
             }
@@ -11048,7 +11049,7 @@ private struct TripPlannerExpenseCategoryBreakdownView: View {
             }
 
             HStack(spacing: 4) {
-                Text("Total tracked:")
+                Text("trip_planner.expenses.total_tracked")
                 AppCurrencyAmountLabel(
                     amount: TripPlannerCurrencyDisplay.amountFromUSD(
                         totalSpent,
@@ -11119,11 +11120,11 @@ private struct TripPlannerCustomExpenseCategoryPrompt: View {
                 }
 
             VStack(alignment: .leading, spacing: 14) {
-                Text("Custom category")
+                Text("trip_planner.expenses.custom_category_title")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(.black)
 
-                TextField("Type a category name", text: $name)
+                TextField(String(localized: "trip_planner.expenses.custom_category_placeholder"), text: $name)
                     .textInputAutocapitalization(.words)
                     .font(.system(size: 15, weight: .semibold))
                     .padding(.horizontal, 14)
@@ -11134,7 +11135,7 @@ private struct TripPlannerCustomExpenseCategoryPrompt: View {
                     )
 
                 HStack(spacing: 10) {
-                    Button("Cancel") {
+                    Button(String(localized: "common.cancel")) {
                         onCancel()
                     }
                     .buttonStyle(.plain)
@@ -11143,7 +11144,7 @@ private struct TripPlannerCustomExpenseCategoryPrompt: View {
 
                     Spacer()
 
-                    Button("Save") {
+                    Button(String(localized: "common.save")) {
                         onSave(trimmedName)
                     }
                     .buttonStyle(.plain)
@@ -11200,11 +11201,11 @@ private struct TripPlannerExpenseTitlePrompt: View {
                 }
 
             VStack(alignment: .leading, spacing: 14) {
-                Text("Expense title")
+                Text("trip_planner.expenses.expense_title")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(.black)
 
-                TextField("Name this expense", text: $title)
+                TextField(String(localized: "trip_planner.expenses.expense_title_placeholder"), text: $title)
                     .textInputAutocapitalization(.words)
                     .font(.system(size: 15, weight: .semibold))
                     .padding(.horizontal, 14)
@@ -11215,7 +11216,7 @@ private struct TripPlannerExpenseTitlePrompt: View {
                     )
 
                 HStack(spacing: 10) {
-                    Button("Cancel") {
+                    Button(String(localized: "common.cancel")) {
                         onCancel()
                     }
                     .buttonStyle(.plain)
@@ -11224,7 +11225,7 @@ private struct TripPlannerExpenseTitlePrompt: View {
 
                     Spacer()
 
-                    Button("Save") {
+                    Button(String(localized: "common.save")) {
                         onSave(trimmedTitle)
                     }
                     .buttonStyle(.plain)
@@ -11264,17 +11265,17 @@ private struct TripPlannerExpenseDeleteConfirmationPrompt: View {
 
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Delete this expense?")
+                    Text("trip_planner.expenses.delete_title")
                         .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(.black)
 
-                    Text("This will permanently remove it from the trip expenses.")
+                    Text("trip_planner.expenses.delete_message")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.black.opacity(0.66))
                 }
 
                 HStack(spacing: 10) {
-                    Button("Cancel") {
+                    Button(String(localized: "common.cancel")) {
                         onCancel()
                     }
                     .buttonStyle(.plain)
@@ -11283,7 +11284,7 @@ private struct TripPlannerExpenseDeleteConfirmationPrompt: View {
 
                     Spacer()
 
-                    Button("Delete") {
+                    Button(String(localized: "trip_planner.expenses.delete")) {
                         onDelete()
                     }
                     .buttonStyle(.plain)
@@ -11810,7 +11811,7 @@ private struct TripPlannerStatsPreviewSection: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Overall trip Score")
+                    Text("trip_planner.stats.overall_score")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.black.opacity(0.62))
 
@@ -11836,7 +11837,7 @@ private struct TripPlannerStatsPreviewSection: View {
                 VStack(alignment: .trailing, spacing: 6) {
                     costTextView
 
-                    Text(isGroupTrip ? "Hotel share is split across travelers" : "Per-person estimate")
+                    Text(isGroupTrip ? String(localized: "trip_planner.stats.hotel_share_group") : String(localized: "trip_planner.stats.per_person_estimate"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.black.opacity(0.56))
                         .multilineTextAlignment(.trailing)
@@ -11872,7 +11873,7 @@ private struct TripPlannerStatsPreviewSection: View {
                 minimumFractionDigits: 2
             )
         } else {
-            Text("Add dates")
+            Text("trip_planner.stats.add_dates")
                 .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(.black)
                 .multilineTextAlignment(.trailing)
@@ -11922,13 +11923,13 @@ private struct TripPlannerTripScoreBreakdownView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Trip Score")
+                Theme.titleBanner(String(localized: "trip_planner.stats.trip_score_title"))
 
                 ScrollView {
                     VStack(spacing: 18) {
                         if isGroupTrip {
                             TripPlannerInfoCard(
-                                text: "This group score uses equal weighting across the five planner categories.",
+                                text: String(localized: "trip_planner.stats.group_score_hint"),
                                 systemImage: "person.3.sequence.fill"
                             )
                         }
@@ -12828,7 +12829,7 @@ private struct TripPlannerEstimatedCostBreakdownCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Estimated cost breakdown")
+            Text("trip_planner.cost_breakdown.title")
                 .font(.system(size: 14, weight: .bold))
                 .foregroundStyle(.black)
 
@@ -12864,7 +12865,7 @@ private struct TripPlannerEstimatedCostBreakdownCard: View {
             Divider()
 
             HStack {
-                Text("Estimated total")
+                Text("trip_planner.cost_breakdown.estimated_total")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.black)
 
@@ -13601,7 +13602,7 @@ private struct TripPlannerSavedTripCard: View {
                             Image(systemName: "bell.badge.fill")
                                 .font(.system(size: 11, weight: .black))
 
-                            Text("New shared trip")
+                            Text("trip_planner.shared_trip.new_badge")
                                 .font(.system(size: 11, weight: .black))
                                 .tracking(0.3)
                         }
@@ -13696,7 +13697,7 @@ private struct TripPlannerSharedTripNotificationCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 8) {
-                Label("Shared trip", systemImage: "bell.badge.fill")
+                Label(String(localized: "trip_planner.shared_trip.label"), systemImage: "bell.badge.fill")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.black.opacity(0.72))
                     .padding(.horizontal, 10)
@@ -13730,7 +13731,7 @@ private struct TripPlannerSharedTripNotificationCard: View {
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Added to your planner")
+                    Text("trip_planner.shared_trip.added")
                         .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(.black)
 
@@ -13738,7 +13739,7 @@ private struct TripPlannerSharedTripNotificationCard: View {
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.black.opacity(0.86))
 
-                    Text("This trip is ready to edit with the rest of the group.")
+                    Text("trip_planner.shared_trip.ready")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.black.opacity(0.68))
                         .multilineTextAlignment(.leading)
@@ -13746,7 +13747,7 @@ private struct TripPlannerSharedTripNotificationCard: View {
             }
 
             HStack(spacing: 8) {
-                TripPlannerBadge(text: "Shared")
+                TripPlannerBadge(text: String(localized: "trip_planner.shared_trip.badge"))
 
                 if let rangeText = TripPlannerDateFormatter.rangeText(start: trip.startDate, end: trip.endDate) {
                     TripPlannerBadge(text: rangeText)
@@ -13773,7 +13774,7 @@ private struct TripPlannerLoadingStateCard: View {
             ProgressView()
                 .tint(.black.opacity(0.82))
 
-            Text("Loading your trips")
+            Text("trip_planner.loading_trips")
                 .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(.black)
         }
