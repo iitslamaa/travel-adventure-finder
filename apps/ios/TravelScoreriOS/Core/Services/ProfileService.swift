@@ -229,6 +229,18 @@ final class ProfileService {
         return persistedProfile
     }
 
+    func memoryCachedProfile(userId: UUID) -> Profile? {
+        guard let cachedProfile = Self.profileCache[userId] else {
+            SocialFeedDebug.log("profile.service.cache.profile.memory_miss user=\(userId.uuidString)")
+            return nil
+        }
+
+        SocialFeedDebug.log(
+            "profile.service.cache.profile.memory_hit user=\(userId.uuidString) username=\(logField(cachedProfile.username)) languages=\(cachedProfile.languages.count)"
+        )
+        return cachedProfile
+    }
+
     func warmProfileCacheIfNeeded(
         userId: UUID,
         defaultUsername: String? = nil,

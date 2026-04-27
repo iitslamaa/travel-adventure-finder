@@ -3931,22 +3931,15 @@ struct TripPlannerView: View {
             TripPlannerDebugLog.message(
                 "Planner screen task started trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
             )
-            let hasCachedCurrentUserProfile = sessionManager.userId.flatMap { profileService.cachedProfile(userId: $0) } != nil
             TripPlannerDebugLog.probe(
                 "TripPlannerView.task.before_initial_load",
-                "duration=\(TripPlannerDebugLog.durationText(since: loadStart)) cachedProfile=\(hasCachedCurrentUserProfile) trips=\(store.trips.count)"
+                "duration=\(TripPlannerDebugLog.durationText(since: loadStart)) trips=\(store.trips.count)"
             )
             async let tripRefresh: Void = store.loadInitialTripsIfNeeded()
-
-            if hasCachedCurrentUserProfile {
-                Task {
-                    await loadCurrentUserSnapshot()
-                }
-                await tripRefresh
-            } else {
-                async let snapshotRefresh: Void = loadCurrentUserSnapshot()
-                _ = await (snapshotRefresh, tripRefresh)
+            Task {
+                await loadCurrentUserSnapshot()
             }
+            await tripRefresh
 
             TripPlannerDebugLog.message(
                 "Planner screen task finished duration=\(TripPlannerDebugLog.durationText(since: loadStart)) trips=\(store.trips.count)"
@@ -3985,7 +3978,7 @@ struct TripPlannerView: View {
             return
         }
 
-        if let cachedProfile = profileService.cachedProfile(userId: userId) {
+        if let cachedProfile = profileService.memoryCachedProfile(userId: userId) {
             currentUserSnapshot = TripPlannerFriendSnapshot(
                 id: cachedProfile.id,
                 displayName: cachedProfile.tripDisplayName,
@@ -4007,7 +4000,7 @@ struct TripPlannerView: View {
         }
 
         TripPlannerDebugLog.message(
-            "Current user snapshot unavailable without cache duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            "Current user snapshot unavailable without memory cache/auth duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
         )
     }
 
