@@ -119,6 +119,34 @@ struct ProfileView: View {
         String(localized: "profile.title")
     }
 
+    private var relationshipLogValue: String {
+        switch profileVM.relationshipState {
+        case .selfProfile:
+            return "selfProfile"
+        case .none:
+            return "none"
+        case .requestSent:
+            return "requestSent"
+        case .requestReceived:
+            return "requestReceived"
+        case .friends:
+            return "friends"
+        }
+    }
+
+    private var renderGateDebugSummary: String {
+        [
+            "ready=\(isReadyToRenderProfile)",
+            "own=\(isOwnProfile)",
+            "profile=\(logField(profileVM.profile?.id.uuidString))",
+            "relationship=\(relationshipLogValue)",
+            "relationship_loading=\(profileVM.isRelationshipLoading)",
+            "is_loading=\(profileVM.isLoading)",
+            "has_core=\(profileVM.hasLoadedCoreData)",
+            "error=\(logField(profileVM.errorMessage))"
+        ].joined(separator: " ")
+    }
+
     private func logField(_ value: String?) -> String {
         guard let value, !value.isEmpty else { return "nil" }
         return value
@@ -368,6 +396,33 @@ struct ProfileView: View {
                 )
                 clearProfileNavigationLoadingIfReady(reason: "load_task_end")
             }
+        }
+        .onChange(of: isReadyToRenderProfile) { oldValue, newValue in
+            SocialFeedDebug.log(
+                "profile.view.render_gate.ready_change user=\(userId.uuidString) old=\(oldValue) new=\(newValue) " +
+                renderGateDebugSummary
+            )
+            if newValue {
+                clearProfileNavigationLoadingIfReady(reason: "ready_change")
+            }
+        }
+        .onChange(of: profileVM.isRelationshipLoading) { oldValue, newValue in
+            SocialFeedDebug.log(
+                "profile.view.render_gate.relationship_loading_change user=\(userId.uuidString) " +
+                "old=\(oldValue) new=\(newValue) \(renderGateDebugSummary)"
+            )
+        }
+        .onChange(of: profileVM.hasLoadedCoreData) { oldValue, newValue in
+            SocialFeedDebug.log(
+                "profile.view.render_gate.core_loaded_change user=\(userId.uuidString) " +
+                "old=\(oldValue) new=\(newValue) \(renderGateDebugSummary)"
+            )
+        }
+        .onChange(of: profileVM.profile?.id) { oldValue, newValue in
+            SocialFeedDebug.log(
+                "profile.view.render_gate.profile_change user=\(userId.uuidString) " +
+                "old=\(logField(oldValue?.uuidString)) new=\(logField(newValue?.uuidString)) \(renderGateDebugSummary)"
+            )
         }
     }
 }

@@ -67,25 +67,92 @@ extension ProfileViewModel {
             SocialFeedDebug.log(
                 "profile.vm.load.network_tasks.start user=\(startingUserId.uuidString) generation=\(generation.uuidString)"
             )
-            async let fetchedProfileTask = loadProfileTask(
-                userId: startingUserId,
-                generation: generation,
-                isOwnProfile: isOwnProfile
-            )
-            async let traveledTask = loadTraveledTask(userId: startingUserId, generation: generation)
-            async let bucketTask = loadBucketTask(userId: startingUserId, generation: generation)
-            async let relationshipTask = loadRelationshipTask(
-                userId: startingUserId,
-                generation: generation,
-                isOwnProfile: isOwnProfile
-            )
-            async let passportPreferencesTask = loadPassportPreferencesTask(
-                userId: startingUserId,
-                generation: generation,
-                isOwnProfile: isOwnProfile
-            )
+            let profileTask = Task {
+                try await loadProfileTask(
+                    userId: startingUserId,
+                    generation: generation,
+                    isOwnProfile: isOwnProfile
+                )
+            }
+            let traveledTask = Task {
+                try await loadTraveledTask(userId: startingUserId, generation: generation)
+            }
+            let bucketTask = Task {
+                try await loadBucketTask(userId: startingUserId, generation: generation)
+            }
+            let relationshipTask = Task {
+                try await loadRelationshipTask(
+                    userId: startingUserId,
+                    generation: generation,
+                    isOwnProfile: isOwnProfile
+                )
+            }
+            let passportPreferencesTask = Task {
+                try await loadPassportPreferencesTask(
+                    userId: startingUserId,
+                    generation: generation,
+                    isOwnProfile: isOwnProfile
+                )
+            }
 
-            let fetchedProfile = try await fetchedProfileTask
+            if hasRenderableSeed && !isRefreshing {
+                SocialFeedDebug.log(
+                    "profile.vm.load.fast_path.start user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
+                    "reason=renderable_seed_waiting_for_secondary"
+                )
+                let traveled = try await traveledTask.value
+                let bucket = try await bucketTask.value
+                let resolvedRelationship = try await relationshipTask.value
+                let fetchedPassportPreferences = try await passportPreferencesTask.value
+                SocialFeedDebug.log(
+                    "profile.vm.load.fast_path.secondary_done user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
+                    "traveled=\(traveled.count) bucket=\(bucket.count) relationship=\(relationshipLogValue(resolvedRelationship))"
+                )
+
+                guard generation == loadGeneration,
+                      self.userId == startingUserId else {
+                    SocialFeedDebug.log(
+                        "profile.vm.load.fast_path.discard user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
+                        "active_generation=\(loadGeneration.uuidString) current_user=\(self.userId.uuidString)"
+                    )
+                    profileTask.cancel()
+                    return
+                }
+
+                applyLoadedContext(
+                    traveled: traveled,
+                    bucket: bucket,
+                    relationship: resolvedRelationship,
+                    passportPreferences: fetchedPassportPreferences
+                )
+                SocialFeedDebug.log(
+                    "profile.vm.load.fast_path.ready user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
+                    "profile=\(logField(profile?.id.uuidString)) relationship=\(relationshipLogValue(relationshipState))"
+                )
+
+                Task { [weak self] in
+                    let refreshStartTime = Date()
+                    do {
+                        let fetchedProfile = try await profileTask.value
+                        await self?.applyBackgroundProfileRefresh(
+                            fetchedProfile,
+                            userId: startingUserId,
+                            generation: generation,
+                            startedAt: refreshStartTime
+                        )
+                    } catch {
+                        await self?.logBackgroundProfileRefreshError(
+                            userId: startingUserId,
+                            generation: generation,
+                            startedAt: refreshStartTime,
+                            error: error
+                        )
+                    }
+                }
+                return
+            }
+
+            let fetchedProfile = try await profileTask.value
             SocialFeedDebug.log(
                 "profile.vm.load.profile_task.done user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
                 "fetched=\(fetchedProfile.id.uuidString)"
@@ -99,32 +166,20 @@ extension ProfileViewModel {
                 return
             }
 
-            profile = fetchedProfile
-            let changedFriendCacheEntries = friendService.refreshCachedProfile(fetchedProfile)
-            SocialFeedDebug.log(
-                "profile.load.profile_applied user=\(startingUserId.uuidString) is_own=\(isOwnProfile) " +
-                "username=\(logField(fetchedProfile.username)) avatar=\(logField(fetchedProfile.avatarUrl)) " +
-                "friend_cache_changes=\(changedFriendCacheEntries)"
-            )
-            if let defaultCurrencyCode = fetchedProfile.defaultCurrencyCode {
-                UserDefaults.standard.set(
-                    defaultCurrencyCode,
-                    forKey: "travelaf.default_currency_code"
-                )
-            }
+            applyFetchedProfile(fetchedProfile, userId: startingUserId, isOwnProfile: isOwnProfile)
             if isOwnProfile {
                 relationshipState = .selfProfile
                 isFriend = false
             }
             computeOrderedLists()
 
-            let traveled = try await traveledTask
-            let bucket = try await bucketTask
-            let resolvedRelationship = try await relationshipTask
-            let fetchedPassportPreferences = try await passportPreferencesTask
+            let traveled = try await traveledTask.value
+            let bucket = try await bucketTask.value
+            let resolvedRelationship = try await relationshipTask.value
+            let fetchedPassportPreferences = try await passportPreferencesTask.value
             SocialFeedDebug.log(
                 "profile.vm.load.secondary_tasks.done user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
-                "traveled=\(traveled.count) bucket=\(bucket.count)"
+                "traveled=\(traveled.count) bucket=\(bucket.count) relationship=\(relationshipLogValue(resolvedRelationship))"
             )
 
             guard generation == loadGeneration,
@@ -136,17 +191,12 @@ extension ProfileViewModel {
                 return
             }
 
-            viewedTraveledCountries = traveled
-            viewedBucketListCountries = bucket
-            relationshipState = resolvedRelationship
-            isFriend = resolvedRelationship == .friends
-            mutualLanguages = []
-            mutualBucketCountries = []
-            mutualTraveledCountries = []
-            passportPreferences = fetchedPassportPreferences
-            computeOrderedLists()
-            hasLoadedCoreData = true
-            hasLoadedPassportContext = true
+            applyLoadedContext(
+                traveled: traveled,
+                bucket: bucket,
+                relationship: resolvedRelationship,
+                passportPreferences: fetchedPassportPreferences
+            )
 
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
@@ -175,6 +225,93 @@ extension ProfileViewModel {
     private func logField(_ value: String?) -> String {
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return trimmed.isEmpty ? "nil" : trimmed
+    }
+
+    private func relationshipLogValue(_ state: RelationshipState) -> String {
+        switch state {
+        case .selfProfile:
+            return "selfProfile"
+        case .none:
+            return "none"
+        case .requestSent:
+            return "requestSent"
+        case .requestReceived:
+            return "requestReceived"
+        case .friends:
+            return "friends"
+        }
+    }
+
+    private func applyFetchedProfile(_ fetchedProfile: Profile, userId: UUID, isOwnProfile: Bool) {
+        profile = fetchedProfile
+        let changedFriendCacheEntries = friendService.refreshCachedProfile(fetchedProfile)
+        SocialFeedDebug.log(
+            "profile.load.profile_applied user=\(userId.uuidString) is_own=\(isOwnProfile) " +
+            "username=\(logField(fetchedProfile.username)) avatar=\(logField(fetchedProfile.avatarUrl)) " +
+            "friend_cache_changes=\(changedFriendCacheEntries)"
+        )
+        if let defaultCurrencyCode = fetchedProfile.defaultCurrencyCode {
+            UserDefaults.standard.set(
+                defaultCurrencyCode,
+                forKey: "travelaf.default_currency_code"
+            )
+        }
+    }
+
+    private func applyLoadedContext(
+        traveled: Set<String>,
+        bucket: Set<String>,
+        relationship: RelationshipState,
+        passportPreferences fetchedPassportPreferences: PassportPreferences
+    ) {
+        viewedTraveledCountries = traveled
+        viewedBucketListCountries = bucket
+        relationshipState = relationship
+        isFriend = relationship == .friends
+        mutualLanguages = []
+        mutualBucketCountries = []
+        mutualTraveledCountries = []
+        passportPreferences = fetchedPassportPreferences
+        computeOrderedLists()
+        hasLoadedCoreData = true
+        hasLoadedPassportContext = true
+    }
+
+    private func applyBackgroundProfileRefresh(
+        _ fetchedProfile: Profile,
+        userId: UUID,
+        generation: UUID,
+        startedAt: Date
+    ) {
+        guard generation == loadGeneration,
+              self.userId == userId else {
+            SocialFeedDebug.log(
+                "profile.vm.load.fast_path.profile_refresh.discard user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) active_generation=\(loadGeneration.uuidString) " +
+                "current_user=\(self.userId.uuidString)"
+            )
+            return
+        }
+
+        applyFetchedProfile(fetchedProfile, userId: userId, isOwnProfile: userId == supabase.currentUserId)
+        computeOrderedLists()
+        SocialFeedDebug.log(
+            "profile.vm.load.fast_path.profile_refresh.applied user=\(userId.uuidString) generation=\(generation.uuidString) " +
+            "duration=\(SocialFeedDebug.duration(since: startedAt)) username=\(logField(fetchedProfile.username)) " +
+            "avatar=\(logField(fetchedProfile.avatarUrl))"
+        )
+    }
+
+    private func logBackgroundProfileRefreshError(
+        userId: UUID,
+        generation: UUID,
+        startedAt: Date,
+        error: Error
+    ) {
+        SocialFeedDebug.log(
+            "profile.vm.load.fast_path.profile_refresh.error user=\(userId.uuidString) generation=\(generation.uuidString) " +
+            "duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+        )
     }
 
     private func loadProfileTask(userId: UUID, generation: UUID, isOwnProfile: Bool) async throws -> Profile {
