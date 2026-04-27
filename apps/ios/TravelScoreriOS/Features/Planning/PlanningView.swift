@@ -10253,9 +10253,11 @@ private struct TripPlannerChecklistItemEditorRow: View {
 
                     if item.supportsExpenseTracking {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("trip_planner.checklist.add_cost_hint")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(.black.opacity(0.58))
+                            if !item.hasLinkedExpenseDetails {
+                                Text("trip_planner.checklist.add_cost_hint")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.black.opacity(0.58))
+                            }
 
                             HStack(alignment: .top, spacing: 10) {
                                 TripPlannerCurrencyInput(
