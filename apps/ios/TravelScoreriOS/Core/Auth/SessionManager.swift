@@ -62,8 +62,7 @@ final class SessionManager: ObservableObject {
             await supabase.startAuthListener()
         }
 
-        guestBucketSnapshot = bucketListStore.ids
-        guestTraveledSnapshot = traveledStore.ids
+        observeGuestListSnapshots()
 
         // Begin observing auth state
         startAuthObservation()
@@ -75,6 +74,11 @@ final class SessionManager: ObservableObject {
         if isAuthSuppressed != false { isAuthSuppressed = false }
         if didContinueAsGuest != true { didContinueAsGuest = true }
         if isAuthenticated != false { isAuthenticated = false }
+        guestBucketSnapshot = bucketListStore.ids
+        guestTraveledSnapshot = traveledStore.ids
+        SocialFeedDebug.log(
+            "session.guest.continue snapshot_bucket_\(SocialFeedDebug.countrySetSummary(guestBucketSnapshot)) traveled_count=\(guestTraveledSnapshot.count)"
+        )
     }
 
     func signOut() async {
@@ -295,16 +299,18 @@ final class SessionManager: ObservableObject {
                 async let bucketTask = self.listSync.fetchBucketList(userId: userId)
                 async let traveledTask = self.listSync.fetchTraveled(userId: userId)
                 var (bucketIds, traveledIds) = try await (bucketTask, traveledTask)
+                let guestBucketIds = self.guestBucketSnapshot
+                let guestTraveledIds = self.guestTraveledSnapshot
 
-                if !self.guestBucketSnapshot.isEmpty || !self.guestTraveledSnapshot.isEmpty {
+                if !guestBucketIds.isEmpty || !guestTraveledIds.isEmpty {
                     await self.mergeGuestDataIfNeeded(
                         for: userId,
                         remoteBucketIds: bucketIds,
                         remoteTraveledIds: traveledIds
                     )
 
-                    bucketIds.formUnion(self.guestBucketSnapshot)
-                    traveledIds.formUnion(self.guestTraveledSnapshot)
+                    bucketIds.formUnion(guestBucketIds)
+                    traveledIds.formUnion(guestTraveledIds)
                 }
 
                 if Task.isCancelled { return }
@@ -320,6 +326,28 @@ final class SessionManager: ObservableObject {
                 self.syncTask = nil
             }
         }
+    }
+
+    private func observeGuestListSnapshots() {
+        bucketListStore.$ids
+            .dropFirst()
+            .sink { [weak self] ids in
+                guard let self, self.didContinueAsGuest, !self.isAuthenticated else { return }
+                self.guestBucketSnapshot = ids
+                SocialFeedDebug.log(
+                    "session.guest.snapshot.bucket_update \(SocialFeedDebug.countrySetSummary(ids))"
+                )
+            }
+            .store(in: &cancellables)
+
+        traveledStore.$ids
+            .dropFirst()
+            .sink { [weak self] ids in
+                guard let self, self.didContinueAsGuest, !self.isAuthenticated else { return }
+                self.guestTraveledSnapshot = ids
+                SocialFeedDebug.log("session.guest.snapshot.traveled_update count=\(ids.count)")
+            }
+            .store(in: &cancellables)
     }
 
     private func startAuthObservation() {
