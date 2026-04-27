@@ -14383,6 +14383,8 @@ private struct TripPlannerProfileDestinationView: View {
         case .friendRequests:
             FriendRequestsView()
                 .environmentObject(socialNav)
+        case .country(let country):
+            CountryDetailView(country: country)
         }
     }
 }

@@ -18,6 +18,9 @@ import Translation
 
 private enum CountryDetailDebugLog {
     nonisolated static func message(_ text: String) {
+        #if DEBUG
+        print("[CountryDetail \(timestamp())] \(text)")
+        #endif
     }
 
     nonisolated static func durationText(since startTime: TimeInterval) -> String {
@@ -77,6 +80,7 @@ struct CountryDetailView: View {
     @State private var countryRefreshTask: Task<Void, Never>?
     @State private var profileWarmupTask: Task<Void, Never>?
     @State private var passportContextWarmupTask: Task<Void, Never>?
+    @State private var languageProfileTask: Task<Void, Never>?
     @State private var isLoadingLanguageCompatibility: Bool = false
 
     private var passportFallbackCountryCode: String {
@@ -442,10 +446,6 @@ struct CountryDetailView: View {
             let iso2 = country.iso2.uppercased()
             let shouldResolveVisaContext = shouldResolveVisaContextBeforeDisplay
             isResolvingVisaContext = shouldResolveVisaContext
-            isLoadingLanguageCompatibility = true
-            defer {
-                isLoadingLanguageCompatibility = false
-            }
 
             if countryLanguageProfile?.countryISO2.uppercased() != iso2 {
                 countryLanguageProfile = nil
@@ -467,14 +467,8 @@ struct CountryDetailView: View {
                 currentUserId: sessionManager.userId,
                 isAuthenticated: sessionManager.isAuthenticated
             )
-            async let languageProfileLoad: CountryLanguageProfile? = loadLanguageProfileForScreen(iso2: iso2, loadStart: loadStart)
-            async let profileSeed: Void = seedCurrentUserProfileForLanguageCard(loadStart: loadStart)
-
-            countryLanguageProfile = await languageProfileLoad
-            CountryDetailDebugLog.message(
-                "screen.language_profile.assigned iso2=\(iso2) loaded=\(countryLanguageProfile != nil) language_count=\(countryLanguageProfile?.languages.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile?.languages ?? []))] total_duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
-            )
-            await profileSeed
+            startLanguageProfileLoadInBackground(iso2: iso2, loadStart: loadStart)
+            await seedCurrentUserProfileForLanguageCard(loadStart: loadStart)
 
             await refreshCountryIfAvailable()
             refreshCountryInBackgroundIfNeeded()
@@ -511,6 +505,7 @@ struct CountryDetailView: View {
             countryRefreshTask?.cancel()
             profileWarmupTask?.cancel()
             passportContextWarmupTask?.cancel()
+            languageProfileTask?.cancel()
             engagementVM.cancel()
         }
         .onChange(of: profileVM.passportPreferences) { _, _ in
@@ -540,16 +535,70 @@ struct CountryDetailView: View {
         )
 
         do {
-            let profile = try await CountryLanguageProfileStore.shared.profile(for: iso2)
+            let profile = try await loadLanguageProfileWithTimeout(iso2: iso2)
             CountryDetailDebugLog.message(
                 "screen.language_profile.load.finish iso2=\(iso2) loaded=\(profile != nil) language_count=\(profile?.languages.count ?? 0) source=\(profile?.source ?? "nil") source_version=\(profile?.sourceVersion ?? "nil") evidence=\(profile?.evidence.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(profile?.languages ?? []))] duration=\(CountryDetailDebugLog.durationText(since: languageStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
             )
             return profile
         } catch {
-            CountryDetailDebugLog.message(
-                "screen.language_profile.load.error iso2=\(iso2) error_type=\(String(describing: type(of: error))) error=\(error.localizedDescription) duration=\(CountryDetailDebugLog.durationText(since: languageStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
-            )
+            if case CountryLanguageProfileTimeoutError.timedOut = error {
+                CountryDetailDebugLog.message(
+                    "screen.language_profile.load.timeout iso2=\(iso2) duration=\(CountryDetailDebugLog.durationText(since: languageStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+            } else {
+                CountryDetailDebugLog.message(
+                    "screen.language_profile.load.error iso2=\(iso2) error_type=\(String(describing: type(of: error))) error=\(error.localizedDescription) duration=\(CountryDetailDebugLog.durationText(since: languageStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+            }
             return nil
+        }
+    }
+
+    private func loadLanguageProfileWithTimeout(
+        iso2: String,
+        timeoutNanoseconds: UInt64 = 2_000_000_000
+    ) async throws -> CountryLanguageProfile? {
+        try await withThrowingTaskGroup(of: CountryLanguageProfile?.self) { group in
+            group.addTask {
+                try await CountryLanguageProfileStore.shared.profile(for: iso2)
+            }
+            group.addTask {
+                try await Task.sleep(nanoseconds: timeoutNanoseconds)
+                throw CountryLanguageProfileTimeoutError.timedOut
+            }
+
+            defer { group.cancelAll() }
+            return try await group.next() ?? nil
+        }
+    }
+
+    @MainActor
+    private func startLanguageProfileLoadInBackground(iso2: String, loadStart: TimeInterval) {
+        languageProfileTask?.cancel()
+        isLoadingLanguageCompatibility = true
+        CountryDetailDebugLog.message(
+            "screen.language_profile.background.start iso2=\(iso2) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+
+        languageProfileTask = Task {
+            let profile = await loadLanguageProfileForScreen(iso2: iso2, loadStart: loadStart)
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard country.iso2.uppercased() == iso2 else {
+                    CountryDetailDebugLog.message(
+                        "screen.language_profile.background.discard iso2=\(iso2) current_iso2=\(country.iso2.uppercased()) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                    )
+                    isLoadingLanguageCompatibility = false
+                    return
+                }
+
+                countryLanguageProfile = profile
+                isLoadingLanguageCompatibility = false
+                CountryDetailDebugLog.message(
+                    "screen.language_profile.assigned iso2=\(iso2) loaded=\(countryLanguageProfile != nil) language_count=\(countryLanguageProfile?.languages.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile?.languages ?? []))] total_duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+            }
         }
     }
 
@@ -1264,6 +1313,8 @@ private struct CountryFriendProfileSheet: View {
         case .friendRequests:
             FriendRequestsView()
                 .environmentObject(socialNav)
+        case .country(let country):
+            CountryDetailView(country: country)
         }
     }
 }
@@ -1421,6 +1472,10 @@ private struct CountryLanguageCompatibilityResult {
 
         return String(localized: "country_detail.language.source")
     }
+}
+
+private enum CountryLanguageProfileTimeoutError: Error {
+    case timedOut
 }
 
 private actor CountryLanguageProfileStore {
@@ -1960,6 +2015,11 @@ private struct CountryOverviewCard: View {
         .task(id: country.iso2.uppercased()) {
             viewModel.load(country: country)
         }
+        .onAppear {
+            CountryDetailDebugLog.message(
+                "overview.card.appear iso2=\(country.iso2.uppercased()) country=\(country.localizedDisplayName)"
+            )
+        }
         #if canImport(Translation)
         .modifier(CountryOverviewTranslationModifier(country: country, viewModel: viewModel))
         #endif
@@ -1973,6 +2033,9 @@ private struct CountryOverviewTranslationModifier: ViewModifier {
 
     @ViewBuilder
     func body(content: Content) -> some View {
+        #if targetEnvironment(simulator)
+        content
+        #else
         if #available(iOS 18.0, *), let target = viewModel.translationTargetLanguage {
             content.translationTask(
                 source: Locale.Language(identifier: "en"),
@@ -1983,6 +2046,7 @@ private struct CountryOverviewTranslationModifier: ViewModifier {
         } else {
             content
         }
+        #endif
     }
 }
 #endif
@@ -2132,6 +2196,7 @@ private struct CountryStaticMapView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> MKMapView {
+        CountryDetailDebugLog.message("static_map.make")
         let mapView = MKMapView()
         let config = MKStandardMapConfiguration(elevationStyle: .flat)
         mapView.preferredConfiguration = config
@@ -2151,21 +2216,31 @@ private struct CountryStaticMapView: UIViewRepresentable {
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
         let iso = country.iso2.uppercased()
+        CountryDetailDebugLog.message(
+            "static_map.update.start iso2=\(iso) current=\(context.coordinator.currentISO ?? "nil") overlays=\(mapView.overlays.count)"
+        )
 
         if context.coordinator.currentISO != iso {
             context.coordinator.currentISO = iso
             let overlays = CountryMapRegionResolver.overlays(for: iso)
             mapView.removeOverlays(mapView.overlays)
             mapView.addOverlays(overlays)
+            CountryDetailDebugLog.message(
+                "static_map.overlays_applied iso2=\(iso) count=\(overlays.count)"
+            )
         }
 
         if let override = CountryMapRegionResolver.regionOverride(for: iso) {
             mapView.setRegion(override, animated: false)
+            CountryDetailDebugLog.message("static_map.update.finish iso2=\(iso) region=override")
             return
         }
 
         let overlays = mapView.overlays
-        guard let firstOverlay = overlays.first else { return }
+        guard let firstOverlay = overlays.first else {
+            CountryDetailDebugLog.message("static_map.update.finish iso2=\(iso) region=missing_overlays")
+            return
+        }
 
         let combinedRect = overlays.dropFirst().reduce(firstOverlay.boundingMapRect) { partial, overlay in
             partial.union(overlay.boundingMapRect)
@@ -2176,6 +2251,7 @@ private struct CountryStaticMapView: UIViewRepresentable {
             edgePadding: UIEdgeInsets(top: 28, left: 28, bottom: 28, right: 28),
             animated: false
         )
+        CountryDetailDebugLog.message("static_map.update.finish iso2=\(iso) region=visible_rect overlays=\(overlays.count)")
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
