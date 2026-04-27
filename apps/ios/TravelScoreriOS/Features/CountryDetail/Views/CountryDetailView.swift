@@ -1070,26 +1070,63 @@ private struct CountryFriendEngagementCard: View {
 private struct FriendAvatarView: View {
     let profile: Profile
 
+    @State private var appearedAt = Date().timeIntervalSinceReferenceDate
+    @State private var lastLoggedPhase: String?
+
     var body: some View {
         Group {
             if let avatarURL = profile.avatarUrl,
                !avatarURL.isEmpty,
                let url = URL(string: avatarURL) {
                 AsyncImage(url: url) { phase in
-                    if let image = phase.image {
+                    switch phase {
+                    case .empty:
+                        fallbackAvatar
+                            .onAppear {
+                                logPhase("loading", avatarURL: avatarURL)
+                            }
+                    case .success(let image):
                         image
                             .resizable()
                             .scaledToFill()
-                    } else {
+                            .onAppear {
+                                logPhase("success", avatarURL: avatarURL)
+                            }
+                    case .failure(let error):
                         fallbackAvatar
+                            .onAppear {
+                                logPhase("failure", avatarURL: avatarURL, error: error.localizedDescription)
+                            }
+                    @unknown default:
+                        fallbackAvatar
+                            .onAppear {
+                                logPhase("unknown", avatarURL: avatarURL)
+                            }
                     }
                 }
             } else {
                 fallbackAvatar
+                    .onAppear {
+                        logPhase("no_avatar", avatarURL: nil)
+                    }
             }
         }
         .frame(width: 38, height: 38)
         .clipShape(Circle())
+        .onAppear {
+            appearedAt = Date().timeIntervalSinceReferenceDate
+            lastLoggedPhase = nil
+            CountryDetailDebugLog.message(
+                "friend.avatar.appear profile=\(profile.id.uuidString) username=\(logField(profile.username)) " +
+                "has_avatar=\((profile.avatarUrl?.isEmpty == false)) avatar=\(logField(profile.avatarUrl))"
+            )
+        }
+        .onDisappear {
+            CountryDetailDebugLog.message(
+                "friend.avatar.disappear profile=\(profile.id.uuidString) username=\(logField(profile.username)) " +
+                "last_phase=\(lastLoggedPhase ?? "nil") duration=\(CountryDetailDebugLog.durationText(since: appearedAt))"
+            )
+        }
     }
 
     private var fallbackAvatar: some View {
@@ -1103,6 +1140,22 @@ private struct FriendAvatarView: View {
                 .foregroundStyle(.secondary)
                 .padding(4)
         }
+    }
+
+    private func logPhase(_ phase: String, avatarURL: String?, error: String? = nil) {
+        guard lastLoggedPhase != phase else { return }
+        lastLoggedPhase = phase
+
+        CountryDetailDebugLog.message(
+            "friend.avatar.phase profile=\(profile.id.uuidString) username=\(logField(profile.username)) " +
+            "phase=\(phase) elapsed=\(CountryDetailDebugLog.durationText(since: appearedAt)) " +
+            "avatar=\(logField(avatarURL)) error=\(logField(error))"
+        )
+    }
+
+    private func logField(_ value: String?) -> String {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "nil" : trimmed
     }
 }
 

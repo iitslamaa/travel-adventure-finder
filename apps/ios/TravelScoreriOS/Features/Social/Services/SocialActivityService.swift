@@ -222,12 +222,13 @@ final class SocialActivityService {
             let source = profilesById[freshProfile.id] == nil ? "profile_query" : "profile_query_refreshed"
             profilesById[freshProfile.id] = freshProfile
             profileSources[freshProfile.id] = source
+            profileService.cacheProfile(freshProfile)
         }
 
         SocialFeedDebug.log(
             "service.profile_lookup.fresh_profiles.end id=\(requestId) actors=\(actorIds.count) rows=\(freshProfiles.count) " +
             "stale_avatar_profiles=\(staleAvatarProfiles.count) stale_username_profiles=\(staleUsernameProfiles.count) " +
-            "duration=\(SocialFeedDebug.duration(since: freshProfilesStartTime))"
+            "cached_profiles=\(freshProfiles.count) duration=\(SocialFeedDebug.duration(since: freshProfilesStartTime))"
         )
         if !staleAvatarProfiles.isEmpty {
             let stalePreview = staleAvatarProfiles.prefix(6).map { freshProfile in
