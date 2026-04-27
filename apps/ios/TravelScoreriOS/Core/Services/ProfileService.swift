@@ -241,6 +241,18 @@ final class ProfileService {
         return cachedProfile
     }
 
+    func memoryCachedPassportPreferences(userId: UUID) -> PassportPreferences? {
+        guard let cached = Self.passportPreferencesCache[userId] else {
+            SocialFeedDebug.log("profile.service.cache.passport.memory_miss user=\(userId.uuidString)")
+            return nil
+        }
+
+        SocialFeedDebug.log(
+            "profile.service.cache.passport.memory_hit user=\(userId.uuidString) nationalities=\(cached.nationalityCountryCodes.count)"
+        )
+        return cached
+    }
+
     func warmProfileCacheIfNeeded(
         userId: UUID,
         defaultUsername: String? = nil,

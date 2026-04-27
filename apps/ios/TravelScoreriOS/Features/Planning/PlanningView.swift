@@ -3037,7 +3037,7 @@ private extension TripPlannerTrip {
             } else {
                 let profileService = ProfileService(supabase: SupabaseManager.shared)
 
-                if let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+                if let cachedOwner = profileService.memoryCachedProfile(userId: ownerId) {
                     ordered.append(
                         TripPlannerFriendSnapshot(
                             id: cachedOwner.id,
@@ -3996,12 +3996,25 @@ struct TripPlannerView: View {
             TripPlannerDebugLog.message(
                 "Current user snapshot primed from auth duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
             )
-            return
         }
 
-        TripPlannerDebugLog.message(
-            "Current user snapshot unavailable without memory cache/auth duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
-        )
+        let fetchStart = Date().timeIntervalSinceReferenceDate
+        do {
+            let profile = try await profileService.fetchMyProfile(userId: userId, useCache: false)
+            currentUserSnapshot = TripPlannerFriendSnapshot(
+                id: profile.id,
+                displayName: profile.tripDisplayName,
+                username: profile.username,
+                avatarURL: profile.avatarUrl
+            )
+            TripPlannerDebugLog.message(
+                "Current user snapshot refreshed from app profile duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(profile.avatarUrl == nil ? "nil" : "app")"
+            )
+        } catch {
+            TripPlannerDebugLog.message(
+                "Current user snapshot app profile fetch failed duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId)) error=\(SocialFeedDebug.describe(error))"
+            )
+        }
     }
 
     private func currentUserAuthSnapshot(userId: UUID) -> TripPlannerFriendSnapshot? {
@@ -4017,9 +4030,6 @@ struct TripPlannerView: View {
         let fullName =
             metadata["full_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
             metadata["name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let avatarURL =
-            metadata["avatar_url"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
-            metadata["picture"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
         let username =
             metadata["user_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
             metadata["preferred_username"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
@@ -4029,7 +4039,7 @@ struct TripPlannerView: View {
             .compactMap { $0?.isEmpty == false ? $0 : nil }
             .first ?? String(localized: "trip_planner.you")
 
-        if displayName.isEmpty && (avatarURL?.isEmpty ?? true) {
+        if displayName.isEmpty {
             return nil
         }
 
@@ -4037,7 +4047,7 @@ struct TripPlannerView: View {
             id: userId,
             displayName: displayName,
             username: username,
-            avatarURL: avatarURL?.isEmpty == true ? nil : avatarURL
+            avatarURL: nil
         )
     }
 
@@ -4069,7 +4079,7 @@ struct TripPlannerView: View {
                     "trip=\(target.tripId.uuidString) owner=\(TripPlannerDebugLog.userLabel(target.ownerId))"
                 )
                 nextSnapshots[target.tripId] = embeddedSnapshot
-            } else if let cachedOwner = profileService.cachedProfile(userId: target.ownerId) {
+            } else if let cachedOwner = profileService.memoryCachedProfile(userId: target.ownerId) {
                 TripPlannerDebugLog.probe(
                     "TripPlannerView.owner_preload.cached_profile",
                     "trip=\(target.tripId.uuidString) owner=\(TripPlannerDebugLog.userLabel(target.ownerId))"
@@ -4155,7 +4165,7 @@ struct TripPlannerView: View {
             return nil
         }
 
-        if let cachedProfile = profileService.cachedProfile(userId: currentUserId) {
+        if let cachedProfile = profileService.memoryCachedProfile(userId: currentUserId) {
             return TripPlannerFriendSnapshot(
                 id: cachedProfile.id,
                 displayName: cachedProfile.tripDisplayName,
@@ -4243,7 +4253,7 @@ struct TripPlannerView: View {
            ownerId != sessionManager.userId,
            !trip.friends.contains(where: { $0.id == ownerId }),
            let ownerName = trip.effectiveOwnerSnapshot?.displayName
-            ?? ProfileService(supabase: SupabaseManager.shared).cachedProfile(userId: ownerId)?.tripDisplayName {
+            ?? ProfileService(supabase: SupabaseManager.shared).memoryCachedProfile(userId: ownerId)?.tripDisplayName {
             names.insert(ownerName, at: 0)
         }
 
@@ -5000,7 +5010,7 @@ private struct TripPlannerComposerView: View {
     private func defaultAvailability() -> [TripPlannerAvailabilityProposal] {
         guard includeDates else { return [] }
         let currentUserId = sessionManager.userId ?? supabase.currentUserId
-        let currentProfile = currentUserId.flatMap { profileService.cachedProfile(userId: $0) }
+        let currentProfile = currentUserId.flatMap { profileService.memoryCachedProfile(userId: $0) }
         return [
             TripPlannerAvailabilityProposal(
                 id: UUID(),
@@ -5094,7 +5104,7 @@ private struct TripPlannerDetailView: View {
             ownerSnapshot = embeddedOwnerSnapshot
         } else if let ownerId = trip.ownerId,
                   ownerId != SupabaseManager.shared.currentUserId,
-                  let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+                  let cachedOwner = profileService.memoryCachedProfile(userId: ownerId) {
             ownerSnapshot = TripPlannerFriendSnapshot(
                 id: cachedOwner.id,
                 displayName: cachedOwner.tripDisplayName,
@@ -5140,7 +5150,7 @@ private struct TripPlannerDetailView: View {
             return nil
         }
 
-        if let cachedProfile = profileService.cachedProfile(userId: currentUserId) {
+        if let cachedProfile = profileService.memoryCachedProfile(userId: currentUserId) {
             return TripPlannerFriendSnapshot(
                 id: cachedProfile.id,
                 displayName: cachedProfile.tripDisplayName,
@@ -5607,7 +5617,7 @@ private struct TripPlannerDetailView: View {
         var passportPreferencesByUserID: [UUID: PassportPreferences] = [:]
 
         if let currentUserId = sessionManager.userId {
-            if let cached = profileService.cachedProfile(userId: currentUserId) {
+            if let cached = profileService.memoryCachedProfile(userId: currentUserId) {
                 profilesByID[currentUserId] = cached
                 currentUserSnapshot = friendSnapshot(from: cached)
             } else if let profile = try? await profileService.fetchMyProfile(userId: currentUserId) {
@@ -5615,7 +5625,7 @@ private struct TripPlannerDetailView: View {
                 currentUserSnapshot = friendSnapshot(from: profile)
             }
 
-            if let cachedPreferences = profileService.cachedPassportPreferences(userId: currentUserId) {
+            if let cachedPreferences = profileService.memoryCachedPassportPreferences(userId: currentUserId) {
                 currentPassportPreferences = cachedPreferences
                 passportPreferencesByUserID[currentUserId] = cachedPreferences
             } else if let preferences = try? await profileService.fetchPassportPreferences(userId: currentUserId) {
@@ -5625,7 +5635,7 @@ private struct TripPlannerDetailView: View {
         }
 
         if let ownerId = trip.ownerId, ownerId != sessionManager.userId {
-            if let cachedOwner = profileService.cachedProfile(userId: ownerId) {
+            if let cachedOwner = profileService.memoryCachedProfile(userId: ownerId) {
                 profilesByID[ownerId] = cachedOwner
                 ownerSnapshot = friendSnapshot(from: cachedOwner)
             } else if let ownerProfile = try? await profileService.fetchMyProfile(userId: ownerId) {
@@ -5637,7 +5647,7 @@ private struct TripPlannerDetailView: View {
         }
 
         for snapshot in trip.friends {
-            if let cached = profileService.cachedProfile(userId: snapshot.id) {
+            if let cached = profileService.memoryCachedProfile(userId: snapshot.id) {
                 profilesByID[snapshot.id] = cached
                 refreshed.append(friendSnapshot(from: cached))
             } else {
@@ -5650,7 +5660,7 @@ private struct TripPlannerDetailView: View {
                 }
             }
 
-            if let cachedPreferences = profileService.cachedPassportPreferences(userId: snapshot.id) {
+            if let cachedPreferences = profileService.memoryCachedPassportPreferences(userId: snapshot.id) {
                 passportPreferencesByUserID[snapshot.id] = cachedPreferences
             } else if let preferences = try? await profileService.fetchPassportPreferences(userId: snapshot.id) {
                 passportPreferencesByUserID[snapshot.id] = preferences
@@ -5946,7 +5956,7 @@ private struct TripPlannerBasicsEditorView: View {
     private func updatedAvailability() -> [TripPlannerAvailabilityProposal] {
         let currentUserId = sessionManager.userId ?? SupabaseManager.shared.currentUserId
         let currentParticipantId = currentUserId?.uuidString ?? "self"
-        let currentProfile = currentUserId.flatMap { profileService.cachedProfile(userId: $0) }
+        let currentProfile = currentUserId.flatMap { profileService.memoryCachedProfile(userId: $0) }
         let nonSelf = trip.normalizedAvailabilityProposals(currentUserId: currentUserId)
             .filter { $0.participantId != currentParticipantId }
         guard includeDates else { return nonSelf }
@@ -12180,7 +12190,7 @@ private extension TripPlannerTrip {
             if preferCurrentUserName,
                let currentUserId,
                snapshot.id == currentUserId,
-               let cachedProfile = profileService.cachedProfile(userId: currentUserId) {
+               let cachedProfile = profileService.memoryCachedProfile(userId: currentUserId) {
                 ordered.append(
                     TripPlannerAvailabilityParticipant(
                         id: id,
@@ -12206,7 +12216,7 @@ private extension TripPlannerTrip {
                 append(snapshot: existing, preferCurrentUserName: preferCurrentUserName)
             } else if let ownerSnapshot = effectiveOwnerSnapshot, ownerSnapshot.id == userId {
                 append(snapshot: ownerSnapshot, preferCurrentUserName: preferCurrentUserName)
-            } else if let cachedProfile = profileService.cachedProfile(userId: userId) {
+            } else if let cachedProfile = profileService.memoryCachedProfile(userId: userId) {
                 append(
                     snapshot: TripPlannerFriendSnapshot(
                         id: cachedProfile.id,
@@ -14141,7 +14151,7 @@ private struct TripPlannerSavedTripCard: View {
             )
         }
 
-        if let cachedProfile = profileService.cachedProfile(userId: ownerId) {
+        if let cachedProfile = profileService.memoryCachedProfile(userId: ownerId) {
             return TripPlannerTravelerChip(
                 id: cachedProfile.id.uuidString,
                 name: cachedProfile.tripDisplayName,
@@ -14168,7 +14178,7 @@ private struct TripPlannerSavedTripCard: View {
             return nil
         }
 
-        if let cachedProfile = profileService.cachedProfile(userId: currentUserId) {
+        if let cachedProfile = profileService.memoryCachedProfile(userId: currentUserId) {
             return TripPlannerTravelerChip(
                 id: cachedProfile.id.uuidString,
                 name: String(localized: "trip_planner.you"),
