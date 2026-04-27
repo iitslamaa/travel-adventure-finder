@@ -282,6 +282,10 @@ final class ProfileService {
     }
 
     func cachedAvatarSnapshot(userId: UUID) async -> ProfileAvatarSnapshot? {
+        cachedAvatarSnapshotIfAvailable(userId: userId)
+    }
+
+    func cachedAvatarSnapshotIfAvailable(userId: UUID) -> ProfileAvatarSnapshot? {
         let startedAt = Date()
         SocialFeedDebug.log("profile.service.cache.avatar.start user=\(userId.uuidString)")
 

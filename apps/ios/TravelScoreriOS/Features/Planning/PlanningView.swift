@@ -4345,6 +4345,15 @@ struct TripPlannerView: View {
             )
         }
 
+        if let avatarSnapshot = profileService.cachedAvatarSnapshotIfAvailable(userId: currentUserId) {
+            return TripPlannerFriendSnapshot(
+                id: avatarSnapshot.id,
+                displayName: avatarSnapshot.displayName,
+                username: avatarSnapshot.username,
+                avatarURL: avatarSnapshot.avatarUrl
+            )
+        }
+
         return TripPlannerFriendSnapshot.currentAuthUserSnapshot(userId: currentUserId)
             ?? TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
     }
@@ -5776,7 +5785,8 @@ private struct TripPlannerDetailView: View {
 
     @MainActor
     private func loadTravelerProfiles() async {
-        isLoadingFriendProfiles = true
+        let shouldShowBlockingLoader = displayedTravelers.isEmpty
+        isLoadingFriendProfiles = shouldShowBlockingLoader
         defer { isLoadingFriendProfiles = false }
 
         if currentUserSnapshot == nil {
@@ -5791,9 +5801,11 @@ private struct TripPlannerDetailView: View {
             if let cached = profileService.memoryCachedProfile(userId: currentUserId) {
                 profilesByID[currentUserId] = cached
                 currentUserSnapshot = friendSnapshot(from: cached)
-            } else if let profile = try? await profileService.fetchMyProfile(userId: currentUserId) {
-                profilesByID[currentUserId] = profile
-                currentUserSnapshot = friendSnapshot(from: profile)
+            } else {
+                if let avatarSnapshot = profileService.cachedAvatarSnapshotIfAvailable(userId: currentUserId) {
+                    currentUserSnapshot = friendSnapshot(from: avatarSnapshot)
+                }
+                refreshTravelerProfileInBackground(userId: currentUserId, role: .currentUser)
             }
 
             if let cachedPreferences = profileService.memoryCachedPassportPreferences(userId: currentUserId) {
@@ -5809,9 +5821,11 @@ private struct TripPlannerDetailView: View {
             if let cachedOwner = profileService.memoryCachedProfile(userId: ownerId) {
                 profilesByID[ownerId] = cachedOwner
                 ownerSnapshot = friendSnapshot(from: cachedOwner)
-            } else if let ownerProfile = try? await profileService.fetchMyProfile(userId: ownerId) {
-                profilesByID[ownerId] = ownerProfile
-                ownerSnapshot = friendSnapshot(from: ownerProfile)
+            } else {
+                if let avatarSnapshot = profileService.cachedAvatarSnapshotIfAvailable(userId: ownerId) {
+                    ownerSnapshot = friendSnapshot(from: avatarSnapshot)
+                }
+                refreshTravelerProfileInBackground(userId: ownerId, role: .owner)
             }
         } else {
             ownerSnapshot = nil
@@ -5822,13 +5836,12 @@ private struct TripPlannerDetailView: View {
                 profilesByID[snapshot.id] = cached
                 refreshed.append(friendSnapshot(from: cached))
             } else {
-                do {
-                    let profile = try await profileService.fetchMyProfile(userId: snapshot.id)
-                    profilesByID[snapshot.id] = profile
-                    refreshed.append(friendSnapshot(from: profile))
-                } catch {
+                if let avatarSnapshot = profileService.cachedAvatarSnapshotIfAvailable(userId: snapshot.id) {
+                    refreshed.append(friendSnapshot(from: avatarSnapshot))
+                } else {
                     refreshed.append(snapshot)
                 }
+                refreshTravelerProfileInBackground(userId: snapshot.id, role: .friend)
             }
 
             if let cachedPreferences = profileService.memoryCachedPassportPreferences(userId: snapshot.id) {
@@ -5848,6 +5861,62 @@ private struct TripPlannerDetailView: View {
         if let ownerSnapshot, ownerSnapshot != trip.effectiveOwnerSnapshot {
             trip = trip.withOwnerSnapshot(ownerSnapshot)
         }
+    }
+
+    private enum TravelerProfileRole {
+        case currentUser
+        case owner
+        case friend
+    }
+
+    @MainActor
+    private func refreshTravelerProfileInBackground(userId: UUID, role: TravelerProfileRole) {
+        Task {
+            let startedAt = Date().timeIntervalSinceReferenceDate
+            TripPlannerDebugLog.message(
+                "Trip detail traveler profile background.start user=\(TripPlannerDebugLog.userLabel(userId)) role=\(role)"
+            )
+            do {
+                let profile = try await profileService.fetchMyProfile(userId: userId, useCache: false)
+                await MainActor.run {
+                    let snapshot = friendSnapshot(from: profile)
+                    travelerProfiles[userId] = profile
+
+                    switch role {
+                    case .currentUser:
+                        currentUserSnapshot = snapshot
+                    case .owner:
+                        ownerSnapshot = snapshot
+                        if ownerSnapshot != trip.effectiveOwnerSnapshot {
+                            trip = trip.withOwnerSnapshot(snapshot)
+                        }
+                    case .friend:
+                        if let index = resolvedFriends.firstIndex(where: { $0.id == userId }) {
+                            resolvedFriends[index] = snapshot
+                        } else if trip.friends.contains(where: { $0.id == userId }) {
+                            resolvedFriends.append(snapshot)
+                        }
+                    }
+
+                    TripPlannerDebugLog.message(
+                        "Trip detail traveler profile background.success user=\(TripPlannerDebugLog.userLabel(userId)) role=\(role) duration=\(TripPlannerDebugLog.durationText(since: startedAt)) avatar=\(profile.avatarUrl == nil ? "nil" : "app")"
+                    )
+                }
+            } catch {
+                TripPlannerDebugLog.message(
+                    "Trip detail traveler profile background.failed user=\(TripPlannerDebugLog.userLabel(userId)) role=\(role) duration=\(TripPlannerDebugLog.durationText(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+                )
+            }
+        }
+    }
+
+    private func friendSnapshot(from snapshot: ProfileAvatarSnapshot) -> TripPlannerFriendSnapshot {
+        return TripPlannerFriendSnapshot(
+            id: snapshot.id,
+            displayName: snapshot.displayName,
+            username: snapshot.username,
+            avatarURL: snapshot.avatarUrl
+        )
     }
 
     private func friendSnapshot(from profile: Profile) -> TripPlannerFriendSnapshot {
