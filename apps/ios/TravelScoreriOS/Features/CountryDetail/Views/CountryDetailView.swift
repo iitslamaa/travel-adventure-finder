@@ -980,16 +980,16 @@ private struct CountryFriendEngagementCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(red: 0.95, green: 0.91, blue: 0.84).opacity(0.46))
+                    .fill(Color(red: 0.96, green: 0.92, blue: 0.85).opacity(0.88))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .fill(Color.white.opacity(0.08))
+                            .fill(Color.white.opacity(0.16))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(Color.white.opacity(0.26), lineWidth: 1)
+                            .stroke(Color.white.opacity(0.42), lineWidth: 1)
                     )
-                    .shadow(color: .black.opacity(0.10), radius: 12, y: 8)
+                    .shadow(color: .black.opacity(0.14), radius: 14, y: 8)
             )
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
 
@@ -1056,7 +1056,7 @@ private struct CountryFriendEngagementCard: View {
                             .padding(.vertical, 10)
                             .background(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(Color(red: 0.98, green: 0.95, blue: 0.90).opacity(0.74))
+                                    .fill(Color(red: 0.99, green: 0.97, blue: 0.93).opacity(0.92))
                             )
                         }
                         .buttonStyle(.plain)
