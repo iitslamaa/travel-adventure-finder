@@ -3918,7 +3918,9 @@ struct TripPlannerView: View {
                         "TripPlannerView.refreshable.start",
                         "trips=\(store.trips.count) pendingInbox=\(sharedTripInbox.notifications.count)"
                     )
-                    async let snapshotRefresh: Void = loadCurrentUserSnapshot()
+                    Task {
+                        await loadCurrentUserSnapshot()
+                    }
 
                     if let userId = sessionManager.userId {
                         do {
@@ -3934,7 +3936,6 @@ struct TripPlannerView: View {
                         await store.refresh()
                     }
 
-                    _ = await snapshotRefresh
                     await preloadTripOwnerProfiles()
                     TripPlannerDebugLog.probe(
                         "TripPlannerView.refreshable.end",
@@ -4109,21 +4110,10 @@ struct TripPlannerView: View {
             )
         }
 
-        if let persistedProfile = await profileService.persistedCachedProfile(userId: userId) {
-            currentUserSnapshot = TripPlannerFriendSnapshot(
-                id: persistedProfile.id,
-                displayName: persistedProfile.tripDisplayName,
-                username: persistedProfile.username,
-                avatarURL: persistedProfile.avatarUrl
-            )
-            TripPlannerDebugLog.message(
-                "Current user snapshot loaded from async disk cache duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(persistedProfile.avatarUrl == nil ? "nil" : "app")"
-            )
-        }
-
         let fetchStart = Date().timeIntervalSinceReferenceDate
         do {
             let profile = try await profileService.fetchMyProfile(userId: userId, useCache: false)
+            guard sessionManager.userId == userId else { return }
             currentUserSnapshot = TripPlannerFriendSnapshot(
                 id: profile.id,
                 displayName: profile.tripDisplayName,
@@ -5743,9 +5733,6 @@ private struct TripPlannerDetailView: View {
             if let cached = profileService.memoryCachedProfile(userId: currentUserId) {
                 profilesByID[currentUserId] = cached
                 currentUserSnapshot = friendSnapshot(from: cached)
-            } else if let persisted = await profileService.persistedCachedProfile(userId: currentUserId) {
-                profilesByID[currentUserId] = persisted
-                currentUserSnapshot = friendSnapshot(from: persisted)
             } else if let profile = try? await profileService.fetchMyProfile(userId: currentUserId) {
                 profilesByID[currentUserId] = profile
                 currentUserSnapshot = friendSnapshot(from: profile)
@@ -5764,9 +5751,6 @@ private struct TripPlannerDetailView: View {
             if let cachedOwner = profileService.memoryCachedProfile(userId: ownerId) {
                 profilesByID[ownerId] = cachedOwner
                 ownerSnapshot = friendSnapshot(from: cachedOwner)
-            } else if let persistedOwner = await profileService.persistedCachedProfile(userId: ownerId) {
-                profilesByID[ownerId] = persistedOwner
-                ownerSnapshot = friendSnapshot(from: persistedOwner)
             } else if let ownerProfile = try? await profileService.fetchMyProfile(userId: ownerId) {
                 profilesByID[ownerId] = ownerProfile
                 ownerSnapshot = friendSnapshot(from: ownerProfile)
@@ -5779,9 +5763,6 @@ private struct TripPlannerDetailView: View {
             if let cached = profileService.memoryCachedProfile(userId: snapshot.id) {
                 profilesByID[snapshot.id] = cached
                 refreshed.append(friendSnapshot(from: cached))
-            } else if let persisted = await profileService.persistedCachedProfile(userId: snapshot.id) {
-                profilesByID[snapshot.id] = persisted
-                refreshed.append(friendSnapshot(from: persisted))
             } else {
                 do {
                     let profile = try await profileService.fetchMyProfile(userId: snapshot.id)
