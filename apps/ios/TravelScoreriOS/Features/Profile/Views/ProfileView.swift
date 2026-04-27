@@ -85,8 +85,14 @@ struct ProfileView: View {
         profileVM.profile?.friendCount ?? 0
     }
 
+    private var isOwnProfile: Bool {
+        SupabaseManager.shared.currentUserId == userId
+    }
+
     private var isReadyToRenderProfile: Bool {
-        profileVM.profile?.id == userId
+        guard profileVM.profile?.id == userId else { return false }
+        guard !isOwnProfile else { return true }
+        return !profileVM.isRelationshipLoading
     }
 
     private var travelModeLabel: String? {
@@ -116,6 +122,23 @@ struct ProfileView: View {
     private func logField(_ value: String?) -> String {
         guard let value, !value.isEmpty else { return "nil" }
         return value
+    }
+
+    private func clearProfileNavigationLoadingIfReady(reason: String) {
+        if isReadyToRenderProfile || profileVM.errorMessage != nil {
+            SocialFeedDebug.log(
+                "profile.view.navigation.clear user=\(userId.uuidString) reason=\(reason) " +
+                "ready=\(isReadyToRenderProfile) relationship_loading=\(profileVM.isRelationshipLoading) " +
+                "error=\(logField(profileVM.errorMessage))"
+            )
+            socialNav.profileRouteDidAppear(userId: userId)
+        } else {
+            SocialFeedDebug.log(
+                "profile.view.navigation.hold user=\(userId.uuidString) reason=\(reason) " +
+                "vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
+                "relationship_loading=\(profileVM.isRelationshipLoading) is_loading=\(profileVM.isLoading)"
+            )
+        }
     }
 
     private func resolveCountry(for isoCode: String) -> Country {
@@ -150,13 +173,15 @@ struct ProfileView: View {
                         .onAppear {
                             SocialFeedDebug.log(
                                 "profile.view.loading.appear user=\(userId.uuidString) " +
-                                "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading)"
+                                "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading) " +
+                                "relationship_loading=\(profileVM.isRelationshipLoading)"
                             )
                         }
                         .onDisappear {
                             SocialFeedDebug.log(
                                 "profile.view.loading.disappear user=\(userId.uuidString) " +
-                                "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading)"
+                                "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading) " +
+                                "relationship_loading=\(profileVM.isRelationshipLoading)"
                             )
                         }
                 } else {
@@ -322,30 +347,26 @@ struct ProfileView: View {
         .onAppear {
             SocialFeedDebug.log(
                 "profile.view.appear user=\(userId.uuidString) vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
-                "ready=\(isReadyToRenderProfile) is_loading=\(profileVM.isLoading) has_loaded_core=\(profileVM.hasLoadedCoreData)"
+                "ready=\(isReadyToRenderProfile) is_loading=\(profileVM.isLoading) " +
+                "relationship_loading=\(profileVM.isRelationshipLoading) has_loaded_core=\(profileVM.hasLoadedCoreData)"
             )
-            socialNav.profileRouteDidAppear(userId: userId)
-
-            guard profileVM.profile?.id != userId else {
-                SocialFeedDebug.log(
-                    "profile.view.load.skip user=\(userId.uuidString) reason=profile_present " +
-                    "vm_profile=\(logField(profileVM.profile?.id.uuidString))"
-                )
-                return
-            }
+            clearProfileNavigationLoadingIfReady(reason: "appear")
 
             Task {
                 let loadStartTime = Date()
                 SocialFeedDebug.log(
                     "profile.view.load.task.start user=\(userId.uuidString) " +
-                    "vm_profile=\(logField(profileVM.profile?.id.uuidString)) has_loaded_core=\(profileVM.hasLoadedCoreData)"
+                    "vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
+                    "relationship_loading=\(profileVM.isRelationshipLoading) has_loaded_core=\(profileVM.hasLoadedCoreData)"
                 )
                 await profileVM.loadIfNeeded()
                 SocialFeedDebug.log(
                     "profile.view.load.task.end user=\(userId.uuidString) vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
                     "ready=\(isReadyToRenderProfile) is_loading=\(profileVM.isLoading) " +
+                    "relationship_loading=\(profileVM.isRelationshipLoading) " +
                     "duration=\(SocialFeedDebug.duration(since: loadStartTime))"
                 )
+                clearProfileNavigationLoadingIfReady(reason: "load_task_end")
             }
         }
     }
