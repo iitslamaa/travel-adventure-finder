@@ -1831,8 +1831,10 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
         self.title = title
         self.totalAmount = totalAmount
         self.paidById = paidById
-        self.paidByName = paidByName
-        self.paidByUsername = paidByUsername
+        self.paidByName = Self.cleanDisplayText(paidByName)
+            ?? Self.cleanDisplayText(paidByUsername)
+            ?? String(localized: "trip_planner.you")
+        self.paidByUsername = Self.cleanDisplayText(paidByUsername)
         self.splitMode = splitMode
         self.date = date
         self.participantIds = participantIds
@@ -1871,13 +1873,25 @@ struct TripPlannerExpense: Codable, Identifiable, Hashable, Sendable {
         title = try container.decode(String.self, forKey: .title)
         totalAmount = try container.decode(Double.self, forKey: .totalAmount)
         paidById = try container.decode(String.self, forKey: .paidById)
-        paidByName = try container.decode(String.self, forKey: .paidByName)
-        paidByUsername = try container.decodeIfPresent(String.self, forKey: .paidByUsername)
+        let decodedPaidByUsername = try container.decodeIfPresent(String.self, forKey: .paidByUsername)
+        paidByName = Self.cleanDisplayText(try container.decode(String.self, forKey: .paidByName))
+            ?? Self.cleanDisplayText(decodedPaidByUsername)
+            ?? String(localized: "trip_planner.you")
+        paidByUsername = Self.cleanDisplayText(decodedPaidByUsername)
         splitMode = try container.decode(TripPlannerExpenseSplitMode.self, forKey: .splitMode)
         date = try container.decodeFlexibleDate(forKey: .date)
         participantIds = try container.decode([String].self, forKey: .participantIds)
         participantNames = try container.decode([String].self, forKey: .participantNames)
         shares = try container.decode([TripPlannerExpenseShare].self, forKey: .shares)
+    }
+
+    private static func cleanDisplayText(_ value: String?) -> String? {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !trimmed.isEmpty else { return nil }
+
+        let lowercased = trimmed.lowercased()
+        let nullValues: Set<String> = ["null", "(null)", "nil", "<null>"]
+        return nullValues.contains(lowercased) ? nil : trimmed
     }
 }
 
@@ -8962,7 +8976,7 @@ private struct TripPlannerChecklistEditorView: View {
                                                 ForEach(dayExpenses) { expense in
                                                     TripPlannerExpenseRow(
                                                         expense: expense,
-                                                        participants: [],
+                                                        participants: expenseParticipants,
                                                         currencyCode: plannerCurrencyCode,
                                                         onEdit: nil
                                                     )
@@ -9324,6 +9338,33 @@ private struct TripPlannerChecklistEditorView: View {
         return TripPlannerExpensesEditorView.sortedExpenses(
             trip.expenses.filter { calendar.isDate($0.date, inSameDayAs: date) }
         )
+    }
+
+    private var expenseParticipants: [TripPlannerExpenseParticipant] {
+        var travelers: [TripPlannerFriendSnapshot] = []
+
+        if let actorId {
+            travelers.append(
+                TripPlannerFriendSnapshot(
+                    id: actorId,
+                    displayName: actorName,
+                    username: "",
+                    avatarURL: nil
+                )
+            )
+        }
+
+        if let ownerSnapshot = trip.effectiveOwnerSnapshot {
+            travelers.append(ownerSnapshot)
+        }
+
+        travelers.append(contentsOf: trip.friends)
+
+        var seen = Set<UUID>()
+        return travelers.compactMap { traveler in
+            guard seen.insert(traveler.id).inserted else { return nil }
+            return TripPlannerExpenseParticipant(friend: traveler)
+        }
     }
 
     private func moveOptions(

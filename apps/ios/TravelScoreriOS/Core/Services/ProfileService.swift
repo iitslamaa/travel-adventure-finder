@@ -290,6 +290,14 @@ final class ProfileService {
             return snapshot
         }
 
+        if let persistedProfile = await persistedCachedProfile(userId: userId) {
+            let snapshot = Self.avatarSnapshot(from: persistedProfile)
+            SocialFeedDebug.log(
+                "profile.service.cache.avatar.profile_disk_hit user=\(userId.uuidString) username=\(logField(snapshot.username)) avatar=\(logField(snapshot.avatarUrl))"
+            )
+            return snapshot
+        }
+
         let url = Self.avatarSnapshotURL(for: userId)
         let snapshot: ProfileAvatarSnapshot?
         if let data = try? Data(contentsOf: url) {
@@ -439,6 +447,15 @@ final class ProfileService {
                 profileDetailDebugSummary(cachedProfile)
             )
             return cachedProfile
+        }
+
+        if useCache, let persistedProfile = await persistedCachedProfile(userId: userId) {
+            SocialFeedDebug.log(
+                "profile.service.fetch.persisted_cache_hit user=\(userId.uuidString) " +
+                "username=\(logField(persistedProfile.username)) avatar=\(logField(persistedProfile.avatarUrl)) " +
+                profileDetailDebugSummary(persistedProfile)
+            )
+            return persistedProfile
         }
 
         if useCache, let inFlightFetch = Self.inFlightProfileFetches[userId] {
