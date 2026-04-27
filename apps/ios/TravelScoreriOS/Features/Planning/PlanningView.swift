@@ -1299,6 +1299,285 @@ private enum TripPlannerChecklistTemplates {
     }
 }
 
+private struct TripPlannerRideApp: Identifiable, Hashable {
+    let name: String
+    let note: String
+    let appStoreURL: URL?
+    let iconURL: URL?
+
+    var id: String { name }
+}
+
+private struct TripPlannerCountryRideAppGuide: Identifiable, Hashable {
+    let countryId: String
+    let countryName: String
+    let apps: [TripPlannerRideApp]
+
+    var id: String { countryId }
+}
+
+private enum TripPlannerRideAppGuideStore {
+    private struct AppStoreMetadata {
+        let appStoreURL: String
+        let iconURL: String
+    }
+
+    private static let appStoreMetadataByName: [String: AppStoreMetadata] = [
+        "13cabs": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/au/app/13cabs-ride-with-no-surge/id358640110",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/16/3b/d4/163bd41d-fe9d-0a9f-bc42-3665d6b8b6dd/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/100x100bb.jpg"
+        ),
+        "Blacklane": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/blacklane-private-car-service/id524123600",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/e7/92/f7/e792f730-9d78-7f64-cd0b-66570cc39512/AppIcon-0-0-1x_U007ephone-0-1-0-sRGB-85-220.png/100x100bb.jpg"
+        ),
+        "Bolt": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/bolt-request-a-ride/id675033630",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/ca/f5/06/caf506f1-28a9-39a1-da28-3b3d3ff0f497/AppIcon-1x_U007emarketing-0-6-0-85-220-0.png/100x100bb.jpg"
+        ),
+        "Cabify": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/cabify/id476087442",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/b9/56/13/b9561383-3514-07c3-bd38-c9cc220df5f9/AppIcon-0-0-1x_U007emarketing-0-8-0-sRGB-85-220.png/100x100bb.jpg"
+        ),
+        "Careem": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/careem-rides-food-grocery/id592978487",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/48/18/3a/48183a06-afd4-accd-4a62-39f7e38f30be/SuperAppIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/100x100bb.jpg"
+        ),
+        "DiDi": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/didi-rider-affordable-rides/id1362398401",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/36/2a/e6/362ae61e-3c63-f9ba-8ce9-7a4228457e53/AppIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/100x100bb.jpg"
+        ),
+        "Gett": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/gett-book-black-taxis/id449655162",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/12/28/f0/1228f039-f963-5590-0c43-f67b0c76fe4e/AppIcon-0-0-1x_U007ephone-0-1-0-85-220.png/100x100bb.jpg"
+        ),
+        "GO": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/go-taxi-app-for-japan/id1254341709",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/1a/8e/87/1a8e8767-fed5-0b07-c1f6-458403a3b1fb/AppIcon-0-0-1x_U007epad-0-1-85-220.png/100x100bb.jpg"
+        ),
+        "Grab": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/grab-taxi-ride-food-delivery/id647268330",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/5d/6a/87/5d6a8793-ab9a-a7cb-ee9e-91b14f5822a4/GrabIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/100x100bb.jpg"
+        ),
+        "Kakao T": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/kakao-t/id981110422",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/56/57/3c/56573c99-fccf-60ae-1617-75d882be20e2/AppIcon-0-0-1x_U007emarketing-0-7-0-85-220.png/100x100bb.jpg"
+        ),
+        "Lyft": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/lyft/id529379082",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/13/f7/3a/13f73a36-5702-09f6-e6e6-8b654ddf03b5/PassengerAppIcon-0-0-1x_U007ephone-0-1-85-220.png/100x100bb.jpg"
+        ),
+        "Maxim": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/maxim-order-a-taxi-delivery/id579985456",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/b9/66/68/b96668fd-6627-a330-b647-805275e8958a/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/100x100bb.jpg"
+        ),
+        "MyTaxi": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/mytaxi-taxi-and-delivery/id865012817",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/5f/20/0e/5f200e6b-08d3-a70e-fd5a-c6c8cbaa704b/AppIcon-0-0-1x_U007emarketing-0-8-0-85-220.png/100x100bb.jpg"
+        ),
+        "TADA": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/tada-ride-hailing/id1412329684",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/b4/ef/2f/b4ef2f25-3280-47b0-4345-2857c17e2afd/AppIcon-0-0-1x_U007ephone-0-1-0-85-220.png/100x100bb.jpg"
+        ),
+        "Uber": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/uber-request-a-ride/id368677368",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/b6/fe/da/b6feda49-6004-8d01-03a4-84809ea0e7cf/AppIcon-0-0-1x_U007emarketing-0-8-0-0-85-220.png/100x100bb.jpg"
+        ),
+        "Yandex Go": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/yandex-go-taxi-food-market/id472650686",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/5d/89/d9/5d89d9a6-d257-faa2-16cd-40c1d646798c/AppIcon-0-0-1x_U007emarketing-0-6-0-0-85-220.png/100x100bb.jpg"
+        ),
+        "Yango": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/yango-taxi-food-delivery/id1437157286",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/39/bf/87/39bf877b-e784-b723-f316-719ead20a314/AppIcon-0-0-1x_U007emarketing-0-6-0-0-85-220.png/100x100bb.jpg"
+        ),
+        "inDrive": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/indrive-save-on-city-rides/id780125801",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/b8/ff/3d/b8ff3dd0-8f70-fcac-d521-2f90ed5bb343/AppIcon-0-0-1x_U007ephone-0-1-0-sRGB-85-220.png/100x100bb.jpg"
+        ),
+        "taxi.eu": AppStoreMetadata(
+            appStoreURL: "https://apps.apple.com/us/app/taxi-eu/id465315934",
+            iconURL: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/c0/2f/8c/c02f8ce1-d74e-31bf-0079-c795dc2b2007/AppIcon-0-0-1x_U007emarketing-0-0-0-5-0-0-85-220.png/100x100bb.jpg"
+        )
+    ]
+
+    private static let uberCountries: Set<String> = [
+        "AD", "AE", "AR", "AT", "AU", "BB", "BD", "BE", "BH", "BO", "BR", "CA", "CH", "CL", "CO", "CR",
+        "CZ", "DE", "DK", "DO", "EC", "EE", "EG", "ES", "FI", "FR", "GB", "GH", "GR", "GT", "HK", "HN",
+        "HR", "HU", "IE", "IN", "IT", "JM", "JO", "JP", "KE", "KR", "KW", "LB", "LC", "LK", "LT", "LU",
+        "MT", "MX", "NG", "NL", "NO", "NZ", "PA", "PE", "PL", "PT", "PY", "QA", "RO", "SA", "SE", "SI",
+        "SK", "SV", "TR", "TW", "UA", "UG", "US", "UY", "ZA"
+    ]
+
+    private static let boltCountries: Set<String> = [
+        "AL", "AT", "BA", "BE", "BG", "CH", "CZ", "DE", "DK", "EE", "FI", "FR", "GB", "GE", "GH", "HR",
+        "HU", "IE", "KE", "LT", "LV", "ME", "MK", "MT", "NG", "NL", "NO", "PL", "PT", "PY", "RO", "RW",
+        "SE", "SI", "SK", "TH", "TZ", "UA", "ZA"
+    ]
+
+    private static let grabCountries: Set<String> = ["KH", "ID", "MY", "MM", "PH", "SG", "TH", "VN"]
+    private static let careemCountries: Set<String> = ["AE", "BH", "EG", "IQ", "JO", "KW", "MA", "QA", "SA"]
+    private static let cabifyCountries: Set<String> = ["AR", "CL", "CO", "EC", "ES", "MX", "PE", "UY"]
+    private static let lyftCountries: Set<String> = ["CA", "US"]
+    private static let didiCountries: Set<String> = ["AU", "BR", "CL", "CN", "CO", "CR", "DO", "MX", "NZ", "PE"]
+    private static let gojekCountries: Set<String> = ["ID", "SG", "VN"]
+    private static let olaCountries: Set<String> = ["AU", "GB", "IN", "NZ"]
+    private static let yandexGoCountries: Set<String> = ["AM", "BY", "GE", "KG", "KZ", "MD", "RS", "UZ"]
+    private static let yangoCountries: Set<String> = ["AO", "CD", "CG", "CI", "CM", "GH", "MZ", "SN", "ZM"]
+    private static let freeNowCountries: Set<String> = ["AT", "DE", "ES", "FR", "GB", "GR", "IE", "IT", "PL", "RO"]
+    private static let taxiEuCountries: Set<String> = ["AT", "BE", "CH", "CZ", "DE", "DK", "FR", "LU", "NL", "NO", "PL"]
+    private static let maximCountries: Set<String> = ["AM", "AZ", "BY", "GE", "KG", "KZ", "MD", "TJ", "UZ"]
+    private static let tadaCountries: Set<String> = ["KH", "SG", "TH", "VN"]
+    private static let gettCountries: Set<String> = ["GB", "IL"]
+    private static let kakaoTCountries: Set<String> = ["KR"]
+    private static let goJapanCountries: Set<String> = ["JP"]
+    private static let thirteenCabsCountries: Set<String> = ["AU"]
+    private static let myTaxiCountries: Set<String> = ["UZ"]
+    private static let blacklaneCountries: Set<String> = [
+        "AD", "AE", "AL", "AM", "AR", "AT", "AU", "AZ", "BA", "BB", "BD", "BE", "BG", "BH", "BR", "CA",
+        "CH", "CL", "CN", "CO", "CR", "CY", "CZ", "DE", "DK", "DO", "EC", "EE", "EG", "ES", "FI", "FR",
+        "GB", "GE", "GH", "GR", "GT", "HK", "HR", "HU", "ID", "IE", "IL", "IN", "IS", "IT", "JM", "JO",
+        "JP", "KE", "KH", "KR", "KW", "KZ", "LB", "LK", "LT", "LU", "LV", "MA", "ME", "MK", "MT", "MX",
+        "MY", "NG", "NL", "NO", "NZ", "PA", "PE", "PH", "PL", "PT", "QA", "RO", "RS", "SA", "SE", "SG",
+        "SI", "SK", "TH", "TR", "TW", "UA", "US", "UY", "VN", "ZA"
+    ]
+
+    static func guides(countryIds: [String], countryNames: [String]) -> [TripPlannerCountryRideAppGuide] {
+        zip(countryIds, countryNames).compactMap { rawId, rawName in
+            let countryId = rawId.uppercased()
+            let countryName = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !countryId.isEmpty, !countryName.isEmpty else { return nil }
+
+            return TripPlannerCountryRideAppGuide(
+                countryId: countryId,
+                countryName: countryName,
+                apps: apps(for: countryId)
+            )
+        }
+    }
+
+    private static func apps(for countryId: String) -> [TripPlannerRideApp] {
+        var apps: [TripPlannerRideApp] = []
+
+        append("Uber", uberNote(for: countryId), to: &apps, when: uberCountries.contains(countryId))
+        append("Lyft", String(localized: "trip_planner.apps_to_download.note.lyft"), to: &apps, when: lyftCountries.contains(countryId))
+        append("Bolt", boltNote(for: countryId), to: &apps, when: boltCountries.contains(countryId))
+        append("Grab", grabNote(for: countryId), to: &apps, when: grabCountries.contains(countryId))
+        append("Gojek", String(localized: "trip_planner.apps_to_download.note.gojek"), to: &apps, when: gojekCountries.contains(countryId))
+        append("Careem", careemNote(for: countryId), to: &apps, when: careemCountries.contains(countryId))
+        append("Cabify", String(localized: "trip_planner.apps_to_download.note.cabify"), to: &apps, when: cabifyCountries.contains(countryId))
+        append("DiDi", didiNote(for: countryId), to: &apps, when: didiCountries.contains(countryId))
+        append("Ola", String(localized: "trip_planner.apps_to_download.note.ola"), to: &apps, when: olaCountries.contains(countryId))
+        append("Yandex Go", yandexGoNote(for: countryId), to: &apps, when: yandexGoCountries.contains(countryId))
+        append("Yango", String(localized: "trip_planner.apps_to_download.note.yango"), to: &apps, when: yangoCountries.contains(countryId))
+        append("Free Now", String(localized: "trip_planner.apps_to_download.note.free_now"), to: &apps, when: freeNowCountries.contains(countryId))
+        append("taxi.eu", String(localized: "trip_planner.apps_to_download.note.taxi_eu"), to: &apps, when: taxiEuCountries.contains(countryId))
+        append("Maxim", String(localized: "trip_planner.apps_to_download.note.maxim"), to: &apps, when: maximCountries.contains(countryId))
+        append("TADA", String(localized: "trip_planner.apps_to_download.note.tada"), to: &apps, when: tadaCountries.contains(countryId))
+        append("Gett", String(localized: "trip_planner.apps_to_download.note.gett"), to: &apps, when: gettCountries.contains(countryId))
+        append("Kakao T", String(localized: "trip_planner.apps_to_download.note.kakao_t"), to: &apps, when: kakaoTCountries.contains(countryId))
+        append("GO", String(localized: "trip_planner.apps_to_download.note.go_japan"), to: &apps, when: goJapanCountries.contains(countryId))
+        append("13cabs", String(localized: "trip_planner.apps_to_download.note.thirteen_cabs"), to: &apps, when: thirteenCabsCountries.contains(countryId))
+        append("MyTaxi", String(localized: "trip_planner.apps_to_download.note.mytaxi"), to: &apps, when: myTaxiCountries.contains(countryId))
+        append("inDrive", String(localized: "trip_planner.apps_to_download.note.indrive"), to: &apps, when: inDriveLikelyCountries.contains(countryId))
+        append("Blacklane", String(localized: "trip_planner.apps_to_download.note.blacklane"), to: &apps, when: apps.isEmpty && blacklaneCountries.contains(countryId))
+
+        return apps
+    }
+
+    private static let inDriveLikelyCountries: Set<String> = [
+        "AR", "BD", "BO", "BR", "CL", "CO", "CR", "DO", "EC", "EG", "GH", "GT", "HN", "ID", "IN", "JO",
+        "KE", "KZ", "MA", "MX", "NG", "NP", "PK", "PE", "PH", "SV", "TZ", "UG", "ZA"
+    ]
+
+    private static func uberNote(for countryId: String) -> String {
+        switch countryId {
+        case "US", "CA":
+            return String(localized: "trip_planner.apps_to_download.note.uber_north_america")
+        case "AE", "QA", "SA", "KW", "BH", "JO", "EG", "MA":
+            return String(localized: "trip_planner.apps_to_download.note.uber_mena")
+        case "IN":
+            return String(localized: "trip_planner.apps_to_download.note.uber_india")
+        case "JP":
+            return String(localized: "trip_planner.apps_to_download.note.uber_japan")
+        default:
+            return String(localized: "trip_planner.apps_to_download.note.uber_default")
+        }
+    }
+
+    private static func boltNote(for countryId: String) -> String {
+        switch countryId {
+        case "EE", "LV", "LT", "PL", "PT", "RO", "HR", "SI", "SK", "CZ", "HU", "BG", "MT", "GE":
+            return String(localized: "trip_planner.apps_to_download.note.bolt_core")
+        case "KE", "NG", "GH", "ZA", "TZ", "RW":
+            return String(localized: "trip_planner.apps_to_download.note.bolt_africa")
+        case "TH":
+            return String(localized: "trip_planner.apps_to_download.note.bolt_thailand")
+        default:
+            return String(localized: "trip_planner.apps_to_download.note.bolt_default")
+        }
+    }
+
+    private static func grabNote(for countryId: String) -> String {
+        switch countryId {
+        case "SG":
+            return String(localized: "trip_planner.apps_to_download.note.grab_singapore")
+        case "ID", "TH", "VN", "PH", "MY", "KH":
+            return String(localized: "trip_planner.apps_to_download.note.grab_southeast_asia")
+        default:
+            return String(localized: "trip_planner.apps_to_download.note.grab_default")
+        }
+    }
+
+    private static func careemNote(for countryId: String) -> String {
+        switch countryId {
+        case "AE":
+            return String(localized: "trip_planner.apps_to_download.note.careem_uae")
+        case "SA", "KW", "QA", "BH":
+            return String(localized: "trip_planner.apps_to_download.note.careem_gulf")
+        default:
+            return String(localized: "trip_planner.apps_to_download.note.careem_default")
+        }
+    }
+
+    private static func didiNote(for countryId: String) -> String {
+        switch countryId {
+        case "CN":
+            return String(localized: "trip_planner.apps_to_download.note.didi_china")
+        case "MX", "CO", "CL", "PE", "CR":
+            return String(localized: "trip_planner.apps_to_download.note.didi_latin_america")
+        case "AU", "NZ":
+            return String(localized: "trip_planner.apps_to_download.note.didi_oceania")
+        default:
+            return String(localized: "trip_planner.apps_to_download.note.didi_default")
+        }
+    }
+
+    private static func yandexGoNote(for countryId: String) -> String {
+        switch countryId {
+        case "UZ":
+            return String(localized: "trip_planner.apps_to_download.note.yandex_go_uzbekistan")
+        case "KZ", "KG":
+            return String(localized: "trip_planner.apps_to_download.note.yandex_go_central_asia")
+        case "GE":
+            return String(localized: "trip_planner.apps_to_download.note.yandex_go_georgia")
+        default:
+            return String(localized: "trip_planner.apps_to_download.note.yandex_go_default")
+        }
+    }
+
+    private static func append(_ name: String, _ note: String, to apps: inout [TripPlannerRideApp], when shouldAppend: Bool) {
+        guard shouldAppend else { return }
+        let metadata = appStoreMetadataByName[name]
+        apps.append(TripPlannerRideApp(
+            name: name,
+            note: note,
+            appStoreURL: metadata.flatMap { URL(string: $0.appStoreURL) },
+            iconURL: metadata.flatMap { URL(string: $0.iconURL) }
+        ))
+    }
+}
+
 struct TripPlannerDayPlan: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let date: Date
@@ -7869,6 +8148,177 @@ private struct TripPlannerChecklistPreviewSection: View {
     }
 }
 
+private struct TripPlannerAppsToDownloadView: View {
+    let guides: [TripPlannerCountryRideAppGuide]
+
+    var body: some View {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Theme.titleBanner(String(localized: "trip_planner.apps_to_download.title"))
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        TripPlannerInfoCard(
+                            text: String(localized: "trip_planner.apps_to_download.intro"),
+                            systemImage: "car.fill"
+                        )
+
+                        if guides.isEmpty {
+                            TripPlannerInfoCard(
+                                text: String(localized: "trip_planner.apps_to_download.empty"),
+                                systemImage: "plus.circle"
+                            )
+                        } else {
+                            ForEach(guides) { guide in
+                                TripPlannerRideAppCountryCard(guide: guide)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, Theme.pageHorizontalInset)
+                    .padding(.top, 18)
+                    .padding(.bottom, 32)
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct TripPlannerRideAppCountryCard: View {
+    let guide: TripPlannerCountryRideAppGuide
+
+    var body: some View {
+        TripPlannerSectionCard(
+            title: guide.countryName,
+            subtitle: guide.apps.isEmpty
+                ? String(localized: "trip_planner.apps_to_download.no_confident_match")
+                : String(format: String(localized: guide.apps.count == 1 ? "trip_planner.apps_to_download.app_count_singular" : "trip_planner.apps_to_download.app_count_plural"), locale: AppDisplayLocale.current, guide.apps.count)
+        ) {
+            VStack(alignment: .leading, spacing: 12) {
+                if guide.apps.isEmpty {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "questionmark.app")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.black.opacity(0.52))
+                            .padding(.top, 1)
+
+                        Text(String(
+                            format: String(localized: "trip_planner.apps_to_download.no_starter_app_format"),
+                            locale: AppDisplayLocale.current,
+                            guide.countryName
+                        ))
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.black.opacity(0.68))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color.white.opacity(0.56))
+                    )
+                } else {
+                    ForEach(guide.apps) { app in
+                        TripPlannerRideAppRow(app: app)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct TripPlannerRideAppRow: View {
+    let app: TripPlannerRideApp
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                TripPlannerRideAppIcon(url: app.iconURL)
+
+                Text(app.name)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.black)
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+
+                if let appStoreURL = app.appStoreURL {
+                    Link(destination: appStoreURL) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.down.app.fill")
+                                .font(.system(size: 12, weight: .bold))
+                            Text("trip_planner.apps_to_download.app_store")
+                                .font(.system(size: 12, weight: .bold))
+                        }
+                        .foregroundStyle(Color(red: 0.20, green: 0.39, blue: 0.30))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(
+                            Capsule()
+                                .fill(Color.white.opacity(0.74))
+                        )
+                    }
+                }
+            }
+
+            Text(app.note)
+                .font(.system(size: 13))
+                .foregroundStyle(.black.opacity(0.68))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.white.opacity(0.72))
+        )
+    }
+}
+
+private struct TripPlannerRideAppIcon: View {
+    let url: URL?
+
+    var body: some View {
+        Group {
+            if let url {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    default:
+                        fallbackIcon
+                    }
+                }
+            } else {
+                fallbackIcon
+            }
+        }
+        .frame(width: 38, height: 38)
+        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .stroke(.black.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    private var fallbackIcon: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(Color(red: 0.22, green: 0.45, blue: 0.34).opacity(0.14))
+            Image(systemName: "car.fill")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(Color(red: 0.22, green: 0.45, blue: 0.34))
+        }
+    }
+}
+
 private struct TripPlannerChecklistEditorView: View {
     @EnvironmentObject private var currencyPreferenceStore: CurrencyPreferenceStore
 
@@ -8000,6 +8450,25 @@ private struct TripPlannerChecklistEditorView: View {
         overallItems.firstIndex { $0.category == .packing }
     }
 
+    private var rideAppGuides: [TripPlannerCountryRideAppGuide] {
+        TripPlannerRideAppGuideStore.guides(
+            countryIds: trip.countryIds,
+            countryNames: trip.countryNames
+        )
+    }
+
+    private var rideAppSummary: String {
+        let appNames = Array(Set(rideAppGuides.flatMap { $0.apps.map(\.name) })).sorted()
+        guard !appNames.isEmpty else { return String(localized: "trip_planner.apps_to_download.summary_empty") }
+
+        let visibleNames = appNames.prefix(3).joined(separator: ", ")
+        let remainingCount = appNames.count - min(appNames.count, 3)
+        if remainingCount > 0 {
+            return "\(visibleNames) + \(remainingCount) more"
+        }
+        return visibleNames
+    }
+
     private var currentDraftSnapshot: TripPlannerChecklistDraftSnapshot {
         let syncedOverallItems = TripPlannerChecklistBuilder.syncedOverallChecklistItems(
             existingItems: overallItems,
@@ -8118,6 +8587,18 @@ private struct TripPlannerChecklistEditorView: View {
                                                 visaItems.count,
                                                 visaItems.count == 1 ? "" : "s"
                                             )
+                                    ) {
+                                        EmptyView()
+                                    }
+                                }
+                                .buttonStyle(.plain)
+
+                                NavigationLink {
+                                    TripPlannerAppsToDownloadView(guides: rideAppGuides)
+                                } label: {
+                                    TripPlannerNavigationSectionCard(
+                                        title: String(localized: "trip_planner.apps_to_download.title"),
+                                        subtitle: rideAppSummary
                                     ) {
                                         EmptyView()
                                     }
