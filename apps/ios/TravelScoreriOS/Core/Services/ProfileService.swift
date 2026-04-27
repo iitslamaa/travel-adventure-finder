@@ -132,7 +132,6 @@ private struct PersistedCountrySet: Codable {
     let countryCodes: [String]
 }
 
-@MainActor
 final class ProfileService {
 
     private enum CacheKeys {
@@ -340,7 +339,8 @@ final class ProfileService {
         if useCache, let cachedProfile = Self.profileCache[userId] {
             SocialFeedDebug.log(
                 "profile.service.fetch.cache_hit user=\(userId.uuidString) " +
-                "username=\(logField(cachedProfile.username)) avatar=\(logField(cachedProfile.avatarUrl))"
+                "username=\(logField(cachedProfile.username)) avatar=\(logField(cachedProfile.avatarUrl)) " +
+                profileDetailDebugSummary(cachedProfile)
             )
             return cachedProfile
         }
@@ -351,11 +351,12 @@ final class ProfileService {
         }
 
         let startedAt = Date()
+        let client = supabase.client
         SocialFeedDebug.log(
             "profile.service.fetch.network.start user=\(userId.uuidString) use_cache=\(useCache) current_user=\(supabase.currentUserId?.uuidString ?? "nil") table=profiles"
         )
-        let fetchTask = Task<Profile, Error> { [supabase] in
-            let response: PostgrestResponse<[Profile]> = try await supabase.client
+        let fetchTask = Task.detached(priority: .userInitiated) {
+            let response: PostgrestResponse<[Profile]> = try await client
                 .from("profiles")
                 .select()
                 .eq("id", value: userId.uuidString)
@@ -384,7 +385,8 @@ final class ProfileService {
             }
             SocialFeedDebug.log(
                 "profile.service.fetch.network.success user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
-                "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl))"
+                "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl)) " +
+                profileDetailDebugSummary(profile)
             )
             return profile
         } catch {
@@ -408,6 +410,14 @@ final class ProfileService {
         SocialFeedDebug.log(
             "profile.service.ensure.start user=\(userId.uuidString) current_user=\(supabase.currentUserId?.uuidString ?? "nil")"
         )
+
+        if let cachedProfile = cachedProfile(userId: userId) {
+            SocialFeedDebug.log(
+                "profile.service.ensure.cached_exists user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
+                "username=\(logField(cachedProfile.username))"
+            )
+            return
+        }
 
         // Try fetch first
         do {
@@ -523,12 +533,13 @@ final class ProfileService {
     func fetchOrCreateProfile(
         userId: UUID,
         defaultUsername: String? = nil,
-        defaultAvatarUrl: String? = nil
+        defaultAvatarUrl: String? = nil,
+        useCache: Bool = true
     ) async throws -> Profile {
         let startedAt = Date()
-        SocialFeedDebug.log("profile.service.fetch_or_create.start user=\(userId.uuidString)")
+        SocialFeedDebug.log("profile.service.fetch_or_create.start user=\(userId.uuidString) use_cache=\(useCache)")
         do {
-            let profile = try await fetchMyProfile(userId: userId)
+            let profile = try await fetchMyProfile(userId: userId, useCache: useCache)
             hydrateProfileIdentityFromAuthMetadataIfNeededInBackground(
                 userId: userId,
                 profile: profile
@@ -544,7 +555,7 @@ final class ProfileService {
                 defaultUsername: defaultUsername,
                 defaultAvatarUrl: defaultAvatarUrl
             )
-            let profile = try await fetchMyProfile(userId: userId)
+            let profile = try await fetchMyProfile(userId: userId, useCache: false)
             SocialFeedDebug.log(
                 "profile.service.fetch_or_create.success user=\(userId.uuidString) source=create duration=\(SocialFeedDebug.duration(since: startedAt))"
             )
@@ -589,10 +600,25 @@ final class ProfileService {
     func cacheProfile(_ profile: Profile) {
         SocialFeedDebug.log(
             "profile.service.cache.write user=\(profile.id.uuidString) " +
-            "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl))"
+            "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl)) " +
+            profileDetailDebugSummary(profile)
         )
         Self.profileCache[profile.id] = profile
         Self.persistCachedValue(profile, forKey: Self.profileCacheKey(for: profile.id))
+    }
+
+    private func profileDetailDebugSummary(_ profile: Profile) -> String {
+        [
+            "languages=\(profile.languages.count)",
+            "lived=\(profile.livedCountries.count)",
+            "travel_style=\(profile.travelStyle.count)",
+            "travel_mode=\(profile.travelMode.count)",
+            "next=\(logField(profile.nextDestination))",
+            "current=\(logField(profile.currentCountry))",
+            "favorites=\(profile.favoriteCountries?.count ?? 0)",
+            "onboarding=\(profile.onboardingCompleted.map(String.init) ?? "nil")",
+            "friend_count=\(profile.friendCount)"
+        ].joined(separator: " ")
     }
 
     private func logField(_ value: String?) -> String {

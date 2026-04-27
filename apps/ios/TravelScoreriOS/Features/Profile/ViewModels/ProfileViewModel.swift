@@ -258,8 +258,6 @@ final class ProfileViewModel: ObservableObject {
         }
 
         errorMessage = nil
-        isRelationshipLoading = true
-
         let isSwitchingUsers = profile?.id != nil && profile?.id != userId
         let cachedProfile = profileService.cachedProfile(userId: userId)
         let cachedTraveled = profileService.cachedTraveledCountries(userId: userId)
@@ -315,6 +313,11 @@ final class ProfileViewModel: ObservableObject {
             "traveled=\(viewedTraveledCountries.count) bucket=\(viewedBucketListCountries.count) is_loading=\(isLoading)"
         )
 
+        isRelationshipLoading = true
+        defer {
+            isRelationshipLoading = false
+        }
+
         cancelInFlightWork()
 
         let generation = UUID()
@@ -324,11 +327,16 @@ final class ProfileViewModel: ObservableObject {
             "is_loading=\(isLoading)"
         )
 
-        loadTask = Task { [weak self] in
-            await self?.load(generation: generation)
+        let task = Task<Void, Never> { [weak self] in
+            guard let self else { return }
+            await self.load(generation: generation)
         }
+        loadTask = task
 
-        await loadTask?.value
+        await task.value
+        if loadTask == task {
+            loadTask = nil
+        }
         isRelationshipLoading = false
         SocialFeedDebug.log(
             "profile.vm.load_if_needed.complete user=\(userId.uuidString) generation=\(generation.uuidString) " +

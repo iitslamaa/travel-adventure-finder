@@ -350,7 +350,13 @@ final class SocialActivityService {
             let source = profilesById[freshProfile.id] == nil ? "profile_query" : "profile_query_refreshed"
             profilesById[freshProfile.id] = freshProfile
             profileSources[freshProfile.id] = source
-            profileService.cacheProfile(freshProfile)
+            SocialFeedDebug.log(
+                "service.profile_lookup.summary_profile.not_cached id=\(requestId) user=\(freshProfile.id.uuidString) " +
+                "source=\(source) reason=social_select_is_partial username=\(logField(freshProfile.username)) " +
+                "avatar=\(logField(freshProfile.avatarUrl)) languages=\(freshProfile.languages.count) " +
+                "lived=\(freshProfile.livedCountries.count) travel_style=\(freshProfile.travelStyle.count) " +
+                "travel_mode=\(freshProfile.travelMode.count)"
+            )
         }
 
         SocialFeedDebug.log(

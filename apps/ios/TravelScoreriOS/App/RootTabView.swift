@@ -31,8 +31,17 @@ final class SocialNavigationController: ObservableObject {
 
         if case .profile(let userId) = route {
             showProfileLoadingScreen(for: userId, reason: "push")
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 80_000_000)
+                append(route)
+            }
+            return
         }
 
+        append(route)
+    }
+
+    private func append(_ route: SocialRoute) {
         path.append(route)
         SocialFeedDebug.log(
             "navigation.push.appended route=\(debugDescription(for: route)) path_active=\(hasActiveRoute) " +

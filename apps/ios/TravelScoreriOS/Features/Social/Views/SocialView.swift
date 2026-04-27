@@ -214,7 +214,6 @@ struct SocialView: View {
                 "view.activity.row.tap event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString) " +
                 "username=\(logField(event.actorProfile?.username)) avatar=\(logField(event.actorProfile?.avatarUrl))"
             )
-            socialNav.showProfileLoadingScreen(for: event.actorUserId, reason: "activity_row_tap")
             SocialFeedDebug.log(
                 "view.activity.row.push.start event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString)"
             )

@@ -112,6 +112,12 @@ extension ProfileViewModel {
                     "profile.vm.load.fast_path.secondary_done user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
                     "traveled=\(traveled.count) bucket=\(bucket.count) relationship=\(relationshipLogValue(resolvedRelationship))"
                 )
+                SocialFeedDebug.log("profile.vm.load.fast_path.await_full_profile user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
+                let fetchedProfile = try await profileTask.value
+                SocialFeedDebug.log(
+                    "profile.vm.load.fast_path.full_profile_done user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
+                    "fetched=\(fetchedProfile.id.uuidString) \(profileDetailDebugSummary(fetchedProfile))"
+                )
 
                 guard generation == loadGeneration,
                       self.userId == startingUserId else {
@@ -123,6 +129,7 @@ extension ProfileViewModel {
                     return
                 }
 
+                applyFetchedProfile(fetchedProfile, userId: startingUserId, isOwnProfile: isOwnProfile)
                 applyLoadedContext(
                     traveled: traveled,
                     bucket: bucket,
@@ -133,29 +140,6 @@ extension ProfileViewModel {
                     "profile.vm.load.fast_path.ready user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
                     "profile=\(logField(profile?.id.uuidString)) relationship=\(relationshipLogValue(relationshipState))"
                 )
-
-                Task { [weak self] in
-                    let refreshStartTime = Date()
-                    do {
-                        SocialFeedDebug.log(
-                            "profile.vm.load.fast_path.profile_refresh.await user=\(startingUserId.uuidString) generation=\(generation.uuidString)"
-                        )
-                        let fetchedProfile = try await profileTask.value
-                        await self?.applyBackgroundProfileRefresh(
-                            fetchedProfile,
-                            userId: startingUserId,
-                            generation: generation,
-                            startedAt: refreshStartTime
-                        )
-                    } catch {
-                        await self?.logBackgroundProfileRefreshError(
-                            userId: startingUserId,
-                            generation: generation,
-                            startedAt: refreshStartTime,
-                            error: error
-                        )
-                    }
-                }
                 return
             }
 
@@ -163,7 +147,7 @@ extension ProfileViewModel {
             let fetchedProfile = try await profileTask.value
             SocialFeedDebug.log(
                 "profile.vm.load.profile_task.done user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
-                "fetched=\(fetchedProfile.id.uuidString)"
+                "fetched=\(fetchedProfile.id.uuidString) \(profileDetailDebugSummary(fetchedProfile))"
             )
             guard generation == loadGeneration,
                   self.userId == startingUserId else {
@@ -260,7 +244,7 @@ extension ProfileViewModel {
         SocialFeedDebug.log(
             "profile.load.profile_applied user=\(userId.uuidString) is_own=\(isOwnProfile) " +
             "username=\(logField(fetchedProfile.username)) avatar=\(logField(fetchedProfile.avatarUrl)) " +
-            "friend_cache_changes=\(changedFriendCacheEntries)"
+            "\(profileDetailDebugSummary(fetchedProfile)) friend_cache_changes=\(changedFriendCacheEntries)"
         )
         if let defaultCurrencyCode = fetchedProfile.defaultCurrencyCode {
             UserDefaults.standard.set(
@@ -326,6 +310,20 @@ extension ProfileViewModel {
         )
     }
 
+    private func profileDetailDebugSummary(_ profile: Profile) -> String {
+        [
+            "languages=\(profile.languages.count)",
+            "lived=\(profile.livedCountries.count)",
+            "travel_style=\(profile.travelStyle.count)",
+            "travel_mode=\(profile.travelMode.count)",
+            "next=\(logField(profile.nextDestination))",
+            "current=\(logField(profile.currentCountry))",
+            "favorites=\(profile.favoriteCountries?.count ?? 0)",
+            "onboarding=\(profile.onboardingCompleted.map(String.init) ?? "nil")",
+            "friend_count=\(profile.friendCount)"
+        ].joined(separator: " ")
+    }
+
     private func loadProfileTask(userId: UUID, generation: UUID, isOwnProfile: Bool) async throws -> Profile {
         let startedAt = Date()
         SocialFeedDebug.log(
@@ -333,11 +331,12 @@ extension ProfileViewModel {
         )
         do {
             let profile = try await (isOwnProfile
-                ? profileService.fetchOrCreateProfile(userId: userId)
+                ? profileService.fetchOrCreateProfile(userId: userId, useCache: false)
                 : profileService.fetchMyProfile(userId: userId, useCache: false))
             SocialFeedDebug.log(
                 "profile.vm.load.profile_task.success user=\(userId.uuidString) generation=\(generation.uuidString) " +
-                "duration=\(SocialFeedDebug.duration(since: startedAt)) fetched=\(profile.id.uuidString)"
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) fetched=\(profile.id.uuidString) " +
+                profileDetailDebugSummary(profile)
             )
             return profile
         } catch {
