@@ -40,6 +40,14 @@ private enum TripPlannerDebugLog {
         return "trips=\(trips.count) countries=\(countries) friends=\(friends) dayPlans=\(dayPlans) checklist=\(checklist)"
     }
 
+    nonisolated static func tripDateSummary(_ trips: [TripPlannerTrip]) -> String {
+        trips.prefix(12).map { trip in
+            let start = trip.startDate.map { TripPlannerCivilDateCoding.debugString(from: $0) } ?? "nil"
+            let end = trip.endDate.map { TripPlannerCivilDateCoding.debugString(from: $0) } ?? "nil"
+            return "\(trip.title)[\(trip.id.uuidString.prefix(8))]=\(start)..\(end)"
+        }.joined(separator: ";")
+    }
+
     nonisolated static func participantLabels(for ids: [UUID]) -> String {
         ids.map(\.uuidString).joined(separator: ", ")
     }
@@ -2010,8 +2018,8 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
         updatedAt = try container.decodeFlexibleDateIfPresent(forKey: .updatedAt) ?? createdAt
         title = try container.decode(String.self, forKey: .title)
         notes = try container.decode(String.self, forKey: .notes)
-        startDate = try container.decodeFlexibleDateIfPresent(forKey: .startDate)
-        endDate = try container.decodeFlexibleDateIfPresent(forKey: .endDate)
+        startDate = try container.decodeTripPlannerCivilDateIfPresent(forKey: .startDate)
+        endDate = try container.decodeTripPlannerCivilDateIfPresent(forKey: .endDate)
         countryIds = try container.decode([String].self, forKey: .countryIds)
         countryNames = try container.decode([String].self, forKey: .countryNames)
         friendIds = try container.decodeIfPresent([UUID].self, forKey: .friendIds) ?? []
@@ -2042,6 +2050,30 @@ struct TripPlannerTrip: Codable, Identifiable, Hashable, Sendable {
         overallChecklistItems = try container.decodeIfPresent([TripPlannerChecklistItem].self, forKey: .overallChecklistItems) ?? []
         packingProgressEntries = try container.decodeIfPresent([TripPlannerPackingProgress].self, forKey: .packingProgressEntries) ?? []
         expenses = try container.decodeIfPresent([TripPlannerExpense].self, forKey: .expenses) ?? []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(updatedAt, forKey: .updatedAt)
+        try container.encode(title, forKey: .title)
+        try container.encode(notes, forKey: .notes)
+        try container.encodeTripPlannerCivilDateIfPresent(startDate, forKey: .startDate)
+        try container.encodeTripPlannerCivilDateIfPresent(endDate, forKey: .endDate)
+        try container.encode(countryIds, forKey: .countryIds)
+        try container.encode(countryNames, forKey: .countryNames)
+        try container.encode(friendIds, forKey: .friendIds)
+        try container.encode(friendNames, forKey: .friendNames)
+        try container.encode(friends, forKey: .friends)
+        try container.encodeIfPresent(ownerId, forKey: .ownerId)
+        try container.encodeIfPresent(ownerSnapshot, forKey: .ownerSnapshot)
+        try container.encodeIfPresent(plannerCurrencyCode, forKey: .plannerCurrencyCode)
+        try container.encode(availability, forKey: .availability)
+        try container.encode(dayPlans, forKey: .dayPlans)
+        try container.encode(overallChecklistItems, forKey: .overallChecklistItems)
+        try container.encode(packingProgressEntries, forKey: .packingProgressEntries)
+        try container.encode(expenses, forKey: .expenses)
     }
 
     func preparedForSync(currentUserId: UUID?) -> TripPlannerTrip {
@@ -2121,6 +2153,81 @@ private extension KeyedDecodingContainer {
     func decodeFlexibleDateIfPresent(forKey key: Key) throws -> Date? {
         guard contains(key), try !decodeNil(forKey: key) else { return nil }
         return try decodeFlexibleDate(forKey: key)
+    }
+
+    func decodeTripPlannerCivilDateIfPresent(forKey key: Key) throws -> Date? {
+        guard contains(key), try !decodeNil(forKey: key) else { return nil }
+
+        if let string = try? decode(String.self, forKey: key),
+           let date = TripPlannerCivilDateCoding.date(from: string) {
+            return date
+        }
+
+        return try decodeFlexibleDate(forKey: key)
+    }
+}
+
+private extension KeyedEncodingContainer {
+    mutating func encodeTripPlannerCivilDateIfPresent(_ date: Date?, forKey key: Key) throws {
+        guard let date else {
+            try encodeNil(forKey: key)
+            return
+        }
+
+        try encode(TripPlannerCivilDateCoding.string(from: date), forKey: key)
+    }
+}
+
+private enum TripPlannerCivilDateCoding {
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
+    static func string(from date: Date) -> String {
+        let calendar = Calendar.autoupdatingCurrent
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        guard let year = components.year,
+              let month = components.month,
+              let day = components.day else {
+            return dateFormatter.string(from: date)
+        }
+
+        return String(format: "%04d-%02d-%02d", year, month, day)
+    }
+
+    static func date(from string: String) -> Date? {
+        guard string.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+        guard let startOfDay = dateFormatter.date(from: string) else { return nil }
+        return calendar.date(bySettingHour: 12, minute: 0, second: 0, of: startOfDay)
+    }
+
+    nonisolated static func debugString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return "\(formatter.string(from: date))@\(Int(date.timeIntervalSince1970))"
+    }
+
+    static func rangeText(start: Date, end: Date) -> String {
+        let formatter = DateIntervalFormatter()
+        formatter.locale = AppDisplayLocale.current
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: start, to: end)
     }
 }
 
@@ -3501,6 +3608,10 @@ private struct TripPlannerSyncService {
                 "TripPlannerSyncService.fetchTrips.decode_sort.end",
                 "\(TripPlannerDebugLog.tripsSummary(trips)) duration=\(TripPlannerDebugLog.durationText(since: mapStart))"
             )
+            TripPlannerDebugLog.probe(
+                "TripPlannerSyncService.fetchTrips.date_summary",
+                TripPlannerDebugLog.tripDateSummary(trips)
+            )
             return trips
         }
 
@@ -3995,6 +4106,18 @@ struct TripPlannerView: View {
             currentUserSnapshot = authSnapshot
             TripPlannerDebugLog.message(
                 "Current user snapshot primed from auth duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
+        }
+
+        if let persistedProfile = await profileService.persistedCachedProfile(userId: userId) {
+            currentUserSnapshot = TripPlannerFriendSnapshot(
+                id: persistedProfile.id,
+                displayName: persistedProfile.tripDisplayName,
+                username: persistedProfile.username,
+                avatarURL: persistedProfile.avatarUrl
+            )
+            TripPlannerDebugLog.message(
+                "Current user snapshot loaded from async disk cache duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(persistedProfile.avatarUrl == nil ? "nil" : "app")"
             )
         }
 
@@ -5620,6 +5743,9 @@ private struct TripPlannerDetailView: View {
             if let cached = profileService.memoryCachedProfile(userId: currentUserId) {
                 profilesByID[currentUserId] = cached
                 currentUserSnapshot = friendSnapshot(from: cached)
+            } else if let persisted = await profileService.persistedCachedProfile(userId: currentUserId) {
+                profilesByID[currentUserId] = persisted
+                currentUserSnapshot = friendSnapshot(from: persisted)
             } else if let profile = try? await profileService.fetchMyProfile(userId: currentUserId) {
                 profilesByID[currentUserId] = profile
                 currentUserSnapshot = friendSnapshot(from: profile)
@@ -5638,6 +5764,9 @@ private struct TripPlannerDetailView: View {
             if let cachedOwner = profileService.memoryCachedProfile(userId: ownerId) {
                 profilesByID[ownerId] = cachedOwner
                 ownerSnapshot = friendSnapshot(from: cachedOwner)
+            } else if let persistedOwner = await profileService.persistedCachedProfile(userId: ownerId) {
+                profilesByID[ownerId] = persistedOwner
+                ownerSnapshot = friendSnapshot(from: persistedOwner)
             } else if let ownerProfile = try? await profileService.fetchMyProfile(userId: ownerId) {
                 profilesByID[ownerId] = ownerProfile
                 ownerSnapshot = friendSnapshot(from: ownerProfile)
@@ -5650,6 +5779,9 @@ private struct TripPlannerDetailView: View {
             if let cached = profileService.memoryCachedProfile(userId: snapshot.id) {
                 profilesByID[snapshot.id] = cached
                 refreshed.append(friendSnapshot(from: cached))
+            } else if let persisted = await profileService.persistedCachedProfile(userId: snapshot.id) {
+                profilesByID[snapshot.id] = persisted
+                refreshed.append(friendSnapshot(from: persisted))
             } else {
                 do {
                     let profile = try await profileService.fetchMyProfile(userId: snapshot.id)
@@ -15831,7 +15963,7 @@ private enum TripPlannerAvailabilityCalculator {
 private enum TripPlannerDateFormatter {
     static func rangeText(start: Date?, end: Date?) -> String? {
         guard let start, let end else { return nil }
-        return AppDateFormatting.dateRangeString(start: start, end: end)
+        return TripPlannerCivilDateCoding.rangeText(start: start, end: end)
     }
 }
 

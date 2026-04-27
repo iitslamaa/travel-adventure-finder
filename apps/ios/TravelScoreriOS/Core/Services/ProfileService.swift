@@ -241,6 +241,39 @@ final class ProfileService {
         return cachedProfile
     }
 
+    func persistedCachedProfile(userId: UUID) async -> Profile? {
+        if let cachedProfile = Self.profileCache[userId] {
+            SocialFeedDebug.log(
+                "profile.service.cache.profile.memory_hit user=\(userId.uuidString) username=\(logField(cachedProfile.username)) languages=\(cachedProfile.languages.count)"
+            )
+            return cachedProfile
+        }
+
+        let key = Self.profileCacheKey(for: userId)
+        let cachedData: Data? = await Task.detached(priority: .utility) {
+            UserDefaults.standard.data(forKey: key)
+        }.value
+        guard let cachedData else {
+            SocialFeedDebug.log("profile.service.cache.profile.async_disk_miss user=\(userId.uuidString)")
+            return nil
+        }
+
+        let persistedProfile: Profile
+        do {
+            persistedProfile = try JSONDecoder().decode(Profile.self, from: cachedData)
+        } catch {
+            Self.removeCachedValue(forKey: key)
+            SocialFeedDebug.log("profile.service.cache.profile.async_disk_decode_error user=\(userId.uuidString) error=\(SocialFeedDebug.describe(error))")
+            return nil
+        }
+
+        Self.profileCache[userId] = persistedProfile
+        SocialFeedDebug.log(
+            "profile.service.cache.profile.async_disk_hit user=\(userId.uuidString) username=\(logField(persistedProfile.username)) languages=\(persistedProfile.languages.count)"
+        )
+        return persistedProfile
+    }
+
     func memoryCachedPassportPreferences(userId: UUID) -> PassportPreferences? {
         guard let cached = Self.passportPreferencesCache[userId] else {
             SocialFeedDebug.log("profile.service.cache.passport.memory_miss user=\(userId.uuidString)")
