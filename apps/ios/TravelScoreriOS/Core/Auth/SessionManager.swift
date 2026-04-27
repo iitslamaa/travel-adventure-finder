@@ -242,6 +242,8 @@ final class SessionManager: ObservableObject {
 
         syncTask = Task { [weak self] in
             guard let self else { return }
+            let startedAt = Date()
+            SocialFeedDebug.log("launch.session.list_sync.start user=\(userId.uuidString)")
 
             do {
                 async let bucketTask = self.listSync.fetchBucketList(userId: userId)
@@ -263,9 +265,25 @@ final class SessionManager: ObservableObject {
 
                 if Task.isCancelled { return }
 
-                self.bucketListStore.replace(with: bucketIds)
-                self.traveledStore.replace(with: traveledIds)
+                if self.bucketListStore.ids == bucketIds {
+                    SocialFeedDebug.log("launch.session.list_sync.bucket.skip user=\(userId.uuidString) reason=unchanged")
+                } else {
+                    self.bucketListStore.replace(with: bucketIds)
+                }
+
+                if self.traveledStore.ids == traveledIds {
+                    SocialFeedDebug.log("launch.session.list_sync.traveled.skip user=\(userId.uuidString) reason=unchanged")
+                } else {
+                    self.traveledStore.replace(with: traveledIds)
+                }
+
+                SocialFeedDebug.log(
+                    "launch.session.list_sync.end user=\(userId.uuidString) bucket=\(bucketIds.count) traveled=\(traveledIds.count) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
             } catch {
+                SocialFeedDebug.log(
+                    "launch.session.list_sync.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+                )
             }
 
             if !Task.isCancelled, self.syncingUserId == userId {

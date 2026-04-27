@@ -37,6 +37,7 @@ final class TraveledStore: ObservableObject {
     }
     
     func replace(with ids: Set<String>) {
+        guard self.ids != ids else { return }
         self.ids = ids
         save()
     }

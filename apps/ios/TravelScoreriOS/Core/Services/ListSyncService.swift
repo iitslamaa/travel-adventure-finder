@@ -23,6 +23,7 @@ final class ListSyncService {
     // MARK: - Fetch
 
     func fetchBucketList(userId: UUID) async throws -> Set<String> {
+        let startedAt = Date()
         SocialFeedDebug.log("list_sync.fetch_bucket.start instance=\(instanceId.uuidString) user=\(userId.uuidString)")
         let rows: [[String: String]] = try await supabase.client
             .from("user_bucket_list")
@@ -33,12 +34,14 @@ final class ListSyncService {
 
         let bucket = Set(rows.compactMap { $0["country_id"] })
         SocialFeedDebug.log(
-            "list_sync.fetch_bucket.success instance=\(instanceId.uuidString) user=\(userId.uuidString) rows=\(rows.count) \(SocialFeedDebug.countrySetSummary(bucket))"
+            "list_sync.fetch_bucket.success instance=\(instanceId.uuidString) user=\(userId.uuidString) rows=\(rows.count) \(SocialFeedDebug.countrySetSummary(bucket)) duration=\(SocialFeedDebug.duration(since: startedAt))"
         )
         return bucket
     }
 
     func fetchTraveled(userId: UUID) async throws -> Set<String> {
+        let startedAt = Date()
+        SocialFeedDebug.log("list_sync.fetch_traveled.start instance=\(instanceId.uuidString) user=\(userId.uuidString)")
         let rows: [[String: String]] = try await supabase.client
             .from("user_traveled")
             .select("country_id")
@@ -46,7 +49,11 @@ final class ListSyncService {
             .execute()
             .value
 
-        return Set(rows.compactMap { $0["country_id"] })
+        let traveled = Set(rows.compactMap { $0["country_id"] })
+        SocialFeedDebug.log(
+            "list_sync.fetch_traveled.success instance=\(instanceId.uuidString) user=\(userId.uuidString) rows=\(rows.count) count=\(traveled.count) duration=\(SocialFeedDebug.duration(since: startedAt))"
+        )
+        return traveled
     }
 
     // MARK: - Mutations

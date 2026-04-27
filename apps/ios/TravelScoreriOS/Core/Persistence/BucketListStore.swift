@@ -54,6 +54,13 @@ final class BucketListStore: ObservableObject {
     }
     
     func replace(with ids: Set<String>) {
+        guard self.ids != ids else {
+            SocialFeedDebug.log(
+                "bucket.store.replace.skip instance=\(instanceId.uuidString) reason=unchanged \(SocialFeedDebug.countrySetSummary(ids))"
+            )
+            return
+        }
+
         SocialFeedDebug.log(
             "bucket.store.replace instance=\(instanceId.uuidString) before_\(SocialFeedDebug.countrySetSummary(self.ids)) incoming_\(SocialFeedDebug.countrySetSummary(ids))"
         )
