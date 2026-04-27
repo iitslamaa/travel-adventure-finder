@@ -32,8 +32,12 @@ final class SocialActivityService {
 
         let friendsStartTime = Date()
         SocialFeedDebug.log("service.friends.start id=\(requestId)")
-        let friends = try await friendService.fetchFriends(for: userId)
-        SocialFeedDebug.log("service.friends.success id=\(requestId) count=\(friends.count) duration=\(SocialFeedDebug.duration(since: friendsStartTime)) cancelled=\(Task.isCancelled)")
+        let friendContext = try await fetchFriendsForFeed(userId: userId, requestId: requestId, startedAt: friendsStartTime)
+        let friends = friendContext.friends
+        SocialFeedDebug.log(
+            "service.friends.success id=\(requestId) count=\(friends.count) source=\(friendContext.source) " +
+            "timed_out=\(friendContext.timedOut) duration=\(SocialFeedDebug.duration(since: friendsStartTime)) cancelled=\(Task.isCancelled)"
+        )
 
         let prequeryStartTime = Date()
         SocialFeedDebug.log("service.prequery.start id=\(requestId) total_duration=\(SocialFeedDebug.duration(since: startTime)) cancelled=\(Task.isCancelled)")
@@ -42,7 +46,11 @@ final class SocialActivityService {
         let actorIds = Array(Set(friends.map(\.id) + [userId]))
         let actorPreview = actorIds.prefix(6).map(\.uuidString).joined(separator: ",")
         let duplicateActors = (friends.count + 1) - actorIds.count
-        SocialFeedDebug.log("service.prequery.actors.end id=\(requestId) actors=\(actorIds.count) duplicate_actors=\(max(duplicateActors, 0)) duration=\(SocialFeedDebug.duration(since: actorsStartTime))")
+        SocialFeedDebug.log(
+            "service.prequery.actors.end id=\(requestId) actors=\(actorIds.count) friends=\(friends.count) " +
+            "friend_source=\(friendContext.source) duplicate_actors=\(max(duplicateActors, 0)) " +
+            "duration=\(SocialFeedDebug.duration(since: actorsStartTime))"
+        )
 
         let lookupStartTime = Date()
         SocialFeedDebug.log("service.prequery.friend_lookup.start id=\(requestId) actors=\(actorIds.count)")
@@ -181,6 +189,126 @@ final class SocialActivityService {
             eventType: eventType,
             metadata: metadata
         )
+    }
+
+    private struct FeedFriendContext {
+        let friends: [Profile]
+        let source: String
+        let timedOut: Bool
+    }
+
+    private func fetchFriendsForFeed(userId: UUID, requestId: String, startedAt: Date) async throws -> FeedFriendContext {
+        if let cachedFriends = friendService.cachedFriends(for: userId) {
+            SocialFeedDebug.log(
+                "service.friends.cache.hit id=\(requestId) user=\(userId.uuidString) count=\(cachedFriends.count) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return FeedFriendContext(friends: cachedFriends, source: "memory_cache", timedOut: false)
+        }
+
+        SocialFeedDebug.log("service.friends.cache.miss id=\(requestId) user=\(userId.uuidString)")
+        let fetchTask = Task<[Profile], Error> { [friendService] in
+            try await friendService.fetchFriends(for: userId)
+        }
+
+        switch await waitForFriends(fetchTask, userId: userId, requestId: requestId, startedAt: startedAt) {
+        case .success(let friends):
+            SocialFeedDebug.log(
+                "service.friends.network_race.hit id=\(requestId) user=\(userId.uuidString) count=\(friends.count) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return FeedFriendContext(friends: friends, source: "network", timedOut: false)
+        case .timeout:
+            let fallbackFriends = friendService.cachedFriends(for: userId) ?? []
+            SocialFeedDebug.log(
+                "service.friends.network_race.timeout id=\(requestId) user=\(userId.uuidString) timeout_ms=1500 " +
+                "fallback_count=\(fallbackFriends.count) fallback_source=\(fallbackFriends.isEmpty ? "current_user_only" : "late_cache") " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            observeSlowFriendFetch(fetchTask, userId: userId, requestId: requestId, startedAt: startedAt)
+            return FeedFriendContext(
+                friends: fallbackFriends,
+                source: fallbackFriends.isEmpty ? "timeout_current_user_only" : "timeout_late_cache",
+                timedOut: true
+            )
+        case .failure(let error):
+            if let cachedFriends = friendService.cachedFriends(for: userId) {
+                SocialFeedDebug.log(
+                    "service.friends.network_race.error_cached_fallback id=\(requestId) user=\(userId.uuidString) " +
+                    "count=\(cachedFriends.count) error=\(SocialFeedDebug.describe(error)) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
+                return FeedFriendContext(friends: cachedFriends, source: "error_memory_cache", timedOut: false)
+            }
+
+            SocialFeedDebug.log(
+                "service.friends.network_race.error id=\(requestId) user=\(userId.uuidString) " +
+                "error=\(SocialFeedDebug.describe(error)) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            throw error
+        }
+    }
+
+    private enum FriendRaceResult {
+        case success([Profile])
+        case timeout
+        case failure(Error)
+    }
+
+    private func waitForFriends(
+        _ fetchTask: Task<[Profile], Error>,
+        userId: UUID,
+        requestId: String,
+        startedAt: Date
+    ) async -> FriendRaceResult {
+        SocialFeedDebug.log("service.friends.network_race.start id=\(requestId) user=\(userId.uuidString) timeout_ms=1500")
+
+        return await withCheckedContinuation { continuation in
+            let lock = NSLock()
+            var didResume = false
+
+            func resumeOnce(_ result: FriendRaceResult) {
+                lock.lock()
+                defer { lock.unlock() }
+                guard !didResume else { return }
+                didResume = true
+                continuation.resume(returning: result)
+            }
+
+            Task {
+                do {
+                    resumeOnce(.success(try await fetchTask.value))
+                } catch {
+                    resumeOnce(.failure(error))
+                }
+            }
+
+            Task {
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                resumeOnce(.timeout)
+            }
+        }
+    }
+
+    private func observeSlowFriendFetch(_ fetchTask: Task<[Profile], Error>, userId: UUID, requestId: String, startedAt: Date) {
+        Task {
+            do {
+                let refreshedFriends = try await fetchTask.value
+                SocialFeedDebug.log(
+                    "service.friends.slow_fetch.completed id=\(requestId) user=\(userId.uuidString) " +
+                    "count=\(refreshedFriends.count) total_duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
+            } catch where SocialFeedDebug.isCancellation(error) {
+                SocialFeedDebug.log(
+                    "service.friends.slow_fetch.cancelled id=\(requestId) user=\(userId.uuidString) " +
+                    "total_duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
+            } catch {
+                SocialFeedDebug.log(
+                    "service.friends.slow_fetch.error id=\(requestId) user=\(userId.uuidString) " +
+                    "error=\(SocialFeedDebug.describe(error)) total_duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
+            }
+        }
     }
 
     private func buildActorProfiles(for userId: UUID, friends: [Profile], requestId: String) async throws -> ([UUID: Profile], [UUID: String]) {
