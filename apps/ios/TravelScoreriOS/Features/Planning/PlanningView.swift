@@ -1303,6 +1303,7 @@ private struct TripPlannerRideApp: Identifiable, Hashable {
     let name: String
     let note: String
     let appStoreURL: URL?
+    let appStoreLaunchURL: URL?
     let iconURL: URL?
 
     var id: String { name }
@@ -1320,6 +1321,18 @@ private enum TripPlannerRideAppGuideStore {
     private struct AppStoreMetadata {
         let appStoreURL: String
         let iconURL: String
+
+        var appStoreLaunchURL: URL? {
+            guard let appID else { return nil }
+            return URL(string: "itms-apps://itunes.apple.com/app/id\(appID)")
+        }
+
+        private var appID: String? {
+            guard let idRange = appStoreURL.range(of: "/id", options: .backwards) else { return nil }
+            let suffix = appStoreURL[idRange.upperBound...]
+            let id = suffix.prefix { $0.isNumber }
+            return id.isEmpty ? nil : String(id)
+        }
     }
 
     private static let appStoreMetadataByName: [String: AppStoreMetadata] = [
@@ -1573,6 +1586,7 @@ private enum TripPlannerRideAppGuideStore {
             name: name,
             note: note,
             appStoreURL: metadata.flatMap { URL(string: $0.appStoreURL) },
+            appStoreLaunchURL: metadata?.appStoreLaunchURL,
             iconURL: metadata.flatMap { URL(string: $0.iconURL) }
         ))
     }
@@ -8234,6 +8248,7 @@ private struct TripPlannerRideAppCountryCard: View {
 
 private struct TripPlannerRideAppRow: View {
     let app: TripPlannerRideApp
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -8248,7 +8263,9 @@ private struct TripPlannerRideAppRow: View {
                 Spacer(minLength: 0)
 
                 if let appStoreURL = app.appStoreURL {
-                    Link(destination: appStoreURL) {
+                    Button {
+                        openAppStore(primaryURL: app.appStoreLaunchURL, fallbackURL: appStoreURL)
+                    } label: {
                         HStack(spacing: 5) {
                             Image(systemName: "arrow.down.app.fill")
                                 .font(.system(size: 12, weight: .bold))
@@ -8263,6 +8280,7 @@ private struct TripPlannerRideAppRow: View {
                                 .fill(Color.white.opacity(0.74))
                         )
                     }
+                    .buttonStyle(.plain)
                 }
             }
 
@@ -8277,6 +8295,19 @@ private struct TripPlannerRideAppRow: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color.white.opacity(0.72))
         )
+    }
+
+    private func openAppStore(primaryURL: URL?, fallbackURL: URL) {
+        guard let primaryURL else {
+            openURL(fallbackURL)
+            return
+        }
+
+        openURL(primaryURL) { accepted in
+            if !accepted {
+                openURL(fallbackURL)
+            }
+        }
     }
 }
 
