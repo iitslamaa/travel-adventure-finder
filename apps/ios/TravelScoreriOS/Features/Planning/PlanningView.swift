@@ -80,12 +80,6 @@ final class SharedTripInboxStore: ObservableObject {
         TripPlannerDebugLog.probe("SharedTripInbox.init.start")
         observeAuthState()
         observeTripUpdates()
-
-        Task {
-            TripPlannerDebugLog.probe("SharedTripInbox.init.refresh_task.start")
-            await refresh()
-            TripPlannerDebugLog.probe("SharedTripInbox.init.refresh_task.end", "pending=\(notifications.count)")
-        }
         TripPlannerDebugLog.probe("SharedTripInbox.init.end")
     }
 

@@ -21,7 +21,7 @@ struct DiscoveryCountryListView: View {
     @FocusState private var isSearchFocused: Bool
     @State private var sort: CountrySort = .name
     @State private var sortOrder: SortOrder = .ascending
-    @State private var baseCountries: [Country] = CountryAPI.loadCachedCountries() ?? []
+    @State private var baseCountries: [Country] = []
     @State private var didRunInitialLoad = false
     @State private var refreshTask: Task<Void, Never>?
 
@@ -298,6 +298,7 @@ struct DiscoveryView: View {
         .task {
             guard !didLoadCountries else { return }
             didLoadCountries = true
+            await Task.yield()
             let startedAt = Date()
             var source = "existing-state"
 

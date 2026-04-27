@@ -204,7 +204,7 @@ extension CountryAPI {
                 visaType: dto.visaType,
                 visaAllowedDays: dto.visaAllowedDays,
                 visaFeeUsd: dto.visaFeeUsd,
-                visaNotes: nil,
+                visaNotes: dto.visaNotes,
                 visaSourceUrl: dto.visaSourceUrl,
                 dailySpendTotalUsd: dto.dailySpendTotalUsd,
                 dailySpendHotelUsd: dto.dailySpendHotelUsd,
