@@ -16,7 +16,11 @@ import Supabase
 import PostgREST
 
 private enum TripPlannerDebugLog {
-    nonisolated static func message(_ text: String) {}
+    nonisolated static func message(_ text: String) {
+        #if DEBUG
+        print("[TripPlanner] \(stamp()) \(text)")
+        #endif
+    }
 
     nonisolated static func userLabel(_ userId: UUID?) -> String {
         userId?.uuidString ?? "nil-user"
@@ -24,6 +28,16 @@ private enum TripPlannerDebugLog {
 
     nonisolated static func tripLabel(_ trip: TripPlannerTrip) -> String {
         "\(trip.title) [\(trip.id.uuidString)]"
+    }
+
+    nonisolated static func tripsSummary(_ trips: [TripPlannerTrip]) -> String {
+        let countries = trips.reduce(0) { $0 + $1.countryIds.count }
+        let friends = trips.reduce(0) { $0 + $1.friendIds.count + $1.friends.count }
+        let checklist = trips.reduce(0) {
+            $0 + $1.overallChecklistItems.count + $1.dayPlans.reduce(0) { $0 + $1.checklistItems.count }
+        }
+        let dayPlans = trips.reduce(0) { $0 + $1.dayPlans.count }
+        return "trips=\(trips.count) countries=\(countries) friends=\(friends) dayPlans=\(dayPlans) checklist=\(checklist)"
     }
 
     nonisolated static func participantLabels(for ids: [UUID]) -> String {
@@ -34,7 +48,22 @@ private enum TripPlannerDebugLog {
         String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)
     }
 
-    nonisolated static func probe(_ name: String, _ detail: String = "") {}
+    nonisolated static func probe(_ name: String, _ detail: String = "") {
+        #if DEBUG
+        let suffix = detail.isEmpty ? "" : " \(detail)"
+        print("[TripPlanner] \(stamp()) \(name)\(suffix)")
+        #endif
+    }
+
+    nonisolated private static func stamp() -> String {
+        #if DEBUG
+        let now = Date().timeIntervalSinceReferenceDate
+        let thread = Thread.isMainThread ? "main" : "bg"
+        return String(format: "t=%.3f thread=%@", now, thread)
+        #else
+        return ""
+        #endif
+    }
 
     nonisolated static func tripCardState(
         trip: TripPlannerTrip,
@@ -2367,7 +2396,7 @@ final class TripPlannerStore: ObservableObject {
         hasRequestedInitialRefresh = true
         TripPlannerDebugLog.probe(
             "TripPlannerStore.auth_change.end",
-            "duration=\(TripPlannerDebugLog.durationText(since: start)) trips=\(trips.count)"
+            "duration=\(TripPlannerDebugLog.durationText(since: start)) \(TripPlannerDebugLog.tripsSummary(trips))"
         )
     }
 
@@ -2383,19 +2412,22 @@ final class TripPlannerStore: ObservableObject {
         guard force || !hasLoadedLocalTrips else {
             TripPlannerDebugLog.probe(
                 "TripPlannerStore.loadLocalIfNeeded.skipped",
-                "force=\(force) trips=\(trips.count)"
+                "force=\(force) \(TripPlannerDebugLog.tripsSummary(trips))"
             )
             return
         }
 
         let start = Date().timeIntervalSinceReferenceDate
-        TripPlannerDebugLog.probe("TripPlannerStore.loadLocalIfNeeded.start", "force=\(force)")
+        TripPlannerDebugLog.probe(
+            "TripPlannerStore.loadLocalIfNeeded.start",
+            "force=\(force) hasLoaded=\(hasLoadedLocalTrips) isLoading=\(isLoadingLocalTrips)"
+        )
         loadLocal()
         hasLoadedLocalTrips = true
         isLoadingLocalTrips = false
         TripPlannerDebugLog.probe(
             "TripPlannerStore.loadLocalIfNeeded.end",
-            "duration=\(TripPlannerDebugLog.durationText(since: start)) trips=\(trips.count)"
+            "duration=\(TripPlannerDebugLog.durationText(since: start)) \(TripPlannerDebugLog.tripsSummary(trips)) isLoading=\(isLoadingLocalTrips)"
         )
     }
 
@@ -2430,7 +2462,7 @@ final class TripPlannerStore: ObservableObject {
             trips = decoded.sorted { $0.updatedAt > $1.updatedAt }
             TripPlannerDebugLog.probe(
                 "TripPlannerStore.loadLocal.decode.end",
-                "key=\(key) trips=\(decoded.count) duration=\(TripPlannerDebugLog.durationText(since: start))"
+                "key=\(key) bytes=\(data.count) \(TripPlannerDebugLog.tripsSummary(trips)) duration=\(TripPlannerDebugLog.durationText(since: start))"
             )
             return
         }
@@ -2454,7 +2486,7 @@ final class TripPlannerStore: ObservableObject {
         UserDefaults.standard.set(data, forKey: localSaveKey)
         TripPlannerDebugLog.probe(
             "TripPlannerStore.persistLocal.end",
-            "trips=\(trips.count) bytes=\(data.count) duration=\(TripPlannerDebugLog.durationText(since: start))"
+            "\(TripPlannerDebugLog.tripsSummary(trips)) bytes=\(data.count) duration=\(TripPlannerDebugLog.durationText(since: start))"
         )
     }
 
@@ -2489,7 +2521,7 @@ final class TripPlannerStore: ObservableObject {
         }
         TripPlannerDebugLog.probe(
             "TripPlannerStore.refreshRemote.end",
-            "duration=\(TripPlannerDebugLog.durationText(since: refreshStart)) trips=\(trips.count) migrateLocal=\(migrateLocalTrips)"
+            "duration=\(TripPlannerDebugLog.durationText(since: refreshStart)) \(TripPlannerDebugLog.tripsSummary(trips)) migrateLocal=\(migrateLocalTrips)"
         )
     }
 
@@ -2502,12 +2534,12 @@ final class TripPlannerStore: ObservableObject {
         let applyStart = Date().timeIntervalSinceReferenceDate
         TripPlannerDebugLog.probe(
             "TripPlannerStore.applyRemoteTrips.start",
-            "local=\(localTrips.count) remote=\(remoteTrips.count) migrateLocal=\(migrateLocalTrips)"
+            "local{\(TripPlannerDebugLog.tripsSummary(localTrips))} remote{\(TripPlannerDebugLog.tripsSummary(remoteTrips))} migrateLocal=\(migrateLocalTrips)"
         )
         let mergedTrips = mergedTrips(local: localTrips, remote: remoteTrips)
         TripPlannerDebugLog.probe(
             "TripPlannerStore.applyRemoteTrips.merged",
-            "merged=\(mergedTrips.count) duration=\(TripPlannerDebugLog.durationText(since: applyStart))"
+            "\(TripPlannerDebugLog.tripsSummary(mergedTrips)) duration=\(TripPlannerDebugLog.durationText(since: applyStart))"
         )
 
         if migrateLocalTrips {
@@ -2531,7 +2563,7 @@ final class TripPlannerStore: ObservableObject {
         }
 
         trips = mergedTrips
-        TripPlannerDebugLog.probe("TripPlannerStore.applyRemoteTrips.assign", "trips=\(trips.count)")
+        TripPlannerDebugLog.probe("TripPlannerStore.applyRemoteTrips.assign", TripPlannerDebugLog.tripsSummary(trips))
         persistLocal()
         TripPlannerDebugLog.message(
             "Remote refresh complete for \(TripPlannerDebugLog.userLabel(userId)); remote count=\(remoteTrips.count), merged count=\(mergedTrips.count)"
@@ -3325,28 +3357,59 @@ private actor TripPlannerFetchCache {
     private var inFlightTasks: [UUID: Task<[TripPlannerTrip], Error>] = [:]
 
     func cachedTrips(for userId: UUID, maxAge: TimeInterval) -> [TripPlannerTrip]? {
-        guard let entry = entries[userId] else { return nil }
+        guard let entry = entries[userId] else {
+            TripPlannerDebugLog.probe(
+                "TripPlannerFetchCache.cachedTrips.miss",
+                "user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
+            return nil
+        }
         guard Date().timeIntervalSince(entry.fetchedAt) <= maxAge else {
+            TripPlannerDebugLog.probe(
+                "TripPlannerFetchCache.cachedTrips.expired",
+                "user=\(TripPlannerDebugLog.userLabel(userId)) age=\(TripPlannerDebugLog.durationText(since: entry.fetchedAt.timeIntervalSinceReferenceDate)) maxAge=\(Int(maxAge))s trips=\(entry.trips.count)"
+            )
             entries[userId] = nil
             return nil
         }
+        TripPlannerDebugLog.probe(
+            "TripPlannerFetchCache.cachedTrips.hit",
+            "user=\(TripPlannerDebugLog.userLabel(userId)) age=\(TripPlannerDebugLog.durationText(since: entry.fetchedAt.timeIntervalSinceReferenceDate)) trips=\(entry.trips.count)"
+        )
         return entry.trips
     }
 
     func inFlightTask(for userId: UUID) -> Task<[TripPlannerTrip], Error>? {
-        inFlightTasks[userId]
+        let task = inFlightTasks[userId]
+        TripPlannerDebugLog.probe(
+            task == nil ? "TripPlannerFetchCache.inFlightTask.miss" : "TripPlannerFetchCache.inFlightTask.hit",
+            "user=\(TripPlannerDebugLog.userLabel(userId))"
+        )
+        return task
     }
 
     func storeInFlightTask(_ task: Task<[TripPlannerTrip], Error>, for userId: UUID) {
         inFlightTasks[userId] = task
+        TripPlannerDebugLog.probe(
+            "TripPlannerFetchCache.storeInFlightTask",
+            "user=\(TripPlannerDebugLog.userLabel(userId))"
+        )
     }
 
     func clearInFlightTask(for userId: UUID) {
         inFlightTasks[userId] = nil
+        TripPlannerDebugLog.probe(
+            "TripPlannerFetchCache.clearInFlightTask",
+            "user=\(TripPlannerDebugLog.userLabel(userId))"
+        )
     }
 
     func storeTrips(_ trips: [TripPlannerTrip], for userId: UUID) {
         entries[userId] = Entry(trips: trips, fetchedAt: Date())
+        TripPlannerDebugLog.probe(
+            "TripPlannerFetchCache.storeTrips",
+            "user=\(TripPlannerDebugLog.userLabel(userId)) trips=\(trips.count)"
+        )
     }
 
     func invalidate(userIds: [UUID]) {
@@ -3354,6 +3417,10 @@ private actor TripPlannerFetchCache {
             entries[userId] = nil
             inFlightTasks[userId]?.cancel()
             inFlightTasks[userId] = nil
+            TripPlannerDebugLog.probe(
+                "TripPlannerFetchCache.invalidate",
+                "user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
         }
     }
 }
@@ -3406,15 +3473,20 @@ private struct TripPlannerSyncService {
                 "TripPlannerSyncService.fetchTrips.network.start",
                 "user=\(TripPlannerDebugLog.userLabel(userId))"
             )
+            TripPlannerDebugLog.probe(
+                "TripPlannerSyncService.fetchTrips.supabase.execute.before",
+                "table=user_trip_plans columns=user_id,trip_id,trip_data user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
             let rows: [TripPlannerRemoteTripRow] = try await supabase.client
                 .from("user_trip_plans")
                 .select("user_id,trip_id,trip_data")
                 .eq("user_id", value: userId.uuidString)
                 .execute()
                 .value
+            let rowBytes = (try? TripPlannerJSONCoding.encoder.encode(rows).count) ?? -1
             TripPlannerDebugLog.probe(
                 "TripPlannerSyncService.fetchTrips.network.rows",
-                "rows=\(rows.count) duration=\(TripPlannerDebugLog.durationText(since: networkStart))"
+                "rows=\(rows.count) approxBytes=\(rowBytes) duration=\(TripPlannerDebugLog.durationText(since: networkStart))"
             )
 
             TripPlannerDebugLog.message(
@@ -3427,7 +3499,7 @@ private struct TripPlannerSyncService {
                 .sorted { $0.createdAt > $1.createdAt }
             TripPlannerDebugLog.probe(
                 "TripPlannerSyncService.fetchTrips.decode_sort.end",
-                "trips=\(trips.count) duration=\(TripPlannerDebugLog.durationText(since: mapStart))"
+                "\(TripPlannerDebugLog.tripsSummary(trips)) duration=\(TripPlannerDebugLog.durationText(since: mapStart))"
             )
             return trips
         }
@@ -3680,6 +3752,18 @@ struct TripPlannerView: View {
 
                         if store.isLoadingLocalTrips {
                             TripPlannerLoadingStateCard()
+                                .onAppear {
+                                    TripPlannerDebugLog.probe(
+                                        "TripPlannerView.loading_card.appear",
+                                        "trips=\(store.trips.count) user=\(TripPlannerDebugLog.userLabel(sessionManager.userId))"
+                                    )
+                                }
+                                .onDisappear {
+                                    TripPlannerDebugLog.probe(
+                                        "TripPlannerView.loading_card.disappear",
+                                        "trips=\(store.trips.count) user=\(TripPlannerDebugLog.userLabel(sessionManager.userId))"
+                                    )
+                                }
                         } else if store.trips.isEmpty {
                             NavigationLink {
                                 TripPlannerComposerView { trip in
