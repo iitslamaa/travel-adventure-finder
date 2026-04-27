@@ -3488,24 +3488,6 @@ private enum TripPlannerFetchPolicy {
     case networkOnly
 }
 
-private enum TripPlannerAvatarLogDeduper {
-    private static let lock = NSLock()
-    private static var lastLoggedAtByKey: [String: TimeInterval] = [:]
-
-    static func shouldLog(key: String, cooldown: TimeInterval = 30) -> Bool {
-        let now = Date().timeIntervalSinceReferenceDate
-        lock.lock()
-        defer { lock.unlock() }
-
-        if let lastLoggedAt = lastLoggedAtByKey[key], now - lastLoggedAt < cooldown {
-            return false
-        }
-
-        lastLoggedAtByKey[key] = now
-        return true
-    }
-}
-
 private actor TripPlannerFetchCache {
     struct Entry {
         let trips: [TripPlannerTrip]
@@ -4137,10 +4119,16 @@ struct TripPlannerView: View {
     @MainActor
     private func loadCurrentUserSnapshot() async {
         let loadStart = Date().timeIntervalSinceReferenceDate
+        let requestID = String(UUID().uuidString.prefix(8))
+        TripPlannerDebugLog.message("Current user snapshot load.start request=\(requestID)")
         guard let userId = sessionManager.userId else {
             currentUserSnapshot = nil
+            TripPlannerDebugLog.message("Current user snapshot load.no_user request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: loadStart))")
             return
         }
+        TripPlannerDebugLog.message(
+            "Current user snapshot load.user request=\(requestID) user=\(TripPlannerDebugLog.userLabel(userId)) duration=\(TripPlannerDebugLog.durationText(since: loadStart))"
+        )
 
         if let cachedProfile = profileService.memoryCachedProfile(userId: userId) {
             currentUserSnapshot = TripPlannerFriendSnapshot(
@@ -4150,22 +4138,70 @@ struct TripPlannerView: View {
                 avatarURL: cachedProfile.avatarUrl
             )
             TripPlannerDebugLog.message(
-                "Current user snapshot loaded from cache duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+                "Current user snapshot memory.hit request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(cachedProfile.avatarUrl == nil ? "nil" : "app")"
             )
             return
         }
+        TripPlannerDebugLog.message(
+            "Current user snapshot memory.miss request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+        )
 
-        if let authSnapshot = currentUserAuthSnapshot(userId: userId) {
+        let avatarCacheStart = Date().timeIntervalSinceReferenceDate
+        TripPlannerDebugLog.message(
+            "Current user snapshot avatar_cache.start request=\(requestID) user=\(TripPlannerDebugLog.userLabel(userId))"
+        )
+        if let avatarSnapshot = await profileService.cachedAvatarSnapshot(userId: userId) {
+            guard sessionManager.userId == userId else {
+                TripPlannerDebugLog.message(
+                    "Current user snapshot avatar_cache.stale request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: avatarCacheStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+                )
+                return
+            }
+            currentUserSnapshot = TripPlannerFriendSnapshot(
+                id: avatarSnapshot.id,
+                displayName: avatarSnapshot.displayName,
+                username: avatarSnapshot.username,
+                avatarURL: avatarSnapshot.avatarUrl
+            )
+            TripPlannerDebugLog.message(
+                "Current user snapshot avatar_cache.hit request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: avatarCacheStart)) total=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(avatarSnapshot.avatarUrl == nil ? "nil" : "app")"
+            )
+        } else {
+            TripPlannerDebugLog.message(
+                "Current user snapshot avatar_cache.miss request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: avatarCacheStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
+        }
+
+        if currentUserSnapshot?.avatarURL == nil, let authSnapshot = currentUserAuthSnapshot(userId: userId) {
             currentUserSnapshot = authSnapshot
             TripPlannerDebugLog.message(
-                "Current user snapshot primed from auth duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+                "Current user snapshot auth.seed request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(authSnapshot.avatarURL == nil ? "nil" : "auth")"
+            )
+        } else if currentUserSnapshot?.avatarURL != nil {
+            TripPlannerDebugLog.message(
+                "Current user snapshot auth.skip request=\(requestID) reason=app_avatar_already_available duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
+        } else {
+            TripPlannerDebugLog.message(
+                "Current user snapshot auth.unavailable request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
             )
         }
 
         let fetchStart = Date().timeIntervalSinceReferenceDate
+        TripPlannerDebugLog.message(
+            "Current user snapshot app_profile_fetch.start request=\(requestID) user=\(TripPlannerDebugLog.userLabel(userId))"
+        )
         do {
             let profile = try await profileService.fetchMyProfile(userId: userId, useCache: false)
-            guard sessionManager.userId == userId else { return }
+            guard sessionManager.userId == userId else {
+                TripPlannerDebugLog.message(
+                    "Current user snapshot app_profile_fetch.stale request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+                )
+                return
+            }
+            TripPlannerDebugLog.message(
+                "Current user snapshot app_profile_fetch.success request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(profile.avatarUrl == nil ? "nil" : "app")"
+            )
             currentUserSnapshot = TripPlannerFriendSnapshot(
                 id: profile.id,
                 displayName: profile.tripDisplayName,
@@ -4173,11 +4209,11 @@ struct TripPlannerView: View {
                 avatarURL: profile.avatarUrl
             )
             TripPlannerDebugLog.message(
-                "Current user snapshot refreshed from app profile duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(profile.avatarUrl == nil ? "nil" : "app")"
+                "Current user snapshot app_profile_assign.end request=\(requestID) total=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(profile.avatarUrl == nil ? "nil" : "app")"
             )
         } catch {
             TripPlannerDebugLog.message(
-                "Current user snapshot app profile fetch failed duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId)) error=\(SocialFeedDebug.describe(error))"
+                "Current user snapshot app_profile_fetch.failed request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) total=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) error=\(SocialFeedDebug.describe(error))"
             )
         }
     }
@@ -15178,25 +15214,22 @@ private struct TripPlannerAvatarView: View {
                             .resizable()
                             .scaledToFill()
                             .onAppear {
-                                guard TripPlannerAvatarLogDeduper.shouldLog(
-                                    key: "success:\(avatarURL)",
-                                    cooldown: 60
-                                ) else { return }
                                 TripPlannerDebugLog.message(
-                                    "Avatar loaded username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL)"
+                                    "Avatar image.success username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL)"
                                 )
                             }
                     } else {
                         fallbackAvatar
                             .onAppear {
-                                guard state.error != nil else { return }
-                                guard TripPlannerAvatarLogDeduper.shouldLog(
-                                    key: "failure:\(avatarURL)",
-                                    cooldown: 60
-                                ) else { return }
-                                TripPlannerDebugLog.message(
-                                    "Avatar failed username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL) error=\(String(describing: state.error))"
-                                )
+                                if let error = state.error {
+                                    TripPlannerDebugLog.message(
+                                        "Avatar image.failure username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL) error=\(String(describing: error))"
+                                    )
+                                } else {
+                                    TripPlannerDebugLog.message(
+                                        "Avatar image.loading_placeholder username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL)"
+                                    )
+                                }
                             }
                     }
                 }
@@ -15213,17 +15246,9 @@ private struct TripPlannerAvatarView: View {
         .onAppear {
             avatarLoadStart = Date().timeIntervalSinceReferenceDate
             if let avatarURL, !avatarURL.isEmpty {
-                guard TripPlannerAvatarLogDeduper.shouldLog(
-                    key: "request:\(avatarURL)",
-                    cooldown: 60
-                ) else { return }
-                TripPlannerDebugLog.message("Avatar request started username=@\(username) url=\(avatarURL)")
+                TripPlannerDebugLog.message("Avatar view.appear username=@\(username) url=\(avatarURL)")
             } else {
-                guard TripPlannerAvatarLogDeduper.shouldLog(
-                    key: "fallback:\(username.lowercased())",
-                    cooldown: 60
-                ) else { return }
-                TripPlannerDebugLog.message("Avatar fallback used username=@\(username) reason=missing_url")
+                TripPlannerDebugLog.message("Avatar view.fallback username=@\(username) reason=missing_url")
             }
         }
     }
