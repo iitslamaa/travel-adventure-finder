@@ -421,7 +421,14 @@ final class FriendService {
     }
 
     func fetchRelationshipState(currentUserId: UUID, otherUserId: UUID) async throws -> RelationshipState {
+        let startedAt = Date()
+        FriendServiceDebugLog.message(
+            "Relationship state fetch start current=\(currentUserId.uuidString) other=\(otherUserId.uuidString)"
+        )
         if currentUserId == otherUserId {
+            FriendServiceDebugLog.message(
+                "Relationship state self current=\(currentUserId.uuidString) duration=\(FriendServiceDebugLog.duration(since: startedAt))"
+            )
             return .selfProfile
         }
 
@@ -430,17 +437,29 @@ final class FriendService {
         async let hasSentValue = hasSentRequest(from: currentUserId, to: otherUserId)
 
         if try await isFriendValue {
+            FriendServiceDebugLog.message(
+                "Relationship state result current=\(currentUserId.uuidString) other=\(otherUserId.uuidString) state=friends duration=\(FriendServiceDebugLog.duration(since: startedAt))"
+            )
             return .friends
         }
 
         if try await hasIncomingValue {
+            FriendServiceDebugLog.message(
+                "Relationship state result current=\(currentUserId.uuidString) other=\(otherUserId.uuidString) state=requestReceived duration=\(FriendServiceDebugLog.duration(since: startedAt))"
+            )
             return .requestReceived
         }
 
         if try await hasSentValue {
+            FriendServiceDebugLog.message(
+                "Relationship state result current=\(currentUserId.uuidString) other=\(otherUserId.uuidString) state=requestSent duration=\(FriendServiceDebugLog.duration(since: startedAt))"
+            )
             return .requestSent
         }
 
+        FriendServiceDebugLog.message(
+            "Relationship state result current=\(currentUserId.uuidString) other=\(otherUserId.uuidString) state=none duration=\(FriendServiceDebugLog.duration(since: startedAt))"
+        )
         return .none
     }
 

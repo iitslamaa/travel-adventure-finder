@@ -12,7 +12,7 @@ extension ProfileViewModel {
 
     // MARK: - Bucket Toggle
 
-    func toggleBucket(_ countryId: String) async {
+    func toggleBucket(_ countryId: String, recordActivity: Bool = true) async {
         SocialFeedDebug.log("profile.bucket.toggle.start user=\(userId) country=\(countryId) guest=\(isGuestMode)")
         if isGuestMode {
             let wasInBucket = viewedBucketListCountries.contains(countryId)
@@ -55,11 +55,13 @@ extension ProfileViewModel {
                     countryCode: countryId
                 )
 
-                try? await SocialActivityService().recordActivity(
-                    actorUserId: currentUserId,
-                    eventType: .bucketListAdded,
-                    metadata: ["country_code": countryId.uppercased()]
-                )
+                if recordActivity {
+                    try? await SocialActivityService().recordCountryListActivity(
+                        actorUserId: currentUserId,
+                        eventType: .bucketListAdded,
+                        countryIds: [countryId]
+                    )
+                }
             }
 
             SocialFeedDebug.log("profile.bucket.toggle.notification user=\(userId) country=\(countryId) posting=socialActivityUpdated")
@@ -82,7 +84,7 @@ extension ProfileViewModel {
 
     // MARK: - Traveled Toggle
 
-    func toggleTraveled(_ countryId: String) async {
+    func toggleTraveled(_ countryId: String, recordActivity: Bool = true) async {
         SocialFeedDebug.log("profile.traveled.toggle.start user=\(userId) country=\(countryId) guest=\(isGuestMode)")
         if isGuestMode {
             let wasVisited = viewedTraveledCountries.contains(countryId)
@@ -127,11 +129,13 @@ extension ProfileViewModel {
                     ])
                     .execute()
 
-                try? await SocialActivityService().recordActivity(
-                    actorUserId: currentUserId,
-                    eventType: .countryVisited,
-                    metadata: ["country_code": countryId.uppercased()]
-                )
+                if recordActivity {
+                    try? await SocialActivityService().recordCountryListActivity(
+                        actorUserId: currentUserId,
+                        eventType: .countryVisited,
+                        countryIds: [countryId]
+                    )
+                }
             }
 
             SocialFeedDebug.log("profile.traveled.toggle.notification user=\(userId) country=\(countryId) posting=socialActivityUpdated")

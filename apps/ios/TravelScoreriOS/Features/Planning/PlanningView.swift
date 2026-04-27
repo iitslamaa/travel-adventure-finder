@@ -912,14 +912,14 @@ enum TripPlannerChecklistCategory: String, Codable, CaseIterable, Identifiable, 
 
     var title: String {
         switch self {
-        case .accommodation: return "Accommodation"
-        case .attractionTickets: return "Attraction tickets"
-        case .transportBooking: return "Transport booking"
-        case .reservation: return "Reservation"
-        case .visa: return "Visa"
-        case .insurance: return "Insurance"
-        case .packing: return "Packing list"
-        case .custom: return "Custom"
+        case .accommodation: return String(localized: "trip_planner.checklist.category.accommodation")
+        case .attractionTickets: return String(localized: "trip_planner.checklist.category.attraction_tickets")
+        case .transportBooking: return String(localized: "trip_planner.checklist.category.transport_booking")
+        case .reservation: return String(localized: "trip_planner.checklist.category.reservation")
+        case .visa: return String(localized: "trip_planner.checklist.category.visa")
+        case .insurance: return String(localized: "trip_planner.checklist.category.insurance")
+        case .packing: return String(localized: "trip_planner.checklist.category.packing")
+        case .custom: return String(localized: "trip_planner.checklist.category.custom")
         }
     }
 
@@ -1249,31 +1249,35 @@ private enum TripPlannerPackingCodec {
 }
 
 private enum TripPlannerChecklistTemplates {
-    static let accommodationTitle = "Accommodation"
-    static let transportationTitle = "Transportation"
-    static let visaTitle = "Apply for visas"
-    static let packingTitle = "What to pack"
-    static let packingSuggestions = [
-        "Passport",
-        "Camera",
-        "Phone charger",
-        "Travel adapter",
-        "Medication",
-        "Comfortable shoes",
-        "Rain layer",
-        "Toiletries",
-        "Earplugs",
-        "Headphones",
-        "Sunscreen",
-        "Eye mask",
-        "Slippers"
-    ]
+    static var accommodationTitle: String { String(localized: "trip_planner.checklist.template.accommodation") }
+    static var transportationTitle: String { String(localized: "trip_planner.checklist.template.transportation") }
+    static var visaTitle: String { String(localized: "trip_planner.checklist.template.apply_for_visas") }
+    static var packingTitle: String { String(localized: "trip_planner.checklist.template.what_to_pack") }
+    static var packingSuggestions: [String] {
+        [
+            String(localized: "trip_planner.checklist.packing.passport"),
+            String(localized: "trip_planner.checklist.packing.camera"),
+            String(localized: "trip_planner.checklist.packing.phone_charger"),
+            String(localized: "trip_planner.checklist.packing.travel_adapter"),
+            String(localized: "trip_planner.checklist.packing.medication"),
+            String(localized: "trip_planner.checklist.packing.comfortable_shoes"),
+            String(localized: "trip_planner.checklist.packing.rain_layer"),
+            String(localized: "trip_planner.checklist.packing.toiletries"),
+            String(localized: "trip_planner.checklist.packing.earplugs"),
+            String(localized: "trip_planner.checklist.packing.headphones"),
+            String(localized: "trip_planner.checklist.packing.sunscreen"),
+            String(localized: "trip_planner.checklist.packing.eye_mask"),
+            String(localized: "trip_planner.checklist.packing.slippers")
+        ]
+    }
 
-    static let daySuggestions: [TripPlannerChecklistItem] = [
-        TripPlannerChecklistItem(category: .attractionTickets, title: "Book attraction tickets"),
-        TripPlannerChecklistItem(category: .transportBooking, title: "Book transport in advance"),
-        TripPlannerChecklistItem(category: .reservation, title: "Reserve a restaurant or experience")
-    ]
+    static var daySuggestions: [TripPlannerChecklistItem] {
+        [
+            TripPlannerChecklistItem(category: .attractionTickets, title: String(localized: "trip_planner.checklist.suggestion.book_attraction_tickets")),
+            TripPlannerChecklistItem(category: .transportBooking, title: String(localized: "trip_planner.checklist.suggestion.book_transport")),
+            TripPlannerChecklistItem(category: .reservation, title: String(localized: "trip_planner.checklist.suggestion.reserve_restaurant"))
+        ]
+    }
 
     static func defaultAccommodationItem() -> TripPlannerChecklistItem {
         TripPlannerChecklistItem(category: .accommodation, title: accommodationTitle)
@@ -1352,11 +1356,11 @@ enum TripPlannerExpenseCategory: String, Codable, CaseIterable, Identifiable, Se
 
     var title: String {
         switch self {
-        case .accommodation: return "Accommodation"
-        case .food: return "Food"
-        case .transportation: return "Transportation"
-        case .activities: return "Activities"
-        case .other: return "Other"
+        case .accommodation: return String(localized: "trip_planner.expenses.category.accommodation")
+        case .food: return String(localized: "trip_planner.expenses.category.food")
+        case .transportation: return String(localized: "trip_planner.expenses.category.transportation")
+        case .activities: return String(localized: "trip_planner.expenses.category.activities")
+        case .other: return String(localized: "trip_planner.expenses.category.other")
         }
     }
 
@@ -1391,15 +1395,15 @@ enum TripPlannerExpenseCategory: String, Codable, CaseIterable, Identifiable, Se
     var splitGuidance: String {
         switch self {
         case .accommodation:
-            return "Good for hotels or stays that usually get split across the people sharing them."
+            return String(localized: "trip_planner.expenses.split_guidance.accommodation")
         case .food:
-            return "Food is usually per person, so pick exactly who this meal covered."
+            return String(localized: "trip_planner.expenses.split_guidance.food")
         case .transportation:
-            return "Transport is often only for the riders on that segment."
+            return String(localized: "trip_planner.expenses.split_guidance.transportation")
         case .activities:
-            return "Use this for tours, events, or anything booked for specific travelers."
+            return String(localized: "trip_planner.expenses.split_guidance.activities")
         case .other:
-            return "Choose who should share this cost."
+            return String(localized: "trip_planner.expenses.split_guidance.other")
         }
     }
 }
@@ -4230,7 +4234,7 @@ private struct TripPlannerComposerView: View {
                                         }
 
                                         TripPlannerTextInput(
-                                            title: "Add by username",
+                                            title: String(localized: "trip_planner.add_by_username"),
                                             text: $usernameSearch.query,
                                             placeholder: "@username"
                                         )
@@ -4839,7 +4843,7 @@ private struct TripPlannerDetailView: View {
             return ownerSnapshot.displayName
         }
 
-        return "You"
+        return String(localized: "trip_planner.you")
     }
 
     private var syncedOverallChecklistItems: [TripPlannerChecklistItem] {
@@ -4894,7 +4898,7 @@ private struct TripPlannerDetailView: View {
             openChecklistEditor()
         } label: {
             TripPlannerNavigationSectionCard(
-                title: "Planning checklist",
+                title: String(localized: "trip_planner.checklist.title"),
                 subtitle: ""
             ) {
                 TripPlannerChecklistPreviewSection(
@@ -4949,7 +4953,7 @@ private struct TripPlannerDetailView: View {
     @ViewBuilder
     private var travelersSection: some View {
         TripPlannerEditableSectionCard(
-            title: "Who's going",
+            title: String(localized: "trip_planner.whos_going.title"),
             subtitle: displayedTravelers.isEmpty ? String(localized: "trip_planner.detail.just_you_for_now") : ""
         ) {
             NavigationLink {
@@ -5677,7 +5681,7 @@ private struct TripPlannerFriendsEditorView: View {
                                 }
 
                                 TripPlannerTextInput(
-                                    title: "Add by username",
+                                    title: String(localized: "trip_planner.add_by_username"),
                                     text: $usernameSearch.query,
                                     placeholder: "@username"
                                 )
@@ -5900,11 +5904,17 @@ private struct TripPlannerInlineAvailabilityEditor: View {
 
     private var selectedDateRangeText: String {
         let sorted = selectedDates.sorted()
-        guard let first = sorted.first else { return "Tap dates you can travel." }
+        guard let first = sorted.first else { return String(localized: "trip_planner.availability.tap_dates") }
         guard sorted.count > 1 else {
             return AppDateFormatting.dateString(from: first, dateStyle: .medium)
         }
-        return "\(sorted.count) dates selected"
+        return AppNumberFormatting.localizedDigits(
+            in: String(
+                format: String(localized: "trip_planner.availability.dates_selected_format"),
+                locale: AppDisplayLocale.current,
+                sorted.count
+            )
+        )
     }
 
     private var availabilitySignature: String {
@@ -6284,13 +6294,19 @@ private struct TripPlannerAvailabilityEditorView: View {
 
     private var selectedDateRangeText: String {
         let sorted = selectedDates.sorted()
-        guard let first = sorted.first else { return "No exact days selected" }
+        guard let first = sorted.first else { return String(localized: "trip_planner.availability.no_exact_days") }
 
         if sorted.count == 1 {
             return AppDateFormatting.dateString(from: first, dateStyle: .medium)
         }
 
-        return "\(sorted.count) dates selected"
+        return AppNumberFormatting.localizedDigits(
+            in: String(
+                format: String(localized: "trip_planner.availability.dates_selected_format"),
+                locale: AppDisplayLocale.current,
+                sorted.count
+            )
+        )
     }
 
     var body: some View {
@@ -6304,13 +6320,13 @@ private struct TripPlannerAvailabilityEditorView: View {
                 ScrollView {
                     VStack(spacing: 18) {
                         TripPlannerSectionCard(
-                            title: "Suggested trip dates",
-                            subtitle: overlapMatches.isEmpty ? "Add availability to generate matches." : "Ranked by shared availability."
+                            title: String(localized: "trip_planner.availability.suggested_dates_title"),
+                            subtitle: overlapMatches.isEmpty ? String(localized: "trip_planner.availability.add_to_generate") : String(localized: "trip_planner.availability.ranked_by_shared")
                         ) {
                             VStack(alignment: .leading, spacing: 10) {
                                 if overlapMatches.isEmpty {
                                     TripPlannerInfoCard(
-                                        text: "No shared window yet.",
+                                        text: String(localized: "trip_planner.availability.no_shared_window"),
                                         systemImage: "sparkles"
                                     )
                                 } else {
@@ -6329,7 +6345,7 @@ private struct TripPlannerAvailabilityEditorView: View {
                         }
 
                         TripPlannerSectionCard(
-                            title: "Your availability",
+                            title: String(localized: "trip_planner.availability.your_availability"),
                             subtitle: selectedDateRangeText
                         ) {
                             VStack(alignment: .leading, spacing: 14) {
@@ -6367,8 +6383,16 @@ private struct TripPlannerAvailabilityEditorView: View {
                         }
 
                         TripPlannerSectionCard(
-                            title: "Availability by traveler",
-                            subtitle: proposals.isEmpty ? "No dates added yet." : "\(proposals.count) saved option\(proposals.count == 1 ? "" : "s")"
+                            title: String(localized: "trip_planner.availability.by_traveler"),
+                            subtitle: proposals.isEmpty
+                                ? String(localized: "trip_planner.availability.no_dates_added")
+                                : AppNumberFormatting.localizedDigits(
+                                    in: String(
+                                        format: String(localized: "trip_planner.availability.saved_options_format"),
+                                        locale: AppDisplayLocale.current,
+                                        proposals.count
+                                    )
+                                )
                         ) {
                             travelerAvailabilityList
                         }
@@ -6468,7 +6492,7 @@ private struct TripPlannerAvailabilityEditorView: View {
     private var travelerAvailabilityList: some View {
         if proposals.isEmpty {
             TripPlannerInfoCard(
-                text: "No one has added availability yet.",
+                text: String(localized: "trip_planner.availability.no_one_added"),
                 systemImage: "calendar.badge.plus"
             )
         } else {
@@ -7377,9 +7401,13 @@ private struct TripPlannerCountriesEditorView: View {
             let formatter = DateFormatter()
             formatter.locale = AppDisplayLocale.current
             let monthName = formatter.monthSymbols[recommendationMonth - 1]
-            return "Good timing for \(monthName) and close to the regions already in this trip."
+            return String(
+                format: String(localized: "trip_planner.country_picker.recommendation_month_subtitle"),
+                locale: AppDisplayLocale.current,
+                monthName
+            )
         }
-        return "Good timing and nearby additions for the regions already in this trip."
+        return String(localized: "trip_planner.country_picker.recommendation_subtitle")
     }
 }
 
@@ -7688,7 +7716,7 @@ private struct TripPlannerDayPlanEditorRow: View {
 
     private var selectedCountryLabel: String {
         let option = countryOptions.first { $0.id == (plan.countryId ?? preferredCountryOption?.id) } ?? preferredCountryOption
-        guard let option else { return "Select a country" }
+        guard let option else { return String(localized: "trip_planner.itinerary.select_country") }
         return countryLabel(for: option.id, name: option.name)
     }
 
@@ -7707,11 +7735,11 @@ private struct TripPlannerDayPlanEditorRow: View {
     }
 
     private var travelOriginLabel: String {
-        travelEndpointLabel(from: previousPlan) ?? "Home"
+        travelEndpointLabel(from: previousPlan) ?? String(localized: "trip_planner.itinerary.home")
     }
 
     private var travelDestinationLabel: String {
-        travelEndpointLabel(from: nextPlan) ?? "Home"
+        travelEndpointLabel(from: nextPlan) ?? String(localized: "trip_planner.itinerary.home")
     }
 
     private func travelEndpointLabel(from plan: TripPlannerDayPlan?) -> String? {
@@ -7797,7 +7825,7 @@ private struct TripPlannerChecklistPreviewSection: View {
             TripPlannerChecklistPreviewEntry(
                 id: $0.id,
                 title: $0.title,
-                subtitle: $0.category == .visa ? "Visas" : "Trip prep",
+                subtitle: $0.category == .visa ? String(localized: "trip_planner.checklist.preview.visas") : String(localized: "trip_planner.checklist.preview.trip_prep"),
                 isCompleted: $0.isCompleted,
                 completedByName: $0.completedByName
             )
@@ -7825,22 +7853,22 @@ private struct TripPlannerChecklistPreviewSection: View {
     var body: some View {
         if previewEntries.isEmpty {
             TripPlannerInfoCard(
-                text: "Start with accommodation for each day, then add tickets or other prep items.",
+                text: String(localized: "trip_planner.checklist.preview.empty"),
                 systemImage: "checklist"
             )
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     TripPlannerStatPill(
-                        title: "Progress",
+                        title: String(localized: "trip_planner.checklist.preview.progress"),
                         value: "\(completedCount)/\(previewEntries.count)",
-                        detail: completedCount == previewEntries.count ? "Everything checked off" : "Tasks completed"
+                        detail: completedCount == previewEntries.count ? String(localized: "trip_planner.checklist.preview.everything_checked") : String(localized: "trip_planner.checklist.preview.tasks_completed")
                     )
 
                     TripPlannerStatPill(
-                        title: "Open items",
+                        title: String(localized: "trip_planner.checklist.preview.open_items"),
                         value: "\(max(previewEntries.count - completedCount, 0))",
-                        detail: overallItems.contains(where: { $0.category == .visa }) ? "Includes visas" : "Daily prep only"
+                        detail: overallItems.contains(where: { $0.category == .visa }) ? String(localized: "trip_planner.checklist.preview.includes_visas") : String(localized: "trip_planner.checklist.preview.daily_prep_only")
                     )
                 }
             }
@@ -8438,11 +8466,20 @@ private struct TripPlannerChecklistEditorView: View {
                         isSelected: false
                     )
                 } + [
-                    TripPlannerChipItem(id: "custom", title: "+ Custom", isSelected: false)
+                    TripPlannerChipItem(
+                        id: "custom",
+                        title: "+ \(String(localized: "trip_planner.checklist.category.custom"))",
+                        isSelected: false
+                    )
                 ],
                 onTap: { item in
                     if item.id == "custom" {
-                        addAction(TripPlannerChecklistItem(category: .custom, title: "Custom task"))
+                        addAction(
+                            TripPlannerChecklistItem(
+                                category: .custom,
+                                title: String(localized: "trip_planner.checklist.custom_task")
+                            )
+                        )
                     } else if let suggestion = items.first(where: { $0.id.uuidString == item.id }) {
                         addAction(suggestion)
                     }
@@ -8450,9 +8487,14 @@ private struct TripPlannerChecklistEditorView: View {
             )
         } else {
             Button {
-                addAction(TripPlannerChecklistItem(category: .custom, title: "Custom task"))
+                addAction(
+                    TripPlannerChecklistItem(
+                        category: .custom,
+                        title: String(localized: "trip_planner.checklist.custom_task")
+                    )
+                )
             } label: {
-                Label("Add custom item", systemImage: "plus")
+                Label("trip_planner.checklist.add_custom_item", systemImage: "plus")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)
@@ -9432,7 +9474,7 @@ private struct TripPlannerChecklistItemEditorRow: View {
                             }
 
                             if item.hasLinkedExpenseDetails {
-                                Label("Automatically synced to expenses", systemImage: "checkmark.circle.fill")
+                                Label("trip_planner.checklist.synced_to_expenses", systemImage: "checkmark.circle.fill")
                                     .font(.system(size: 12, weight: .bold))
                                     .foregroundStyle(.black.opacity(0.75))
                             }
@@ -9565,7 +9607,7 @@ private struct TripPlannerPackingEntriesEditor: View {
                                 .buttonStyle(.plain)
                             }
 
-                            TextField("Add note (optional)", text: $entry.note)
+                            TextField(String(localized: "trip_planner.checklist.add_note_optional"), text: $entry.note)
                                 .textInputAutocapitalization(.sentences)
                                 .font(.system(size: 12))
                                 .foregroundStyle(.black.opacity(0.68))
@@ -9600,12 +9642,12 @@ private struct TripPlannerPackingEntriesEditor: View {
 
             HStack(spacing: 8) {
                 VStack(spacing: 8) {
-                    TextField("Add custom item", text: $customPackingItem)
+                    TextField(String(localized: "trip_planner.checklist.add_custom_item"), text: $customPackingItem)
                         .textInputAutocapitalization(.sentences)
                         .font(.system(size: 13))
                         .foregroundStyle(.black.opacity(0.78))
 
-                    TextField("Add note (optional)", text: $customPackingNote)
+                    TextField(String(localized: "trip_planner.checklist.add_note_optional"), text: $customPackingNote)
                         .textInputAutocapitalization(.sentences)
                         .font(.system(size: 12))
                         .foregroundStyle(.black.opacity(0.68))
@@ -9706,14 +9748,20 @@ private struct TripPlannerExpensesPreviewSection: View {
         HStack(alignment: .top, spacing: 10) {
             TripPlannerStatPill(
                 title: String(localized: "trip_planner.expenses.stats.total_logged"),
-                detail: "\(expenses.count) expenses"
+                detail: AppNumberFormatting.localizedDigits(
+                    in: String(
+                        format: String(localized: "trip_planner.expenses.stats.expense_count"),
+                        locale: AppDisplayLocale.current,
+                        expenses.count
+                    )
+                )
             ) {
                 amountValue(totalSpent)
             }
 
             TripPlannerStatPill(
                 title: String(localized: "trip_planner.expenses.stats.still_owed"),
-                detail: outstandingTotal > 0 ? "Tap to view balances" : "Tap to manage expenses"
+                detail: outstandingTotal > 0 ? String(localized: "trip_planner.expenses.stats.tap_view_balances") : String(localized: "trip_planner.expenses.stats.tap_manage_expenses")
             ) {
                 amountValue(outstandingTotal)
             }
@@ -9937,7 +9985,7 @@ private struct TripPlannerExpensesEditorView: View {
 
                         if !categoryBreakdown.isEmpty {
                             TripPlannerSectionCard(
-                                title: "Spending breakdown",
+                                title: String(localized: "trip_planner.expenses.spending_breakdown"),
                                 subtitle: ""
                             ) {
                                 TripPlannerExpenseCategoryBreakdownView(
@@ -12065,10 +12113,10 @@ private struct TripPlannerStatsSection: View {
         let averageOther = countries.compactMap(otherDailyCost).averageOrZero * Double(tripLengthDays)
 
         return [
-            TripPlannerCostBreakdownLine(title: "Accommodation", amount: averageAccommodation, detail: "Nightly stays across the full trip"),
-            TripPlannerCostBreakdownLine(title: "Food", amount: averageFood, detail: "Average daily food spend"),
-            TripPlannerCostBreakdownLine(title: "Activities", amount: averageActivities, detail: "Average daily activities spend"),
-            TripPlannerCostBreakdownLine(title: "Other", amount: averageOther, detail: "Local transport and other daily costs")
+            TripPlannerCostBreakdownLine(title: String(localized: "trip_planner.expenses.category.accommodation"), amount: averageAccommodation, detail: String(localized: "trip_planner.stats.cost_detail.nightly_stays")),
+            TripPlannerCostBreakdownLine(title: String(localized: "trip_planner.expenses.category.food"), amount: averageFood, detail: String(localized: "trip_planner.stats.cost_detail.average_food")),
+            TripPlannerCostBreakdownLine(title: String(localized: "trip_planner.expenses.category.activities"), amount: averageActivities, detail: String(localized: "trip_planner.stats.cost_detail.average_activities")),
+            TripPlannerCostBreakdownLine(title: String(localized: "trip_planner.expenses.category.other"), amount: averageOther, detail: String(localized: "trip_planner.stats.cost_detail.other_daily"))
         ]
         .filter { $0.amount > 0.009 }
     }
@@ -12098,10 +12146,10 @@ private struct TripPlannerStatsSection: View {
         }
 
         return [
-            TripPlannerCostBreakdownLine(title: "Accommodation", amount: accommodation, detail: "Includes arrival-night stays on travel days"),
-            TripPlannerCostBreakdownLine(title: "Food", amount: food, detail: "Country days only"),
-            TripPlannerCostBreakdownLine(title: "Activities", amount: activities, detail: "Country days only"),
-            TripPlannerCostBreakdownLine(title: "Other", amount: other, detail: "Local transport and uncategorized daily costs")
+            TripPlannerCostBreakdownLine(title: String(localized: "trip_planner.expenses.category.accommodation"), amount: accommodation, detail: String(localized: "trip_planner.stats.cost_detail.arrival_night_stays")),
+            TripPlannerCostBreakdownLine(title: String(localized: "trip_planner.expenses.category.food"), amount: food, detail: String(localized: "trip_planner.stats.cost_detail.country_days_only")),
+            TripPlannerCostBreakdownLine(title: String(localized: "trip_planner.expenses.category.activities"), amount: activities, detail: String(localized: "trip_planner.stats.cost_detail.country_days_only")),
+            TripPlannerCostBreakdownLine(title: String(localized: "trip_planner.expenses.category.other"), amount: other, detail: String(localized: "trip_planner.stats.cost_detail.local_transport_uncategorized"))
         ]
         .filter { $0.amount > 0.009 }
     }
@@ -12329,7 +12377,13 @@ private struct TripPlannerStatsSection: View {
         guard let tripLengthDays else {
             return String(localized: "trip_planner.stats.estimate_when_dates_set")
         }
-        return "Includes \(tripLengthDays) day\(tripLengthDays == 1 ? "" : "s"), travel dates, and arrival-night stays"
+        return AppNumberFormatting.localizedDigits(
+            in: String(
+                format: String(localized: "trip_planner.stats.estimated_cost_detail_format"),
+                locale: AppDisplayLocale.current,
+                tripLengthDays
+            )
+        )
     }
 
     private var dailySpendDetail: String {

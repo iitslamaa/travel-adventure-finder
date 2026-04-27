@@ -132,7 +132,6 @@ private struct PersistedCountrySet: Codable {
     let countryCodes: [String]
 }
 
-@MainActor
 final class ProfileService {
 
     private enum CacheKeys {
@@ -157,16 +156,24 @@ final class ProfileService {
     }
 
     func inMemoryProfile(userId: UUID) -> Profile? {
-        Self.profileCache[userId]
+        let cached = Self.profileCache[userId]
+        SocialFeedDebug.log(
+            "profile.service.memory_profile user=\(userId.uuidString) hit=\(cached != nil) username=\(logField(cached?.username))"
+        )
+        return cached
     }
 
     func currentUserProfileFallback(userId: UUID) -> Profile? {
         if let cachedProfile = Self.profileCache[userId] {
+            SocialFeedDebug.log("profile.service.fallback.memory_hit user=\(userId.uuidString)")
             return cachedProfile
         }
 
         guard userId == supabase.currentUserId,
               let user = supabase.client.auth.currentUser else {
+            SocialFeedDebug.log(
+                "profile.service.fallback.unavailable user=\(userId.uuidString) current_user=\(supabase.currentUserId?.uuidString ?? "nil") auth_user_present=\(supabase.client.auth.currentUser != nil)"
+            )
             return nil
         }
 
@@ -178,7 +185,7 @@ final class ProfileService {
             metadata["user_name"]?.stringValue?.nilIfEmpty ??
             "user_\(userId.uuidString.replacingOccurrences(of: "-", with: "").prefix(6).lowercased())"
 
-        return Profile(
+        let fallback = Profile(
             id: userId,
             username: fallbackUsername,
             fullName: identity.fullName,
@@ -196,18 +203,29 @@ final class ProfileService {
             onboardingCompleted: nil,
             friendCount: 0
         )
+        SocialFeedDebug.log(
+            "profile.service.fallback.created user=\(userId.uuidString) username=\(logField(fallback.username)) avatar=\(logField(fallback.avatarUrl))"
+        )
+        return fallback
     }
 
     func cachedProfile(userId: UUID) -> Profile? {
         if let cachedProfile = Self.profileCache[userId] {
+            SocialFeedDebug.log(
+                "profile.service.cache.profile.memory_hit user=\(userId.uuidString) username=\(logField(cachedProfile.username)) languages=\(cachedProfile.languages.count)"
+            )
             return cachedProfile
         }
 
         guard let persistedProfile: Profile = Self.loadCachedValue(forKey: Self.profileCacheKey(for: userId)) else {
+            SocialFeedDebug.log("profile.service.cache.profile.miss user=\(userId.uuidString)")
             return nil
         }
 
         Self.profileCache[userId] = persistedProfile
+        SocialFeedDebug.log(
+            "profile.service.cache.profile.disk_hit user=\(userId.uuidString) username=\(logField(persistedProfile.username)) languages=\(persistedProfile.languages.count)"
+        )
         return persistedProfile
     }
 
@@ -217,13 +235,17 @@ final class ProfileService {
         defaultAvatarUrl: String? = nil
     ) async throws -> Profile {
         if let cachedProfile = Self.profileCache[userId] {
+            SocialFeedDebug.log("profile.service.warm.cache_hit user=\(userId.uuidString)")
             return cachedProfile
         }
 
         if let inFlightTask = Self.inFlightProfileWarmups[userId] {
+            SocialFeedDebug.log("profile.service.warm.in_flight_hit user=\(userId.uuidString)")
             return try await inFlightTask.value
         }
 
+        let startedAt = Date()
+        SocialFeedDebug.log("profile.service.warm.start user=\(userId.uuidString)")
         let warmTask = Task<Profile, Error> { @MainActor [weak self] in
             guard let self else {
                 throw CancellationError()
@@ -243,47 +265,71 @@ final class ProfileService {
             }
         }
 
-        return try await warmTask.value
+        do {
+            let profile = try await warmTask.value
+            SocialFeedDebug.log(
+                "profile.service.warm.success user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return profile
+        } catch {
+            SocialFeedDebug.log(
+                "profile.service.warm.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
     }
 
     func cachedTraveledCountries(userId: UUID) -> Set<String>? {
         if let cached = Self.traveledCache[userId] {
+            SocialFeedDebug.log("profile.service.cache.traveled.memory_hit user=\(userId.uuidString) count=\(cached.count)")
             return cached
         }
 
         guard let persisted: PersistedCountrySet = Self.loadCachedValue(forKey: Self.traveledCacheKey(for: userId)) else {
+            SocialFeedDebug.log("profile.service.cache.traveled.miss user=\(userId.uuidString)")
             return nil
         }
 
         let cached = Set(persisted.countryCodes)
         Self.traveledCache[userId] = cached
+        SocialFeedDebug.log("profile.service.cache.traveled.disk_hit user=\(userId.uuidString) count=\(cached.count)")
         return cached
     }
 
     func cachedBucketListCountries(userId: UUID) -> Set<String>? {
         if let cached = Self.bucketCache[userId] {
+            SocialFeedDebug.log("profile.service.cache.bucket.memory_hit user=\(userId.uuidString) count=\(cached.count)")
             return cached
         }
 
         guard let persisted: PersistedCountrySet = Self.loadCachedValue(forKey: Self.bucketCacheKey(for: userId)) else {
+            SocialFeedDebug.log("profile.service.cache.bucket.miss user=\(userId.uuidString)")
             return nil
         }
 
         let cached = Set(persisted.countryCodes)
         Self.bucketCache[userId] = cached
+        SocialFeedDebug.log("profile.service.cache.bucket.disk_hit user=\(userId.uuidString) count=\(cached.count)")
         return cached
     }
 
     func cachedPassportPreferences(userId: UUID) -> PassportPreferences? {
         if let cached = Self.passportPreferencesCache[userId] {
+            SocialFeedDebug.log(
+                "profile.service.cache.passport.memory_hit user=\(userId.uuidString) nationalities=\(cached.nationalityCountryCodes.count)"
+            )
             return cached
         }
 
         guard let persisted: PassportPreferences = Self.loadCachedValue(forKey: Self.passportCacheKey(for: userId)) else {
+            SocialFeedDebug.log("profile.service.cache.passport.miss user=\(userId.uuidString)")
             return nil
         }
 
         Self.passportPreferencesCache[userId] = persisted
+        SocialFeedDebug.log(
+            "profile.service.cache.passport.disk_hit user=\(userId.uuidString) nationalities=\(persisted.nationalityCountryCodes.count)"
+        )
         return persisted
     }
 
@@ -293,7 +339,8 @@ final class ProfileService {
         if useCache, let cachedProfile = Self.profileCache[userId] {
             SocialFeedDebug.log(
                 "profile.service.fetch.cache_hit user=\(userId.uuidString) " +
-                "username=\(logField(cachedProfile.username)) avatar=\(logField(cachedProfile.avatarUrl))"
+                "username=\(logField(cachedProfile.username)) avatar=\(logField(cachedProfile.avatarUrl)) " +
+                profileDetailDebugSummary(cachedProfile)
             )
             return cachedProfile
         }
@@ -304,9 +351,12 @@ final class ProfileService {
         }
 
         let startedAt = Date()
-        SocialFeedDebug.log("profile.service.fetch.network.start user=\(userId.uuidString) use_cache=\(useCache)")
-        let fetchTask = Task<Profile, Error> { [supabase] in
-            let response: PostgrestResponse<[Profile]> = try await supabase.client
+        let client = supabase.client
+        SocialFeedDebug.log(
+            "profile.service.fetch.network.start user=\(userId.uuidString) use_cache=\(useCache) current_user=\(supabase.currentUserId?.uuidString ?? "nil") table=profiles"
+        )
+        let fetchTask = Task.detached(priority: .userInitiated) {
+            let response: PostgrestResponse<[Profile]> = try await client
                 .from("profiles")
                 .select()
                 .eq("id", value: userId.uuidString)
@@ -335,7 +385,8 @@ final class ProfileService {
             }
             SocialFeedDebug.log(
                 "profile.service.fetch.network.success user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
-                "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl))"
+                "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl)) " +
+                profileDetailDebugSummary(profile)
             )
             return profile
         } catch {
@@ -355,21 +406,41 @@ final class ProfileService {
         defaultUsername: String? = nil,
         defaultAvatarUrl: String? = nil
     ) async throws {
+        let startedAt = Date()
+        SocialFeedDebug.log(
+            "profile.service.ensure.start user=\(userId.uuidString) current_user=\(supabase.currentUserId?.uuidString ?? "nil")"
+        )
+
+        if let cachedProfile = cachedProfile(userId: userId) {
+            SocialFeedDebug.log(
+                "profile.service.ensure.cached_exists user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
+                "username=\(logField(cachedProfile.username))"
+            )
+            return
+        }
 
         // Try fetch first
         do {
             _ = try await fetchMyProfile(userId: userId)
+            SocialFeedDebug.log(
+                "profile.service.ensure.exists user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             return
         } catch let error as NSError {
             // Only create profile if it's truly 404 (not found)
             if error.code == 404 {
+                SocialFeedDebug.log("profile.service.ensure.not_found user=\(userId.uuidString)")
             } else {
                 // Rethrow network / decoding / timeout errors
+                SocialFeedDebug.log(
+                    "profile.service.ensure.fetch_error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+                )
                 throw error
             }
         }
 
         guard let user = supabase.client.auth.currentUser else {
+            SocialFeedDebug.log("profile.service.ensure.no_auth_user user=\(userId.uuidString)")
             throw NSError(
                 domain: "ProfileService",
                 code: 0,
@@ -413,6 +484,9 @@ final class ProfileService {
             }
 
             do {
+                SocialFeedDebug.log(
+                    "profile.service.ensure.insert.attempt user=\(userId.uuidString) attempt=\(idx + 1)/\(delays.count) delay_ns=\(delay)"
+                )
                 do {
                     try await supabase.client
                         .from("profiles")
@@ -429,10 +503,16 @@ final class ProfileService {
                         .execute()
                 }
 
+                SocialFeedDebug.log(
+                    "profile.service.ensure.insert.success user=\(userId.uuidString) attempt=\(idx + 1) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
                 return
 
             } catch {
                 lastError = error
+                SocialFeedDebug.log(
+                    "profile.service.ensure.insert.error user=\(userId.uuidString) attempt=\(idx + 1) error=\(SocialFeedDebug.describe(error))"
+                )
 
                 if let pg = error as? PostgrestError, pg.code == "23503" {
                     print("⚠️ ensureProfileExists FK violation (23503) — retry \(idx + 1)/\(delays.count)")
@@ -453,16 +533,20 @@ final class ProfileService {
     func fetchOrCreateProfile(
         userId: UUID,
         defaultUsername: String? = nil,
-        defaultAvatarUrl: String? = nil
+        defaultAvatarUrl: String? = nil,
+        useCache: Bool = true
     ) async throws -> Profile {
-        SocialFeedDebug.log("profile.service.fetch_or_create.start user=\(userId.uuidString)")
+        let startedAt = Date()
+        SocialFeedDebug.log("profile.service.fetch_or_create.start user=\(userId.uuidString) use_cache=\(useCache)")
         do {
-            let profile = try await fetchMyProfile(userId: userId)
+            let profile = try await fetchMyProfile(userId: userId, useCache: useCache)
             hydrateProfileIdentityFromAuthMetadataIfNeededInBackground(
                 userId: userId,
                 profile: profile
             )
-            SocialFeedDebug.log("profile.service.fetch_or_create.success user=\(userId.uuidString) source=fetch")
+            SocialFeedDebug.log(
+                "profile.service.fetch_or_create.success user=\(userId.uuidString) source=fetch duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             return profile
         } catch let error as NSError where error.code == 404 {
             SocialFeedDebug.log("profile.service.fetch_or_create.ensure user=\(userId.uuidString) reason=not_found")
@@ -471,13 +555,20 @@ final class ProfileService {
                 defaultUsername: defaultUsername,
                 defaultAvatarUrl: defaultAvatarUrl
             )
-            let profile = try await fetchMyProfile(userId: userId)
-            SocialFeedDebug.log("profile.service.fetch_or_create.success user=\(userId.uuidString) source=create")
+            let profile = try await fetchMyProfile(userId: userId, useCache: false)
+            SocialFeedDebug.log(
+                "profile.service.fetch_or_create.success user=\(userId.uuidString) source=create duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             hydrateProfileIdentityFromAuthMetadataIfNeededInBackground(
                 userId: userId,
                 profile: profile
             )
             return profile
+        } catch {
+            SocialFeedDebug.log(
+                "profile.service.fetch_or_create.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
         }
     }
 
@@ -509,10 +600,25 @@ final class ProfileService {
     func cacheProfile(_ profile: Profile) {
         SocialFeedDebug.log(
             "profile.service.cache.write user=\(profile.id.uuidString) " +
-            "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl))"
+            "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl)) " +
+            profileDetailDebugSummary(profile)
         )
         Self.profileCache[profile.id] = profile
         Self.persistCachedValue(profile, forKey: Self.profileCacheKey(for: profile.id))
+    }
+
+    private func profileDetailDebugSummary(_ profile: Profile) -> String {
+        [
+            "languages=\(profile.languages.count)",
+            "lived=\(profile.livedCountries.count)",
+            "travel_style=\(profile.travelStyle.count)",
+            "travel_mode=\(profile.travelMode.count)",
+            "next=\(logField(profile.nextDestination))",
+            "current=\(logField(profile.currentCountry))",
+            "favorites=\(profile.favoriteCountries?.count ?? 0)",
+            "onboarding=\(profile.onboardingCompleted.map(String.init) ?? "nil")",
+            "friend_count=\(profile.friendCount)"
+        ].joined(separator: " ")
     }
 
     private func logField(_ value: String?) -> String {
@@ -521,21 +627,33 @@ final class ProfileService {
     }
 
     func fetchPassportPreferences(userId: UUID) async throws -> PassportPreferences {
-        let response: PostgrestResponse<[PassportPreferencesRow]> = try await supabase.client
-            .from("user_passport_preferences")
-            .select("user_id,nationality_country_codes,passport_country_code")
-            .eq("user_id", value: userId.uuidString)
-            .limit(1)
-            .execute()
+        let startedAt = Date()
+        SocialFeedDebug.log("profile.service.passport.fetch.start user=\(userId.uuidString) table=user_passport_preferences")
+        do {
+            let response: PostgrestResponse<[PassportPreferencesRow]> = try await supabase.client
+                .from("user_passport_preferences")
+                .select("user_id,nationality_country_codes,passport_country_code")
+                .eq("user_id", value: userId.uuidString)
+                .limit(1)
+                .execute()
 
-        let preferences = PassportPreferences(
-            nationalityCountryCodes: response.value.first?.nationalityCountryCodes ?? [],
-            passportCountryCode: response.value.first?.passportCountryCode
-        )
+            let preferences = PassportPreferences(
+                nationalityCountryCodes: response.value.first?.nationalityCountryCodes ?? [],
+                passportCountryCode: response.value.first?.passportCountryCode
+            )
 
-        Self.passportPreferencesCache[userId] = preferences
-        Self.persistCachedValue(preferences, forKey: Self.passportCacheKey(for: userId))
-        return preferences
+            Self.passportPreferencesCache[userId] = preferences
+            Self.persistCachedValue(preferences, forKey: Self.passportCacheKey(for: userId))
+            SocialFeedDebug.log(
+                "profile.service.passport.fetch.success user=\(userId.uuidString) rows=\(response.value.count) nationalities=\(preferences.nationalityCountryCodes.count) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return preferences
+        } catch {
+            SocialFeedDebug.log(
+                "profile.service.passport.fetch.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
     }
 
     func upsertPassportPreferences(
@@ -695,38 +813,62 @@ final class ProfileService {
 
     /// Traveled countries for any viewed user
     func fetchTraveledCountries(userId: UUID) async throws -> Set<String> {
-        let response: PostgrestResponse<[CountryRow]> = try await supabase.client
-            .from("user_traveled")
-            .select("country_id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(1000)
-            .execute()
+        let startedAt = Date()
+        SocialFeedDebug.log("profile.service.traveled.fetch.start user=\(userId.uuidString) table=user_traveled")
+        do {
+            let response: PostgrestResponse<[CountryRow]> = try await supabase.client
+                .from("user_traveled")
+                .select("country_id")
+                .eq("user_id", value: userId.uuidString)
+                .limit(1000)
+                .execute()
 
-        let traveled = Set(response.value.map { $0.countryId })
-        Self.traveledCache[userId] = traveled
-        Self.persistCachedValue(
-            PersistedCountrySet(countryCodes: traveled.sorted()),
-            forKey: Self.traveledCacheKey(for: userId)
-        )
-        return traveled
+            let traveled = Set(response.value.map { $0.countryId })
+            Self.traveledCache[userId] = traveled
+            Self.persistCachedValue(
+                PersistedCountrySet(countryCodes: traveled.sorted()),
+                forKey: Self.traveledCacheKey(for: userId)
+            )
+            SocialFeedDebug.log(
+                "profile.service.traveled.fetch.success user=\(userId.uuidString) rows=\(response.value.count) unique=\(traveled.count) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return traveled
+        } catch {
+            SocialFeedDebug.log(
+                "profile.service.traveled.fetch.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
     }
 
     /// Bucket list countries for any viewed user
     func fetchBucketListCountries(userId: UUID) async throws -> Set<String> {
-        let response: PostgrestResponse<[CountryRow]> = try await supabase.client
-            .from("user_bucket_list")
-            .select("country_id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(1000)
-            .execute()
+        let startedAt = Date()
+        SocialFeedDebug.log("profile.service.bucket.fetch.start user=\(userId.uuidString) table=user_bucket_list")
+        do {
+            let response: PostgrestResponse<[CountryRow]> = try await supabase.client
+                .from("user_bucket_list")
+                .select("country_id")
+                .eq("user_id", value: userId.uuidString)
+                .limit(1000)
+                .execute()
 
-        let bucket = Set(response.value.map { $0.countryId })
-        Self.bucketCache[userId] = bucket
-        Self.persistCachedValue(
-            PersistedCountrySet(countryCodes: bucket.sorted()),
-            forKey: Self.bucketCacheKey(for: userId)
-        )
-        return bucket
+            let bucket = Set(response.value.map { $0.countryId })
+            Self.bucketCache[userId] = bucket
+            Self.persistCachedValue(
+                PersistedCountrySet(countryCodes: bucket.sorted()),
+                forKey: Self.bucketCacheKey(for: userId)
+            )
+            SocialFeedDebug.log(
+                "profile.service.bucket.fetch.success user=\(userId.uuidString) rows=\(response.value.count) unique=\(bucket.count) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return bucket
+        } catch {
+            SocialFeedDebug.log(
+                "profile.service.bucket.fetch.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
     }
 
     // MARK: - Bucket List Mutations

@@ -76,6 +76,8 @@ struct CountryDetailView: View {
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
     @State private var countryRefreshTask: Task<Void, Never>?
+    @State private var profileWarmupTask: Task<Void, Never>?
+    @State private var passportContextWarmupTask: Task<Void, Never>?
     @State private var isLoadingLanguageCompatibility: Bool = false
 
     private var passportFallbackCountryCode: String {
@@ -417,6 +419,8 @@ struct CountryDetailView: View {
             }
         )
         .preferredColorScheme(.light)
+        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(false)
         .overlay(alignment: .topTrailing) {
             VStack(spacing: 10) {
                 PlanningListActionButton(kind: .bucket, isActive: isBucketed) {
@@ -465,28 +469,22 @@ struct CountryDetailView: View {
                 isAuthenticated: sessionManager.isAuthenticated
             )
             async let languageProfileLoad: CountryLanguageProfile? = loadLanguageProfileForScreen(iso2: iso2, loadStart: loadStart)
-            async let profileLoad: Void = loadCurrentUserProfileForLanguageCard(loadStart: loadStart)
+            async let profileSeed: Void = seedCurrentUserProfileForLanguageCard(loadStart: loadStart)
 
             countryLanguageProfile = await languageProfileLoad
             CountryDetailDebugLog.message(
                 "screen.language_profile.assigned iso2=\(iso2) loaded=\(countryLanguageProfile != nil) language_count=\(countryLanguageProfile?.languages.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile?.languages ?? []))] total_duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
             )
-            await profileLoad
-
-            if shouldResolveVisaContext {
-                CountryDetailDebugLog.message(
-                    "screen.passport_context.start iso2=\(iso2) profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil")"
-                )
-                await profileVM.loadPassportContextIfNeeded()
-                CountryDetailDebugLog.message(
-                    "screen.passport_context.finish iso2=\(iso2) passports=\(profileVM.passportNationalities.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
-                )
-            }
+            await profileSeed
 
             await refreshCountryIfAvailable()
             refreshCountryInBackgroundIfNeeded()
             await refreshVisaPresentation()
-            isResolvingVisaContext = false
+            startPassportContextWarmupIfNeeded(
+                shouldResolveVisaContext: shouldResolveVisaContext,
+                iso2: iso2,
+                loadStart: loadStart
+            )
 
             CountryDetailDebugLog.message(
                 "screen.load.finish iso2=\(iso2) languageProfileLoaded=\(countryLanguageProfile != nil) profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
@@ -512,6 +510,8 @@ struct CountryDetailView: View {
                 "screen.disappear iso2=\(country.iso2.uppercased()) language_profile_loaded=\(countryLanguageProfile != nil) profile_loaded=\(profileVM.profile != nil)"
             )
             countryRefreshTask?.cancel()
+            profileWarmupTask?.cancel()
+            passportContextWarmupTask?.cancel()
             engagementVM.cancel()
         }
         .onChange(of: profileVM.passportPreferences) { _, _ in
@@ -554,7 +554,8 @@ struct CountryDetailView: View {
         }
     }
 
-    private func loadCurrentUserProfileForLanguageCard(loadStart: TimeInterval) async {
+    @MainActor
+    private func seedCurrentUserProfileForLanguageCard(loadStart: TimeInterval) async {
         guard sessionManager.isAuthenticated else {
             CountryDetailDebugLog.message(
                 "screen.profile.load.skipped reason=unauthenticated total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
@@ -562,20 +563,87 @@ struct CountryDetailView: View {
             return
         }
 
-        guard profileVM.profile == nil || profileVM.profile?.id != profileVM.userId else {
-            CountryDetailDebugLog.message(
-                "screen.profile.load.skipped reason=already_available profile_languages=\(profileVM.profile?.languages.count ?? 0) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
-            )
+        guard !isCurrentUserProfileAvailable() else {
+            logCurrentUserProfileAlreadyAvailable(loadStart: loadStart)
             return
         }
 
         let profileStart = Date().timeIntervalSinceReferenceDate
         CountryDetailDebugLog.message(
-            "screen.profile.load.start profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil") profile_loaded=\(profileVM.profile != nil) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            "screen.profile.seed.start profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil") profile_loaded=\(profileVM.profile != nil) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
         )
-        await profileVM.loadIfNeeded()
+
+        profileWarmupTask?.cancel()
+        profileWarmupTask = Task { @MainActor in
+            let backgroundStart = Date().timeIntervalSinceReferenceDate
+            CountryDetailDebugLog.message(
+                "screen.profile.background.start profile_user=\(profileVM.userId.uuidString) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            await profileVM.loadIfNeeded()
+            guard !Task.isCancelled else { return }
+            CountryDetailDebugLog.message(
+                "screen.profile.background.finish profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profileVM.profile?.languages ?? []))] duration=\(CountryDetailDebugLog.durationText(since: backgroundStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+        }
+
+        for _ in 0..<5 {
+            if profileVM.profile?.id == profileVM.userId {
+                CountryDetailDebugLog.message(
+                    "screen.profile.seed.finish profile_loaded=true profile_languages=\(profileVM.profile?.languages.count ?? 0) language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profileVM.profile?.languages ?? []))] duration=\(CountryDetailDebugLog.durationText(since: profileStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+                return
+            }
+
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+
         CountryDetailDebugLog.message(
-            "screen.profile.load.finish profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profileVM.profile?.languages ?? []))] duration=\(CountryDetailDebugLog.durationText(since: profileStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            "screen.profile.seed.deferred profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) duration=\(CountryDetailDebugLog.durationText(since: profileStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+    }
+
+    @MainActor
+    private func startPassportContextWarmupIfNeeded(
+        shouldResolveVisaContext: Bool,
+        iso2: String,
+        loadStart: TimeInterval
+    ) {
+        guard shouldResolveVisaContext else {
+            isResolvingVisaContext = false
+            return
+        }
+
+        CountryDetailDebugLog.message(
+            "screen.passport_context.background.start iso2=\(iso2) profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil") total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+
+        passportContextWarmupTask?.cancel()
+        passportContextWarmupTask = Task { @MainActor in
+            let passportStart = Date().timeIntervalSinceReferenceDate
+            await profileVM.loadPassportContextIfNeeded()
+            guard !Task.isCancelled else { return }
+            await refreshVisaPresentation()
+            isResolvingVisaContext = false
+            CountryDetailDebugLog.message(
+                "screen.passport_context.background.finish iso2=\(iso2) passports=\(profileVM.passportNationalities.count) duration=\(CountryDetailDebugLog.durationText(since: passportStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+        }
+
+        if profileVM.passportNationalities.isEmpty {
+            isResolvingVisaContext = false
+            CountryDetailDebugLog.message(
+                "screen.passport_context.background.placeholder_ready iso2=\(iso2) reason=no_cached_passports total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+        }
+    }
+
+    private func isCurrentUserProfileAvailable() -> Bool {
+        profileVM.profile?.id == profileVM.userId
+    }
+
+    private func logCurrentUserProfileAlreadyAvailable(loadStart: TimeInterval) {
+        CountryDetailDebugLog.message(
+            "screen.profile.load.skipped reason=already_available profile_languages=\(profileVM.profile?.languages.count ?? 0) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
         )
     }
 
@@ -980,16 +1048,16 @@ private struct CountryFriendEngagementCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(red: 0.95, green: 0.91, blue: 0.84).opacity(0.46))
+                    .fill(Color(red: 0.96, green: 0.92, blue: 0.85).opacity(0.88))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .fill(Color.white.opacity(0.08))
+                            .fill(Color.white.opacity(0.16))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(Color.white.opacity(0.26), lineWidth: 1)
+                            .stroke(Color.white.opacity(0.42), lineWidth: 1)
                     )
-                    .shadow(color: .black.opacity(0.10), radius: 12, y: 8)
+                    .shadow(color: .black.opacity(0.14), radius: 14, y: 8)
             )
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
 
@@ -1056,7 +1124,7 @@ private struct CountryFriendEngagementCard: View {
                             .padding(.vertical, 10)
                             .background(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(Color(red: 0.98, green: 0.95, blue: 0.90).opacity(0.74))
+                                    .fill(Color(red: 0.99, green: 0.97, blue: 0.93).opacity(0.92))
                             )
                         }
                         .buttonStyle(.plain)
@@ -1070,26 +1138,63 @@ private struct CountryFriendEngagementCard: View {
 private struct FriendAvatarView: View {
     let profile: Profile
 
+    @State private var appearedAt = Date().timeIntervalSinceReferenceDate
+    @State private var lastLoggedPhase: String?
+
     var body: some View {
         Group {
             if let avatarURL = profile.avatarUrl,
                !avatarURL.isEmpty,
                let url = URL(string: avatarURL) {
                 AsyncImage(url: url) { phase in
-                    if let image = phase.image {
+                    switch phase {
+                    case .empty:
+                        fallbackAvatar
+                            .onAppear {
+                                logPhase("loading", avatarURL: avatarURL)
+                            }
+                    case .success(let image):
                         image
                             .resizable()
                             .scaledToFill()
-                    } else {
+                            .onAppear {
+                                logPhase("success", avatarURL: avatarURL)
+                            }
+                    case .failure(let error):
                         fallbackAvatar
+                            .onAppear {
+                                logPhase("failure", avatarURL: avatarURL, error: error.localizedDescription)
+                            }
+                    @unknown default:
+                        fallbackAvatar
+                            .onAppear {
+                                logPhase("unknown", avatarURL: avatarURL)
+                            }
                     }
                 }
             } else {
                 fallbackAvatar
+                    .onAppear {
+                        logPhase("no_avatar", avatarURL: nil)
+                    }
             }
         }
         .frame(width: 38, height: 38)
         .clipShape(Circle())
+        .onAppear {
+            appearedAt = Date().timeIntervalSinceReferenceDate
+            lastLoggedPhase = nil
+            CountryDetailDebugLog.message(
+                "friend.avatar.appear profile=\(profile.id.uuidString) username=\(logField(profile.username)) " +
+                "has_avatar=\((profile.avatarUrl?.isEmpty == false)) avatar=\(logField(profile.avatarUrl))"
+            )
+        }
+        .onDisappear {
+            CountryDetailDebugLog.message(
+                "friend.avatar.disappear profile=\(profile.id.uuidString) username=\(logField(profile.username)) " +
+                "last_phase=\(lastLoggedPhase ?? "nil") duration=\(CountryDetailDebugLog.durationText(since: appearedAt))"
+            )
+        }
     }
 
     private var fallbackAvatar: some View {
@@ -1103,6 +1208,22 @@ private struct FriendAvatarView: View {
                 .foregroundStyle(.secondary)
                 .padding(4)
         }
+    }
+
+    private func logPhase(_ phase: String, avatarURL: String?, error: String? = nil) {
+        guard lastLoggedPhase != phase else { return }
+        lastLoggedPhase = phase
+
+        CountryDetailDebugLog.message(
+            "friend.avatar.phase profile=\(profile.id.uuidString) username=\(logField(profile.username)) " +
+            "phase=\(phase) elapsed=\(CountryDetailDebugLog.durationText(since: appearedAt)) " +
+            "avatar=\(logField(avatarURL)) error=\(logField(error))"
+        )
+    }
+
+    private func logField(_ value: String?) -> String {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? "nil" : trimmed
     }
 }
 
@@ -1249,9 +1370,9 @@ private struct CountryLanguageProfile: Decodable {
             || normalizedBaselineSource == "cldr_territory_language_info" {
             return CountryLanguageEvidence(
                 kind: "baseline_source",
-                title: "CLDR territory language data",
+                title: String(localized: "country_detail.language.source_cldr_title"),
                 url: URL(string: "https://github.com/unicode-org/cldr/blob/main/common/supplemental/supplementalData.xml"),
-                note: "Baseline country language data comes from Unicode CLDR territoryInfo."
+                note: String(localized: "country_detail.language.source_cldr_note")
             )
         }
 
@@ -1280,19 +1401,27 @@ private struct CountryLanguageCompatibilityResult {
     let evidence: CountryLanguageEvidence?
 
     var evidenceLinkLabel: String {
-        guard let evidence else { return "Source" }
+        guard let evidence else { return String(localized: "country_detail.language.source") }
 
         if let title = evidence.title?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
-            return "Source: \(title)"
+            return String(
+                format: String(localized: "country_detail.language.source_format"),
+                locale: AppDisplayLocale.current,
+                title
+            )
         }
 
         if let host = evidence.url?.host(percentEncoded: false)?
             .replacingOccurrences(of: "www.", with: ""),
            !host.isEmpty {
-            return "Source: \(host)"
+            return String(
+                format: String(localized: "country_detail.language.source_format"),
+                locale: AppDisplayLocale.current,
+                host
+            )
         }
 
-        return "Source"
+        return String(localized: "country_detail.language.source")
     }
 }
 
@@ -1570,7 +1699,7 @@ private struct CountryLanguageCompatibilityCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Language")
+                Text("country_detail.language.title")
                     .font(.headline)
 
                 Spacer()
@@ -1759,7 +1888,7 @@ private struct CountryLanguageCompatibilityLoadingCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Language")
+                Text("country_detail.language.title")
                     .font(.headline)
                     .fontWeight(.semibold)
 

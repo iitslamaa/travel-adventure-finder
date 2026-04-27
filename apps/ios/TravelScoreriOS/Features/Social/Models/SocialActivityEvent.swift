@@ -78,4 +78,20 @@ enum SocialActivityMetadataValue: Decodable {
 
         return nil
     }
+
+    var intValue: Int? {
+        switch self {
+        case .number(let value):
+            return Int(value)
+        case .string(let value):
+            return Int(value)
+        default:
+            return nil
+        }
+    }
+
+    var stringArrayValue: [String]? {
+        guard case .array(let values) = self else { return nil }
+        return values.compactMap(\.stringValue)
+    }
 }

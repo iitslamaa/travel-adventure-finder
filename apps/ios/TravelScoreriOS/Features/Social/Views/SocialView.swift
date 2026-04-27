@@ -214,7 +214,6 @@ struct SocialView: View {
                 "view.activity.row.tap event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString) " +
                 "username=\(logField(event.actorProfile?.username)) avatar=\(logField(event.actorProfile?.avatarUrl))"
             )
-            socialNav.showProfileLoadingScreen(for: event.actorUserId, reason: "activity_row_tap")
             SocialFeedDebug.log(
                 "view.activity.row.push.start event=\(event.id.uuidString.prefix(8)) actor=\(event.actorUserId.uuidString)"
             )
@@ -299,6 +298,21 @@ struct SocialView: View {
 
         switch event.eventType {
         case .bucketListAdded:
+            let countries = countryDisplayTexts(for: event)
+            let countryCount = countryCount(for: event)
+            if countryCount > 3 {
+                return localizedString(
+                    "social.activity.bucket_list_multiple",
+                    defaultValue: "Added new countries to their bucket list"
+                )
+            }
+            if countries.count >= 2 {
+                return localizedFormat(
+                    "social.activity.bucket_list_countries_format",
+                    defaultValue: "Added %@ to their bucket list",
+                    countryListText(countries)
+                )
+            }
             return localizedFormat(
                 "social.activity.bucket_list_format",
                 defaultValue: "Added %@%@ to their bucket list",
@@ -306,6 +320,21 @@ struct SocialView: View {
                 flagSuffix(for: event)
             )
         case .countryVisited:
+            let countries = countryDisplayTexts(for: event)
+            let countryCount = countryCount(for: event)
+            if countryCount > 3 {
+                return localizedString(
+                    "social.activity.visited_multiple",
+                    defaultValue: "Updated their visited countries"
+                )
+            }
+            if countries.count >= 2 {
+                return localizedFormat(
+                    "social.activity.visited_countries_format",
+                    defaultValue: "Visited %@",
+                    countryListText(countries)
+                )
+            }
             return localizedFormat(
                 "social.activity.visited_format",
                 defaultValue: "Visited %@%@",
@@ -329,6 +358,21 @@ struct SocialView: View {
                 flagSuffix(for: event)
             )
         case .homeCountryChanged:
+            let countries = countryDisplayTexts(for: event)
+            let countryCount = countryCount(for: event)
+            if countryCount > 3 {
+                return localizedString(
+                    "social.activity.home_country_multiple",
+                    defaultValue: "Updated their home flags"
+                )
+            }
+            if !countries.isEmpty {
+                return localizedFormat(
+                    "social.activity.home_country_flags_format",
+                    defaultValue: "Updated home country flags to include %@",
+                    countryListText(countries)
+                )
+            }
             return localizedFormat(
                 "social.activity.home_country_format",
                 defaultValue: "Updated home country to %@%@",
@@ -395,7 +439,7 @@ struct SocialView: View {
         case .currentCountryChanged:
             return "📍"
         case .homeCountryChanged:
-            return "📍"
+            return "🏠"
         case .favoriteCountryAdded:
             return "⭐️"
         }
@@ -414,6 +458,76 @@ struct SocialView: View {
         let code = countryCode.uppercased()
         let name = Locale.current.localizedString(forRegionCode: code) ?? code
         return name
+    }
+
+    private func countryDisplayTexts(for event: SocialActivityEvent) -> [String] {
+        countryCodes(for: event)
+            .prefix(3)
+            .map { code in
+                let name = Locale.current.localizedString(forRegionCode: code) ?? code
+                let flag = flag(for: code)
+                return flag.isEmpty ? name : "\(name)\u{00A0}\(flag)"
+            }
+    }
+
+    private func countryListText(_ countries: [String]) -> String {
+        switch countries.count {
+        case 0:
+            return localizedString("social.activity.fallback.country", defaultValue: "Somewhere new")
+        case 1:
+            return countries[0]
+        case 2:
+            return localizedFormat(
+                "social.activity.country_list_two_format",
+                defaultValue: "%@ and %@",
+                countries[0],
+                countries[1]
+            )
+        default:
+            return localizedFormat(
+                "social.activity.country_list_three_format",
+                defaultValue: "%@, %@, and %@",
+                countries[0],
+                countries[1],
+                countries[2]
+            )
+        }
+    }
+
+    private func countryCodes(for event: SocialActivityEvent) -> [String] {
+        var codes: [String] = []
+
+        if let arrayCodes = event.metadata["country_codes"]?.stringArrayValue {
+            codes.append(contentsOf: arrayCodes)
+        }
+
+        if let csvCodes = event.metadata["country_codes"]?.stringValue {
+            codes.append(contentsOf: csvCodes.split(separator: ",").map(String.init))
+        }
+
+        if let countryCode = event.metadata["country_code"]?.stringValue
+            ?? event.metadata["country"]?.stringValue {
+            codes.append(countryCode)
+        }
+
+        if let secondCountryCode = event.metadata["country_code_2"]?.stringValue {
+            codes.append(secondCountryCode)
+        }
+
+        if let thirdCountryCode = event.metadata["country_code_3"]?.stringValue {
+            codes.append(thirdCountryCode)
+        }
+
+        var seen = Set<String>()
+        return codes.compactMap { rawCode in
+            let code = rawCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            guard !code.isEmpty, seen.insert(code).inserted else { return nil }
+            return code
+        }
+    }
+
+    private func countryCount(for event: SocialActivityEvent) -> Int {
+        event.metadata["country_count"]?.intValue ?? countryCodes(for: event).count
     }
 
     private func destinationDisplayName(for event: SocialActivityEvent) -> String? {

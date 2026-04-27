@@ -187,11 +187,19 @@ struct BucketListView: View {
             let additions = updatedIds.subtracting(previousIds).sorted()
 
             for countryId in removals {
-                await profileVM.toggleBucket(countryId)
+                await profileVM.toggleBucket(countryId, recordActivity: false)
             }
 
             for countryId in additions {
-                await profileVM.toggleBucket(countryId)
+                await profileVM.toggleBucket(countryId, recordActivity: false)
+            }
+
+            if let userId = sessionManager.userId, !additions.isEmpty {
+                try? await SocialActivityService().recordCountryListActivity(
+                    actorUserId: userId,
+                    eventType: .bucketListAdded,
+                    countryIds: additions
+                )
             }
 
             let latestIds = profileVM.viewedBucketListCountries

@@ -31,8 +31,17 @@ final class SocialNavigationController: ObservableObject {
 
         if case .profile(let userId) = route {
             showProfileLoadingScreen(for: userId, reason: "push")
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 80_000_000)
+                append(route)
+            }
+            return
         }
 
+        append(route)
+    }
+
+    private func append(_ route: SocialRoute) {
         path.append(route)
         SocialFeedDebug.log(
             "navigation.push.appended route=\(debugDescription(for: route)) path_active=\(hasActiveRoute) " +
@@ -340,8 +349,8 @@ struct RootTabView: View {
         HStack(spacing: 10) {
             tabButton(.discovery, title: String(localized: "tab.discovery"), systemImage: "globe.americas.fill")
             tabButton(.planning, title: String(localized: "tab.planning"), systemImage: "list.bullet", badgeCount: sharedTripInbox.pendingCount)
-            tabButton(.media, title: "Media", systemImage: "newspaper.fill")
-            tabButton(.social, title: "Social", systemImage: "person.2.fill")
+            tabButton(.media, title: String(localized: "media.title"), systemImage: "newspaper.fill")
+            tabButton(.social, title: String(localized: "social.title"), systemImage: "person.2.fill")
             tabButton(.more, title: String(localized: "tab.more"), systemImage: "ellipsis")
         }
         .padding(.horizontal, 10)
@@ -365,7 +374,7 @@ struct RootTabView: View {
     }
 
     private func guestLockedState(backgroundImage: String) -> some View {
-        let bannerTitle = "Social"
+        let bannerTitle = String(localized: "social.title")
         let cardTitle = String(localized: "guest.friends.card_title")
         let message = String(localized: "guest.friends.message")
 
@@ -423,6 +432,11 @@ struct RootTabView: View {
 
     @ViewBuilder
     private func socialDestination(_ route: SocialRoute, navigator: SocialNavigationController) -> some View {
+        let _ = SocialFeedDebug.log(
+            "navigation.destination.build route=\(navigatorDebugDescription(for: route)) " +
+            "pending_profile=\(navigator.pendingProfileLoadUserId?.uuidString ?? "nil")"
+        )
+
         switch route {
         case .profile(let userId):
             if sessionManager.userId == userId {
@@ -450,6 +464,17 @@ struct RootTabView: View {
                 .onAppear {
                     SocialFeedDebug.log("navigation.destination.friend_requests.appear")
                 }
+        }
+    }
+
+    private func navigatorDebugDescription(for route: SocialRoute) -> String {
+        switch route {
+        case .profile(let userId):
+            return "profile:\(userId.uuidString)"
+        case .friends(let userId):
+            return "friends:\(userId.uuidString)"
+        case .friendRequests:
+            return "friendRequests"
         }
     }
 
