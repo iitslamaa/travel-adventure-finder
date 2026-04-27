@@ -832,6 +832,39 @@ struct TripPlannerFriendSnapshot: Codable, Identifiable, Hashable, Sendable {
             avatarURL: nil
         )
     }
+
+    static func currentAuthUserSnapshot(userId: UUID) -> TripPlannerFriendSnapshot? {
+        guard let user = SupabaseManager.shared.client.auth.currentUser,
+              user.id == userId else {
+            return nil
+        }
+
+        let metadata = user.userMetadata
+        let firstName =
+            metadata["first_name"]?.stringValue?.plannerTrimmedNilIfEmpty ??
+            metadata["given_name"]?.stringValue?.plannerTrimmedNilIfEmpty
+        let fullName =
+            metadata["full_name"]?.stringValue?.plannerTrimmedNilIfEmpty ??
+            metadata["name"]?.stringValue?.plannerTrimmedNilIfEmpty
+        let username =
+            metadata["user_name"]?.stringValue?.plannerTrimmedNilIfEmpty ??
+            metadata["preferred_username"]?.stringValue?.plannerTrimmedNilIfEmpty ??
+            "traveler"
+        let avatarURL =
+            metadata["avatar_url"]?.stringValue?.plannerTrimmedNilIfEmpty ??
+            metadata["picture"]?.stringValue?.plannerTrimmedNilIfEmpty
+
+        let displayName = [firstName, fullName]
+            .compactMap { $0 }
+            .first ?? String(localized: "trip_planner.you")
+
+        return TripPlannerFriendSnapshot(
+            id: userId,
+            displayName: displayName,
+            username: username,
+            avatarURL: avatarURL
+        )
+    }
 }
 
 enum TripPlannerAvailabilityKind: String, Codable, CaseIterable, Identifiable, Sendable {
@@ -3305,6 +3338,11 @@ private extension TripPlannerTrip {
 }
 
 private extension String {
+    var plannerTrimmedNilIfEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
     var detectedURLs: [URL] {
         guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
             return []
@@ -4124,19 +4162,6 @@ struct TripPlannerView: View {
             )
         }
 
-        if let avatarSnapshot = await profileService.cachedAvatarSnapshot(userId: userId) {
-            guard sessionManager.userId == userId else { return }
-            currentUserSnapshot = TripPlannerFriendSnapshot(
-                id: avatarSnapshot.id,
-                displayName: avatarSnapshot.displayName,
-                username: avatarSnapshot.username,
-                avatarURL: avatarSnapshot.avatarUrl
-            )
-            TripPlannerDebugLog.message(
-                "Current user snapshot loaded from avatar cache duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(avatarSnapshot.avatarUrl == nil ? "nil" : "app")"
-            )
-        }
-
         let fetchStart = Date().timeIntervalSinceReferenceDate
         do {
             let profile = try await profileService.fetchMyProfile(userId: userId, useCache: false)
@@ -4158,37 +4183,7 @@ struct TripPlannerView: View {
     }
 
     private func currentUserAuthSnapshot(userId: UUID) -> TripPlannerFriendSnapshot? {
-        guard let user = SupabaseManager.shared.client.auth.currentUser,
-              user.id == userId else {
-            return nil
-        }
-
-        let metadata = user.userMetadata
-        let firstName =
-            metadata["first_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
-            metadata["given_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let fullName =
-            metadata["full_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
-            metadata["name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let username =
-            metadata["user_name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
-            metadata["preferred_username"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines) ??
-            "traveler"
-
-        let displayName = [firstName, fullName]
-            .compactMap { $0?.isEmpty == false ? $0 : nil }
-            .first ?? String(localized: "trip_planner.you")
-
-        if displayName.isEmpty {
-            return nil
-        }
-
-        return TripPlannerFriendSnapshot(
-            id: userId,
-            displayName: displayName,
-            username: username,
-            avatarURL: nil
-        )
+        TripPlannerFriendSnapshot.currentAuthUserSnapshot(userId: userId)
     }
 
     @MainActor
@@ -4314,7 +4309,8 @@ struct TripPlannerView: View {
             )
         }
 
-        return TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
+        return TripPlannerFriendSnapshot.currentAuthUserSnapshot(userId: currentUserId)
+            ?? TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
     }
 
     @ViewBuilder
@@ -5299,9 +5295,8 @@ private struct TripPlannerDetailView: View {
             )
         }
 
-        // Keep the planner neutral until the persisted profile arrives so
-        // auth-provider metadata never flashes over a customized profile.
-        return TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
+        return TripPlannerFriendSnapshot.currentAuthUserSnapshot(userId: currentUserId)
+            ?? TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
     }
 
     private var displayedTravelers: [TripPlannerFriendSnapshot] {

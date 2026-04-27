@@ -290,14 +290,6 @@ final class ProfileService {
             return snapshot
         }
 
-        if let persistedProfile = await persistedCachedProfile(userId: userId) {
-            let snapshot = Self.avatarSnapshot(from: persistedProfile)
-            SocialFeedDebug.log(
-                "profile.service.cache.avatar.profile_disk_hit user=\(userId.uuidString) username=\(logField(snapshot.username)) avatar=\(logField(snapshot.avatarUrl))"
-            )
-            return snapshot
-        }
-
         let url = Self.avatarSnapshotURL(for: userId)
         let snapshot: ProfileAvatarSnapshot?
         if let data = try? Data(contentsOf: url) {
