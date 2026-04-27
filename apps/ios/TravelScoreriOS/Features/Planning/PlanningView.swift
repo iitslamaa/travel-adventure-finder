@@ -2983,18 +2983,39 @@ private extension TripPlannerTrip {
     }
 
     func applyingExpenseEditsToLinkedChecklistItems(_ updatedExpenses: [TripPlannerExpense]) -> TripPlannerTrip {
-        let expensesByChecklistID = Dictionary<UUID, TripPlannerExpense>(
-            uniqueKeysWithValues: updatedExpenses.compactMap { expense -> (UUID, TripPlannerExpense)? in
-                guard let linkedChecklistItemId = expense.linkedChecklistItemId else { return nil }
-                return (linkedChecklistItemId, expense)
+        let expensesByChecklistID = updatedExpenses.reduce(into: [UUID: TripPlannerExpense]()) { result, expense in
+            guard let linkedChecklistItemId = expense.linkedChecklistItemId else { return }
+            result[linkedChecklistItemId] = expense
+        }
+
+        let manualExpenses = updatedExpenses.filter { $0.linkedChecklistItemId == nil }
+        var consumedManualExpenseIDs = Set<UUID>()
+
+        func matchingManualExpense(for item: TripPlannerChecklistItem, on planDate: Date) -> TripPlannerExpense? {
+            manualExpenses.first { expense in
+                guard !consumedManualExpenseIDs.contains(expense.id) else { return false }
+                return expense.matchesChecklistItem(item, date: item.linkedExpenseDate ?? planDate, amount: item.linkedExpenseAmount)
             }
-        )
+        }
 
         let updatedDayPlans = dayPlans.map { plan in
             let updatedItems = plan.checklistItems.map { item in
                 guard item.supportsExpenseTracking else { return item }
 
                 if let expense = expensesByChecklistID[item.expenseSyncKey] {
+                    return item
+                        .updatedTitle(expense.title)
+                        .updatedExpenseSync(
+                            sourceItemId: item.expenseSourceItemId,
+                            expenseId: expense.id,
+                            amount: expense.totalAmount,
+                            currencyCode: expense.entryCurrencyCode ?? item.linkedExpenseCurrencyCode,
+                            date: expense.date
+                        )
+                }
+
+                if let expense = matchingManualExpense(for: item, on: plan.date) {
+                    consumedManualExpenseIDs.insert(expense.id)
                     return item
                         .updatedTitle(expense.title)
                         .updatedExpenseSync(
@@ -3056,18 +3077,19 @@ private extension TripPlannerTrip {
     func normalizedForPersistence(currentUser: TripPlannerFriendSnapshot?) -> TripPlannerTrip {
         let participantSnapshots = plannerExpenseParticipants(preferredCurrentUser: currentUser)
         let manualExpenses = expenses.filter { $0.linkedChecklistItemId == nil }
-        let existingLinkedExpenses = Dictionary<UUID, TripPlannerExpense>(
-            uniqueKeysWithValues: expenses.compactMap { expense -> (UUID, TripPlannerExpense)? in
-                guard let linkedChecklistItemId = expense.linkedChecklistItemId else { return nil }
-                return (linkedChecklistItemId, expense)
-            }
-        )
+        var consumedManualExpenseIDs = Set<UUID>()
+        let existingLinkedExpenses = expenses.reduce(into: [UUID: TripPlannerExpense]()) { result, expense in
+            guard let linkedChecklistItemId = expense.linkedChecklistItemId else { return }
+            result[linkedChecklistItemId] = expense
+        }
+        let existingExpensesByID = Dictionary(uniqueKeysWithValues: expenses.map { ($0.id, $0) })
         let sortedPlans = dayPlans.sorted { $0.date < $1.date }
 
         struct SharedExpenseDraft {
             let item: TripPlannerChecklistItem
             let amount: Double
             let date: Date
+            let existingExpense: TripPlannerExpense?
         }
 
         var sharedExpenseDrafts: [UUID: SharedExpenseDraft] = [:]
@@ -3082,7 +3104,25 @@ private extension TripPlannerTrip {
                 sharedExpenseDrafts[item.expenseSyncKey] = SharedExpenseDraft(
                     item: item,
                     amount: amount,
-                    date: item.linkedExpenseDate ?? plan.date
+                    date: item.linkedExpenseDate ?? plan.date,
+                    existingExpense: nil
+                )
+            }
+        }
+
+        for plan in sortedPlans {
+            for item in plan.checklistItems where item.supportsExpenseTracking {
+                guard sharedExpenseDrafts[item.expenseSyncKey] == nil,
+                      let expense = matchingManualExpense(for: item, on: plan.date, excluding: consumedManualExpenseIDs) else {
+                    continue
+                }
+
+                consumedManualExpenseIDs.insert(expense.id)
+                sharedExpenseDrafts[item.expenseSyncKey] = SharedExpenseDraft(
+                    item: item,
+                    amount: expense.totalAmount,
+                    date: expense.date,
+                    existingExpense: expense
                 )
             }
         }
@@ -3109,6 +3149,12 @@ private extension TripPlannerTrip {
                 }
 
                 let existingExpense = existingLinkedExpenses[expenseKey]
+                    ?? item.linkedExpenseId.flatMap { existingExpensesByID[$0] }
+                    ?? draft.existingExpense
+                    ?? matchingManualExpense(for: draft.item, on: draft.date, excluding: consumedManualExpenseIDs)
+                if let existingExpense, existingExpense.linkedChecklistItemId == nil {
+                    consumedManualExpenseIDs.insert(existingExpense.id)
+                }
                 let resolvedExpense = syncedLinkedExpense(
                     for: draft.item,
                     syncKey: expenseKey,
@@ -3164,8 +3210,25 @@ private extension TripPlannerTrip {
             dayPlans: updatedDayPlans,
             overallChecklistItems: overallChecklistItems,
             packingProgressEntries: packingProgressEntries,
-            expenses: TripPlannerExpensesEditorView.sortedExpenses(manualExpenses + linkedExpenses)
+            expenses: TripPlannerExpensesEditorView.sortedExpenses(
+                manualExpenses.filter { !consumedManualExpenseIDs.contains($0.id) } + linkedExpenses
+            )
         )
+    }
+
+    private func matchingManualExpense(
+        for item: TripPlannerChecklistItem,
+        on planDate: Date,
+        excluding consumedExpenseIDs: Set<UUID>
+    ) -> TripPlannerExpense? {
+        let matchDate = item.linkedExpenseDate ?? planDate
+        return expenses.first { expense in
+            guard expense.linkedChecklistItemId == nil,
+                  !consumedExpenseIDs.contains(expense.id) else {
+                return false
+            }
+            return expense.matchesChecklistItem(item, date: matchDate, amount: item.linkedExpenseAmount)
+        }
     }
 
     private func plannerExpenseParticipants(preferredCurrentUser: TripPlannerFriendSnapshot?) -> [TripPlannerFriendSnapshot] {
@@ -3316,7 +3379,7 @@ private extension TripPlannerTrip {
         existingShareStates: [String: TripPlannerExpenseShare]
     ) -> [TripPlannerExpenseShare] {
         let beneficiaryIDs = participantIDs.filter { $0 != payerId }
-        let shareAmount = beneficiaryIDs.isEmpty ? 0 : amount / Double(beneficiaryIDs.count)
+        let shareAmount = participantIDs.isEmpty ? 0 : amount / Double(participantIDs.count)
         let snapshotsByID = Dictionary(
             uniqueKeysWithValues: participantSnapshots.map { ($0.id.uuidString, $0) }
         )
@@ -4187,33 +4250,40 @@ struct TripPlannerView: View {
             )
         }
 
+        if currentUserSnapshot != nil {
+            TripPlannerDebugLog.message(
+                "Current user snapshot lightweight.done request=\(requestID) reason=seed_available total=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+            )
+            return
+        }
+
         let fetchStart = Date().timeIntervalSinceReferenceDate
         TripPlannerDebugLog.message(
-            "Current user snapshot app_profile_fetch.start request=\(requestID) user=\(TripPlannerDebugLog.userLabel(userId))"
+            "Current user snapshot avatar_snapshot_fetch.start request=\(requestID) user=\(TripPlannerDebugLog.userLabel(userId))"
         )
         do {
-            let profile = try await profileService.fetchMyProfile(userId: userId, useCache: false)
+            let snapshot = try await profileService.fetchAvatarSnapshot(userId: userId, useCache: true)
             guard sessionManager.userId == userId else {
                 TripPlannerDebugLog.message(
-                    "Current user snapshot app_profile_fetch.stale request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
+                    "Current user snapshot avatar_snapshot_fetch.stale request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId))"
                 )
                 return
             }
             TripPlannerDebugLog.message(
-                "Current user snapshot app_profile_fetch.success request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(profile.avatarUrl == nil ? "nil" : "app")"
+                "Current user snapshot avatar_snapshot_fetch.success request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(snapshot.avatarUrl == nil ? "nil" : "app")"
             )
             currentUserSnapshot = TripPlannerFriendSnapshot(
-                id: profile.id,
-                displayName: profile.tripDisplayName,
-                username: profile.username,
-                avatarURL: profile.avatarUrl
+                id: snapshot.id,
+                displayName: snapshot.displayName,
+                username: snapshot.username,
+                avatarURL: snapshot.avatarUrl
             )
             TripPlannerDebugLog.message(
-                "Current user snapshot app_profile_assign.end request=\(requestID) total=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(profile.avatarUrl == nil ? "nil" : "app")"
+                "Current user snapshot avatar_snapshot_assign.end request=\(requestID) total=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(snapshot.avatarUrl == nil ? "nil" : "app")"
             )
         } catch {
             TripPlannerDebugLog.message(
-                "Current user snapshot app_profile_fetch.failed request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) total=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) error=\(SocialFeedDebug.describe(error))"
+                "Current user snapshot avatar_snapshot_fetch.failed request=\(requestID) duration=\(TripPlannerDebugLog.durationText(since: fetchStart)) total=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) error=\(SocialFeedDebug.describe(error))"
             )
         }
     }
@@ -4293,13 +4363,13 @@ struct TripPlannerView: View {
             for (ownerId, tripIDs) in uncachedTripIDsByOwnerID {
                 group.addTask {
                     let fetchStart = Date().timeIntervalSinceReferenceDate
-                    let fetchedOwner = try? await profileService.fetchMyProfile(userId: ownerId)
+                    let fetchedOwner = try? await profileService.fetchAvatarSnapshot(userId: ownerId, useCache: true)
                     let snapshot: TripPlannerFriendSnapshot?
                     if let fetchedOwner {
                         snapshot = await MainActor.run {
                             TripPlannerFriendSnapshot(
                                 id: fetchedOwner.id,
-                                displayName: fetchedOwner.tripDisplayName,
+                                displayName: fetchedOwner.displayName,
                                 username: fetchedOwner.username,
                                 avatarURL: fetchedOwner.avatarUrl
                             )
@@ -5340,6 +5410,15 @@ private struct TripPlannerDetailView: View {
             )
         }
 
+        if let avatarSnapshot = profileService.cachedAvatarSnapshotIfAvailable(userId: currentUserId) {
+            return TripPlannerFriendSnapshot(
+                id: avatarSnapshot.id,
+                displayName: avatarSnapshot.displayName,
+                username: avatarSnapshot.username,
+                avatarURL: avatarSnapshot.avatarUrl
+            )
+        }
+
         return TripPlannerFriendSnapshot.currentAuthUserSnapshot(userId: currentUserId)
             ?? TripPlannerFriendSnapshot.currentUserFallback(userId: currentUserId)
     }
@@ -5429,6 +5508,10 @@ private struct TripPlannerDetailView: View {
             packingProgressEntries: trip.packingProgressEntries,
             expenses: trip.expenses
         )
+    }
+
+    private var expenseSyncedTrip: TripPlannerTrip {
+        syncedTrip.normalizedForPersistence(currentUser: currentUserSnapshot)
     }
 
     private var effectivePlannerCurrencyCode: String {
@@ -5569,9 +5652,11 @@ private struct TripPlannerDetailView: View {
 
     @ViewBuilder
     private var expensesSectionLink: some View {
+        let displayedTrip = expenseSyncedTrip
+
         NavigationLink {
             TripPlannerExpensesEditorView(
-                trip: trip,
+                trip: displayedTrip,
                 participants: displayedTravelers,
                 currencyCode: effectivePlannerCurrencyCode,
                 onSave: saveTripChanges
@@ -5582,7 +5667,7 @@ private struct TripPlannerDetailView: View {
                 subtitle: ""
             ) {
                 TripPlannerExpensesPreviewSection(
-                    expenses: trip.expenses,
+                    expenses: displayedTrip.expenses,
                     currencyCode: effectivePlannerCurrencyCode
                 )
             }
@@ -5753,6 +5838,7 @@ private struct TripPlannerDetailView: View {
             await loadTravelerProfiles()
             await loadCountryStats()
             await loadGroupLanguageScores()
+            loadPassportPreferencesInBackground()
         }
         .navigationDestination(isPresented: $isShowingChecklistEditor) {
             if let presentation = checklistPresentation {
@@ -5811,9 +5897,15 @@ private struct TripPlannerDetailView: View {
             if let cachedPreferences = profileService.memoryCachedPassportPreferences(userId: currentUserId) {
                 currentPassportPreferences = cachedPreferences
                 passportPreferencesByUserID[currentUserId] = cachedPreferences
-            } else if let preferences = try? await profileService.fetchPassportPreferences(userId: currentUserId) {
-                currentPassportPreferences = preferences
-                passportPreferencesByUserID[currentUserId] = preferences
+            } else if let cachedPreferences = profileService.cachedPassportPreferences(userId: currentUserId) {
+                currentPassportPreferences = cachedPreferences
+                passportPreferencesByUserID[currentUserId] = cachedPreferences
+            } else if currentPassportPreferences != .empty {
+                passportPreferencesByUserID[currentUserId] = currentPassportPreferences
+            } else {
+                TripPlannerDebugLog.message(
+                    "Trip detail passport deferred user=\(TripPlannerDebugLog.userLabel(currentUserId)) role=currentUser"
+                )
             }
         }
 
@@ -5846,8 +5938,12 @@ private struct TripPlannerDetailView: View {
 
             if let cachedPreferences = profileService.memoryCachedPassportPreferences(userId: snapshot.id) {
                 passportPreferencesByUserID[snapshot.id] = cachedPreferences
-            } else if let preferences = try? await profileService.fetchPassportPreferences(userId: snapshot.id) {
-                passportPreferencesByUserID[snapshot.id] = preferences
+            } else if let cachedPreferences = profileService.cachedPassportPreferences(userId: snapshot.id) {
+                passportPreferencesByUserID[snapshot.id] = cachedPreferences
+            } else {
+                TripPlannerDebugLog.message(
+                    "Trip detail passport deferred user=\(TripPlannerDebugLog.userLabel(snapshot.id)) role=friend"
+                )
             }
         }
 
@@ -5863,6 +5959,64 @@ private struct TripPlannerDetailView: View {
         }
     }
 
+    @MainActor
+    private func loadPassportPreferencesInBackground() {
+        let travelerIDs = displayedTravelers.map(\.id)
+        let missingIDs = travelerIDs.filter { travelerId in
+            if travelerId == sessionManager.userId, currentPassportPreferences != .empty {
+                return false
+            }
+
+            return travelerPassportPreferences[travelerId] == nil
+        }
+
+        guard !missingIDs.isEmpty else { return }
+
+        Task {
+            let startedAt = Date().timeIntervalSinceReferenceDate
+            TripPlannerDebugLog.message(
+                "Trip detail passport background.start travelers=\(missingIDs.count)"
+            )
+            var fetchedPreferences: [UUID: PassportPreferences] = [:]
+
+            await withTaskGroup(of: (UUID, PassportPreferences?).self) { group in
+                for travelerId in missingIDs {
+                    group.addTask {
+                        let preferences = try? await profileService.fetchPassportPreferences(userId: travelerId)
+                        return (travelerId, preferences)
+                    }
+                }
+
+                for await (travelerId, preferences) in group {
+                    if let preferences {
+                        fetchedPreferences[travelerId] = preferences
+                    }
+                }
+            }
+
+            guard !fetchedPreferences.isEmpty else {
+                TripPlannerDebugLog.message(
+                    "Trip detail passport background.empty duration=\(TripPlannerDebugLog.durationText(since: startedAt))"
+                )
+                return
+            }
+
+            await MainActor.run {
+                for (travelerId, preferences) in fetchedPreferences {
+                    if travelerId == sessionManager.userId {
+                        currentPassportPreferences = preferences
+                    }
+                    travelerPassportPreferences[travelerId] = preferences
+                }
+            }
+
+            await loadCountryStats()
+            TripPlannerDebugLog.message(
+                "Trip detail passport background.success travelers=\(fetchedPreferences.count) duration=\(TripPlannerDebugLog.durationText(since: startedAt))"
+            )
+        }
+    }
+
     private enum TravelerProfileRole {
         case currentUser
         case owner
@@ -5874,13 +6028,12 @@ private struct TripPlannerDetailView: View {
         Task {
             let startedAt = Date().timeIntervalSinceReferenceDate
             TripPlannerDebugLog.message(
-                "Trip detail traveler profile background.start user=\(TripPlannerDebugLog.userLabel(userId)) role=\(role)"
+                "Trip detail traveler identity background.start user=\(TripPlannerDebugLog.userLabel(userId)) role=\(role)"
             )
             do {
-                let profile = try await profileService.fetchMyProfile(userId: userId, useCache: false)
+                let snapshotRow = try await profileService.fetchAvatarSnapshot(userId: userId, useCache: true)
                 await MainActor.run {
-                    let snapshot = friendSnapshot(from: profile)
-                    travelerProfiles[userId] = profile
+                    let snapshot = friendSnapshot(from: snapshotRow)
 
                     switch role {
                     case .currentUser:
@@ -5899,12 +6052,12 @@ private struct TripPlannerDetailView: View {
                     }
 
                     TripPlannerDebugLog.message(
-                        "Trip detail traveler profile background.success user=\(TripPlannerDebugLog.userLabel(userId)) role=\(role) duration=\(TripPlannerDebugLog.durationText(since: startedAt)) avatar=\(profile.avatarUrl == nil ? "nil" : "app")"
+                        "Trip detail traveler identity background.success user=\(TripPlannerDebugLog.userLabel(userId)) role=\(role) duration=\(TripPlannerDebugLog.durationText(since: startedAt)) avatar=\(snapshot.avatarURL == nil ? "nil" : "app")"
                     )
                 }
             } catch {
                 TripPlannerDebugLog.message(
-                    "Trip detail traveler profile background.failed user=\(TripPlannerDebugLog.userLabel(userId)) role=\(role) duration=\(TripPlannerDebugLog.durationText(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+                    "Trip detail traveler identity background.failed user=\(TripPlannerDebugLog.userLabel(userId)) role=\(role) duration=\(TripPlannerDebugLog.durationText(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
                 )
             }
         }
@@ -8680,6 +8833,8 @@ private struct TripPlannerChecklistEditorView: View {
     let countries: [Country]
     let groupVisaNeeds: [TripPlannerTravelerVisaNeed]
     let saveAction: TripPlannerTripSaveAction
+    private let countryCurrencyCodesByID: [String: String]
+    private let tripLocalCurrencyCodes: [String]
 
     @State private var overallItems: [TripPlannerChecklistItem]
     @State private var dayPlans: [TripPlannerDayPlan]
@@ -8710,6 +8865,12 @@ private struct TripPlannerChecklistEditorView: View {
         self.countries = countries
         self.groupVisaNeeds = groupVisaNeeds
         self.saveAction = saveAction
+        let currencyContext = TripPlannerCountryCurrencyContext.make(
+            countryIds: trip.countryIds,
+            preferredCountries: countries
+        )
+        self.countryCurrencyCodesByID = currencyContext.codesByCountryID
+        self.tripLocalCurrencyCodes = currencyContext.localCurrencyCodes
         _overallItems = State(initialValue: TripPlannerChecklistBuilder.syncedOverallChecklistItems(
             existingItems: trip.overallChecklistItems,
             countries: countries,
@@ -8856,36 +9017,6 @@ private struct TripPlannerChecklistEditorView: View {
 
     private var plannerCurrencyCode: String {
         trip.effectivePlannerCurrencyCode
-    }
-
-    private var countryCurrencyCodesByID: [String: String] {
-        var currencyCodes: [String: String] = [:]
-
-        for country in countries {
-            if let currencyCode = TripPlannerCountryCurrencyLookup.currencyCode(for: country) {
-                currencyCodes[country.id.uppercased()] = currencyCode
-            }
-        }
-
-        for country in TripPlannerCountryLookup.countries(for: trip.countryIds) {
-            if let currencyCode = TripPlannerCountryCurrencyLookup.currencyCode(for: country) {
-                currencyCodes[country.id.uppercased()] = currencyCode
-            }
-        }
-
-        for countryId in trip.countryIds {
-            let normalizedID = countryId.uppercased()
-            if currencyCodes[normalizedID] == nil,
-               let currencyCode = TripPlannerCountryCurrencyLookup.currencyCode(forCountryID: normalizedID) {
-                currencyCodes[normalizedID] = currencyCode
-            }
-        }
-
-        return currencyCodes
-    }
-
-    private var tripLocalCurrencyCodes: [String] {
-        uniqueCurrencyCodes(trip.countryIds.compactMap { countryCurrencyCodesByID[$0.uppercased()] })
     }
 
     private var tripLocalCurrencyCode: String? {
@@ -9269,10 +9400,6 @@ private struct TripPlannerChecklistEditorView: View {
             result = tripLocalCurrencyCodes
         }
 
-        TripPlannerDebugLog.probe(
-            "TripPlannerChecklistEditor.local_currency_codes",
-            "trip=\(TripPlannerDebugLog.tripLabel(trip)) kind=\(plan.kind.rawValue) country=\(plan.countryId ?? "nil") dayIndex=\(dayIndex.map(String.init) ?? "nil") result=\(result.joined(separator: ","))"
-        )
         return result
     }
 
@@ -9435,8 +9562,23 @@ private struct TripPlannerChecklistEditorView: View {
 
     private func expenses(for date: Date) -> [TripPlannerExpense] {
         let calendar = Calendar.current
+        let planForDate = dayPlans.first { calendar.isDate($0.date, inSameDayAs: date) }
+        let visibleChecklistItems = planForDate?.checklistItems.filter(\.supportsExpenseTracking) ?? []
+        let visibleChecklistExpenseKeys = Set(visibleChecklistItems.map(\.expenseSyncKey))
+
         return TripPlannerExpensesEditorView.sortedExpenses(
-            trip.expenses.filter { calendar.isDate($0.date, inSameDayAs: date) }
+            trip.expenses.filter { expense in
+                guard calendar.isDate(expense.date, inSameDayAs: date) else { return false }
+
+                if let linkedChecklistItemId = expense.linkedChecklistItemId,
+                   visibleChecklistExpenseKeys.contains(linkedChecklistItemId) {
+                    return false
+                }
+
+                return !visibleChecklistItems.contains { item in
+                    expense.matchesChecklistItem(item, date: date, amount: item.linkedExpenseAmount)
+                }
+            }
         )
     }
 
@@ -9698,6 +9840,7 @@ private struct TripPlannerChecklistEditorView: View {
             countryName: dayPlans[dayIndex].countryName,
             checklistItems: updatedItems
         )
+        saveFeedbackNonce += 1
     }
 
     private func addDaySuggestion(_ item: TripPlannerChecklistItem, to dayIndex: Int) {
@@ -10856,6 +10999,8 @@ private struct TripPlannerExpensesEditorView: View {
     let participants: [TripPlannerFriendSnapshot]
     let currencyCode: String
     let onSave: (TripPlannerTrip) -> Void
+    private let countryCurrencyCodesByID: [String: String]
+    private let tripLocalCurrencyCodes: [String]
 
     @State private var expenses: [TripPlannerExpense]
     @State private var composerPresentation: TripPlannerExpenseComposerPresentation?
@@ -10870,32 +11015,14 @@ private struct TripPlannerExpensesEditorView: View {
         self.participants = participants
         self.currencyCode = currencyCode
         self.onSave = onSave
+        let currencyContext = TripPlannerCountryCurrencyContext.make(countryIds: trip.countryIds)
+        self.countryCurrencyCodesByID = currencyContext.codesByCountryID
+        self.tripLocalCurrencyCodes = currencyContext.localCurrencyCodes
         _expenses = State(initialValue: Self.sortedExpenses(trip.expenses))
     }
 
     private var expenseParticipants: [TripPlannerExpenseParticipant] {
         participants.map(TripPlannerExpenseParticipant.init(friend:))
-    }
-
-    private var countryCurrencyCodesByID: [String: String] {
-        var currencyCodes: [String: String] = [:]
-        for country in TripPlannerCountryLookup.countries(for: trip.countryIds) {
-            if let currencyCode = TripPlannerCountryCurrencyLookup.currencyCode(for: country) {
-                currencyCodes[country.id.uppercased()] = currencyCode
-            }
-        }
-        for countryId in trip.countryIds {
-            let normalizedID = countryId.uppercased()
-            if currencyCodes[normalizedID] == nil,
-               let currencyCode = TripPlannerCountryCurrencyLookup.currencyCode(forCountryID: normalizedID) {
-                currencyCodes[normalizedID] = currencyCode
-            }
-        }
-        return currencyCodes
-    }
-
-    private var tripLocalCurrencyCodes: [String] {
-        uniqueCurrencyCodes(trip.countryIds.compactMap { countryCurrencyCodesByID[$0.uppercased()] })
     }
 
     private var balances: [TripPlannerExpenseBalance] {
@@ -11099,10 +11226,6 @@ private struct TripPlannerExpensesEditorView: View {
         let calendar = Calendar.current
         let day = calendar.startOfDay(for: date)
         guard let dayIndex = trip.dayPlans.firstIndex(where: { calendar.isDate($0.date, inSameDayAs: day) }) else {
-            TripPlannerDebugLog.probe(
-                "TripPlannerExpensesEditor.suggested_currency_codes",
-                "trip=\(TripPlannerDebugLog.tripLabel(trip)) date=\(AppDateFormatting.dateString(from: date, dateStyle: .short)) matchedPlan=false result=\(tripLocalCurrencyCodes.joined(separator: ","))"
-            )
             return tripLocalCurrencyCodes
         }
 
@@ -11128,10 +11251,6 @@ private struct TripPlannerExpensesEditorView: View {
             result = tripLocalCurrencyCodes
         }
 
-        TripPlannerDebugLog.probe(
-            "TripPlannerExpensesEditor.suggested_currency_codes",
-            "trip=\(TripPlannerDebugLog.tripLabel(trip)) date=\(AppDateFormatting.dateString(from: date, dateStyle: .short)) matchedPlan=true kind=\(plan.kind.rawValue) country=\(plan.countryId ?? "nil") result=\(result.joined(separator: ","))"
-        )
         return result
     }
 
@@ -11165,31 +11284,10 @@ private struct TripPlannerExpensesEditorView: View {
 
     private func persistExpenses() {
         let sortedExpenses = Self.sortedExpenses(expenses)
-        expenses = sortedExpenses
         let tripWithChecklistUpdates = trip.applyingExpenseEditsToLinkedChecklistItems(sortedExpenses)
-        onSave(
-            TripPlannerTrip(
-                id: tripWithChecklistUpdates.id,
-                createdAt: tripWithChecklistUpdates.createdAt,
-                title: tripWithChecklistUpdates.title,
-                notes: tripWithChecklistUpdates.notes,
-                startDate: tripWithChecklistUpdates.startDate,
-                endDate: tripWithChecklistUpdates.endDate,
-                countryIds: tripWithChecklistUpdates.countryIds,
-                countryNames: tripWithChecklistUpdates.countryNames,
-                friendIds: tripWithChecklistUpdates.friendIds,
-                friendNames: tripWithChecklistUpdates.friendNames,
-                friends: tripWithChecklistUpdates.friends,
-                ownerId: tripWithChecklistUpdates.ownerId,
-                ownerSnapshot: tripWithChecklistUpdates.effectiveOwnerSnapshot,
-                plannerCurrencyCode: tripWithChecklistUpdates.plannerCurrencyCode,
-                availability: tripWithChecklistUpdates.availability,
-                dayPlans: tripWithChecklistUpdates.dayPlans,
-                overallChecklistItems: tripWithChecklistUpdates.overallChecklistItems,
-                packingProgressEntries: tripWithChecklistUpdates.packingProgressEntries,
-                expenses: sortedExpenses
-            )
-        )
+        let normalizedTrip = tripWithChecklistUpdates.normalizedForPersistence(currentUser: nil)
+        expenses = Self.sortedExpenses(normalizedTrip.expenses)
+        onSave(normalizedTrip)
     }
 
     static func sortedExpenses(_ expenses: [TripPlannerExpense]) -> [TripPlannerExpense] {
@@ -12513,6 +12611,30 @@ private struct TripPlannerExpensePaidStatusControl: View {
 private extension TripPlannerExpense {
     var isSettled: Bool {
         shares.allSatisfy(\.isPaid)
+    }
+
+    func matchesChecklistItem(
+        _ item: TripPlannerChecklistItem,
+        date: Date,
+        amount: Double?
+    ) -> Bool {
+        guard category == item.category.defaultExpenseCategory else { return false }
+        guard Self.normalizedMatchingTitle(title) == Self.normalizedMatchingTitle(item.title) else { return false }
+        guard Calendar.current.isDate(self.date, inSameDayAs: date) else { return false }
+
+        if let amount {
+            guard abs(totalAmount - amount) < 0.01 else { return false }
+        }
+
+        return true
+    }
+
+    private static func normalizedMatchingTitle(_ title: String) -> String {
+        title
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: AppDisplayLocale.current)
+            .split(whereSeparator: \.isWhitespace)
+            .joined(separator: " ")
+            .lowercased()
     }
 
     var categoryDisplayTitle: String {
@@ -15299,9 +15421,10 @@ private struct TripPlannerAvatarView: View {
                                         "Avatar image.loading_placeholder username=@\(username) duration=\(TripPlannerDebugLog.durationText(since: avatarLoadStart)) url=\(avatarURL)"
                                     )
                                 }
-                            }
+                        }
                     }
                 }
+                .id(avatarURL)
             } else {
                 fallbackAvatar
             }
@@ -15521,13 +15644,13 @@ private struct TripPlannerChipItem: Identifiable, Hashable {
 }
 
 private enum TripPlannerCountryLookup {
-    static func countries(for ids: [String]) -> [Country] {
-        let cachedCountries = CountryAPI.loadCachedCountries() ?? []
-        let countriesByID = Dictionary(uniqueKeysWithValues: cachedCountries.map { ($0.id.uppercased(), $0) })
+    private static let cachedCountries: [Country] = CountryAPI.loadCachedCountries() ?? []
+    private static let cachedCountriesByID = Dictionary(uniqueKeysWithValues: cachedCountries.map { ($0.id.uppercased(), $0) })
 
-        let resolvedCountries = ids.map { id in
+    static func countries(for ids: [String]) -> [Country] {
+        ids.map { id in
             let normalizedID = id.uppercased()
-            if let country = countriesByID[normalizedID] {
+            if let country = cachedCountriesByID[normalizedID] {
                 return country
             }
 
@@ -15537,15 +15660,53 @@ private enum TripPlannerCountryLookup {
                 score: nil
             )
         }
-        let summary = resolvedCountries.map { country in
-            let currencyCode = TripPlannerCountryCurrencyLookup.currencyCode(for: country)
-            return "\(country.id.uppercased())=\(currencyCode ?? "nil")"
-        }.joined(separator: ",")
-        TripPlannerDebugLog.probe(
-            "TripPlannerCountryLookup.resolve",
-            "ids=\(ids.joined(separator: ",")) cached=\(cachedCountries.count) resolved=\(summary)"
+    }
+}
+
+private struct TripPlannerCountryCurrencyContext {
+    let codesByCountryID: [String: String]
+    let localCurrencyCodes: [String]
+
+    static func make(countryIds: [String], preferredCountries: [Country] = []) -> TripPlannerCountryCurrencyContext {
+        var currencyCodes: [String: String] = [:]
+
+        for country in preferredCountries {
+            if let currencyCode = TripPlannerCountryCurrencyLookup.currencyCode(for: country) {
+                currencyCodes[country.id.uppercased()] = currencyCode
+            }
+        }
+
+        let unresolvedIds = countryIds.filter { currencyCodes[$0.uppercased()] == nil }
+        for country in TripPlannerCountryLookup.countries(for: unresolvedIds) {
+            if let currencyCode = TripPlannerCountryCurrencyLookup.currencyCode(for: country) {
+                currencyCodes[country.id.uppercased()] = currencyCode
+            }
+        }
+
+        for countryId in countryIds {
+            let normalizedID = countryId.uppercased()
+            if currencyCodes[normalizedID] == nil,
+               let currencyCode = TripPlannerCountryCurrencyLookup.currencyCode(forCountryID: normalizedID) {
+                currencyCodes[normalizedID] = currencyCode
+            }
+        }
+
+        return TripPlannerCountryCurrencyContext(
+            codesByCountryID: currencyCodes,
+            localCurrencyCodes: uniqueCurrencyCodes(countryIds.compactMap { currencyCodes[$0.uppercased()] })
         )
-        return resolvedCountries
+    }
+
+    private static func uniqueCurrencyCodes(_ codes: [String]) -> [String] {
+        var seen = Set<String>()
+        return codes.compactMap { rawCode in
+            guard let code = AppCurrencyCatalog.normalizedCode(rawCode),
+                  seen.insert(code).inserted
+            else {
+                return nil
+            }
+            return code
+        }
     }
 }
 
@@ -15621,9 +15782,11 @@ private struct TripPlannerCountryNavigationGrid: View {
 
 private struct TripPlannerSavedTripCountryPreview: View {
     let countryIds: [String]
+    private let previewCountries: [Country]
 
-    private var previewCountries: [Country] {
-        Array(TripPlannerCountryLookup.countries(for: countryIds).prefix(6))
+    init(countryIds: [String]) {
+        self.countryIds = countryIds
+        self.previewCountries = Array(TripPlannerCountryLookup.countries(for: countryIds).prefix(6))
     }
 
     private var remainingCount: Int {

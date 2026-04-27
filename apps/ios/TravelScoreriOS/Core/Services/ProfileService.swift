@@ -115,6 +115,64 @@ struct ProfileAvatarSnapshot: Codable, Sendable {
     let avatarUrl: String?
 }
 
+private struct ProfileAvatarSnapshotRow: Decodable {
+    let id: UUID
+    let username: String?
+    let fullName: String?
+    let firstName: String?
+    let lastName: String?
+    let avatarUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case username
+        case fullName = "full_name"
+        case firstName = "first_name"
+        case lastName = "last_name"
+        case avatarUrl = "avatar_url"
+    }
+
+    var snapshot: ProfileAvatarSnapshot {
+        let resolvedUsername = username?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? "traveler"
+        let resolvedFullName = ProfileAvatarSnapshotRow.combinedName(
+            firstName: firstName,
+            lastName: lastName,
+            fallback: fullName ?? ""
+        )
+        let displayName: String = {
+            if let firstName = firstName?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty {
+                return firstName
+            }
+
+            if !resolvedFullName.isEmpty {
+                return resolvedFullName.split(separator: " ").first.map(String.init) ?? resolvedFullName
+            }
+
+            return resolvedUsername
+        }()
+
+        return ProfileAvatarSnapshot(
+            id: id,
+            displayName: displayName,
+            username: resolvedUsername,
+            avatarUrl: avatarUrl?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        )
+    }
+
+    private static func combinedName(firstName: String?, lastName: String?, fallback: String) -> String {
+        let pieces = [
+            firstName?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
+            lastName?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        ].compactMap { $0 }
+
+        if !pieces.isEmpty {
+            return pieces.joined(separator: " ")
+        }
+
+        return fallback.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 private struct PassportPreferencesRow: Codable {
     let userId: UUID
     let nationalityCountryCodes: [String]
@@ -283,6 +341,44 @@ final class ProfileService {
 
     func cachedAvatarSnapshot(userId: UUID) async -> ProfileAvatarSnapshot? {
         cachedAvatarSnapshotIfAvailable(userId: userId)
+    }
+
+    func fetchAvatarSnapshot(userId: UUID, useCache: Bool = true) async throws -> ProfileAvatarSnapshot {
+        let startedAt = Date()
+        SocialFeedDebug.log(
+            "profile.service.avatar_snapshot.fetch.start user=\(userId.uuidString) use_cache=\(useCache)"
+        )
+
+        if useCache, let cached = cachedAvatarSnapshotIfAvailable(userId: userId) {
+            SocialFeedDebug.log(
+                "profile.service.avatar_snapshot.fetch.cache_hit user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) username=\(logField(cached.username)) avatar=\(logField(cached.avatarUrl))"
+            )
+            return cached
+        }
+
+        let response: PostgrestResponse<[ProfileAvatarSnapshotRow]> = try await supabase.client
+            .from("profiles")
+            .select("id,username,full_name,first_name,last_name,avatar_url")
+            .eq("id", value: userId.uuidString)
+            .limit(1)
+            .execute()
+
+        guard let snapshot = response.value.first?.snapshot else {
+            SocialFeedDebug.log(
+                "profile.service.avatar_snapshot.fetch.empty user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            throw NSError(
+                domain: "ProfileService",
+                code: 404,
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.not_found")]
+            )
+        }
+
+        Self.persistAvatarSnapshot(snapshot)
+        SocialFeedDebug.log(
+            "profile.service.avatar_snapshot.fetch.success user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) username=\(logField(snapshot.username)) avatar=\(logField(snapshot.avatarUrl))"
+        )
+        return snapshot
     }
 
     func cachedAvatarSnapshotIfAvailable(userId: UUID) -> ProfileAvatarSnapshot? {
@@ -791,7 +887,11 @@ final class ProfileService {
 
     private static func persistAvatarSnapshot(_ profile: Profile) {
         let snapshot = avatarSnapshot(from: profile)
-        let url = avatarSnapshotURL(for: profile.id)
+        persistAvatarSnapshot(snapshot)
+    }
+
+    private static func persistAvatarSnapshot(_ snapshot: ProfileAvatarSnapshot) {
+        let url = avatarSnapshotURL(for: snapshot.id)
         do {
             try FileManager.default.createDirectory(
                 at: url.deletingLastPathComponent(),
@@ -800,7 +900,7 @@ final class ProfileService {
             let data = try JSONEncoder().encode(snapshot)
             try data.write(to: url, options: [.atomic])
         } catch {
-            SocialFeedDebug.log("profile.service.cache.avatar.file_write_error user=\(profile.id.uuidString) error=\(SocialFeedDebug.describe(error))")
+            SocialFeedDebug.log("profile.service.cache.avatar.file_write_error user=\(snapshot.id.uuidString) error=\(SocialFeedDebug.describe(error))")
         }
     }
 
