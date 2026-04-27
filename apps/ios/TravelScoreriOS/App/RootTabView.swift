@@ -12,6 +12,7 @@ enum SocialRoute: Hashable {
     case profile(UUID)
     case friends(UUID)
     case friendRequests
+    case country(Country)
 }
 
 @MainActor
@@ -89,6 +90,8 @@ final class SocialNavigationController: ObservableObject {
             return "friends:\(userId.uuidString)"
         case .friendRequests:
             return "friendRequests"
+        case .country(let country):
+            return "country:\(country.iso2.uppercased())"
         }
     }
 
@@ -463,6 +466,13 @@ struct RootTabView: View {
                 .onAppear {
                     SocialFeedDebug.log("navigation.destination.friend_requests.appear")
                 }
+        case .country(let country):
+            CountryDetailView(country: country)
+                .onAppear {
+                    SocialFeedDebug.log(
+                        "navigation.destination.country.appear iso2=\(country.iso2.uppercased()) id=\(country.id) name=\(country.name)"
+                    )
+                }
         }
     }
 
@@ -474,6 +484,8 @@ struct RootTabView: View {
             return "friends:\(userId.uuidString)"
         case .friendRequests:
             return "friendRequests"
+        case .country(let country):
+            return "country:\(country.iso2.uppercased())"
         }
     }
 

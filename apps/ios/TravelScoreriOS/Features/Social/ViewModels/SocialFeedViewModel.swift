@@ -56,6 +56,9 @@ final class SocialFeedViewModel: ObservableObject {
 
 enum SocialFeedDebug {
     static func log(_ message: String) {
+        #if DEBUG
+        print("[SocialFeed] \(message)")
+        #endif
     }
 
     static func countrySetSummary(_ countries: Set<String>) -> String {

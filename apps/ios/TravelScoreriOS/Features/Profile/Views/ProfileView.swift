@@ -46,7 +46,6 @@ struct ProfileView: View {
     @State private var showFriendsDrawer = false
     @State private var showSettings = false
     @State private var scrollAnchor: String? = nil
-    @State private var selectedCountry: Country? = nil
 
     init(
         userId: UUID,
@@ -185,11 +184,17 @@ struct ProfileView: View {
         let normalizedISO = isoCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
 
         if let cached = CountryAPI.loadCachedCountries()?.first(where: { $0.iso2.uppercased() == normalizedISO }) {
+            SocialFeedDebug.log(
+                "profile.view.resolve_country source=cache iso2=\(normalizedISO) id=\(cached.id) name=\(cached.name)"
+            )
             return cached
         }
 
         let locale = Locale.autoupdatingCurrent
         let countryName = locale.localizedString(forRegionCode: normalizedISO) ?? normalizedISO
+        SocialFeedDebug.log(
+            "profile.view.resolve_country source=fallback iso2=\(normalizedISO) name=\(countryName)"
+        )
 
         return Country(
             iso2: normalizedISO,
@@ -245,7 +250,11 @@ struct ProfileView: View {
                                 }
                             },
                             onOpenCountry: { isoCode in
-                                selectedCountry = resolveCountry(for: isoCode)
+                                let country = resolveCountry(for: isoCode)
+                                SocialFeedDebug.log(
+                                    "profile.view.open_country source=header user=\(userId.uuidString) iso2=\(country.iso2.uppercased()) id=\(country.id) name=\(country.name)"
+                                )
+                                socialNav.push(.country(country))
                             }
                         )
                         .background(
@@ -270,7 +279,11 @@ struct ProfileView: View {
                                 currentCountry: profileVM.profile?.currentCountry,
                                 favoriteCountries: profileVM.profile?.favoriteCountries ?? [],
                                 onOpenCountry: { isoCode in
-                                    selectedCountry = resolveCountry(for: isoCode)
+                                    let country = resolveCountry(for: isoCode)
+                                    SocialFeedDebug.log(
+                                        "profile.view.open_country source=travel_snapshot user=\(userId.uuidString) iso2=\(country.iso2.uppercased()) id=\(country.id) name=\(country.name)"
+                                    )
+                                    socialNav.push(.country(country))
                                 }
                             )
                         } else {
@@ -291,12 +304,6 @@ struct ProfileView: View {
                     SocialFeedDebug.log(
                         "profile.view.refresh.end user=\(userId.uuidString) \(renderGateDebugSummary)"
                     )
-                }
-                .navigationDestination(item: $selectedCountry) { country in
-                    CountryDetailView(country: country)
-                        .onAppear {
-                            logCountryDestinationBuild(country)
-                        }
                 }
                 .background(Color.clear)
                 .sheet(isPresented: $showFriendsDrawer) {

@@ -65,10 +65,10 @@ struct CollapsibleCountrySection: View {
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                         .animation(.spring(response: 0.35, dampingFraction: 0.75), value: isExpanded)
                     Text("\(title): ")
-                        .font(.subheadline)
+                        .font(.headline)
                         .fontWeight(.semibold)
                     Text(AppNumberFormatting.integerString(countryCodes.count))
-                        .font(.subheadline)
+                        .font(.headline)
                         .fontWeight(.bold)
                         .foregroundColor(highlightColor)
                     Spacer()
@@ -129,7 +129,7 @@ struct CollapsibleCountrySection: View {
                             HStack(spacing: 8) {
                                 Text(flagEmoji(from: iso))
                                 Text(Locale.current.localizedString(forRegionCode: iso) ?? iso)
-                                    .font(.subheadline)
+                                    .font(.headline)
                                     .fontWeight(.semibold)
                             }
                             .padding(.horizontal, 16)

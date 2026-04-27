@@ -17,12 +17,12 @@ struct ProfileTravelSnapshotCard: View {
     let onOpenCountry: (String) -> Void
 
     private let favoriteColumns = [
-        GridItem(.adaptive(minimum: 132), spacing: 10)
+        GridItem(.adaptive(minimum: 40, maximum: 46), spacing: 4)
     ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            VStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(spacing: 6) {
                 snapshotRow(
                     title: ProfileTravelSnapshotLocalized.string(
                         "profile.travel_snapshot.currently_in",
@@ -48,14 +48,14 @@ struct ProfileTravelSnapshotCard: View {
                 )
             }
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(
-                    ProfileTravelSnapshotLocalized.string(
+                    verbatim: ProfileTravelSnapshotLocalized.string(
                         "profile.travel_snapshot.favorite_countries",
-                        fallback: "Favorite countries"
-                    )
+                        fallback: "Favorite trips"
+                    ) + ":"
                 )
-                    .font(.subheadline.weight(.semibold))
+                    .font(.headline.bold())
                     .foregroundStyle(.black)
 
                 if favoriteCountries.isEmpty {
@@ -64,33 +64,20 @@ struct ProfileTravelSnapshotCard: View {
                             "profile.travel_snapshot.no_favorites",
                             fallback: "No favorites picked yet"
                         )
-                    )
-                        .font(.subheadline)
+                        )
+                        .font(.footnote)
                         .foregroundStyle(.black.opacity(0.72))
                 } else {
-                    LazyVGrid(columns: favoriteColumns, alignment: .leading, spacing: 10) {
+                    LazyVGrid(columns: favoriteColumns, alignment: .leading, spacing: 4) {
                         ForEach(Array(Set(favoriteCountries.map { $0.uppercased() })).sorted(), id: \.self) { code in
                             Button {
                                 onOpenCountry(code)
                             } label: {
-                                HStack(spacing: 8) {
-                                    Text(flagEmoji(for: code))
-                                        .font(.title3)
-
-                                    Text(countryName(for: code))
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(.black)
-                                        .lineLimit(1)
-
-                                    Spacer(minLength: 0)
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 10)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .fill(Color.white.opacity(0.56))
-                                )
+                                Text(flagEmoji(for: code))
+                                    .font(.system(size: 34))
+                                    .frame(width: 42, height: 38)
+                                    .contentShape(Rectangle())
+                                    .accessibilityLabel(countryName(for: code))
                             }
                             .buttonStyle(.plain)
                         }
@@ -102,47 +89,48 @@ struct ProfileTravelSnapshotCard: View {
 
     @ViewBuilder
     private func snapshotRow(title: String, code: String?, emptyText: String) -> some View {
-        HStack(spacing: 12) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
+        HStack(spacing: 2) {
+            Text(verbatim: "\(title):")
+                .font(.headline.bold())
                 .foregroundStyle(.black)
-                .lineLimit(2)
+                .lineLimit(1)
                 .minimumScaleFactor(0.82)
-                .frame(width: 128, alignment: .leading)
+                .frame(width: 122, alignment: .leading)
 
             if let code, !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 Button {
                     onOpenCountry(code.uppercased())
                 } label: {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 5) {
                         Text(flagEmoji(for: code))
-                            .font(.title3)
+                            .font(.system(size: 28))
 
                         Text(countryName(for: code))
-                            .font(.subheadline.weight(.semibold))
+                            .font(.subheadline.weight(.bold))
                             .foregroundStyle(.black)
-                            .lineLimit(1)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.82)
 
                         Spacer(minLength: 0)
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 4)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(Color.white.opacity(0.56))
                     )
                 }
                 .buttonStyle(.plain)
             } else {
                 Text(emptyText)
-                    .font(.subheadline)
+                    .font(.footnote)
                     .foregroundStyle(.black.opacity(0.72))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
                     .background(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .fill(Color.white.opacity(0.34))
                     )
             }

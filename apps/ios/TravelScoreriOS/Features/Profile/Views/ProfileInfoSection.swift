@@ -37,7 +37,12 @@ struct ProfileInfoSection: View {
     }
 
     private var travelSnapshotSection: some View {
-        card(imageScale: 1.1, imageAnchor: .topLeading) {
+        card(
+            imageScale: 1.32,
+            imageAnchor: .trailing,
+            verticalPadding: 14,
+            horizontalPadding: 14
+        ) {
             ProfileTravelSnapshotCard(
                 currentCountry: currentCountry,
                 nextDestination: nextDestination,
@@ -76,16 +81,16 @@ struct ProfileInfoSection: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("profile.settings.travel.mode")
-                            .font(.subheadline.weight(.semibold))
+                            .font(.headline.weight(.semibold))
                             .foregroundColor(.black)
 
                         if let travelMode, !travelMode.isEmpty {
                             Text(travelMode)
-                                .font(.subheadline)
+                                .font(.headline)
                                 .foregroundColor(.black)
                         } else {
                             Text("profile.settings.not_set")
-                                .font(.subheadline)
+                                .font(.headline)
                                 .foregroundColor(.black)
                         }
                     }
@@ -94,16 +99,16 @@ struct ProfileInfoSection: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("profile.settings.travel.style")
-                            .font(.subheadline.weight(.semibold))
+                            .font(.headline.weight(.semibold))
                             .foregroundColor(.black)
 
                         if let travelStyle, !travelStyle.isEmpty {
                             Text(travelStyle)
-                                .font(.subheadline)
+                                .font(.headline)
                                 .foregroundColor(.black)
                         } else {
                             Text("profile.settings.not_set")
-                                .font(.subheadline)
+                                .font(.headline)
                                 .foregroundColor(.black)
                         }
                     }
@@ -170,11 +175,13 @@ struct ProfileInfoSection: View {
     private func card<Content: View>(
         imageScale: CGFloat = 1,
         imageAnchor: UnitPoint = .center,
+        verticalPadding: CGFloat = 22,
+        horizontalPadding: CGFloat = 20,
         @ViewBuilder content: () -> Content
     ) -> some View {
         content()
-            .padding(.vertical, 22)
-            .padding(.horizontal, 20)
+            .padding(.vertical, verticalPadding)
+            .padding(.horizontal, horizontalPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 innerCardBackground(
@@ -218,13 +225,13 @@ struct ProfileInfoSection: View {
     }
     private func sectionHeader(_ text: String) -> some View {
         Text(text)
-            .font(.headline)
+            .font(.title3.weight(.semibold))
             .foregroundColor(.black)
     }
 
     private func secondaryText(_ text: String) -> some View {
         Text(text)
-            .font(.subheadline)
+            .font(.headline)
             .foregroundColor(.black)
     }
 
@@ -241,14 +248,14 @@ struct ProfileInfoSection: View {
 
         return HStack {
             Text(components.first ?? "")
-                .font(.subheadline.weight(.semibold))
+                .font(.headline.weight(.semibold))
                 .foregroundColor(.black)
 
             Spacer()
 
             if components.count > 1 {
                 Text(components[1])
-                    .font(.subheadline)
+                    .font(.headline)
                     .foregroundColor(.black)
             }
         }
@@ -257,12 +264,12 @@ struct ProfileInfoSection: View {
     private func infoRow(title: String, value: String) -> some View {
         HStack {
             Text(title)
-                .font(.subheadline.weight(.semibold))
+                .font(.headline.weight(.semibold))
 
             Spacer()
 
             Text(value)
-                .font(.subheadline)
+                .font(.headline)
                 .lineLimit(1)
         }
     }
