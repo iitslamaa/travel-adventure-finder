@@ -32,7 +32,6 @@ final class GeoJsonLoader {
             ),
             let data = try? Data(contentsOf: url)
         else {
-            print("❌ Failed to load \(dataset.fileName)")
             return []
         }
         
@@ -40,7 +39,6 @@ final class GeoJsonLoader {
             let decoded = try MKGeoJSONDecoder().decode(data)
             return decoded.compactMap { $0 as? MKGeoJSONFeature }
         } catch {
-            print("❌ GeoJSON decode error:", error)
             return []
         }
     }

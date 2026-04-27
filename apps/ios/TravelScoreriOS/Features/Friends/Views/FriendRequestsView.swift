@@ -248,7 +248,6 @@ struct FriendRequestsView: View {
                         do {
                             try await vm.acceptRequest(from: profile.id)
                         } catch {
-                            print("❌ accept failed:", error)
                         }
                         NotificationCenter.default.post(name: .friendshipUpdated, object: nil)
                     }

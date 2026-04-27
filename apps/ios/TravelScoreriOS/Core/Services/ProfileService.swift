@@ -298,7 +298,9 @@ final class ProfileService {
 
     func cachedBucketListCountries(userId: UUID) -> Set<String>? {
         if let cached = Self.bucketCache[userId] {
-            SocialFeedDebug.log("profile.service.cache.bucket.memory_hit user=\(userId.uuidString) count=\(cached.count)")
+            SocialFeedDebug.log(
+                "profile.service.cache.bucket.memory_hit user=\(userId.uuidString) \(SocialFeedDebug.countrySetSummary(cached))"
+            )
             return cached
         }
 
@@ -309,7 +311,9 @@ final class ProfileService {
 
         let cached = Set(persisted.countryCodes)
         Self.bucketCache[userId] = cached
-        SocialFeedDebug.log("profile.service.cache.bucket.disk_hit user=\(userId.uuidString) count=\(cached.count)")
+        SocialFeedDebug.log(
+            "profile.service.cache.bucket.disk_hit user=\(userId.uuidString) \(SocialFeedDebug.countrySetSummary(cached))"
+        )
         return cached
     }
 
@@ -515,7 +519,6 @@ final class ProfileService {
                 )
 
                 if let pg = error as? PostgrestError, pg.code == "23503" {
-                    print("⚠️ ensureProfileExists FK violation (23503) — retry \(idx + 1)/\(delays.count)")
                     continue
                 }
 
@@ -859,8 +862,10 @@ final class ProfileService {
                 PersistedCountrySet(countryCodes: bucket.sorted()),
                 forKey: Self.bucketCacheKey(for: userId)
             )
+            let duplicates = response.value.count - bucket.count
             SocialFeedDebug.log(
-                "profile.service.bucket.fetch.success user=\(userId.uuidString) rows=\(response.value.count) unique=\(bucket.count) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                "profile.service.bucket.fetch.success user=\(userId.uuidString) rows=\(response.value.count) duplicates=\(duplicates) " +
+                "\(SocialFeedDebug.countrySetSummary(bucket)) duration=\(SocialFeedDebug.duration(since: startedAt))"
             )
             return bucket
         } catch {
@@ -877,6 +882,10 @@ final class ProfileService {
         userId: UUID,
         countryCode: String
     ) async throws {
+        let startedAt = Date()
+        SocialFeedDebug.log(
+            "profile.service.bucket.add.start user=\(userId.uuidString) country=\(countryCode) current_user=\(supabase.currentUserId?.uuidString ?? "nil")"
+        )
 
         struct InsertRow: Encodable {
             let user_id: String
@@ -888,23 +897,73 @@ final class ProfileService {
             country_id: countryCode
         )
 
-        try await supabase.client
-            .from("user_bucket_list")
-            .insert(payload)
-            .execute()
+        do {
+            try await supabase.client
+                .from("user_bucket_list")
+                .insert(payload)
+                .execute()
+        } catch {
+            SocialFeedDebug.log(
+                "profile.service.bucket.add.error user=\(userId.uuidString) country=\(countryCode) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
+
+        Self.bucketCache[userId]?.insert(countryCode)
+        if let cached = Self.bucketCache[userId] {
+            Self.persistCachedValue(
+                PersistedCountrySet(countryCodes: cached.sorted()),
+                forKey: Self.bucketCacheKey(for: userId)
+            )
+            SocialFeedDebug.log(
+                "profile.service.bucket.add.cache_after user=\(userId.uuidString) country=\(countryCode) \(SocialFeedDebug.countrySetSummary(cached))"
+            )
+        } else {
+            SocialFeedDebug.log("profile.service.bucket.add.cache_after user=\(userId.uuidString) country=\(countryCode) cache=empty")
+        }
+        SocialFeedDebug.log(
+            "profile.service.bucket.add.success user=\(userId.uuidString) country=\(countryCode) duration=\(SocialFeedDebug.duration(since: startedAt))"
+        )
     }
 
     func removeFromBucketList(
         userId: UUID,
         countryCode: String
     ) async throws {
+        let startedAt = Date()
+        SocialFeedDebug.log(
+            "profile.service.bucket.remove.start user=\(userId.uuidString) country=\(countryCode) current_user=\(supabase.currentUserId?.uuidString ?? "nil")"
+        )
 
-        try await supabase.client
-            .from("user_bucket_list")
-            .delete()
-            .eq("user_id", value: userId.uuidString)
-            .eq("country_id", value: countryCode)
-            .execute()
+        do {
+            try await supabase.client
+                .from("user_bucket_list")
+                .delete()
+                .eq("user_id", value: userId.uuidString)
+                .eq("country_id", value: countryCode)
+                .execute()
+        } catch {
+            SocialFeedDebug.log(
+                "profile.service.bucket.remove.error user=\(userId.uuidString) country=\(countryCode) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
+
+        Self.bucketCache[userId]?.remove(countryCode)
+        if let cached = Self.bucketCache[userId] {
+            Self.persistCachedValue(
+                PersistedCountrySet(countryCodes: cached.sorted()),
+                forKey: Self.bucketCacheKey(for: userId)
+            )
+            SocialFeedDebug.log(
+                "profile.service.bucket.remove.cache_after user=\(userId.uuidString) country=\(countryCode) \(SocialFeedDebug.countrySetSummary(cached))"
+            )
+        } else {
+            SocialFeedDebug.log("profile.service.bucket.remove.cache_after user=\(userId.uuidString) country=\(countryCode) cache=empty")
+        }
+        SocialFeedDebug.log(
+            "profile.service.bucket.remove.success user=\(userId.uuidString) country=\(countryCode) duration=\(SocialFeedDebug.duration(since: startedAt))"
+        )
     }
 
     private static func isMissingSplitNameColumnsError(_ error: Error) -> Bool {

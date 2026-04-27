@@ -129,7 +129,6 @@ final class SeasonalityViewModel: ObservableObject {
                 loadError = error.localizedDescription
             } else {
 #if DEBUG
-                print("⚠️ [SeasonalityViewModel] Refresh failed but cache shown:", error)
 #endif
             }
         }

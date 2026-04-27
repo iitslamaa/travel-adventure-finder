@@ -62,8 +62,7 @@ final class SessionManager: ObservableObject {
             await supabase.startAuthListener()
         }
 
-        guestBucketSnapshot = bucketListStore.ids
-        guestTraveledSnapshot = traveledStore.ids
+        observeGuestListSnapshots()
 
         // Begin observing auth state
         startAuthObservation()
@@ -75,6 +74,11 @@ final class SessionManager: ObservableObject {
         if isAuthSuppressed != false { isAuthSuppressed = false }
         if didContinueAsGuest != true { didContinueAsGuest = true }
         if isAuthenticated != false { isAuthenticated = false }
+        guestBucketSnapshot = bucketListStore.ids
+        guestTraveledSnapshot = traveledStore.ids
+        SocialFeedDebug.log(
+            "session.guest.continue snapshot_bucket_\(SocialFeedDebug.countrySetSummary(guestBucketSnapshot)) traveled_count=\(guestTraveledSnapshot.count)"
+        )
     }
 
     func signOut() async {
@@ -165,7 +169,6 @@ final class SessionManager: ObservableObject {
                 syncingUserId = nil
             }
         } catch {
-            print("⚠️ forceRefreshAuthState transient error:", error)
             // 🔥 DO NOT clear userId or isAuthenticated on transient error
         }
 
@@ -187,7 +190,7 @@ final class SessionManager: ObservableObject {
         ensureProfileTask = Task {
             let delays: [UInt64] = [500_000_000, 1_000_000_000, 2_000_000_000, 4_000_000_000] // 0.5s, 1s, 2s, 4s
 
-            for (idx, delay) in delays.enumerated() {
+            for delay in delays {
                 try? await Task.sleep(nanoseconds: delay)
 
                 // Re-hydrate session in case auth state is still propagating
@@ -203,17 +206,13 @@ final class SessionManager: ObservableObject {
                 } catch {
                     // Keep retrying on FK race; otherwise bail.
                     if let pg = error as? PostgrestError, pg.code == "23503" {
-                        print("⚠️ ensureProfileEventually FK (23503) — retry \(idx + 1)/\(delays.count) for:", userId)
                         continue
                     }
-
-                    print("❌ ensureProfileEventually failed (non-FK):", error)
                     return
                 }
             }
 
             // If we exhausted retries, allow a later auth refresh to try again.
-            print("❌ ensureProfileEventually exhausted retries for:", userId)
             didEnsureProfile = false
             ensureProfileTask = nil
         }
@@ -226,18 +225,30 @@ final class SessionManager: ObservableObject {
         remoteBucketIds: Set<String>,
         remoteTraveledIds: Set<String>
     ) async {
-        guard !hasMergedGuestData else { return }
+        SocialFeedDebug.log(
+            "session.guest_merge.enter user=\(userId.uuidString) already_merged=\(hasMergedGuestData) " +
+            "guest_bucket_\(SocialFeedDebug.countrySetSummary(guestBucketSnapshot)) remote_bucket_\(SocialFeedDebug.countrySetSummary(remoteBucketIds))"
+        )
+        guard !hasMergedGuestData else {
+            SocialFeedDebug.log("session.guest_merge.skip user=\(userId.uuidString) reason=already_merged")
+            return
+        }
         hasMergedGuestData = true
 
         let bucketIdsToMerge = guestBucketSnapshot.subtracting(remoteBucketIds)
         let traveledIdsToMerge = guestTraveledSnapshot.subtracting(remoteTraveledIds)
+        SocialFeedDebug.log(
+            "session.guest_merge.diff user=\(userId.uuidString) bucket_to_merge_\(SocialFeedDebug.countrySetSummary(bucketIdsToMerge)) traveled_to_merge_count=\(traveledIdsToMerge.count)"
+        )
 
         for countryId in bucketIdsToMerge {
+            SocialFeedDebug.log("session.guest_merge.bucket_add.begin user=\(userId.uuidString) country=\(countryId)")
             await listSync.setBucket(
                 userId: userId,
                 countryId: countryId,
                 add: true
             )
+            SocialFeedDebug.log("session.guest_merge.bucket_add.end user=\(userId.uuidString) country=\(countryId)")
         }
 
         for countryId in traveledIdsToMerge {
@@ -267,6 +278,7 @@ final class SessionManager: ObservableObject {
         // Clear guest snapshots after successful merge
         guestBucketSnapshot.removeAll()
         guestTraveledSnapshot.removeAll()
+        SocialFeedDebug.log("session.guest_merge.end user=\(userId.uuidString) cleared_guest_snapshots=true")
     }
 
     private func synchronizeListsIfNeeded(for userId: UUID) {
@@ -282,16 +294,18 @@ final class SessionManager: ObservableObject {
                 async let bucketTask = self.listSync.fetchBucketList(userId: userId)
                 async let traveledTask = self.listSync.fetchTraveled(userId: userId)
                 var (bucketIds, traveledIds) = try await (bucketTask, traveledTask)
+                let guestBucketIds = self.guestBucketSnapshot
+                let guestTraveledIds = self.guestTraveledSnapshot
 
-                if !self.guestBucketSnapshot.isEmpty || !self.guestTraveledSnapshot.isEmpty {
+                if !guestBucketIds.isEmpty || !guestTraveledIds.isEmpty {
                     await self.mergeGuestDataIfNeeded(
                         for: userId,
                         remoteBucketIds: bucketIds,
                         remoteTraveledIds: traveledIds
                     )
 
-                    bucketIds.formUnion(self.guestBucketSnapshot)
-                    traveledIds.formUnion(self.guestTraveledSnapshot)
+                    bucketIds.formUnion(guestBucketIds)
+                    traveledIds.formUnion(guestTraveledIds)
                 }
 
                 if Task.isCancelled { return }
@@ -299,7 +313,6 @@ final class SessionManager: ObservableObject {
                 self.bucketListStore.replace(with: bucketIds)
                 self.traveledStore.replace(with: traveledIds)
             } catch {
-                print("⚠️ synchronizeListsIfNeeded failed:", error)
             }
 
             if !Task.isCancelled, self.syncingUserId == userId {
@@ -307,6 +320,28 @@ final class SessionManager: ObservableObject {
                 self.syncTask = nil
             }
         }
+    }
+
+    private func observeGuestListSnapshots() {
+        bucketListStore.$ids
+            .dropFirst()
+            .sink { [weak self] ids in
+                guard let self, self.didContinueAsGuest, !self.isAuthenticated else { return }
+                self.guestBucketSnapshot = ids
+                SocialFeedDebug.log(
+                    "session.guest.snapshot.bucket_update \(SocialFeedDebug.countrySetSummary(ids))"
+                )
+            }
+            .store(in: &cancellables)
+
+        traveledStore.$ids
+            .dropFirst()
+            .sink { [weak self] ids in
+                guard let self, self.didContinueAsGuest, !self.isAuthenticated else { return }
+                self.guestTraveledSnapshot = ids
+                SocialFeedDebug.log("session.guest.snapshot.traveled_update count=\(ids.count)")
+            }
+            .store(in: &cancellables)
     }
 
     private func startAuthObservation() {
@@ -351,7 +386,6 @@ final class SessionManager: ObservableObject {
                     syncingUserId = nil
                 }
             } catch {
-                print("⚠️ refreshFromCurrentSession transient error:", error)
                 // 🔥 DO NOT clear userId or isAuthenticated on transient error
             }
 

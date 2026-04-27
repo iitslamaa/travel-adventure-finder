@@ -23,6 +23,7 @@ final class ListSyncService {
     // MARK: - Fetch
 
     func fetchBucketList(userId: UUID) async throws -> Set<String> {
+        SocialFeedDebug.log("list_sync.fetch_bucket.start instance=\(instanceId.uuidString) user=\(userId.uuidString)")
         let rows: [[String: String]] = try await supabase.client
             .from("user_bucket_list")
             .select("country_id")
@@ -30,7 +31,11 @@ final class ListSyncService {
             .execute()
             .value
 
-        return Set(rows.compactMap { $0["country_id"] })
+        let bucket = Set(rows.compactMap { $0["country_id"] })
+        SocialFeedDebug.log(
+            "list_sync.fetch_bucket.success instance=\(instanceId.uuidString) user=\(userId.uuidString) rows=\(rows.count) \(SocialFeedDebug.countrySetSummary(bucket))"
+        )
+        return bucket
     }
 
     func fetchTraveled(userId: UUID) async throws -> Set<String> {
@@ -51,6 +56,9 @@ final class ListSyncService {
         countryId: String,
         add: Bool
     ) async {
+        SocialFeedDebug.log(
+            "list_sync.set_bucket.start instance=\(instanceId.uuidString) user=\(userId.uuidString) country=\(countryId) add=\(add)"
+        )
         do {
             if add {
                 try await supabase.client
@@ -68,13 +76,21 @@ final class ListSyncService {
                     .eq("country_id", value: countryId)
                     .execute()
             }
+            SocialFeedDebug.log(
+                "list_sync.set_bucket.success instance=\(instanceId.uuidString) user=\(userId.uuidString) country=\(countryId) add=\(add)"
+            )
         } catch {
             if add,
                let pg = error as? PostgrestError,
                pg.code == "23505" {
+                SocialFeedDebug.log(
+                    "list_sync.set_bucket.duplicate instance=\(instanceId.uuidString) user=\(userId.uuidString) country=\(countryId)"
+                )
                 return
             }
-            print("❌ [ListSync:", instanceId, "] setBucket failed:", error)
+            SocialFeedDebug.log(
+                "list_sync.set_bucket.error instance=\(instanceId.uuidString) user=\(userId.uuidString) country=\(countryId) add=\(add) error=\(SocialFeedDebug.describe(error))"
+            )
         }
     }
 
@@ -106,7 +122,6 @@ final class ListSyncService {
                pg.code == "23505" {
                 return
             }
-            print("❌ [ListSync:", instanceId, "] setTraveled failed:", error)
         }
     }
 

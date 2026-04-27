@@ -94,7 +94,8 @@ final class ProfileViewModel: ObservableObject {
     @Published var viewedBucketListCountries: Set<String> = [] {
         didSet {
             SocialFeedDebug.log(
-                "profile.vm.state.bucket user=\(userId.uuidString) old=\(oldValue.count) new=\(viewedBucketListCountries.count)"
+                "profile.vm.state.bucket user=\(userId.uuidString) old_\(SocialFeedDebug.countrySetSummary(oldValue)) " +
+                "new_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries))"
             )
         }
     }
@@ -286,7 +287,9 @@ final class ProfileViewModel: ObservableObject {
         }
 
         if let cachedBucket {
-            SocialFeedDebug.log("profile.vm.load_if_needed.apply_cached_bucket user=\(userId.uuidString) count=\(cachedBucket.count)")
+            SocialFeedDebug.log(
+                "profile.vm.load_if_needed.apply_cached_bucket user=\(userId.uuidString) \(SocialFeedDebug.countrySetSummary(cachedBucket))"
+            )
             viewedBucketListCountries = cachedBucket
         } else if isSwitchingUsers {
             SocialFeedDebug.log("profile.vm.load_if_needed.clear_bucket user=\(userId.uuidString) reason=switching_no_cache")
@@ -310,7 +313,7 @@ final class ProfileViewModel: ObservableObject {
         isLoading = cachedProfile == nil && cachedTraveled == nil && cachedBucket == nil && profile?.id != userId
         SocialFeedDebug.log(
             "profile.vm.load_if_needed.after_seed user=\(userId.uuidString) profile=\(debugLogField(profile?.id.uuidString)) " +
-            "traveled=\(viewedTraveledCountries.count) bucket=\(viewedBucketListCountries.count) is_loading=\(isLoading)"
+            "traveled=\(viewedTraveledCountries.count) bucket_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries)) is_loading=\(isLoading)"
         )
 
         isRelationshipLoading = true

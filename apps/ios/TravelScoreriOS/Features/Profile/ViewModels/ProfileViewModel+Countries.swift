@@ -13,7 +13,9 @@ extension ProfileViewModel {
     // MARK: - Bucket Toggle
 
     func toggleBucket(_ countryId: String, recordActivity: Bool = true) async {
-        SocialFeedDebug.log("profile.bucket.toggle.start user=\(userId) country=\(countryId) guest=\(isGuestMode)")
+        SocialFeedDebug.log(
+            "profile.bucket.toggle.start user=\(userId) country=\(countryId) guest=\(isGuestMode) before_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries))"
+        )
         if isGuestMode {
             let wasInBucket = viewedBucketListCountries.contains(countryId)
             if wasInBucket {
@@ -22,17 +24,20 @@ extension ProfileViewModel {
                 viewedBucketListCountries.insert(countryId)
             }
             computeOrderedLists()
-            SocialFeedDebug.log("profile.bucket.toggle.guest.end user=\(userId) country=\(countryId) was_in_bucket=\(wasInBucket) new_count=\(viewedBucketListCountries.count)")
+            SocialFeedDebug.log(
+                "profile.bucket.toggle.guest.end user=\(userId) country=\(countryId) was_in_bucket=\(wasInBucket) after_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries))"
+            )
             return
         }
 
         guard let currentUserId = supabase.currentUserId else {
-            print("❌ toggleBucket: No current user")
             return
         }
 
         let wasInBucket = viewedBucketListCountries.contains(countryId)
-        SocialFeedDebug.log("profile.bucket.toggle.optimistic user=\(userId) country=\(countryId) was_in_bucket=\(wasInBucket)")
+        SocialFeedDebug.log(
+            "profile.bucket.toggle.optimistic user=\(userId) country=\(countryId) was_in_bucket=\(wasInBucket) before_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries))"
+        )
 
         // Optimistic UI update
         if wasInBucket {
@@ -42,6 +47,9 @@ extension ProfileViewModel {
         }
 
         computeOrderedLists()
+        SocialFeedDebug.log(
+            "profile.bucket.toggle.optimistic_applied user=\(userId) country=\(countryId) after_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries))"
+        )
 
         do {
             if wasInBucket {
@@ -64,6 +72,9 @@ extension ProfileViewModel {
                 }
             }
 
+            SocialFeedDebug.log(
+                "profile.bucket.toggle.remote_success user=\(userId) country=\(countryId) was_in_bucket=\(wasInBucket) after_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries))"
+            )
             SocialFeedDebug.log("profile.bucket.toggle.notification user=\(userId) country=\(countryId) posting=socialActivityUpdated")
             NotificationCenter.default.post(name: .socialActivityUpdated, object: nil)
         } catch {
@@ -75,9 +86,9 @@ extension ProfileViewModel {
             }
 
             computeOrderedLists()
-
-            print("❌ toggleBucket rolled back due to error:", error)
-            SocialFeedDebug.log("profile.bucket.toggle.error user=\(userId) country=\(countryId) error=\(SocialFeedDebug.describe(error))")
+            SocialFeedDebug.log(
+                "profile.bucket.toggle.error user=\(userId) country=\(countryId) rolled_back_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries)) error=\(SocialFeedDebug.describe(error))"
+            )
             errorMessage = error.localizedDescription
         }
     }
@@ -149,8 +160,6 @@ extension ProfileViewModel {
             }
 
             computeOrderedLists()
-
-            print("❌ toggleTraveled rolled back due to error:", error)
             SocialFeedDebug.log("profile.traveled.toggle.error user=\(userId) country=\(countryId) error=\(SocialFeedDebug.describe(error))")
             errorMessage = error.localizedDescription
         }

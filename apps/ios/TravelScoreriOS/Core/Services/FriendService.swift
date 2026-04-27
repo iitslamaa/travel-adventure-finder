@@ -9,8 +9,6 @@ import PostgREST
 
 private enum FriendServiceDebugLog {
     static func message(_ text: String) {
-        let timestamp = timestampFormatter.string(from: Date())
-        print("[FriendService][\(timestamp)] \(text)")
     }
 
     static func duration(since start: Date) -> String {
@@ -464,11 +462,7 @@ final class FriendService {
     }
 
     func sendFriendRequest(from myUserId: UUID, to otherUserId: UUID) async throws {
-        let requestId = UUID()
-        
-
         guard myUserId != otherUserId else {
-            print("⚠️ [\(requestId)] abort — cannot friend self")
             return
         }
 
@@ -510,20 +504,11 @@ final class FriendService {
             Self.invalidateRequestCaches(for: [myUserId, otherUserId])
 
         } catch {
-            print("❌ [\(requestId)] sendFriendRequest FAILED — raw:", error)
-            print("❌ [\(requestId)] sendFriendRequest FAILED — description:", error.localizedDescription)
-            if let pg = error as? PostgrestError {
-                print("❌ [\(requestId)] PostgrestError code:", pg.code as Any, "message:", pg.message, "detail:", pg.detail as Any, "hint:", pg.hint as Any)
-            }
-            
             throw error
         }
     }
 
     func cancelRequest(from myUserId: UUID, to otherUserId: UUID) async throws {
-        let requestId = UUID()
-        
-
         do {
             try await supabase.client
                 .from("friend_requests")
@@ -536,12 +521,6 @@ final class FriendService {
             Self.invalidateRequestCaches(for: [myUserId, otherUserId])
 
         } catch {
-            print("❌ [\(requestId)] cancelRequest FAILED — raw:", error)
-            print("❌ [\(requestId)] cancelRequest FAILED — description:", error.localizedDescription)
-            if let pg = error as? PostgrestError {
-                print("❌ [\(requestId)] PostgrestError code:", pg.code as Any, "message:", pg.message, "detail:", pg.detail as Any, "hint:", pg.hint as Any)
-            }
-            
             throw error
         }
     }

@@ -70,7 +70,6 @@ final class CountryMetadataResolver {
             countryMetaByISO = map
 
         } catch {
-            print("⚠️ [CountryMetadataResolver] Failed to load country metadata:", error)
         }
     }
 

@@ -133,20 +133,30 @@ struct BucketListView: View {
             await loadBucketListIfNeeded()
         }
         .onReceive(bucketListStore.$ids) { ids in
+            SocialFeedDebug.log(
+                "bucket.view.store_receive before_\(SocialFeedDebug.countrySetSummary(bucketCountryIds)) incoming_\(SocialFeedDebug.countrySetSummary(ids))"
+            )
             bucketCountryIds = ids
         }
     }
 
     @MainActor
     private func loadBucketListIfNeeded() async {
+        SocialFeedDebug.log(
+            "bucket.view.load.start has_loaded=\(hasLoadedOnce) local_\(SocialFeedDebug.countrySetSummary(bucketCountryIds)) store_\(SocialFeedDebug.countrySetSummary(bucketListStore.ids)) user=\(sessionManager.userId?.uuidString ?? "nil")"
+        )
         if countries.isEmpty,
            let cached = CountryAPI.loadCachedCountries(),
            !cached.isEmpty {
             countries = cached
+            SocialFeedDebug.log("bucket.view.load.countries_cache count=\(cached.count)")
         }
 
         if bucketCountryIds.isEmpty || !hasLoadedOnce {
             bucketCountryIds = bucketListStore.ids
+            SocialFeedDebug.log(
+                "bucket.view.load.seed_from_store local_\(SocialFeedDebug.countrySetSummary(bucketCountryIds))"
+            )
         }
 
         let shouldShowBlockingLoad = !hasLoadedOnce && countries.isEmpty && bucketCountryIds.isEmpty
@@ -162,36 +172,62 @@ struct BucketListView: View {
         }()
 
         if let bucket = await bucketFetchTask {
+            SocialFeedDebug.log(
+                "bucket.view.load.remote_bucket user=\(userId?.uuidString ?? "nil") remote_\(SocialFeedDebug.countrySetSummary(bucket)) before_local_\(SocialFeedDebug.countrySetSummary(bucketCountryIds))"
+            )
             bucketCountryIds = bucket
             bucketListStore.replace(with: bucket)
+        } else {
+            SocialFeedDebug.log("bucket.view.load.remote_bucket.nil user=\(userId?.uuidString ?? "nil")")
         }
 
         if let fresh = await freshCountriesTask, !fresh.isEmpty {
             countries = fresh
+            SocialFeedDebug.log("bucket.view.load.countries_fresh count=\(fresh.count)")
         }
 
         isLoading = false
+        SocialFeedDebug.log(
+            "bucket.view.load.end local_\(SocialFeedDebug.countrySetSummary(bucketCountryIds)) store_\(SocialFeedDebug.countrySetSummary(bucketListStore.ids))"
+        )
     }
 
     @MainActor
     private func saveBucketCountries(_ updatedIds: Set<String>) async {
         let previousIds = bucketCountryIds
+        SocialFeedDebug.log(
+            "bucket.view.save.start auth=\(sessionManager.isAuthenticated) previous_\(SocialFeedDebug.countrySetSummary(previousIds)) updated_\(SocialFeedDebug.countrySetSummary(updatedIds)) profile_before_\(SocialFeedDebug.countrySetSummary(profileVM.viewedBucketListCountries)) store_before_\(SocialFeedDebug.countrySetSummary(bucketListStore.ids))"
+        )
 
         if sessionManager.isAuthenticated {
             if profileVM.viewedBucketListCountries != bucketCountryIds {
+                SocialFeedDebug.log(
+                    "bucket.view.save.profile_seed previous_profile_\(SocialFeedDebug.countrySetSummary(profileVM.viewedBucketListCountries)) seed_\(SocialFeedDebug.countrySetSummary(bucketCountryIds))"
+                )
                 profileVM.viewedBucketListCountries = bucketCountryIds
                 profileVM.computeOrderedLists()
             }
 
             let removals = previousIds.subtracting(updatedIds).sorted()
             let additions = updatedIds.subtracting(previousIds).sorted()
+            SocialFeedDebug.log(
+                "bucket.view.save.diff removals=[\(removals.joined(separator: ","))] additions=[\(additions.joined(separator: ","))]"
+            )
 
             for countryId in removals {
+                SocialFeedDebug.log("bucket.view.save.remove.begin country=\(countryId)")
                 await profileVM.toggleBucket(countryId, recordActivity: false)
+                SocialFeedDebug.log(
+                    "bucket.view.save.remove.end country=\(countryId) profile_now_\(SocialFeedDebug.countrySetSummary(profileVM.viewedBucketListCountries))"
+                )
             }
 
             for countryId in additions {
+                SocialFeedDebug.log("bucket.view.save.add.begin country=\(countryId)")
                 await profileVM.toggleBucket(countryId, recordActivity: false)
+                SocialFeedDebug.log(
+                    "bucket.view.save.add.end country=\(countryId) profile_now_\(SocialFeedDebug.countrySetSummary(profileVM.viewedBucketListCountries))"
+                )
             }
 
             if let userId = sessionManager.userId, !additions.isEmpty {
@@ -203,12 +239,18 @@ struct BucketListView: View {
             }
 
             let latestIds = profileVM.viewedBucketListCountries
+            SocialFeedDebug.log(
+                "bucket.view.save.apply_latest latest_\(SocialFeedDebug.countrySetSummary(latestIds)) desired_\(SocialFeedDebug.countrySetSummary(updatedIds))"
+            )
             bucketCountryIds = latestIds
             bucketListStore.replace(with: latestIds)
         } else {
             bucketCountryIds = updatedIds
             bucketListStore.replace(with: updatedIds)
         }
+        SocialFeedDebug.log(
+            "bucket.view.save.end local_\(SocialFeedDebug.countrySetSummary(bucketCountryIds)) profile_\(SocialFeedDebug.countrySetSummary(profileVM.viewedBucketListCountries)) store_\(SocialFeedDebug.countrySetSummary(bucketListStore.ids))"
+        )
     }
 }
 

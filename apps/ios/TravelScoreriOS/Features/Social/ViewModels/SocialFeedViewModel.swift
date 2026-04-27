@@ -56,8 +56,13 @@ final class SocialFeedViewModel: ObservableObject {
 
 enum SocialFeedDebug {
     static func log(_ message: String) {
-        let timestamp = timestampFormatter.string(from: Date())
-        print("[SocialActivity][\(timestamp)] \(message)")
+    }
+
+    static func countrySetSummary(_ countries: Set<String>) -> String {
+        let sorted = countries.sorted()
+        let preview = sorted.prefix(12).joined(separator: ",")
+        let omitted = max(sorted.count - 12, 0)
+        return "count=\(countries.count) has_US=\(countries.contains("US")) has_GB=\(countries.contains("GB")) preview=[\(preview)] omitted=\(omitted)"
     }
 
     static func duration(since startTime: Date) -> String {

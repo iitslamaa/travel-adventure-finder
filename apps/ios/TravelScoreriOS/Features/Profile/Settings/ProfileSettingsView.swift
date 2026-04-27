@@ -741,7 +741,6 @@ struct SettingsScrollContent: View {
                                         try await SupabaseManager.shared.deleteAccount()
                                         sessionManager.handleAccountDeleted()
                                     } catch {
-                                        print("❌ Delete account failed:", error)
                                     }
                                     isDeletingAccount = false
                                 }

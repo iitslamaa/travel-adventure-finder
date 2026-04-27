@@ -18,7 +18,6 @@ import Translation
 
 private enum CountryDetailDebugLog {
     nonisolated static func message(_ text: String) {
-        print("[CountryDetail][\(timestamp())] \(text)")
     }
 
     nonisolated static func durationText(since startTime: TimeInterval) -> String {
@@ -779,7 +778,6 @@ private final class CountryFriendEngagementViewModel: ObservableObject {
                     "Friend engagement cancelled country=\(normalizedCountryCode) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
                 )
             } catch {
-                print("❌ failed to load country friend engagement:", error)
                 engagement = .empty
                 CountryDetailDebugLog.message(
                     "Friend engagement failed country=\(normalizedCountryCode) duration=\(CountryDetailDebugLog.durationText(since: loadStart)) error=\(error.localizedDescription)"

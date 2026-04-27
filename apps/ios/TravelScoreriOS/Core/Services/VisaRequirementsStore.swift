@@ -381,7 +381,6 @@ final class VisaRequirementsStore: ObservableObject {
                 )
             } catch {
                 #if DEBUG
-                print("⚠️ [VisaRequirementsStore] Refresh failed:", error)
                 #endif
             }
 
@@ -405,7 +404,6 @@ final class VisaRequirementsStore: ObservableObject {
                 )
             } catch {
                 #if DEBUG
-                print("⚠️ [VisaRequirementsStore] Background refresh failed:", error)
                 #endif
             }
         }
@@ -439,7 +437,6 @@ final class VisaRequirementsStore: ObservableObject {
                 )
             } catch {
                 #if DEBUG
-                print("⚠️ [VisaRequirementsStore] Bulk refresh failed:", error)
                 #endif
             }
 
@@ -457,7 +454,6 @@ final class VisaRequirementsStore: ObservableObject {
                 )
             } catch {
                 #if DEBUG
-                print("⚠️ [VisaRequirementsStore] Background bulk refresh failed:", error)
                 #endif
             }
         }
@@ -607,7 +603,6 @@ final class VisaRequirementsStore: ObservableObject {
             latestVersion = dataset.version
         } catch {
             #if DEBUG
-            print("⚠️ [VisaRequirementsStore] Cache decode failed:", error)
             #endif
         }
     }
@@ -625,7 +620,6 @@ final class VisaRequirementsStore: ObservableObject {
             UserDefaults.standard.set(data, forKey: cacheKey(for: passportCountryCode))
         } catch {
             #if DEBUG
-            print("⚠️ [VisaRequirementsStore] Cache encode failed:", error)
             #endif
         }
     }

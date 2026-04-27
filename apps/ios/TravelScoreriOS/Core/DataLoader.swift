@@ -27,7 +27,6 @@ enum DataLoader {
                 
             }
         } catch {
-            print("❌ Meta check failed:", error)
         }
     }
 
