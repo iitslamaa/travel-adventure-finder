@@ -340,8 +340,8 @@ struct RootTabView: View {
         HStack(spacing: 10) {
             tabButton(.discovery, title: String(localized: "tab.discovery"), systemImage: "globe.americas.fill")
             tabButton(.planning, title: String(localized: "tab.planning"), systemImage: "list.bullet", badgeCount: sharedTripInbox.pendingCount)
-            tabButton(.media, title: "Media", systemImage: "newspaper.fill")
-            tabButton(.social, title: "Social", systemImage: "person.2.fill")
+            tabButton(.media, title: String(localized: "media.title"), systemImage: "newspaper.fill")
+            tabButton(.social, title: String(localized: "social.title"), systemImage: "person.2.fill")
             tabButton(.more, title: String(localized: "tab.more"), systemImage: "ellipsis")
         }
         .padding(.horizontal, 10)
@@ -365,7 +365,7 @@ struct RootTabView: View {
     }
 
     private func guestLockedState(backgroundImage: String) -> some View {
-        let bannerTitle = "Social"
+        let bannerTitle = String(localized: "social.title")
         let cardTitle = String(localized: "guest.friends.card_title")
         let message = String(localized: "guest.friends.message")
 

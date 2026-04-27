@@ -689,10 +689,21 @@ final class CurrencyPreferenceStore: ObservableObject {
         )
 
         if let publishedAt = exchangeRateSnapshot?.publishedAt {
-            return "Live rate: 1 \(sourceCurrencyCode.uppercased()) = \(rateText) • \(AppDateFormatting.dateString(from: publishedAt, dateStyle: .medium))"
+            return String(
+                format: String(localized: "profile.settings.currency.live_rate_dated_format"),
+                locale: AppDisplayLocale.current,
+                sourceCurrencyCode.uppercased(),
+                rateText,
+                AppDateFormatting.dateString(from: publishedAt, dateStyle: .medium)
+            )
         }
 
-        return "Live rate: 1 \(sourceCurrencyCode.uppercased()) = \(rateText)"
+        return String(
+            format: String(localized: "profile.settings.currency.live_rate_format"),
+            locale: AppDisplayLocale.current,
+            sourceCurrencyCode.uppercased(),
+            rateText
+        )
     }
 
     private var shouldRefreshRates: Bool {

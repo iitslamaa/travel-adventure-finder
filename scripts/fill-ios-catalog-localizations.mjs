@@ -11,6 +11,12 @@ const { translate } = require("/tmp/country-translate-tool/node_modules/@vitalet
 const bing = require("/tmp/country-translate-tool/node_modules/bing-translate-api");
 
 const localeMap = new Map([
+  ["es", { google: "es", bing: "es" }],
+  ["fr", { google: "fr", bing: "fr" }],
+  ["de", { google: "de", bing: "de" }],
+  ["it", { google: "it", bing: "it" }],
+  ["pt-BR", { google: "pt", bing: "pt" }],
+  ["ru", { google: "ru", bing: "ru" }],
   ["nl", { google: "nl", bing: "nl" }],
   ["ar", { google: "ar", bing: "ar" }],
   ["ja", { google: "ja", bing: "ja" }],

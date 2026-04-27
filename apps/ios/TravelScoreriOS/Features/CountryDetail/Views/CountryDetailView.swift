@@ -1249,9 +1249,9 @@ private struct CountryLanguageProfile: Decodable {
             || normalizedBaselineSource == "cldr_territory_language_info" {
             return CountryLanguageEvidence(
                 kind: "baseline_source",
-                title: "CLDR territory language data",
+                title: String(localized: "country_detail.language.source_cldr_title"),
                 url: URL(string: "https://github.com/unicode-org/cldr/blob/main/common/supplemental/supplementalData.xml"),
-                note: "Baseline country language data comes from Unicode CLDR territoryInfo."
+                note: String(localized: "country_detail.language.source_cldr_note")
             )
         }
 
@@ -1280,19 +1280,27 @@ private struct CountryLanguageCompatibilityResult {
     let evidence: CountryLanguageEvidence?
 
     var evidenceLinkLabel: String {
-        guard let evidence else { return "Source" }
+        guard let evidence else { return String(localized: "country_detail.language.source") }
 
         if let title = evidence.title?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
-            return "Source: \(title)"
+            return String(
+                format: String(localized: "country_detail.language.source_format"),
+                locale: AppDisplayLocale.current,
+                title
+            )
         }
 
         if let host = evidence.url?.host(percentEncoded: false)?
             .replacingOccurrences(of: "www.", with: ""),
            !host.isEmpty {
-            return "Source: \(host)"
+            return String(
+                format: String(localized: "country_detail.language.source_format"),
+                locale: AppDisplayLocale.current,
+                host
+            )
         }
 
-        return "Source"
+        return String(localized: "country_detail.language.source")
     }
 }
 
@@ -1570,7 +1578,7 @@ private struct CountryLanguageCompatibilityCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Language")
+                Text("country_detail.language.title")
                     .font(.headline)
 
                 Spacer()
@@ -1759,7 +1767,7 @@ private struct CountryLanguageCompatibilityLoadingCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Language")
+                Text("country_detail.language.title")
                     .font(.headline)
                     .fontWeight(.semibold)
 

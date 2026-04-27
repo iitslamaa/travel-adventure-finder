@@ -79,23 +79,23 @@ struct CountryAffordabilityCard: View {
             // Optional daily spend breakdown (if available)
             VStack(alignment: .leading, spacing: 4) {
                 if let total = country.dailySpendTotalUsd {
-                    affordabilityLine(title: "Typical daily total:", amountUSD: total)
+                    affordabilityLine(title: String(localized: "country_detail.affordability.daily_total"), amountUSD: total)
                 }
 
                 if let hotel = country.dailySpendHotelUsd {
-                    affordabilityLine(title: "Hotel (per night):", amountUSD: hotel)
+                    affordabilityLine(title: String(localized: "country_detail.affordability.hotel_per_night"), amountUSD: hotel)
                 }
 
                 if let hostel = country.dailySpendHostelUsd {
-                    affordabilityLine(title: "Hostel (per night):", amountUSD: hostel)
+                    affordabilityLine(title: String(localized: "country_detail.affordability.hostel_per_night"), amountUSD: hostel)
                 }
 
                 if let food = country.dailySpendFoodUsd {
-                    affordabilityLine(title: "Food (per day):", amountUSD: food)
+                    affordabilityLine(title: String(localized: "country_detail.affordability.food_per_day"), amountUSD: food)
                 }
 
                 if let activities = country.dailySpendActivitiesUsd {
-                    affordabilityLine(title: "Activities (per day):", amountUSD: activities)
+                    affordabilityLine(title: String(localized: "country_detail.affordability.activities_per_day"), amountUSD: activities)
                 }
             }
             .font(.footnote)

@@ -346,11 +346,11 @@ struct CustomWeightsView: View {
         } label: {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(String(localized: "Go someplace new!"))
+                    Text("discovery.weights.hide_visited.title")
                         .font(.headline)
                         .foregroundStyle(.black)
 
-                    Text(String(localized: "Hide countries you've already visited across Discovery so the list, map, and seasonality views focus on new places."))
+                    Text("discovery.weights.hide_visited.subtitle")
                         .font(.subheadline)
                         .foregroundStyle(Color.black.opacity(0.6))
                         .multilineTextAlignment(.leading)

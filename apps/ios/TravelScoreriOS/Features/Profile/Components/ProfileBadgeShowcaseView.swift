@@ -41,8 +41,8 @@ enum ProfileBadgeCatalog {
                     emoji: "👶",
                     assetNames: [],
                     labelText: nil,
-                    title: "Travel Newbie",
-                    subtitle: "Visited your second country",
+                    title: String(localized: "profile.badges.travel_newbie"),
+                    subtitle: String(localized: "profile.badges.visited_second_country"),
                     tint: Color(red: 0.89, green: 0.55, blue: 0.26)
                 )
             )
@@ -55,8 +55,18 @@ enum ProfileBadgeCatalog {
                     emoji: milestoneEmoji(for: threshold),
                     assetNames: [],
                     labelText: milestoneLabel(for: threshold),
-                    title: threshold == 100 ? "100 Club" : "\(threshold) Countries",
-                    subtitle: "Visited \(threshold) countries",
+                    title: threshold == 100
+                        ? String(localized: "profile.badges.hundred_club")
+                        : String(
+                            format: String(localized: "profile.badges.countries_count_format"),
+                            locale: AppDisplayLocale.current,
+                            threshold
+                        ),
+                    subtitle: String(
+                        format: String(localized: "profile.badges.visited_countries_format"),
+                        locale: AppDisplayLocale.current,
+                        threshold
+                    ),
                     tint: milestoneTint(for: threshold)
                 )
             )
@@ -73,8 +83,8 @@ enum ProfileBadgeCatalog {
                     emoji: "🌍",
                     assetNames: [],
                     labelText: nil,
-                    title: "Every Country",
-                    subtitle: "Visited every country in the app",
+                    title: String(localized: "profile.badges.every_country"),
+                    subtitle: String(localized: "profile.badges.visited_every_country"),
                     tint: Color(red: 0.18, green: 0.52, blue: 0.39)
                 )
             )
@@ -128,7 +138,11 @@ enum ProfileBadgeCatalog {
                     assetNames: presentation.assetNames,
                     labelText: nil,
                     title: presentation.title,
-                    subtitle: "Been to \(continent)",
+                    subtitle: String(
+                        format: String(localized: "profile.badges.been_to_continent_format"),
+                        locale: AppDisplayLocale.current,
+                        localizedContinentName(continent)
+                    ),
                     tint: presentation.tint
                 )
             }
@@ -168,6 +182,27 @@ enum ProfileBadgeCatalog {
             return "North America"
         default:
             return nil
+        }
+    }
+
+    private static func localizedContinentName(_ continent: String) -> String {
+        switch continent {
+        case "Africa":
+            return String(localized: "continent.africa")
+        case "Antarctica":
+            return String(localized: "continent.antarctica")
+        case "Asia":
+            return String(localized: "continent.asia")
+        case "Europe":
+            return String(localized: "continent.europe")
+        case "Oceania":
+            return String(localized: "continent.oceania")
+        case "North America":
+            return String(localized: "continent.north_america")
+        case "South America":
+            return String(localized: "continent.south_america")
+        default:
+            return continent
         }
     }
 
@@ -239,35 +274,35 @@ struct ProfileBadgeShowcaseView: View {
         switch visitedCountryCount {
         case ..<5:
             return ProfileTravelRank(
-                title: "Travel Newbie",
+                title: String(localized: "profile.badges.travel_newbie"),
                 start: 0,
                 nextThreshold: 5,
                 tint: Color(red: 0.89, green: 0.55, blue: 0.26)
             )
         case 5..<20:
             return ProfileTravelRank(
-                title: "Passport Starter",
+                title: String(localized: "profile.badges.passport_starter"),
                 start: 5,
                 nextThreshold: 20,
                 tint: Color(red: 0.84, green: 0.63, blue: 0.26)
             )
         case 20..<40:
             return ProfileTravelRank(
-                title: "Frequent Flyer",
+                title: String(localized: "profile.badges.frequent_flyer"),
                 start: 20,
                 nextThreshold: 40,
                 tint: Color(red: 0.25, green: 0.55, blue: 0.87)
             )
         case 40..<60:
             return ProfileTravelRank(
-                title: "World Hopper",
+                title: String(localized: "profile.badges.world_hopper"),
                 start: 40,
                 nextThreshold: 60,
                 tint: Color(red: 0.21, green: 0.59, blue: 0.53)
             )
         case 60..<100:
             return ProfileTravelRank(
-                title: "Global Explorer",
+                title: String(localized: "profile.badges.global_explorer"),
                 start: 60,
                 nextThreshold: 100,
                 tint: Color(red: 0.48, green: 0.39, blue: 0.84)

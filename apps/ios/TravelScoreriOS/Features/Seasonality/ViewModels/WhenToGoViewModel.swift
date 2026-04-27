@@ -122,26 +122,26 @@ final class WhenToGoViewModel: ObservableObject {
         return [
             SeasonSection(
                 seasonType: .peak,
-                title: "Peak season",
-                note: "Best weather and overall conditions. Expect the busiest stretch, higher prices, and the strongest all-around travel scores.",
+                title: String(localized: "seasonality.section.peak.title"),
+                note: String(localized: "seasonality.section.peak.note"),
                 countries: sortedCountries(in: grouped[.peak] ?? [])
             ),
             SeasonSection(
                 seasonType: .good,
-                title: "Good season",
-                note: "Strong month to go with reliable conditions, but usually a little less perfect than the absolute best window.",
+                title: String(localized: "seasonality.section.good.title"),
+                note: String(localized: "seasonality.section.good.note"),
                 countries: sortedCountries(in: grouped[.good] ?? [])
             ),
             SeasonSection(
                 seasonType: .shoulder,
-                title: "Shoulder season",
-                note: "A balanced middle ground. You may trade some ideal weather for lighter crowds, lower prices, or a more flexible trip.",
+                title: String(localized: "seasonality.section.shoulder.title"),
+                note: String(localized: "seasonality.section.shoulder.note"),
                 countries: sortedCountries(in: grouped[.shoulder] ?? [])
             ),
             SeasonSection(
                 seasonType: .poor,
-                title: "Rough season",
-                note: "This month is usually harder for travel here. Weather, crowds, closures, or value may all work against the trip.",
+                title: String(localized: "seasonality.section.rough.title"),
+                note: String(localized: "seasonality.section.rough.note"),
                 countries: sortedCountries(in: grouped[.poor] ?? [])
             ),
         ]
