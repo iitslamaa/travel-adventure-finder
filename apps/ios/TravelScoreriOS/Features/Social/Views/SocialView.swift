@@ -62,13 +62,13 @@ struct SocialView: View {
     private func socialHorizontalInset(for width: CGFloat) -> CGFloat {
         switch width {
         case ..<390:
-            return 24
+            return 14
         case ..<430:
-            return 22
+            return 12
         case ..<520:
-            return 22
+            return 14
         default:
-            return max((width - 720) / 2, 28)
+            return max((width - 760) / 2, 18)
         }
     }
 
