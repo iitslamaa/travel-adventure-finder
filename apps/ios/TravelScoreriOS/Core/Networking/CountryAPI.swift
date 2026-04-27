@@ -9,7 +9,11 @@ import Foundation
 import Supabase
 
 private enum CountryAPIDebugLog {
-    static func message(_ text: String) {}
+    static func message(_ text: String) {
+        #if DEBUG
+        print("[CountryAPI] \(text)")
+        #endif
+    }
 }
 
 enum CountryAPI {
@@ -204,7 +208,7 @@ extension CountryAPI {
                 visaType: dto.visaType,
                 visaAllowedDays: dto.visaAllowedDays,
                 visaFeeUsd: dto.visaFeeUsd,
-                visaNotes: nil,
+                visaNotes: dto.visaNotes,
                 visaSourceUrl: dto.visaSourceUrl,
                 dailySpendTotalUsd: dto.dailySpendTotalUsd,
                 dailySpendHotelUsd: dto.dailySpendHotelUsd,

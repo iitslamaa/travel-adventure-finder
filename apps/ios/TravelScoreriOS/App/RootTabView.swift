@@ -151,8 +151,6 @@ struct RootTabView: View {
     @EnvironmentObject private var currencyPreferenceStore: CurrencyPreferenceStore
     @Environment(\.scenePhase) private var scenePhase
 
-    @State private var countries: [Country] = []
-    @State private var hasLoadedCountries = false
     @StateObject private var socialNav = SocialNavigationController()
     @StateObject private var sharedTripInbox = SharedTripInboxStore()
 
@@ -271,26 +269,14 @@ struct RootTabView: View {
             }
         }
         .task {
+            await Task.yield()
             await sharedTripInbox.updateRealtimeConnection(isActive: scenePhase == .active)
+            await sharedTripInbox.refresh()
         }
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.light, for: .navigationBar)
         .task {
-            guard !hasLoadedCountries else { return }
-            hasLoadedCountries = true
-
-            if let cached = CountryAPI.loadCachedCountries() {
-                countries = cached
-            }
-
-            if countries.isEmpty {
-                do {
-                    countries = try await CountryAPI.fetchCountries()
-                } catch {
-                }
-            }
-        }
-        .task {
+            await Task.yield()
             await currencyPreferenceStore.refreshRatesIfNeeded()
         }
     }

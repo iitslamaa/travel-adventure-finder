@@ -22,8 +22,6 @@
 		170C21342F4790E00090BA78 /* CollapsibleCountrySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D02F4790E00090BA78 /* CollapsibleCountrySection.swift */; };
 		170C21352F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D12F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift */; };
 		170C21362F4790E00090BA78 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D22F4790E00090BA78 /* StatCard.swift */; };
-		E2A100022FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A100012FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift */; };
-		E2A100042FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A100032FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift */; };
 		170C21372F4790E00090BA78 /* ProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D42F4790E00090BA78 /* ProfileHeaderView.swift */; };
 		170C21382F4790E00090BA78 /* ProfileInfoSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D52F4790E00090BA78 /* ProfileInfoSection.swift */; };
 		170C21392F4790E00090BA78 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170C20D62F4790E00090BA78 /* ProfileView.swift */; };
@@ -159,6 +157,8 @@
 		E1B200072FA0000100ABCDEF /* SocialActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B200022FA0000100ABCDEF /* SocialActivityService.swift */; };
 		E1B200082FA0000100ABCDEF /* SocialFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B200032FA0000100ABCDEF /* SocialFeedViewModel.swift */; };
 		E1B200092FA0000100ABCDEF /* SocialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B200042FA0000100ABCDEF /* SocialView.swift */; };
+		E2A100022FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A100012FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift */; };
+		E2A100042FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A100032FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -177,8 +177,6 @@
 		170C20D02F4790E00090BA78 /* CollapsibleCountrySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollapsibleCountrySection.swift; sourceTree = "<group>"; };
 		170C20D12F4790E00090BA78 /* ScrollOffsetPreferenceKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollOffsetPreferenceKey.swift; sourceTree = "<group>"; };
 		170C20D22F4790E00090BA78 /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
-		E2A100012FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgeShowcaseView.swift; sourceTree = "<group>"; };
-		E2A100032FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileTravelSnapshotCard.swift; sourceTree = "<group>"; };
 		170C20D42F4790E00090BA78 /* ProfileHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileHeaderView.swift; sourceTree = "<group>"; };
 		170C20D52F4790E00090BA78 /* ProfileInfoSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileInfoSection.swift; sourceTree = "<group>"; };
 		170C20D62F4790E00090BA78 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
@@ -313,6 +311,8 @@
 		E1B200022FA0000100ABCDEF /* SocialActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialActivityService.swift; sourceTree = "<group>"; };
 		E1B200032FA0000100ABCDEF /* SocialFeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialFeedViewModel.swift; sourceTree = "<group>"; };
 		E1B200042FA0000100ABCDEF /* SocialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialView.swift; sourceTree = "<group>"; };
+		E2A100012FB1000100A1B2C3 /* ProfileBadgeShowcaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgeShowcaseView.swift; sourceTree = "<group>"; };
+		E2A100032FB1000100A1B2C3 /* ProfileTravelSnapshotCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileTravelSnapshotCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1443,7 +1443,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1479,7 +1479,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.iitslamaa.TravelScoreriOS;
 				PRODUCT_NAME = "Travel Adventure Finder";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

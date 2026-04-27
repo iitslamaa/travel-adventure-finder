@@ -108,6 +108,71 @@ private struct ResolvedProfileIdentity {
     let avatarURL: String?
 }
 
+struct ProfileAvatarSnapshot: Codable, Sendable {
+    let id: UUID
+    let displayName: String
+    let username: String
+    let avatarUrl: String?
+}
+
+private struct ProfileAvatarSnapshotRow: Decodable {
+    let id: UUID
+    let username: String?
+    let fullName: String?
+    let firstName: String?
+    let lastName: String?
+    let avatarUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case username
+        case fullName = "full_name"
+        case firstName = "first_name"
+        case lastName = "last_name"
+        case avatarUrl = "avatar_url"
+    }
+
+    var snapshot: ProfileAvatarSnapshot {
+        let resolvedUsername = username?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? "traveler"
+        let resolvedFullName = ProfileAvatarSnapshotRow.combinedName(
+            firstName: firstName,
+            lastName: lastName,
+            fallback: fullName ?? ""
+        )
+        let displayName: String = {
+            if let firstName = firstName?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty {
+                return firstName
+            }
+
+            if !resolvedFullName.isEmpty {
+                return resolvedFullName.split(separator: " ").first.map(String.init) ?? resolvedFullName
+            }
+
+            return resolvedUsername
+        }()
+
+        return ProfileAvatarSnapshot(
+            id: id,
+            displayName: displayName,
+            username: resolvedUsername,
+            avatarUrl: avatarUrl?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        )
+    }
+
+    private static func combinedName(firstName: String?, lastName: String?, fallback: String) -> String {
+        let pieces = [
+            firstName?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
+            lastName?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        ].compactMap { $0 }
+
+        if !pieces.isEmpty {
+            return pieces.joined(separator: " ")
+        }
+
+        return fallback.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 private struct PassportPreferencesRow: Codable {
     let userId: UUID
     let nationalityCountryCodes: [String]
@@ -229,6 +294,139 @@ final class ProfileService {
         return persistedProfile
     }
 
+    func memoryCachedProfile(userId: UUID) -> Profile? {
+        guard let cachedProfile = Self.profileCache[userId] else {
+            SocialFeedDebug.log("profile.service.cache.profile.memory_miss user=\(userId.uuidString)")
+            return nil
+        }
+
+        SocialFeedDebug.log(
+            "profile.service.cache.profile.memory_hit user=\(userId.uuidString) username=\(logField(cachedProfile.username)) languages=\(cachedProfile.languages.count)"
+        )
+        return cachedProfile
+    }
+
+    func persistedCachedProfile(userId: UUID) async -> Profile? {
+        if let cachedProfile = Self.profileCache[userId] {
+            SocialFeedDebug.log(
+                "profile.service.cache.profile.memory_hit user=\(userId.uuidString) username=\(logField(cachedProfile.username)) languages=\(cachedProfile.languages.count)"
+            )
+            return cachedProfile
+        }
+
+        let key = Self.profileCacheKey(for: userId)
+        let cachedData: Data? = await Task.detached(priority: .utility) {
+            UserDefaults.standard.data(forKey: key)
+        }.value
+        guard let cachedData else {
+            SocialFeedDebug.log("profile.service.cache.profile.async_disk_miss user=\(userId.uuidString)")
+            return nil
+        }
+
+        let persistedProfile: Profile
+        do {
+            persistedProfile = try JSONDecoder().decode(Profile.self, from: cachedData)
+        } catch {
+            Self.removeCachedValue(forKey: key)
+            SocialFeedDebug.log("profile.service.cache.profile.async_disk_decode_error user=\(userId.uuidString) error=\(SocialFeedDebug.describe(error))")
+            return nil
+        }
+
+        Self.profileCache[userId] = persistedProfile
+        SocialFeedDebug.log(
+            "profile.service.cache.profile.async_disk_hit user=\(userId.uuidString) username=\(logField(persistedProfile.username)) languages=\(persistedProfile.languages.count)"
+        )
+        return persistedProfile
+    }
+
+    func cachedAvatarSnapshot(userId: UUID) async -> ProfileAvatarSnapshot? {
+        cachedAvatarSnapshotIfAvailable(userId: userId)
+    }
+
+    func fetchAvatarSnapshot(userId: UUID, useCache: Bool = true) async throws -> ProfileAvatarSnapshot {
+        let startedAt = Date()
+        SocialFeedDebug.log(
+            "profile.service.avatar_snapshot.fetch.start user=\(userId.uuidString) use_cache=\(useCache)"
+        )
+
+        if useCache, let cached = cachedAvatarSnapshotIfAvailable(userId: userId) {
+            SocialFeedDebug.log(
+                "profile.service.avatar_snapshot.fetch.cache_hit user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) username=\(logField(cached.username)) avatar=\(logField(cached.avatarUrl))"
+            )
+            return cached
+        }
+
+        let response: PostgrestResponse<[ProfileAvatarSnapshotRow]> = try await supabase.client
+            .from("profiles")
+            .select("id,username,full_name,first_name,last_name,avatar_url")
+            .eq("id", value: userId.uuidString)
+            .limit(1)
+            .execute()
+
+        guard let snapshot = response.value.first?.snapshot else {
+            SocialFeedDebug.log(
+                "profile.service.avatar_snapshot.fetch.empty user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            throw NSError(
+                domain: "ProfileService",
+                code: 404,
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "profile.errors.not_found")]
+            )
+        }
+
+        Self.persistAvatarSnapshot(snapshot)
+        SocialFeedDebug.log(
+            "profile.service.avatar_snapshot.fetch.success user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) username=\(logField(snapshot.username)) avatar=\(logField(snapshot.avatarUrl))"
+        )
+        return snapshot
+    }
+
+    func cachedAvatarSnapshotIfAvailable(userId: UUID) -> ProfileAvatarSnapshot? {
+        let startedAt = Date()
+        SocialFeedDebug.log("profile.service.cache.avatar.start user=\(userId.uuidString)")
+
+        if let cachedProfile = Self.profileCache[userId] {
+            let snapshot = Self.avatarSnapshot(from: cachedProfile)
+            SocialFeedDebug.log(
+                "profile.service.cache.avatar.memory_hit user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) username=\(logField(snapshot.username)) avatar=\(logField(snapshot.avatarUrl))"
+            )
+            return snapshot
+        }
+        SocialFeedDebug.log("profile.service.cache.avatar.memory_miss user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))")
+
+        let url = Self.avatarSnapshotURL(for: userId)
+        SocialFeedDebug.log("profile.service.cache.avatar.file_read.start user=\(userId.uuidString) path=\(url.path)")
+        let snapshot: ProfileAvatarSnapshot?
+        if let data = try? Data(contentsOf: url) {
+            SocialFeedDebug.log("profile.service.cache.avatar.file_read.data user=\(userId.uuidString) bytes=\(data.count) duration=\(SocialFeedDebug.duration(since: startedAt))")
+            snapshot = try? JSONDecoder().decode(ProfileAvatarSnapshot.self, from: data)
+        } else {
+            snapshot = nil
+        }
+
+        guard let snapshot else {
+            SocialFeedDebug.log("profile.service.cache.avatar.file_miss user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))")
+            return nil
+        }
+
+        SocialFeedDebug.log(
+            "profile.service.cache.avatar.file_hit user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) username=\(logField(snapshot.username)) avatar=\(logField(snapshot.avatarUrl))"
+        )
+        return snapshot
+    }
+
+    func memoryCachedPassportPreferences(userId: UUID) -> PassportPreferences? {
+        guard let cached = Self.passportPreferencesCache[userId] else {
+            SocialFeedDebug.log("profile.service.cache.passport.memory_miss user=\(userId.uuidString)")
+            return nil
+        }
+
+        SocialFeedDebug.log(
+            "profile.service.cache.passport.memory_hit user=\(userId.uuidString) nationalities=\(cached.nationalityCountryCodes.count)"
+        )
+        return cached
+    }
+
     func warmProfileCacheIfNeeded(
         userId: UUID,
         defaultUsername: String? = nil,
@@ -340,34 +538,76 @@ final class ProfileService {
     // MARK: - Fetch
 
     func fetchMyProfile(userId: UUID, useCache: Bool = true) async throws -> Profile {
+        let requestID = String(UUID().uuidString.prefix(8))
+        let entryStartedAt = Date()
+        SocialFeedDebug.log(
+            "profile.service.fetch.enter request=\(requestID) user=\(userId.uuidString) use_cache=\(useCache) current_user=\(supabase.currentUserId?.uuidString ?? "nil")"
+        )
+
         if useCache, let cachedProfile = Self.profileCache[userId] {
             SocialFeedDebug.log(
-                "profile.service.fetch.cache_hit user=\(userId.uuidString) " +
+                "profile.service.fetch.cache_hit request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: entryStartedAt)) " +
                 "username=\(logField(cachedProfile.username)) avatar=\(logField(cachedProfile.avatarUrl)) " +
                 profileDetailDebugSummary(cachedProfile)
             )
             return cachedProfile
         }
+        SocialFeedDebug.log(
+            "profile.service.fetch.memory_cache.\(useCache ? "miss" : "skipped") request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: entryStartedAt))"
+        )
 
-        if useCache, let inFlightFetch = Self.inFlightProfileFetches[userId] {
-            SocialFeedDebug.log("profile.service.fetch.in_flight_hit user=\(userId.uuidString)")
+        if useCache, let persistedProfile = await persistedCachedProfile(userId: userId) {
+            SocialFeedDebug.log(
+                "profile.service.fetch.persisted_cache_hit request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: entryStartedAt)) " +
+                "username=\(logField(persistedProfile.username)) avatar=\(logField(persistedProfile.avatarUrl)) " +
+                profileDetailDebugSummary(persistedProfile)
+            )
+            return persistedProfile
+        }
+        SocialFeedDebug.log(
+            "profile.service.fetch.persisted_cache.\(useCache ? "miss" : "skipped") request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: entryStartedAt))"
+        )
+
+        if let inFlightFetch = Self.inFlightProfileFetches[userId] {
+            SocialFeedDebug.log(
+                "profile.service.fetch.in_flight_hit request=\(requestID) user=\(userId.uuidString) use_cache=\(useCache) duration=\(SocialFeedDebug.duration(since: entryStartedAt))"
+            )
             return try await inFlightFetch.value
         }
+        SocialFeedDebug.log(
+            "profile.service.fetch.in_flight_miss request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: entryStartedAt))"
+        )
 
         let startedAt = Date()
         let client = supabase.client
         SocialFeedDebug.log(
-            "profile.service.fetch.network.start user=\(userId.uuidString) use_cache=\(useCache) current_user=\(supabase.currentUserId?.uuidString ?? "nil") table=profiles"
+            "profile.service.fetch.network.start request=\(requestID) user=\(userId.uuidString) use_cache=\(useCache) current_user=\(supabase.currentUserId?.uuidString ?? "nil") table=profiles"
         )
         let fetchTask = Task.detached(priority: .userInitiated) {
+            let executeStartedAt = Date()
+            await MainActor.run {
+                SocialFeedDebug.log(
+                    "profile.service.fetch.network.execute.before request=\(requestID) user=\(userId.uuidString) table=profiles columns=* limit=1"
+                )
+            }
             let response: PostgrestResponse<[Profile]> = try await client
                 .from("profiles")
                 .select()
                 .eq("id", value: userId.uuidString)
                 .limit(1)
                 .execute()
+            await MainActor.run {
+                SocialFeedDebug.log(
+                    "profile.service.fetch.network.execute.after request=\(requestID) user=\(userId.uuidString) rows=\(response.value.count) duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+                )
+            }
 
             guard let profile = response.value.first else {
+                await MainActor.run {
+                    SocialFeedDebug.log(
+                        "profile.service.fetch.network.execute.empty request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+                    )
+                }
                 throw NSError(
                     domain: "ProfileService",
                     code: 404,
@@ -379,16 +619,38 @@ final class ProfileService {
         }
 
         Self.inFlightProfileFetches[userId] = fetchTask
+        SocialFeedDebug.log(
+            "profile.service.fetch.in_flight_store request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+        )
 
         do {
+            SocialFeedDebug.log(
+                "profile.service.fetch.await.start request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             let profile = try await fetchTask.value
+            SocialFeedDebug.log(
+                "profile.service.fetch.await.end request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) avatar=\(logField(profile.avatarUrl))"
+            )
             Self.profileCache[userId] = profile
+            SocialFeedDebug.log(
+                "profile.service.fetch.memory_store request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             Self.persistCachedValue(profile, forKey: Self.profileCacheKey(for: userId))
+            SocialFeedDebug.log(
+                "profile.service.fetch.profile_disk_store request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            Self.persistAvatarSnapshot(profile)
+            SocialFeedDebug.log(
+                "profile.service.fetch.avatar_snapshot_store request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             if Self.inFlightProfileFetches[userId] == fetchTask {
                 Self.inFlightProfileFetches[userId] = nil
+                SocialFeedDebug.log(
+                    "profile.service.fetch.in_flight_clear request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
             }
             SocialFeedDebug.log(
-                "profile.service.fetch.network.success user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
+                "profile.service.fetch.network.success request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
                 "username=\(logField(profile.username)) avatar=\(logField(profile.avatarUrl)) " +
                 profileDetailDebugSummary(profile)
             )
@@ -396,9 +658,12 @@ final class ProfileService {
         } catch {
             if Self.inFlightProfileFetches[userId] == fetchTask {
                 Self.inFlightProfileFetches[userId] = nil
+                SocialFeedDebug.log(
+                    "profile.service.fetch.in_flight_clear_after_error request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
             }
             SocialFeedDebug.log(
-                "profile.service.fetch.network.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
+                "profile.service.fetch.network.error request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) " +
                 "error=\(SocialFeedDebug.describe(error))"
             )
             throw error
@@ -608,6 +873,44 @@ final class ProfileService {
         )
         Self.profileCache[profile.id] = profile
         Self.persistCachedValue(profile, forKey: Self.profileCacheKey(for: profile.id))
+        Self.persistAvatarSnapshot(profile)
+    }
+
+    private static func avatarSnapshot(from profile: Profile) -> ProfileAvatarSnapshot {
+        ProfileAvatarSnapshot(
+            id: profile.id,
+            displayName: profile.tripDisplayName,
+            username: profile.username,
+            avatarUrl: profile.avatarUrl
+        )
+    }
+
+    private static func persistAvatarSnapshot(_ profile: Profile) {
+        let snapshot = avatarSnapshot(from: profile)
+        persistAvatarSnapshot(snapshot)
+    }
+
+    private static func persistAvatarSnapshot(_ snapshot: ProfileAvatarSnapshot) {
+        let url = avatarSnapshotURL(for: snapshot.id)
+        do {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            let data = try JSONEncoder().encode(snapshot)
+            try data.write(to: url, options: [.atomic])
+        } catch {
+            SocialFeedDebug.log("profile.service.cache.avatar.file_write_error user=\(snapshot.id.uuidString) error=\(SocialFeedDebug.describe(error))")
+        }
+    }
+
+    private static func avatarSnapshotURL(for userId: UUID) -> URL {
+        let baseURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        return baseURL
+            .appendingPathComponent("TravelAF", isDirectory: true)
+            .appendingPathComponent("ProfileAvatarSnapshots", isDirectory: true)
+            .appendingPathComponent("\(userId.uuidString).json", isDirectory: false)
     }
 
     private func profileDetailDebugSummary(_ profile: Profile) -> String {

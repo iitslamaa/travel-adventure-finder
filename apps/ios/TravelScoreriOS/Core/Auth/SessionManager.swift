@@ -39,10 +39,7 @@ final class SessionManager: ObservableObject {
     private var guestTraveledSnapshot: Set<String> = []
 
     private var hasMergedGuestData = false
-    private var didEnsureProfile = false
-
     private var syncTask: Task<Void, Never>?
-    private var ensureProfileTask: Task<Void, Never>?
     private var syncingUserId: UUID?
 
     // MARK: - Initializers
@@ -57,9 +54,14 @@ final class SessionManager: ObservableObject {
         self.traveledStore = traveledStore
         self.listSync = ListSyncService(supabase: supabase)
 
+        SocialFeedDebug.log("launch.session.init instance=\(instanceId.uuidString)")
+
         // Start Supabase auth listener (non-blocking)
         Task {
+            let startedAt = Date()
+            SocialFeedDebug.log("launch.session.init_auth_listener_task.start instance=\(instanceId.uuidString)")
             await supabase.startAuthListener()
+            SocialFeedDebug.log("launch.session.init_auth_listener_task.end instance=\(instanceId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))")
         }
 
         observeGuestListSnapshots()
@@ -91,12 +93,9 @@ final class SessionManager: ObservableObject {
         bucketListStore.replace(with: guestBucketSnapshot)
         traveledStore.replace(with: guestTraveledSnapshot)
         hasMergedGuestData = false
-        didEnsureProfile = false
         syncTask?.cancel()
         syncTask = nil
         syncingUserId = nil
-        ensureProfileTask?.cancel()
-        ensureProfileTask = nil
         
         bumpAuthScreen()
     }
@@ -114,12 +113,9 @@ final class SessionManager: ObservableObject {
         
         if userId != nil { userId = nil }
         hasMergedGuestData = false
-        didEnsureProfile = false
         syncTask?.cancel()
         syncTask = nil
         syncingUserId = nil
-        ensureProfileTask?.cancel()
-        ensureProfileTask = nil
         bumpAuthScreen()
     }
 
@@ -157,7 +153,6 @@ final class SessionManager: ObservableObject {
                     if isAuthenticated != true { isAuthenticated = true }
                     if userId != session.user.id { userId = session.user.id }
 
-                    ensureProfileEventually(for: session.user.id)
                     synchronizeListsIfNeeded(for: session.user.id)
                 }
             } else {
@@ -165,7 +160,6 @@ final class SessionManager: ObservableObject {
                 if isAuthenticated != false { isAuthenticated = false }
                 if userId != nil { userId = nil }
                 hasMergedGuestData = false
-                didEnsureProfile = false
                 syncingUserId = nil
             }
         } catch {
@@ -174,47 +168,6 @@ final class SessionManager: ObservableObject {
 
         if hasResolvedInitialAuthState != true {
             hasResolvedInitialAuthState = true
-        }
-    }
-
-    // MARK: - Profile bring-up
-
-    /// Ensures a `profiles` row exists for the authenticated user.
-    /// On some devices, immediately after signup the `auth.users` row may not be visible yet,
-    /// which causes `profiles_id_fkey` (23503). We retry with backoff.
-    private func ensureProfileEventually(for userId: UUID) {
-        guard !didEnsureProfile else { return }
-        didEnsureProfile = true
-
-        ensureProfileTask?.cancel()
-        ensureProfileTask = Task {
-            let delays: [UInt64] = [500_000_000, 1_000_000_000, 2_000_000_000, 4_000_000_000] // 0.5s, 1s, 2s, 4s
-
-            for delay in delays {
-                try? await Task.sleep(nanoseconds: delay)
-
-                // Re-hydrate session in case auth state is still propagating
-                _ = try? await supabase.fetchCurrentSession()
-
-                do {
-                    let profileService = ProfileService(supabase: supabase)
-                    try await profileService.ensureProfileExists(userId: userId)
-
-                    ensureProfileTask = nil
-                    return
-
-                } catch {
-                    // Keep retrying on FK race; otherwise bail.
-                    if let pg = error as? PostgrestError, pg.code == "23503" {
-                        continue
-                    }
-                    return
-                }
-            }
-
-            // If we exhausted retries, allow a later auth refresh to try again.
-            didEnsureProfile = false
-            ensureProfileTask = nil
         }
     }
 
@@ -289,6 +242,8 @@ final class SessionManager: ObservableObject {
 
         syncTask = Task { [weak self] in
             guard let self else { return }
+            let startedAt = Date()
+            SocialFeedDebug.log("launch.session.list_sync.start user=\(userId.uuidString)")
 
             do {
                 async let bucketTask = self.listSync.fetchBucketList(userId: userId)
@@ -310,9 +265,25 @@ final class SessionManager: ObservableObject {
 
                 if Task.isCancelled { return }
 
-                self.bucketListStore.replace(with: bucketIds)
-                self.traveledStore.replace(with: traveledIds)
+                if self.bucketListStore.ids == bucketIds {
+                    SocialFeedDebug.log("launch.session.list_sync.bucket.skip user=\(userId.uuidString) reason=unchanged")
+                } else {
+                    self.bucketListStore.replace(with: bucketIds)
+                }
+
+                if self.traveledStore.ids == traveledIds {
+                    SocialFeedDebug.log("launch.session.list_sync.traveled.skip user=\(userId.uuidString) reason=unchanged")
+                } else {
+                    self.traveledStore.replace(with: traveledIds)
+                }
+
+                SocialFeedDebug.log(
+                    "launch.session.list_sync.end user=\(userId.uuidString) bucket=\(bucketIds.count) traveled=\(traveledIds.count) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
             } catch {
+                SocialFeedDebug.log(
+                    "launch.session.list_sync.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+                )
             }
 
             if !Task.isCancelled, self.syncingUserId == userId {
@@ -345,6 +316,7 @@ final class SessionManager: ObservableObject {
     }
 
     private func startAuthObservation() {
+        SocialFeedDebug.log("launch.session.auth_observation.start instance=\(instanceId.uuidString)")
         refreshFromCurrentSession(source: "initial")
         listenForAuthChanges()
     }
@@ -353,6 +325,25 @@ final class SessionManager: ObservableObject {
 
     private func refreshFromCurrentSession(source: String) {
         Task {
+            let startedAt = Date()
+            let watchdog = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                guard let self, !Task.isCancelled else { return }
+                SocialFeedDebug.log(
+                    "launch.session.refresh.watchdog source=\(source) instance=\(self.instanceId.uuidString) unresolved=\(!self.hasResolvedInitialAuthState) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
+            }
+            defer {
+                watchdog.cancel()
+                SocialFeedDebug.log(
+                    "launch.session.refresh.end source=\(source) instance=\(self.instanceId.uuidString) authenticated=\(self.isAuthenticated) user=\(self.userId?.uuidString ?? "nil") resolved=\(self.hasResolvedInitialAuthState) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
+            }
+
+            SocialFeedDebug.log(
+                "launch.session.refresh.start source=\(source) instance=\(self.instanceId.uuidString) suppressed=\(self.isAuthSuppressed) resolved=\(self.hasResolvedInitialAuthState)"
+            )
+
             if self.isAuthSuppressed {
                 let session = try? await supabase.fetchCurrentSession()
                 if let session, !session.isExpired {
@@ -375,14 +366,12 @@ final class SessionManager: ObservableObject {
                     if isAuthenticated != true { isAuthenticated = true }
                     if userId != session.user.id { userId = session.user.id }
 
-                    ensureProfileEventually(for: session.user.id)
                     synchronizeListsIfNeeded(for: session.user.id)
                 } else {
                     
                     if isAuthenticated != false { isAuthenticated = false }
                     if userId != nil { userId = nil }
                     hasMergedGuestData = false
-                    didEnsureProfile = false
                     syncingUserId = nil
                 }
             } catch {
