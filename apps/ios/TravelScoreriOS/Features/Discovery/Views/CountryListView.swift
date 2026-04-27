@@ -41,20 +41,14 @@ struct CountryListView: View {
 
     @State private var visibleCountries: [Country] = []
     @State private var selectedCountry: Country?
+    @State private var toast: CountryListToast?
     @FocusState private var isSearchFocused: Bool
 
-    private enum QuickConfirm {
-        case bucket
-        case visited
-    }
-
-    @State private var quickConfirmByCountryId: [String: QuickConfirm] = [:]
-
-    private func flashConfirm(_ type: QuickConfirm, for id: String) {
-        quickConfirmByCountryId[id] = type
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            if quickConfirmByCountryId[id] == type {
-                quickConfirmByCountryId[id] = nil
+    private func showToast(_ toast: CountryListToast) {
+        self.toast = toast
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+            if self.toast?.id == toast.id {
+                self.toast = nil
             }
         }
     }
@@ -129,6 +123,15 @@ struct CountryListView: View {
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .stroke(Color.black.opacity(0.06), lineWidth: 1)
         )
+        .overlay(alignment: .top) {
+            if let toast {
+                CountryListToastView(toast: toast)
+                    .padding(.horizontal, 18)
+                    .padding(.top, showsSearchBar ? 64 : 18)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.28, dampingFraction: 0.86), value: toast?.id)
         .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
         .padding(.horizontal, 16)
         .padding(.bottom, floatingTabBarInset + 10)
@@ -184,20 +187,31 @@ struct CountryListView: View {
                 country: country,
                 isBucketed: bucketListStore.ids.contains(country.id),
                 isVisited: traveledStore.ids.contains(country.id),
-                showConfirm: quickConfirmByCountryId[country.id] != nil,
                 onTap: {
                     selectedCountry = country
                 },
                 onBucket: {
                     Task {
+                        let wasBucketed = bucketListStore.ids.contains(country.id)
                         await toggleBucket(country.id)
-                        flashConfirm(.bucket, for: country.id)
+                        showToast(
+                            .bucket(
+                                countryName: country.localizedDisplayName,
+                                didAdd: !wasBucketed
+                            )
+                        )
                     }
                 },
                 onVisited: {
                     Task {
+                        let wasVisited = traveledStore.ids.contains(country.id)
                         await toggleVisited(country.id)
-                        flashConfirm(.visited, for: country.id)
+                        showToast(
+                            .visited(
+                                countryName: country.localizedDisplayName,
+                                didAdd: !wasVisited
+                            )
+                        )
                     }
                 }
             )
@@ -242,6 +256,71 @@ struct CountryListView: View {
         } else {
             traveledStore.toggle(countryId)
         }
+    }
+}
+
+private struct CountryListToast: Identifiable {
+    let id = UUID()
+    let message: String
+    let systemImage: String
+    let tint: Color
+
+    static func bucket(countryName: String, didAdd: Bool) -> CountryListToast {
+        let key = didAdd
+            ? "discovery.country_list.toast.bucket_added_format"
+            : "discovery.country_list.toast.bucket_removed_format"
+        return CountryListToast(
+            message: String(format: String(localized: String.LocalizationValue(key)), locale: AppDisplayLocale.current, countryName),
+            systemImage: didAdd ? "bookmark.fill" : "bookmark.slash",
+            tint: .yellow
+        )
+    }
+
+    static func visited(countryName: String, didAdd: Bool) -> CountryListToast {
+        let key = didAdd
+            ? "discovery.country_list.toast.visited_added_format"
+            : "discovery.country_list.toast.visited_removed_format"
+        return CountryListToast(
+            message: String(format: String(localized: String.LocalizationValue(key)), locale: AppDisplayLocale.current, countryName),
+            systemImage: didAdd ? "checkmark.circle.fill" : "minus.circle",
+            tint: .green
+        )
+    }
+}
+
+private struct CountryListToastView: View {
+    let toast: CountryListToast
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: toast.systemImage)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.black.opacity(0.78))
+                .frame(width: 26, height: 26)
+                .background(
+                    Circle()
+                        .fill(toast.tint.opacity(0.28))
+                )
+
+            Text(toast.message)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.black.opacity(0.82))
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            Capsule(style: .continuous)
+                .fill(Color.white.opacity(0.96))
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(Color.black.opacity(0.08), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
     }
 }
 
@@ -300,7 +379,6 @@ private struct SwipeableCountryRow: View {
     let country: Country
     let isBucketed: Bool
     let isVisited: Bool
-    let showConfirm: Bool
     let onTap: () -> Void
     let onBucket: () -> Void
     let onVisited: () -> Void
@@ -319,12 +397,7 @@ private struct SwipeableCountryRow: View {
 
             Spacer(minLength: 12)
 
-            if showConfirm {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-            } else if let score = country.score {
-                ScorePill(score: score)
-            }
+            trailingIndicators
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 12)
@@ -343,23 +416,71 @@ private struct SwipeableCountryRow: View {
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(action: onVisited) {
-                Label("planning.list_kind.visited.short", systemImage: isVisited ? "checkmark.circle.fill" : "checkmark.circle")
+                swipeActionLabel(
+                    title: "planning.list_kind.visited.short",
+                    systemImage: isVisited ? "checkmark.circle.fill" : "checkmark.circle"
+                )
             }
-            .tint(.green)
+            .tint(isVisited ? .green : Color(red: 0.32, green: 0.72, blue: 0.40))
 
             Button(action: onBucket) {
-                VStack(spacing: 4) {
-                    Text("🪣")
-                        .font(.system(size: 20))
-                    Text("planning.list_kind.bucket.short")
-                        .font(.system(size: 11, weight: .semibold))
-                }
+                swipeActionLabel(
+                    title: "planning.list_kind.bucket.short",
+                    systemImage: isBucketed ? "bookmark.fill" : "bookmark"
+                )
             }
-            .tint(.yellow)
+            .tint(isBucketed ? .yellow : Color(red: 0.95, green: 0.72, blue: 0.22))
         }
         .frame(maxWidth: .infinity)
         .frame(minHeight: 58)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+
+    @ViewBuilder
+    private var trailingIndicators: some View {
+        HStack(spacing: 8) {
+            if isBucketed || isVisited {
+                HStack(spacing: 5) {
+                    if isBucketed {
+                        membershipIcon(systemImage: "bookmark.fill", tint: .yellow)
+                    }
+
+                    if isVisited {
+                        membershipIcon(systemImage: "checkmark.circle.fill", tint: .green)
+                    }
+                }
+            }
+
+            if let score = country.score {
+                ScorePill(score: score)
+            }
+        }
+        .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private func membershipIcon(systemImage: String, tint: Color) -> some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(.black.opacity(0.72))
+            .frame(width: 24, height: 24)
+            .background(
+                Circle()
+                    .fill(tint.opacity(0.28))
+            )
+            .overlay(
+                Circle()
+                    .stroke(tint.opacity(0.5), lineWidth: 1)
+            )
+    }
+
+    @ViewBuilder
+    private func swipeActionLabel(title: LocalizedStringKey, systemImage: String) -> some View {
+        if #available(iOS 26.0, *) {
+            Label(title, systemImage: systemImage)
+                .labelStyle(.iconOnly)
+        } else {
+            Label(title, systemImage: systemImage)
+        }
     }
 }
 
