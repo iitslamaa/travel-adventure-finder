@@ -8937,10 +8937,36 @@ private struct TripPlannerChecklistEditorView: View {
                                                     actorId: actorId,
                                                     actorName: actorName,
                                                     showsRemove: true,
+                                                    moveOptions: moveOptions(for: selectedDayIndex, item: plan.checklistItems[itemIndex]),
+                                                    onMove: { destinationDayPlanID in
+                                                        moveDayItem(
+                                                            at: itemIndex,
+                                                            from: selectedDayIndex,
+                                                            to: destinationDayPlanID
+                                                        )
+                                                    },
                                                     onRemove: {
                                                         removeDayItem(at: itemIndex, from: selectedDayIndex)
                                                     }
                                                 )
+                                            }
+                                        }
+
+                                        let dayExpenses = expenses(for: plan.date)
+                                        if !dayExpenses.isEmpty {
+                                            VStack(alignment: .leading, spacing: 10) {
+                                                Label(String(localized: "trip_planner.expenses.title"), systemImage: "creditcard.fill")
+                                                    .font(.system(size: 13, weight: .bold))
+                                                    .foregroundStyle(.black.opacity(0.68))
+
+                                                ForEach(dayExpenses) { expense in
+                                                    TripPlannerExpenseRow(
+                                                        expense: expense,
+                                                        participants: [],
+                                                        currencyCode: plannerCurrencyCode,
+                                                        onEdit: nil
+                                                    )
+                                                }
                                             }
                                         }
 
@@ -9291,6 +9317,78 @@ private struct TripPlannerChecklistEditorView: View {
     private func nextPlan(for dayIndex: Int) -> TripPlannerDayPlan? {
         guard dayIndex < dayPlans.count - 1 else { return nil }
         return dayPlans[dayIndex + 1]
+    }
+
+    private func expenses(for date: Date) -> [TripPlannerExpense] {
+        let calendar = Calendar.current
+        return TripPlannerExpensesEditorView.sortedExpenses(
+            trip.expenses.filter { calendar.isDate($0.date, inSameDayAs: date) }
+        )
+    }
+
+    private func moveOptions(
+        for sourceDayIndex: Int,
+        item: TripPlannerChecklistItem
+    ) -> [(id: UUID, title: String)] {
+        guard item.category == .transportBooking else { return [] }
+
+        return dayPlans.enumerated().compactMap { index, plan in
+            guard index != sourceDayIndex else { return nil }
+            let dateText = AppDateFormatting.dateString(from: plan.date, template: "EEE MMM d")
+            let suffix: String
+            if plan.kind == .travel {
+                suffix = String(localized: "trip_planner.itinerary.travel_day")
+            } else {
+                suffix = plan.countryName ?? String(localized: "trip_planner.itinerary.country_day")
+            }
+            return (id: plan.id, title: "\(dateText) - \(suffix)")
+        }
+    }
+
+    private func moveDayItem(
+        at itemIndex: Int,
+        from sourceDayIndex: Int,
+        to destinationDayPlanID: UUID
+    ) {
+        guard dayPlans.indices.contains(sourceDayIndex),
+              dayPlans[sourceDayIndex].checklistItems.indices.contains(itemIndex),
+              let destinationDayIndex = dayPlans.firstIndex(where: { $0.id == destinationDayPlanID }),
+              destinationDayIndex != sourceDayIndex else {
+            return
+        }
+
+        let sourcePlan = dayPlans[sourceDayIndex]
+        let destinationPlan = dayPlans[destinationDayIndex]
+        var sourceItems = sourcePlan.checklistItems
+        var destinationItems = destinationPlan.checklistItems
+        let item = sourceItems.remove(at: itemIndex)
+        let movedItem = item.hasLinkedExpenseDetails
+            ? item.updatedExpenseLink(
+                expenseId: item.linkedExpenseId,
+                amount: item.linkedExpenseAmount,
+                currencyCode: item.linkedExpenseCurrencyCode,
+                date: destinationPlan.date
+            )
+            : item
+
+        destinationItems.append(movedItem)
+        dayPlans[sourceDayIndex] = TripPlannerDayPlan(
+            id: sourcePlan.id,
+            date: sourcePlan.date,
+            kind: sourcePlan.kind,
+            countryId: sourcePlan.countryId,
+            countryName: sourcePlan.countryName,
+            checklistItems: sourceItems
+        )
+        dayPlans[destinationDayIndex] = TripPlannerDayPlan(
+            id: destinationPlan.id,
+            date: destinationPlan.date,
+            kind: destinationPlan.kind,
+            countryId: destinationPlan.countryId,
+            countryName: destinationPlan.countryName,
+            checklistItems: destinationItems
+        )
+        selectedDayPlanID = destinationPlan.id
     }
 
     private func cascadeInheritedCountryChanges(
@@ -10020,6 +10118,8 @@ private struct TripPlannerChecklistItemEditorRow: View {
     let showsCompletion: Bool
     let showsTitleField: Bool
     let showsCategoryLabel: Bool
+    let moveOptions: [(id: UUID, title: String)]
+    let onMove: ((UUID) -> Void)?
     let onRemove: () -> Void
 
     @State private var linkedExpenseAmountText = ""
@@ -10081,6 +10181,8 @@ private struct TripPlannerChecklistItemEditorRow: View {
         showsCompletion: Bool = true,
         showsTitleField: Bool = true,
         showsCategoryLabel: Bool = true,
+        moveOptions: [(id: UUID, title: String)] = [],
+        onMove: ((UUID) -> Void)? = nil,
         onRemove: @escaping () -> Void
     ) {
         self._item = item
@@ -10094,6 +10196,8 @@ private struct TripPlannerChecklistItemEditorRow: View {
         self.showsCompletion = showsCompletion
         self.showsTitleField = showsTitleField
         self.showsCategoryLabel = showsCategoryLabel
+        self.moveOptions = moveOptions
+        self.onMove = onMove
         self.onRemove = onRemove
     }
 
@@ -10205,6 +10309,25 @@ private struct TripPlannerChecklistItemEditorRow: View {
                 }
 
                 Spacer(minLength: 0)
+
+                if let onMove, !moveOptions.isEmpty {
+                    Menu {
+                        ForEach(moveOptions, id: \.id) { option in
+                            Button {
+                                onMove(option.id)
+                            } label: {
+                                Label(option.title, systemImage: "calendar")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.black.opacity(0.7))
+                            .padding(8)
+                            .background(Circle().fill(Color.white.opacity(0.8)))
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 if showsRemove {
                     Button(role: .destructive) {
@@ -11598,6 +11721,8 @@ private struct TripPlannerExpenseRow: View {
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.black)
                         .lineLimit(1)
+
+                    TripPlannerDetectedLinkList(text: expense.title)
 
                     Text(AppDateFormatting.dateString(from: expense.date, dateStyle: .medium))
                         .font(.system(size: 12, weight: .semibold))
