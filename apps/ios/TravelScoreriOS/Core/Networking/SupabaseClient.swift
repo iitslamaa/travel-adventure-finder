@@ -58,6 +58,13 @@ final class SupabaseManager {
     """
 
     static let shared = SupabaseManager()
+    private static let authVerificationSession: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 4
+        configuration.timeoutIntervalForResource = 4
+        configuration.waitsForConnectivity = false
+        return URLSession(configuration: configuration)
+    }()
 
     let client: SupabaseClient
 
@@ -106,26 +113,32 @@ final class SupabaseManager {
     /// Verifies the access token against Supabase Auth REST API.
     /// Returns true if the token maps to a real user on the server.
     private func verifyUserOnServer(accessToken: String) async -> Bool {
+        let startedAt = Date()
         guard
             let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
             let baseURL = URL(string: urlString)
         else {
+            SocialFeedDebug.log("launch.supabase.verify.skip reason=missing_url duration=\(SocialFeedDebug.duration(since: startedAt))")
             return false
         }
 
         let url = baseURL.appendingPathComponent("auth/v1/user")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        request.timeoutInterval = 4
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         if let anonKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String {
             request.setValue(anonKey, forHTTPHeaderField: "apikey")
         }
 
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            SocialFeedDebug.log("launch.supabase.verify.start")
+            let (_, response) = try await Self.authVerificationSession.data(for: request)
             let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+            SocialFeedDebug.log("launch.supabase.verify.end status=\(code) duration=\(SocialFeedDebug.duration(since: startedAt))")
             return code == 200
         } catch {
+            SocialFeedDebug.log("launch.supabase.verify.error duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))")
             return false
         }
     }
@@ -136,17 +149,26 @@ final class SupabaseManager {
     /// IMPORTANT: We server-verify the session maps to a real auth user.
     /// On some devices/flows, the SDK can temporarily surface a local session before the user exists in `auth.users`.
     func fetchCurrentSession() async throws -> Session? {
+        let startedAt = Date()
+        SocialFeedDebug.log("launch.supabase.session.start")
         // Do not throw on missing session; treat as logged out.
         let session = try? await client.auth.session
 
-        guard let session else { return nil }
+        guard let session else {
+            SocialFeedDebug.log("launch.supabase.session.none duration=\(SocialFeedDebug.duration(since: startedAt))")
+            return nil
+        }
+
+        SocialFeedDebug.log("launch.supabase.session.local_hit expired=\(session.isExpired) duration=\(SocialFeedDebug.duration(since: startedAt))")
 
         // Server-verify the access token maps to a real user.
         let isValidOnServer = await verifyUserOnServer(accessToken: session.accessToken)
         if !isValidOnServer {
+            SocialFeedDebug.log("launch.supabase.session.rejected duration=\(SocialFeedDebug.duration(since: startedAt))")
             return nil
         }
 
+        SocialFeedDebug.log("launch.supabase.session.verified user=\(session.user.id.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))")
         return session
     }
 

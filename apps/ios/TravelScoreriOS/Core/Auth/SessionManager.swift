@@ -57,9 +57,14 @@ final class SessionManager: ObservableObject {
         self.traveledStore = traveledStore
         self.listSync = ListSyncService(supabase: supabase)
 
+        SocialFeedDebug.log("launch.session.init instance=\(instanceId.uuidString)")
+
         // Start Supabase auth listener (non-blocking)
         Task {
+            let startedAt = Date()
+            SocialFeedDebug.log("launch.session.init_auth_listener_task.start instance=\(instanceId.uuidString)")
             await supabase.startAuthListener()
+            SocialFeedDebug.log("launch.session.init_auth_listener_task.end instance=\(instanceId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))")
         }
 
         observeGuestListSnapshots()
@@ -345,6 +350,7 @@ final class SessionManager: ObservableObject {
     }
 
     private func startAuthObservation() {
+        SocialFeedDebug.log("launch.session.auth_observation.start instance=\(instanceId.uuidString)")
         refreshFromCurrentSession(source: "initial")
         listenForAuthChanges()
     }
@@ -353,6 +359,25 @@ final class SessionManager: ObservableObject {
 
     private func refreshFromCurrentSession(source: String) {
         Task {
+            let startedAt = Date()
+            let watchdog = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                guard let self, !Task.isCancelled else { return }
+                SocialFeedDebug.log(
+                    "launch.session.refresh.watchdog source=\(source) instance=\(self.instanceId.uuidString) unresolved=\(!self.hasResolvedInitialAuthState) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
+            }
+            defer {
+                watchdog.cancel()
+                SocialFeedDebug.log(
+                    "launch.session.refresh.end source=\(source) instance=\(self.instanceId.uuidString) authenticated=\(self.isAuthenticated) user=\(self.userId?.uuidString ?? "nil") resolved=\(self.hasResolvedInitialAuthState) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
+            }
+
+            SocialFeedDebug.log(
+                "launch.session.refresh.start source=\(source) instance=\(self.instanceId.uuidString) suppressed=\(self.isAuthSuppressed) resolved=\(self.hasResolvedInitialAuthState)"
+            )
+
             if self.isAuthSuppressed {
                 let session = try? await supabase.fetchCurrentSession()
                 if let session, !session.isExpired {

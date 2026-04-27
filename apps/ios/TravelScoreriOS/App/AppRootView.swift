@@ -10,7 +10,11 @@ import SwiftUI
 import Combine
 
 private enum AppRootDebugLog {
-    static func message(_ text: String) {}
+    static func message(_ text: String) {
+        #if DEBUG
+        print("[AppRoot] \(text)")
+        #endif
+    }
 }
 
 struct AppRootView: View {
@@ -28,6 +32,9 @@ struct AppRootView: View {
             // MAIN APP CONTENT
             if !sessionManager.hasResolvedInitialAuthState {
                 ProgressView()
+                    .onAppear {
+                        AppRootDebugLog.message("Initial auth ProgressView appeared")
+                    }
             } else if sessionManager.isAuthSuppressed {
                 AuthLandingView()
                     .environmentObject(authViewModel)
@@ -38,8 +45,16 @@ struct AppRootView: View {
                 if let profileVM = profileVMHolder.profileVM {
                     RootTabView()
                         .environmentObject(profileVM)
+                        .onAppear {
+                            AppRootDebugLog.message(
+                                "RootTabView appeared authenticated=\(sessionManager.isAuthenticated) guest=\(sessionManager.didContinueAsGuest) user=\(sessionManager.userId?.uuidString ?? "nil")"
+                            )
+                        }
                 } else {
                     ProgressView()
+                        .onAppear {
+                            AppRootDebugLog.message("Profile VM ProgressView appeared")
+                        }
                 }
             } else {
                 AuthLandingView()
@@ -50,7 +65,10 @@ struct AppRootView: View {
             }
         }
         .task {
+            let startedAt = Date()
+            AppRootDebugLog.message("startAuthListener task begin")
             await SupabaseManager.shared.startAuthListener()
+            AppRootDebugLog.message("startAuthListener task end duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms")
         }
         .task(id: authConfigurationKey) {
             let startedAt = Date()
