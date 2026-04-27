@@ -374,7 +374,7 @@ extension ProfileViewModel {
             let bucket = try await profileService.fetchBucketListCountries(userId: userId)
             SocialFeedDebug.log(
                 "profile.vm.load.bucket_task.success user=\(userId.uuidString) generation=\(generation.uuidString) " +
-                "duration=\(SocialFeedDebug.duration(since: startedAt)) count=\(bucket.count)"
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) \(SocialFeedDebug.countrySetSummary(bucket))"
             )
             return bucket
         } catch {

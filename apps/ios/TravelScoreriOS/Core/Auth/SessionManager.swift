@@ -226,18 +226,30 @@ final class SessionManager: ObservableObject {
         remoteBucketIds: Set<String>,
         remoteTraveledIds: Set<String>
     ) async {
-        guard !hasMergedGuestData else { return }
+        SocialFeedDebug.log(
+            "session.guest_merge.enter user=\(userId.uuidString) already_merged=\(hasMergedGuestData) " +
+            "guest_bucket_\(SocialFeedDebug.countrySetSummary(guestBucketSnapshot)) remote_bucket_\(SocialFeedDebug.countrySetSummary(remoteBucketIds))"
+        )
+        guard !hasMergedGuestData else {
+            SocialFeedDebug.log("session.guest_merge.skip user=\(userId.uuidString) reason=already_merged")
+            return
+        }
         hasMergedGuestData = true
 
         let bucketIdsToMerge = guestBucketSnapshot.subtracting(remoteBucketIds)
         let traveledIdsToMerge = guestTraveledSnapshot.subtracting(remoteTraveledIds)
+        SocialFeedDebug.log(
+            "session.guest_merge.diff user=\(userId.uuidString) bucket_to_merge_\(SocialFeedDebug.countrySetSummary(bucketIdsToMerge)) traveled_to_merge_count=\(traveledIdsToMerge.count)"
+        )
 
         for countryId in bucketIdsToMerge {
+            SocialFeedDebug.log("session.guest_merge.bucket_add.begin user=\(userId.uuidString) country=\(countryId)")
             await listSync.setBucket(
                 userId: userId,
                 countryId: countryId,
                 add: true
             )
+            SocialFeedDebug.log("session.guest_merge.bucket_add.end user=\(userId.uuidString) country=\(countryId)")
         }
 
         for countryId in traveledIdsToMerge {
@@ -267,6 +279,7 @@ final class SessionManager: ObservableObject {
         // Clear guest snapshots after successful merge
         guestBucketSnapshot.removeAll()
         guestTraveledSnapshot.removeAll()
+        SocialFeedDebug.log("session.guest_merge.end user=\(userId.uuidString) cleared_guest_snapshots=true")
     }
 
     private func synchronizeListsIfNeeded(for userId: UUID) {
