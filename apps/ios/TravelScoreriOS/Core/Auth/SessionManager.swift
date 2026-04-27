@@ -39,10 +39,7 @@ final class SessionManager: ObservableObject {
     private var guestTraveledSnapshot: Set<String> = []
 
     private var hasMergedGuestData = false
-    private var didEnsureProfile = false
-
     private var syncTask: Task<Void, Never>?
-    private var ensureProfileTask: Task<Void, Never>?
     private var syncingUserId: UUID?
 
     // MARK: - Initializers
@@ -96,12 +93,9 @@ final class SessionManager: ObservableObject {
         bucketListStore.replace(with: guestBucketSnapshot)
         traveledStore.replace(with: guestTraveledSnapshot)
         hasMergedGuestData = false
-        didEnsureProfile = false
         syncTask?.cancel()
         syncTask = nil
         syncingUserId = nil
-        ensureProfileTask?.cancel()
-        ensureProfileTask = nil
         
         bumpAuthScreen()
     }
@@ -119,12 +113,9 @@ final class SessionManager: ObservableObject {
         
         if userId != nil { userId = nil }
         hasMergedGuestData = false
-        didEnsureProfile = false
         syncTask?.cancel()
         syncTask = nil
         syncingUserId = nil
-        ensureProfileTask?.cancel()
-        ensureProfileTask = nil
         bumpAuthScreen()
     }
 
@@ -162,7 +153,6 @@ final class SessionManager: ObservableObject {
                     if isAuthenticated != true { isAuthenticated = true }
                     if userId != session.user.id { userId = session.user.id }
 
-                    ensureProfileEventually(for: session.user.id)
                     synchronizeListsIfNeeded(for: session.user.id)
                 }
             } else {
@@ -170,7 +160,6 @@ final class SessionManager: ObservableObject {
                 if isAuthenticated != false { isAuthenticated = false }
                 if userId != nil { userId = nil }
                 hasMergedGuestData = false
-                didEnsureProfile = false
                 syncingUserId = nil
             }
         } catch {
@@ -179,47 +168,6 @@ final class SessionManager: ObservableObject {
 
         if hasResolvedInitialAuthState != true {
             hasResolvedInitialAuthState = true
-        }
-    }
-
-    // MARK: - Profile bring-up
-
-    /// Ensures a `profiles` row exists for the authenticated user.
-    /// On some devices, immediately after signup the `auth.users` row may not be visible yet,
-    /// which causes `profiles_id_fkey` (23503). We retry with backoff.
-    private func ensureProfileEventually(for userId: UUID) {
-        guard !didEnsureProfile else { return }
-        didEnsureProfile = true
-
-        ensureProfileTask?.cancel()
-        ensureProfileTask = Task {
-            let delays: [UInt64] = [500_000_000, 1_000_000_000, 2_000_000_000, 4_000_000_000] // 0.5s, 1s, 2s, 4s
-
-            for delay in delays {
-                try? await Task.sleep(nanoseconds: delay)
-
-                // Re-hydrate session in case auth state is still propagating
-                _ = try? await supabase.fetchCurrentSession()
-
-                do {
-                    let profileService = ProfileService(supabase: supabase)
-                    try await profileService.ensureProfileExists(userId: userId)
-
-                    ensureProfileTask = nil
-                    return
-
-                } catch {
-                    // Keep retrying on FK race; otherwise bail.
-                    if let pg = error as? PostgrestError, pg.code == "23503" {
-                        continue
-                    }
-                    return
-                }
-            }
-
-            // If we exhausted retries, allow a later auth refresh to try again.
-            didEnsureProfile = false
-            ensureProfileTask = nil
         }
     }
 
@@ -400,14 +348,12 @@ final class SessionManager: ObservableObject {
                     if isAuthenticated != true { isAuthenticated = true }
                     if userId != session.user.id { userId = session.user.id }
 
-                    ensureProfileEventually(for: session.user.id)
                     synchronizeListsIfNeeded(for: session.user.id)
                 } else {
                     
                     if isAuthenticated != false { isAuthenticated = false }
                     if userId != nil { userId = nil }
                     hasMergedGuestData = false
-                    didEnsureProfile = false
                     syncingUserId = nil
                 }
             } catch {
