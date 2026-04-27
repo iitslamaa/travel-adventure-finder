@@ -8,7 +8,11 @@
 import SwiftUI
 
 private enum DiscoveryDebugLog {
-    static func message(_ text: String) {}
+    static func message(_ text: String) {
+        #if DEBUG
+        print("[Discovery] \(text)")
+        #endif
+    }
 }
 
 struct DiscoveryCountryListView: View {
@@ -183,7 +187,7 @@ struct DiscoveryView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @EnvironmentObject private var traveledStore: TraveledStore
     @State private var showingWeights = false
-    @State private var baseCountries: [Country] = CountryAPI.loadCachedCountries() ?? []
+    @State private var baseCountries: [Country] = []
     @State private var didLoadCountries = false
 
     private var countries: [Country] {
@@ -300,20 +304,14 @@ struct DiscoveryView: View {
             didLoadCountries = true
             await Task.yield()
             let startedAt = Date()
-            var source = "existing-state"
+            let cached = CountryAPI.loadCachedCountries()
 
-            if let cached = CountryAPI.loadCachedCountries(), !cached.isEmpty {
+            if let cached, !cached.isEmpty {
                 baseCountries = cached
-                source = "cache"
-            }
-
-            if baseCountries.isEmpty, let fetched = try? await CountryAPI.fetchCountries(), !fetched.isEmpty {
-                baseCountries = fetched
-                source = "fetch"
             }
 
             DiscoveryDebugLog.message(
-                "Discovery home loaded source=\(source) countries=\(baseCountries.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
+                "Discovery home loaded source=\(baseCountries.isEmpty ? "empty" : "cache") countries=\(baseCountries.count) duration=\(Int(Date().timeIntervalSince(startedAt) * 1000))ms"
             )
         }
         .sheet(isPresented: $showingWeights) {

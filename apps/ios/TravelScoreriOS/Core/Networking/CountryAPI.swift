@@ -9,7 +9,11 @@ import Foundation
 import Supabase
 
 private enum CountryAPIDebugLog {
-    static func message(_ text: String) {}
+    static func message(_ text: String) {
+        #if DEBUG
+        print("[CountryAPI] \(text)")
+        #endif
+    }
 }
 
 enum CountryAPI {

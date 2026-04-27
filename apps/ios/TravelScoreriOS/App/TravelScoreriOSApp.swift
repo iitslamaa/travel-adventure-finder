@@ -53,6 +53,8 @@ struct TravelScoreriOSApp: App {
     @StateObject private var currencyPreferenceStore: CurrencyPreferenceStore
 
     init() {
+        SocialFeedDebug.log("launch.build.marker country-startup-v2")
+
         let bucket = BucketListStore()
         let traveled = TraveledStore()
         let weights = ScoreWeightsStore()
