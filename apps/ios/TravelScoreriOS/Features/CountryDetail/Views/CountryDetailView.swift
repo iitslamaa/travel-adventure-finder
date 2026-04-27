@@ -76,6 +76,8 @@ struct CountryDetailView: View {
     @StateObject private var engagementVM = CountryFriendEngagementViewModel()
     @State private var activeSheet: CountryDetailSheet?
     @State private var countryRefreshTask: Task<Void, Never>?
+    @State private var profileWarmupTask: Task<Void, Never>?
+    @State private var passportContextWarmupTask: Task<Void, Never>?
     @State private var isLoadingLanguageCompatibility: Bool = false
 
     private var passportFallbackCountryCode: String {
@@ -417,6 +419,8 @@ struct CountryDetailView: View {
             }
         )
         .preferredColorScheme(.light)
+        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(false)
         .overlay(alignment: .topTrailing) {
             VStack(spacing: 10) {
                 PlanningListActionButton(kind: .bucket, isActive: isBucketed) {
@@ -465,28 +469,22 @@ struct CountryDetailView: View {
                 isAuthenticated: sessionManager.isAuthenticated
             )
             async let languageProfileLoad: CountryLanguageProfile? = loadLanguageProfileForScreen(iso2: iso2, loadStart: loadStart)
-            async let profileLoad: Void = loadCurrentUserProfileForLanguageCard(loadStart: loadStart)
+            async let profileSeed: Void = seedCurrentUserProfileForLanguageCard(loadStart: loadStart)
 
             countryLanguageProfile = await languageProfileLoad
             CountryDetailDebugLog.message(
                 "screen.language_profile.assigned iso2=\(iso2) loaded=\(countryLanguageProfile != nil) language_count=\(countryLanguageProfile?.languages.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile?.languages ?? []))] total_duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
             )
-            await profileLoad
-
-            if shouldResolveVisaContext {
-                CountryDetailDebugLog.message(
-                    "screen.passport_context.start iso2=\(iso2) profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil")"
-                )
-                await profileVM.loadPassportContextIfNeeded()
-                CountryDetailDebugLog.message(
-                    "screen.passport_context.finish iso2=\(iso2) passports=\(profileVM.passportNationalities.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
-                )
-            }
+            await profileSeed
 
             await refreshCountryIfAvailable()
             refreshCountryInBackgroundIfNeeded()
             await refreshVisaPresentation()
-            isResolvingVisaContext = false
+            startPassportContextWarmupIfNeeded(
+                shouldResolveVisaContext: shouldResolveVisaContext,
+                iso2: iso2,
+                loadStart: loadStart
+            )
 
             CountryDetailDebugLog.message(
                 "screen.load.finish iso2=\(iso2) languageProfileLoaded=\(countryLanguageProfile != nil) profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
@@ -512,6 +510,8 @@ struct CountryDetailView: View {
                 "screen.disappear iso2=\(country.iso2.uppercased()) language_profile_loaded=\(countryLanguageProfile != nil) profile_loaded=\(profileVM.profile != nil)"
             )
             countryRefreshTask?.cancel()
+            profileWarmupTask?.cancel()
+            passportContextWarmupTask?.cancel()
             engagementVM.cancel()
         }
         .onChange(of: profileVM.passportPreferences) { _, _ in
@@ -554,7 +554,8 @@ struct CountryDetailView: View {
         }
     }
 
-    private func loadCurrentUserProfileForLanguageCard(loadStart: TimeInterval) async {
+    @MainActor
+    private func seedCurrentUserProfileForLanguageCard(loadStart: TimeInterval) async {
         guard sessionManager.isAuthenticated else {
             CountryDetailDebugLog.message(
                 "screen.profile.load.skipped reason=unauthenticated total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
@@ -562,20 +563,87 @@ struct CountryDetailView: View {
             return
         }
 
-        guard profileVM.profile == nil || profileVM.profile?.id != profileVM.userId else {
-            CountryDetailDebugLog.message(
-                "screen.profile.load.skipped reason=already_available profile_languages=\(profileVM.profile?.languages.count ?? 0) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
-            )
+        guard !isCurrentUserProfileAvailable() else {
+            logCurrentUserProfileAlreadyAvailable(loadStart: loadStart)
             return
         }
 
         let profileStart = Date().timeIntervalSinceReferenceDate
         CountryDetailDebugLog.message(
-            "screen.profile.load.start profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil") profile_loaded=\(profileVM.profile != nil) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            "screen.profile.seed.start profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil") profile_loaded=\(profileVM.profile != nil) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
         )
-        await profileVM.loadIfNeeded()
+
+        profileWarmupTask?.cancel()
+        profileWarmupTask = Task { @MainActor in
+            let backgroundStart = Date().timeIntervalSinceReferenceDate
+            CountryDetailDebugLog.message(
+                "screen.profile.background.start profile_user=\(profileVM.userId.uuidString) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            await profileVM.loadIfNeeded()
+            guard !Task.isCancelled else { return }
+            CountryDetailDebugLog.message(
+                "screen.profile.background.finish profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profileVM.profile?.languages ?? []))] duration=\(CountryDetailDebugLog.durationText(since: backgroundStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+        }
+
+        for _ in 0..<5 {
+            if profileVM.profile?.id == profileVM.userId {
+                CountryDetailDebugLog.message(
+                    "screen.profile.seed.finish profile_loaded=true profile_languages=\(profileVM.profile?.languages.count ?? 0) language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profileVM.profile?.languages ?? []))] duration=\(CountryDetailDebugLog.durationText(since: profileStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+                return
+            }
+
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+
         CountryDetailDebugLog.message(
-            "screen.profile.load.finish profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) language_preview=[\(CountryDetailDebugLog.profileLanguageSummary(profileVM.profile?.languages ?? []))] duration=\(CountryDetailDebugLog.durationText(since: profileStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            "screen.profile.seed.deferred profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) duration=\(CountryDetailDebugLog.durationText(since: profileStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+    }
+
+    @MainActor
+    private func startPassportContextWarmupIfNeeded(
+        shouldResolveVisaContext: Bool,
+        iso2: String,
+        loadStart: TimeInterval
+    ) {
+        guard shouldResolveVisaContext else {
+            isResolvingVisaContext = false
+            return
+        }
+
+        CountryDetailDebugLog.message(
+            "screen.passport_context.background.start iso2=\(iso2) profile_user=\(profileVM.userId.uuidString) session_user=\(sessionManager.userId?.uuidString ?? "nil") total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+
+        passportContextWarmupTask?.cancel()
+        passportContextWarmupTask = Task { @MainActor in
+            let passportStart = Date().timeIntervalSinceReferenceDate
+            await profileVM.loadPassportContextIfNeeded()
+            guard !Task.isCancelled else { return }
+            await refreshVisaPresentation()
+            isResolvingVisaContext = false
+            CountryDetailDebugLog.message(
+                "screen.passport_context.background.finish iso2=\(iso2) passports=\(profileVM.passportNationalities.count) duration=\(CountryDetailDebugLog.durationText(since: passportStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+        }
+
+        if profileVM.passportNationalities.isEmpty {
+            isResolvingVisaContext = false
+            CountryDetailDebugLog.message(
+                "screen.passport_context.background.placeholder_ready iso2=\(iso2) reason=no_cached_passports total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+        }
+    }
+
+    private func isCurrentUserProfileAvailable() -> Bool {
+        profileVM.profile?.id == profileVM.userId
+    }
+
+    private func logCurrentUserProfileAlreadyAvailable(loadStart: TimeInterval) {
+        CountryDetailDebugLog.message(
+            "screen.profile.load.skipped reason=already_available profile_languages=\(profileVM.profile?.languages.count ?? 0) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
         )
     }
 
