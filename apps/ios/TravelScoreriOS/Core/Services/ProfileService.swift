@@ -108,6 +108,13 @@ private struct ResolvedProfileIdentity {
     let avatarURL: String?
 }
 
+struct ProfileAvatarSnapshot: Codable, Sendable {
+    let id: UUID
+    let displayName: String
+    let username: String
+    let avatarUrl: String?
+}
+
 private struct PassportPreferencesRow: Codable {
     let userId: UUID
     let nationalityCountryCodes: [String]
@@ -272,6 +279,34 @@ final class ProfileService {
             "profile.service.cache.profile.async_disk_hit user=\(userId.uuidString) username=\(logField(persistedProfile.username)) languages=\(persistedProfile.languages.count)"
         )
         return persistedProfile
+    }
+
+    func cachedAvatarSnapshot(userId: UUID) async -> ProfileAvatarSnapshot? {
+        if let cachedProfile = Self.profileCache[userId] {
+            let snapshot = Self.avatarSnapshot(from: cachedProfile)
+            SocialFeedDebug.log(
+                "profile.service.cache.avatar.memory_hit user=\(userId.uuidString) username=\(logField(snapshot.username)) avatar=\(logField(snapshot.avatarUrl))"
+            )
+            return snapshot
+        }
+
+        let url = Self.avatarSnapshotURL(for: userId)
+        let snapshot: ProfileAvatarSnapshot?
+        if let data = try? Data(contentsOf: url) {
+            snapshot = try? JSONDecoder().decode(ProfileAvatarSnapshot.self, from: data)
+        } else {
+            snapshot = nil
+        }
+
+        guard let snapshot else {
+            SocialFeedDebug.log("profile.service.cache.avatar.file_miss user=\(userId.uuidString)")
+            return nil
+        }
+
+        SocialFeedDebug.log(
+            "profile.service.cache.avatar.file_hit user=\(userId.uuidString) username=\(logField(snapshot.username)) avatar=\(logField(snapshot.avatarUrl))"
+        )
+        return snapshot
     }
 
     func memoryCachedPassportPreferences(userId: UUID) -> PassportPreferences? {
@@ -441,6 +476,7 @@ final class ProfileService {
             let profile = try await fetchTask.value
             Self.profileCache[userId] = profile
             Self.persistCachedValue(profile, forKey: Self.profileCacheKey(for: userId))
+            Self.persistAvatarSnapshot(profile)
             if Self.inFlightProfileFetches[userId] == fetchTask {
                 Self.inFlightProfileFetches[userId] = nil
             }
@@ -665,6 +701,40 @@ final class ProfileService {
         )
         Self.profileCache[profile.id] = profile
         Self.persistCachedValue(profile, forKey: Self.profileCacheKey(for: profile.id))
+        Self.persistAvatarSnapshot(profile)
+    }
+
+    private static func avatarSnapshot(from profile: Profile) -> ProfileAvatarSnapshot {
+        ProfileAvatarSnapshot(
+            id: profile.id,
+            displayName: profile.tripDisplayName,
+            username: profile.username,
+            avatarUrl: profile.avatarUrl
+        )
+    }
+
+    private static func persistAvatarSnapshot(_ profile: Profile) {
+        let snapshot = avatarSnapshot(from: profile)
+        let url = avatarSnapshotURL(for: profile.id)
+        do {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            let data = try JSONEncoder().encode(snapshot)
+            try data.write(to: url, options: [.atomic])
+        } catch {
+            SocialFeedDebug.log("profile.service.cache.avatar.file_write_error user=\(profile.id.uuidString) error=\(SocialFeedDebug.describe(error))")
+        }
+    }
+
+    private static func avatarSnapshotURL(for userId: UUID) -> URL {
+        let baseURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        return baseURL
+            .appendingPathComponent("TravelAF", isDirectory: true)
+            .appendingPathComponent("ProfileAvatarSnapshots", isDirectory: true)
+            .appendingPathComponent("\(userId.uuidString).json", isDirectory: false)
     }
 
     private func profileDetailDebugSummary(_ profile: Profile) -> String {

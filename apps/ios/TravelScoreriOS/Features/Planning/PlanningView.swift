@@ -4110,6 +4110,19 @@ struct TripPlannerView: View {
             )
         }
 
+        if let avatarSnapshot = await profileService.cachedAvatarSnapshot(userId: userId) {
+            guard sessionManager.userId == userId else { return }
+            currentUserSnapshot = TripPlannerFriendSnapshot(
+                id: avatarSnapshot.id,
+                displayName: avatarSnapshot.displayName,
+                username: avatarSnapshot.username,
+                avatarURL: avatarSnapshot.avatarUrl
+            )
+            TripPlannerDebugLog.message(
+                "Current user snapshot loaded from avatar cache duration=\(TripPlannerDebugLog.durationText(since: loadStart)) user=\(TripPlannerDebugLog.userLabel(userId)) avatar=\(avatarSnapshot.avatarUrl == nil ? "nil" : "app")"
+            )
+        }
+
         let fetchStart = Date().timeIntervalSinceReferenceDate
         do {
             let profile = try await profileService.fetchMyProfile(userId: userId, useCache: false)
