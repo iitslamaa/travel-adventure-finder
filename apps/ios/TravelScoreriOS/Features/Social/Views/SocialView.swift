@@ -301,18 +301,17 @@ struct SocialView: View {
         case .bucketListAdded:
             let countries = countryDisplayTexts(for: event)
             let countryCount = countryCount(for: event)
-            if countryCount > 2 {
+            if countryCount > 3 {
                 return localizedString(
                     "social.activity.bucket_list_multiple",
                     defaultValue: "Added new countries to their bucket list"
                 )
             }
-            if countries.count == 2 {
+            if countries.count >= 2 {
                 return localizedFormat(
-                    "social.activity.bucket_list_two_format",
-                    defaultValue: "Added %@ and %@ to their bucket list",
-                    countries[0],
-                    countries[1]
+                    "social.activity.bucket_list_countries_format",
+                    defaultValue: "Added %@ to their bucket list",
+                    countryListText(countries)
                 )
             }
             return localizedFormat(
@@ -324,18 +323,17 @@ struct SocialView: View {
         case .countryVisited:
             let countries = countryDisplayTexts(for: event)
             let countryCount = countryCount(for: event)
-            if countryCount > 2 {
+            if countryCount > 3 {
                 return localizedString(
                     "social.activity.visited_multiple",
                     defaultValue: "Updated their visited countries"
                 )
             }
-            if countries.count == 2 {
+            if countries.count >= 2 {
                 return localizedFormat(
-                    "social.activity.visited_two_format",
-                    defaultValue: "Visited %@ and %@",
-                    countries[0],
-                    countries[1]
+                    "social.activity.visited_countries_format",
+                    defaultValue: "Visited %@",
+                    countryListText(countries)
                 )
             }
             return localizedFormat(
@@ -361,6 +359,21 @@ struct SocialView: View {
                 flagSuffix(for: event)
             )
         case .homeCountryChanged:
+            let countries = countryDisplayTexts(for: event)
+            let countryCount = countryCount(for: event)
+            if countryCount > 3 {
+                return localizedString(
+                    "social.activity.home_country_multiple",
+                    defaultValue: "Updated their home flags"
+                )
+            }
+            if !countries.isEmpty {
+                return localizedFormat(
+                    "social.activity.home_country_flags_format",
+                    defaultValue: "Updated home country flags to include %@",
+                    countryListText(countries)
+                )
+            }
             return localizedFormat(
                 "social.activity.home_country_format",
                 defaultValue: "Updated home country to %@%@",
@@ -427,7 +440,7 @@ struct SocialView: View {
         case .currentCountryChanged:
             return "📍"
         case .homeCountryChanged:
-            return "📍"
+            return "🏠"
         case .favoriteCountryAdded:
             return "⭐️"
         }
@@ -450,12 +463,36 @@ struct SocialView: View {
 
     private func countryDisplayTexts(for event: SocialActivityEvent) -> [String] {
         countryCodes(for: event)
-            .prefix(2)
+            .prefix(3)
             .map { code in
                 let name = Locale.current.localizedString(forRegionCode: code) ?? code
                 let flag = flag(for: code)
                 return flag.isEmpty ? name : "\(name)\u{00A0}\(flag)"
             }
+    }
+
+    private func countryListText(_ countries: [String]) -> String {
+        switch countries.count {
+        case 0:
+            return localizedString("social.activity.fallback.country", defaultValue: "Somewhere new")
+        case 1:
+            return countries[0]
+        case 2:
+            return localizedFormat(
+                "social.activity.country_list_two_format",
+                defaultValue: "%@ and %@",
+                countries[0],
+                countries[1]
+            )
+        default:
+            return localizedFormat(
+                "social.activity.country_list_three_format",
+                defaultValue: "%@, %@, and %@",
+                countries[0],
+                countries[1],
+                countries[2]
+            )
+        }
     }
 
     private func countryCodes(for event: SocialActivityEvent) -> [String] {
@@ -476,6 +513,10 @@ struct SocialView: View {
 
         if let secondCountryCode = event.metadata["country_code_2"]?.stringValue {
             codes.append(secondCountryCode)
+        }
+
+        if let thirdCountryCode = event.metadata["country_code_3"]?.stringValue {
+            codes.append(thirdCountryCode)
         }
 
         var seen = Set<String>()

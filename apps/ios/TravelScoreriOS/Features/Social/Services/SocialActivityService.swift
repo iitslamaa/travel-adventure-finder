@@ -168,8 +168,12 @@ final class SocialActivityService {
             "country_count": "\(countryCodes.count)"
         ]
 
-        if countryCodes.count == 2 {
+        if countryCodes.count >= 2 {
             metadata["country_code_2"] = countryCodes[1]
+        }
+
+        if countryCodes.count >= 3 {
+            metadata["country_code_3"] = countryCodes[2]
         }
 
         try await recordActivity(

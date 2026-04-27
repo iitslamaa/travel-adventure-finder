@@ -423,6 +423,11 @@ struct RootTabView: View {
 
     @ViewBuilder
     private func socialDestination(_ route: SocialRoute, navigator: SocialNavigationController) -> some View {
+        let _ = SocialFeedDebug.log(
+            "navigation.destination.build route=\(navigatorDebugDescription(for: route)) " +
+            "pending_profile=\(navigator.pendingProfileLoadUserId?.uuidString ?? "nil")"
+        )
+
         switch route {
         case .profile(let userId):
             if sessionManager.userId == userId {
@@ -450,6 +455,17 @@ struct RootTabView: View {
                 .onAppear {
                     SocialFeedDebug.log("navigation.destination.friend_requests.appear")
                 }
+        }
+    }
+
+    private func navigatorDebugDescription(for route: SocialRoute) -> String {
+        switch route {
+        case .profile(let userId):
+            return "profile:\(userId.uuidString)"
+        case .friends(let userId):
+            return "friends:\(userId.uuidString)"
+        case .friendRequests:
+            return "friendRequests"
         }
     }
 

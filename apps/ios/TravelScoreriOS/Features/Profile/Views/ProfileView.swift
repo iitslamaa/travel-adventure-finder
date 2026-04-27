@@ -53,6 +53,9 @@ struct ProfileView: View {
         showsBackButton: Bool = false,
         profileViewModel: ProfileViewModel? = nil
     ) {
+        SocialFeedDebug.log(
+            "profile.view.init user=\(userId.uuidString) injected_vm=\(profileViewModel != nil) shows_back=\(showsBackButton)"
+        )
         self.userId = userId
         self.showsBackButton = showsBackButton
 
@@ -332,11 +335,16 @@ struct ProfileView: View {
             }
 
             Task {
-                SocialFeedDebug.log("profile.view.load.task.start user=\(userId.uuidString)")
+                let loadStartTime = Date()
+                SocialFeedDebug.log(
+                    "profile.view.load.task.start user=\(userId.uuidString) " +
+                    "vm_profile=\(logField(profileVM.profile?.id.uuidString)) has_loaded_core=\(profileVM.hasLoadedCoreData)"
+                )
                 await profileVM.loadIfNeeded()
                 SocialFeedDebug.log(
                     "profile.view.load.task.end user=\(userId.uuidString) vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
-                    "ready=\(isReadyToRenderProfile) is_loading=\(profileVM.isLoading)"
+                    "ready=\(isReadyToRenderProfile) is_loading=\(profileVM.isLoading) " +
+                    "duration=\(SocialFeedDebug.duration(since: loadStartTime))"
                 )
             }
         }

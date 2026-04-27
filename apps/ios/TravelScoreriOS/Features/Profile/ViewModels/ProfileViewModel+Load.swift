@@ -67,17 +67,23 @@ extension ProfileViewModel {
             SocialFeedDebug.log(
                 "profile.vm.load.network_tasks.start user=\(startingUserId.uuidString) generation=\(generation.uuidString)"
             )
-            async let fetchedProfileTask: Profile = isOwnProfile
-                ? profileService.fetchOrCreateProfile(userId: startingUserId)
-                : profileService.fetchMyProfile(userId: startingUserId, useCache: false)
-            async let traveledTask = profileService.fetchTraveledCountries(userId: startingUserId)
-            async let bucketTask = profileService.fetchBucketListCountries(userId: startingUserId)
-            async let relationshipTask: RelationshipState = isOwnProfile
-                ? .selfProfile
-                : resolvedRelationshipState(for: startingUserId)
-            async let passportPreferencesTask: PassportPreferences = isOwnProfile
-                ? profileService.fetchPassportPreferences(userId: startingUserId)
-                : .empty
+            async let fetchedProfileTask = loadProfileTask(
+                userId: startingUserId,
+                generation: generation,
+                isOwnProfile: isOwnProfile
+            )
+            async let traveledTask = loadTraveledTask(userId: startingUserId, generation: generation)
+            async let bucketTask = loadBucketTask(userId: startingUserId, generation: generation)
+            async let relationshipTask = loadRelationshipTask(
+                userId: startingUserId,
+                generation: generation,
+                isOwnProfile: isOwnProfile
+            )
+            async let passportPreferencesTask = loadPassportPreferencesTask(
+                userId: startingUserId,
+                generation: generation,
+                isOwnProfile: isOwnProfile
+            )
 
             let fetchedProfile = try await fetchedProfileTask
             SocialFeedDebug.log(
@@ -169,6 +175,111 @@ extension ProfileViewModel {
     private func logField(_ value: String?) -> String {
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return trimmed.isEmpty ? "nil" : trimmed
+    }
+
+    private func loadProfileTask(userId: UUID, generation: UUID, isOwnProfile: Bool) async throws -> Profile {
+        let startedAt = Date()
+        SocialFeedDebug.log(
+            "profile.vm.load.profile_task.start user=\(userId.uuidString) generation=\(generation.uuidString) own=\(isOwnProfile)"
+        )
+        do {
+            let profile = try await (isOwnProfile
+                ? profileService.fetchOrCreateProfile(userId: userId)
+                : profileService.fetchMyProfile(userId: userId, useCache: false))
+            SocialFeedDebug.log(
+                "profile.vm.load.profile_task.success user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) fetched=\(profile.id.uuidString)"
+            )
+            return profile
+        } catch {
+            SocialFeedDebug.log(
+                "profile.vm.load.profile_task.error user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
+    }
+
+    private func loadTraveledTask(userId: UUID, generation: UUID) async throws -> Set<String> {
+        let startedAt = Date()
+        SocialFeedDebug.log("profile.vm.load.traveled_task.start user=\(userId.uuidString) generation=\(generation.uuidString)")
+        do {
+            let traveled = try await profileService.fetchTraveledCountries(userId: userId)
+            SocialFeedDebug.log(
+                "profile.vm.load.traveled_task.success user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) count=\(traveled.count)"
+            )
+            return traveled
+        } catch {
+            SocialFeedDebug.log(
+                "profile.vm.load.traveled_task.error user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
+    }
+
+    private func loadBucketTask(userId: UUID, generation: UUID) async throws -> Set<String> {
+        let startedAt = Date()
+        SocialFeedDebug.log("profile.vm.load.bucket_task.start user=\(userId.uuidString) generation=\(generation.uuidString)")
+        do {
+            let bucket = try await profileService.fetchBucketListCountries(userId: userId)
+            SocialFeedDebug.log(
+                "profile.vm.load.bucket_task.success user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) count=\(bucket.count)"
+            )
+            return bucket
+        } catch {
+            SocialFeedDebug.log(
+                "profile.vm.load.bucket_task.error user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
+    }
+
+    private func loadRelationshipTask(userId: UUID, generation: UUID, isOwnProfile: Bool) async throws -> RelationshipState {
+        let startedAt = Date()
+        SocialFeedDebug.log(
+            "profile.vm.load.relationship_task.start user=\(userId.uuidString) generation=\(generation.uuidString) own=\(isOwnProfile)"
+        )
+        do {
+            let relationship: RelationshipState = isOwnProfile ? .selfProfile : try await resolvedRelationshipState(for: userId)
+            SocialFeedDebug.log(
+                "profile.vm.load.relationship_task.success user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return relationship
+        } catch {
+            SocialFeedDebug.log(
+                "profile.vm.load.relationship_task.error user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
+    }
+
+    private func loadPassportPreferencesTask(userId: UUID, generation: UUID, isOwnProfile: Bool) async throws -> PassportPreferences {
+        let startedAt = Date()
+        SocialFeedDebug.log(
+            "profile.vm.load.passport_task.start user=\(userId.uuidString) generation=\(generation.uuidString) own=\(isOwnProfile)"
+        )
+        do {
+            let preferences: PassportPreferences = isOwnProfile
+                ? try await profileService.fetchPassportPreferences(userId: userId)
+                : .empty
+            SocialFeedDebug.log(
+                "profile.vm.load.passport_task.success user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return preferences
+        } catch {
+            SocialFeedDebug.log(
+                "profile.vm.load.passport_task.error user=\(userId.uuidString) generation=\(generation.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
     }
 
     func refreshProfile() async {
