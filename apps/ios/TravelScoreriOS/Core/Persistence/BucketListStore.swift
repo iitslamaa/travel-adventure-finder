@@ -76,7 +76,6 @@ final class BucketListStore: ObservableObject {
             ids = Set(decoded)
             SocialFeedDebug.log("bucket.store.load.success instance=\(instanceId.uuidString) \(SocialFeedDebug.countrySetSummary(ids))")
         } else {
-            print("❌ [BucketListStore:", instanceId, "] load — decode failed")
             SocialFeedDebug.log("bucket.store.load.decode_failed instance=\(instanceId.uuidString) key=\(saveKey)")
         }
     }
@@ -87,7 +86,6 @@ final class BucketListStore: ObservableObject {
             UserDefaults.standard.set(data, forKey: saveKey)
             SocialFeedDebug.log("bucket.store.save.success instance=\(instanceId.uuidString) \(SocialFeedDebug.countrySetSummary(ids))")
         } else {
-            print("❌ [BucketListStore:", instanceId, "] save — encode failed")
             SocialFeedDebug.log("bucket.store.save.encode_failed instance=\(instanceId.uuidString) \(SocialFeedDebug.countrySetSummary(ids))")
         }
     }

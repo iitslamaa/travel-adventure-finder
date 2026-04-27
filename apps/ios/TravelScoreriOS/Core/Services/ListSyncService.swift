@@ -88,7 +88,6 @@ final class ListSyncService {
                 )
                 return
             }
-            print("❌ [ListSync:", instanceId, "] setBucket failed:", error)
             SocialFeedDebug.log(
                 "list_sync.set_bucket.error instance=\(instanceId.uuidString) user=\(userId.uuidString) country=\(countryId) add=\(add) error=\(SocialFeedDebug.describe(error))"
             )
@@ -123,7 +122,6 @@ final class ListSyncService {
                pg.code == "23505" {
                 return
             }
-            print("❌ [ListSync:", instanceId, "] setTraveled failed:", error)
         }
     }
 

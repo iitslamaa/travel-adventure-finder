@@ -39,7 +39,6 @@ struct BucketToggleButton: View {
                             )
                         }
                     } catch {
-                        print("❌ BucketToggleButton failed:", error)
                         SocialFeedDebug.log("bucket.toggle_button.error country=\(countryId) error=\(SocialFeedDebug.describe(error))")
                     }
                 } else {

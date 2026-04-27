@@ -284,7 +284,6 @@ struct RootTabView: View {
                 do {
                     countries = try await CountryAPI.fetchCountries()
                 } catch {
-                    print("❌ Failed to fetch countries:", error)
                 }
             }
         }

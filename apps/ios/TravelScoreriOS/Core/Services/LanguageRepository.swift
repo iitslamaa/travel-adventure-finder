@@ -226,7 +226,6 @@ final class LanguageRepository {
             let data = try? Data(contentsOf: url),
             let decoded = try? JSONDecoder().decode([AppLanguage].self, from: data)
         else {
-            print("❌ Failed to load global_languages.json")
             return
         }
 

@@ -144,7 +144,6 @@ final class SupabaseManager {
         // Server-verify the access token maps to a real user.
         let isValidOnServer = await verifyUserOnServer(accessToken: session.accessToken)
         if !isValidOnServer {
-            print("⚠️ [\(instanceId)] fetchCurrentSession server verify failed — treating as no session")
             return nil
         }
 

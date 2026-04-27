@@ -26,7 +26,6 @@ extension ProfileViewModel {
 
         guard let currentUserId = supabase.currentUserId else {
             errorMessage = String(localized: "profile.errors.not_authenticated")
-            print("❌ refreshRelationshipState abort — currentUserId nil")
             return
         }
 
@@ -49,13 +48,11 @@ extension ProfileViewModel {
 
         guard let currentUserId = supabase.currentUserId else {
             errorMessage = String(localized: "profile.errors.not_authenticated")
-            print("❌ toggleFriend abort — currentUserId nil")
             return
         }
 
         guard let profileId = profile?.id else {
             errorMessage = String(localized: "profile.errors.not_loaded")
-            print("❌ toggleFriend abort — profileId nil")
             return
         }
         
@@ -114,7 +111,6 @@ extension ProfileViewModel {
 
                 
             case .requestSent:
-                print("   ❌ Cancelling sent friend request...")
                 await cancelFriendRequest()
                 
             case .selfProfile:
@@ -122,16 +118,10 @@ extension ProfileViewModel {
             }
         } catch {
             errorMessage = error.localizedDescription
-            print("❌ Relationship action failed — raw:", error)
-            print("❌ Relationship action failed — description:", error.localizedDescription)
-            if let pg = error as? PostgrestError {
-                print("❌ PostgrestError code:", pg.code as Any, "message:", pg.message, "detail:", pg.detail as Any, "hint:", pg.hint as Any)
-            }
         }
     }
 
     func cancelFriendRequest() async {
-        print("❌ cancelFriendRequest CALLED")
         guard let profileId = profile?.id,
               let currentUserId = supabase.currentUserId else { return }
 
@@ -144,11 +134,8 @@ extension ProfileViewModel {
             relationshipState = .none
             isFriend = false
             // logPublishedState("after cancelFriendRequest")
-
-            print("❌ Friend request cancelled:", profileId)
         } catch {
             errorMessage = error.localizedDescription
-            print("❌ Cancel request failed:", error)
         }
     }
 }

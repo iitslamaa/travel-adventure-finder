@@ -63,7 +63,6 @@ final class TraveledStore: ObservableObject {
         if let data = try? JSONEncoder().encode(array) {
             UserDefaults.standard.set(data, forKey: saveKey)
         } else {
-            print("❌ [TraveledStore:", instanceId, "] save failed to encode")
         }
     }
 }

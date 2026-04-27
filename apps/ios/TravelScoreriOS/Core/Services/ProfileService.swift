@@ -519,7 +519,6 @@ final class ProfileService {
                 )
 
                 if let pg = error as? PostgrestError, pg.code == "23503" {
-                    print("⚠️ ensureProfileExists FK violation (23503) — retry \(idx + 1)/\(delays.count)")
                     continue
                 }
 

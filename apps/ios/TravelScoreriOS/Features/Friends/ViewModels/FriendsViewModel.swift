@@ -86,8 +86,6 @@ final class FriendsViewModel: ObservableObject {
             if (error as? URLError)?.code == .cancelled || Task.isCancelled {
                 return
             }
-
-            print("❌ [FriendsVM:", instanceId, "] loadFriends failed:", error)
             if let urlError = error as? URLError {
                 switch urlError.code {
                 case .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost, .timedOut:
@@ -122,8 +120,6 @@ final class FriendsViewModel: ObservableObject {
             if (error as? URLError)?.code == .cancelled || Task.isCancelled {
                 return
             }
-
-            print("❌ [FriendsVM:", instanceId, "] loadIncomingRequestCount failed:", error)
             incomingRequestCount = 0
         }
     }

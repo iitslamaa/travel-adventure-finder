@@ -445,7 +445,6 @@ struct CustomWeightsView: View {
                 .upsert(row)
                 .execute()
         } catch {
-            print("❌ Failed saving weights:", error)
         }
     }
 

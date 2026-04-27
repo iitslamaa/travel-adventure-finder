@@ -31,7 +31,6 @@ extension ProfileViewModel {
         }
 
         guard let currentUserId = supabase.currentUserId else {
-            print("❌ toggleBucket: No current user")
             return
         }
 
@@ -87,8 +86,6 @@ extension ProfileViewModel {
             }
 
             computeOrderedLists()
-
-            print("❌ toggleBucket rolled back due to error:", error)
             SocialFeedDebug.log(
                 "profile.bucket.toggle.error user=\(userId) country=\(countryId) rolled_back_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries)) error=\(SocialFeedDebug.describe(error))"
             )
@@ -163,8 +160,6 @@ extension ProfileViewModel {
             }
 
             computeOrderedLists()
-
-            print("❌ toggleTraveled rolled back due to error:", error)
             SocialFeedDebug.log("profile.traveled.toggle.error user=\(userId) country=\(countryId) error=\(SocialFeedDebug.describe(error))")
             errorMessage = error.localizedDescription
         }

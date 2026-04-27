@@ -212,8 +212,6 @@ extension ProfileViewModel {
             if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
                 return
             }
-
-            print("❌ load() failed:", error)
             errorMessage = error.localizedDescription
         }
     }

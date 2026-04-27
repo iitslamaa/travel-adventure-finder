@@ -117,7 +117,6 @@ final class SharedTripInboxStore: ObservableObject {
                 "duration=\(TripPlannerDebugLog.durationText(since: start)) fetched=\(trips.count) pending=\(notifications.count)"
             )
         } catch {
-            print("❌ Shared trip inbox refresh failed:", error)
             notifications = []
             TripPlannerDebugLog.probe(
                 "SharedTripInbox.refresh.failed",
@@ -237,7 +236,6 @@ final class SharedTripInboxStore: ObservableObject {
                 }
             }
         } catch {
-            print("❌ Shared trip realtime subscribe failed:", error)
             await supabase.client.removeChannel(channel)
         }
     }
@@ -2197,7 +2195,6 @@ final class TripPlannerStore: ObservableObject {
                 migrateLocalTrips: migrateLocalTrips
             )
         } catch {
-            print("❌ Trip planner sync failed:", error)
             TripPlannerDebugLog.probe(
                 "TripPlannerStore.refreshRemote.failed",
                 "duration=\(TripPlannerDebugLog.durationText(since: refreshStart)) error=\(String(describing: error))"
@@ -2293,7 +2290,6 @@ final class TripPlannerStore: ObservableObject {
                 "Save completed for \(TripPlannerDebugLog.tripLabel(trip)); actor now sees \(remoteTrips.count) remote trips"
             )
         } catch {
-            print("❌ Trip planner upsert failed:", error)
         }
     }
 
@@ -2329,7 +2325,6 @@ final class TripPlannerStore: ObservableObject {
             }
             NotificationCenter.default.post(name: .sharedTripsUpdated, object: nil)
         } catch {
-            print("❌ Trip planner delete failed:", error)
         }
     }
 }
@@ -2974,7 +2969,6 @@ extension TripPlannerStore {
                 migrateLocalTrips: false
             )
         } catch {
-            print("❌ Trip planner sync failed:", error)
             TripPlannerDebugLog.probe(
                 "TripPlannerStore.refresh.prefetched.failed",
                 "duration=\(TripPlannerDebugLog.durationText(since: start)) error=\(String(describing: error))"
@@ -3450,7 +3444,6 @@ struct TripPlannerView: View {
                             await store.refresh(using: remoteTrips, userId: userId)
                             sharedTripInbox.refresh(using: remoteTrips, userId: userId)
                         } catch {
-                            print("❌ Trip planner shared refresh failed:", error)
                             async let tripRefresh: Void = store.refresh()
                             async let inboxRefresh: Void = sharedTripInbox.refresh()
                             _ = await (tripRefresh, inboxRefresh)

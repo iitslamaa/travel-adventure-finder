@@ -56,8 +56,6 @@ final class SocialFeedViewModel: ObservableObject {
 
 enum SocialFeedDebug {
     static func log(_ message: String) {
-        let timestamp = timestampFormatter.string(from: Date())
-        print("[SocialActivity][\(timestamp)] \(message)")
     }
 
     static func countrySetSummary(_ countries: Set<String>) -> String {

@@ -70,13 +70,11 @@ struct WorldGeoJSONLoader {
 
         guard let url = Bundle.main.url(forResource: fileName, withExtension: "geo.json"),
               let data = try? Data(contentsOf: url) else {
-            print("❌ Failed to load \(fileName).geo.json")
             return []
         }
 
         let decoder = MKGeoJSONDecoder()
         guard let geoObjects = try? decoder.decode(data) else {
-            print("❌ GeoJSON decode failed for \(fileName)")
             return []
         }
 

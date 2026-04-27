@@ -169,7 +169,6 @@ final class SessionManager: ObservableObject {
                 syncingUserId = nil
             }
         } catch {
-            print("⚠️ forceRefreshAuthState transient error:", error)
             // 🔥 DO NOT clear userId or isAuthenticated on transient error
         }
 
@@ -191,7 +190,7 @@ final class SessionManager: ObservableObject {
         ensureProfileTask = Task {
             let delays: [UInt64] = [500_000_000, 1_000_000_000, 2_000_000_000, 4_000_000_000] // 0.5s, 1s, 2s, 4s
 
-            for (idx, delay) in delays.enumerated() {
+            for delay in delays {
                 try? await Task.sleep(nanoseconds: delay)
 
                 // Re-hydrate session in case auth state is still propagating
@@ -207,17 +206,13 @@ final class SessionManager: ObservableObject {
                 } catch {
                     // Keep retrying on FK race; otherwise bail.
                     if let pg = error as? PostgrestError, pg.code == "23503" {
-                        print("⚠️ ensureProfileEventually FK (23503) — retry \(idx + 1)/\(delays.count) for:", userId)
                         continue
                     }
-
-                    print("❌ ensureProfileEventually failed (non-FK):", error)
                     return
                 }
             }
 
             // If we exhausted retries, allow a later auth refresh to try again.
-            print("❌ ensureProfileEventually exhausted retries for:", userId)
             didEnsureProfile = false
             ensureProfileTask = nil
         }
@@ -318,7 +313,6 @@ final class SessionManager: ObservableObject {
                 self.bucketListStore.replace(with: bucketIds)
                 self.traveledStore.replace(with: traveledIds)
             } catch {
-                print("⚠️ synchronizeListsIfNeeded failed:", error)
             }
 
             if !Task.isCancelled, self.syncingUserId == userId {
@@ -392,7 +386,6 @@ final class SessionManager: ObservableObject {
                     syncingUserId = nil
                 }
             } catch {
-                print("⚠️ refreshFromCurrentSession transient error:", error)
                 // 🔥 DO NOT clear userId or isAuthenticated on transient error
             }
 

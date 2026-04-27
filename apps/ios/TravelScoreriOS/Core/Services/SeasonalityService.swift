@@ -29,15 +29,8 @@ final class SeasonalityService {
         }
 
         let (data, response) = try await URLSession.shared.data(from: url)
-        guard let http = response as? HTTPURLResponse,
-              (200..<300).contains(http.statusCode) else {
-            #if DEBUG
-            if let http = response as? HTTPURLResponse {
-                print("[SeasonalityService] ❌ Status: \(http.statusCode)")
-            } else {
-                print("[SeasonalityService] ❌ Non-HTTP response")
-            }
-            #endif
+        guard let response = response as? HTTPURLResponse,
+              (200..<300).contains(response.statusCode) else {
             throw SeasonalityServiceError.badResponse
         }
 
@@ -51,7 +44,6 @@ final class SeasonalityService {
             return try decoder.decode(SeasonalityResponse.self, from: data)
         } catch {
             #if DEBUG
-            print("[SeasonalityService] ❌ Decode failed:", error)
             #endif
             throw error
         }
