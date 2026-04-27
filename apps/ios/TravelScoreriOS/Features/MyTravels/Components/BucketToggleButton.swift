@@ -20,12 +20,21 @@ struct BucketToggleButton: View {
             Task {
                 if let userId = sessionManager.userId {
                     let service = ProfileService(supabase: SupabaseManager.shared)
-                    if isBucketed {
-                        try? await service.removeFromBucketList(userId: userId, countryCode: countryId)
-                        isBucketed = false
-                    } else {
-                        try? await service.addToBucketList(userId: userId, countryCode: countryId)
-                        isBucketed = true
+                    do {
+                        if isBucketed {
+                            try await service.removeFromBucketList(userId: userId, countryCode: countryId)
+                            isBucketed = false
+                        } else {
+                            try await service.addToBucketList(userId: userId, countryCode: countryId)
+                            isBucketed = true
+                            try? await SocialActivityService().recordCountryListActivity(
+                                actorUserId: userId,
+                                eventType: .bucketListAdded,
+                                countryIds: [countryId]
+                            )
+                        }
+                    } catch {
+                        print("❌ BucketToggleButton failed:", error)
                     }
                 }
             }

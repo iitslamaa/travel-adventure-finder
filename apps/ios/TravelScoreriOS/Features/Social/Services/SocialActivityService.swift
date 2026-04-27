@@ -152,6 +152,33 @@ final class SocialActivityService {
         }
     }
 
+    func recordCountryListActivity(
+        actorUserId: UUID,
+        eventType: SocialActivityEventType,
+        countryIds: [String]
+    ) async throws {
+        let countryCodes = Array(Set(countryIds.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }))
+            .filter { !$0.isEmpty }
+            .sorted()
+
+        guard !countryCodes.isEmpty else { return }
+
+        var metadata = [
+            "country_code": countryCodes[0],
+            "country_count": "\(countryCodes.count)"
+        ]
+
+        if countryCodes.count == 2 {
+            metadata["country_code_2"] = countryCodes[1]
+        }
+
+        try await recordActivity(
+            actorUserId: actorUserId,
+            eventType: eventType,
+            metadata: metadata
+        )
+    }
+
     private func buildActorProfiles(for userId: UUID, friends: [Profile], requestId: String) async throws -> ([UUID: Profile], [UUID: String]) {
         let friendSeedStartTime = Date()
         var profilesById = Dictionary(uniqueKeysWithValues: friends.map { ($0.id, $0) })

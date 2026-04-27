@@ -187,11 +187,19 @@ struct MyTravelsView: View {
             let additions = updatedIds.subtracting(previousIds).sorted()
 
             for countryId in removals {
-                await profileVM.toggleTraveled(countryId)
+                await profileVM.toggleTraveled(countryId, recordActivity: false)
             }
 
             for countryId in additions {
-                await profileVM.toggleTraveled(countryId)
+                await profileVM.toggleTraveled(countryId, recordActivity: false)
+            }
+
+            if let userId = sessionManager.userId, !additions.isEmpty {
+                try? await SocialActivityService().recordCountryListActivity(
+                    actorUserId: userId,
+                    eventType: .countryVisited,
+                    countryIds: additions
+                )
             }
 
             let latestIds = profileVM.viewedTraveledCountries

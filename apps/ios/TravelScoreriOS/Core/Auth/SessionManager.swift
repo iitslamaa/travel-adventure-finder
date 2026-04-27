@@ -248,6 +248,22 @@ final class SessionManager: ObservableObject {
             )
         }
 
+        if !bucketIdsToMerge.isEmpty {
+            try? await SocialActivityService().recordCountryListActivity(
+                actorUserId: userId,
+                eventType: .bucketListAdded,
+                countryIds: Array(bucketIdsToMerge)
+            )
+        }
+
+        if !traveledIdsToMerge.isEmpty {
+            try? await SocialActivityService().recordCountryListActivity(
+                actorUserId: userId,
+                eventType: .countryVisited,
+                countryIds: Array(traveledIdsToMerge)
+            )
+        }
+
         // Clear guest snapshots after successful merge
         guestBucketSnapshot.removeAll()
         guestTraveledSnapshot.removeAll()
