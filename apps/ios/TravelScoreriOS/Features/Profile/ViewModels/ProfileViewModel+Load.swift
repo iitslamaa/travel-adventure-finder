@@ -100,9 +100,13 @@ extension ProfileViewModel {
                     "profile.vm.load.fast_path.start user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
                     "reason=renderable_seed_waiting_for_secondary"
                 )
+                SocialFeedDebug.log("profile.vm.load.fast_path.await_traveled user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
                 let traveled = try await traveledTask.value
+                SocialFeedDebug.log("profile.vm.load.fast_path.await_bucket user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
                 let bucket = try await bucketTask.value
+                SocialFeedDebug.log("profile.vm.load.fast_path.await_relationship user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
                 let resolvedRelationship = try await relationshipTask.value
+                SocialFeedDebug.log("profile.vm.load.fast_path.await_passport user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
                 let fetchedPassportPreferences = try await passportPreferencesTask.value
                 SocialFeedDebug.log(
                     "profile.vm.load.fast_path.secondary_done user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
@@ -133,6 +137,9 @@ extension ProfileViewModel {
                 Task { [weak self] in
                     let refreshStartTime = Date()
                     do {
+                        SocialFeedDebug.log(
+                            "profile.vm.load.fast_path.profile_refresh.await user=\(startingUserId.uuidString) generation=\(generation.uuidString)"
+                        )
                         let fetchedProfile = try await profileTask.value
                         await self?.applyBackgroundProfileRefresh(
                             fetchedProfile,
@@ -152,6 +159,7 @@ extension ProfileViewModel {
                 return
             }
 
+            SocialFeedDebug.log("profile.vm.load.await_profile user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
             let fetchedProfile = try await profileTask.value
             SocialFeedDebug.log(
                 "profile.vm.load.profile_task.done user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +
@@ -173,9 +181,13 @@ extension ProfileViewModel {
             }
             computeOrderedLists()
 
+            SocialFeedDebug.log("profile.vm.load.await_traveled user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
             let traveled = try await traveledTask.value
+            SocialFeedDebug.log("profile.vm.load.await_bucket user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
             let bucket = try await bucketTask.value
+            SocialFeedDebug.log("profile.vm.load.await_relationship user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
             let resolvedRelationship = try await relationshipTask.value
+            SocialFeedDebug.log("profile.vm.load.await_passport user=\(startingUserId.uuidString) generation=\(generation.uuidString)")
             let fetchedPassportPreferences = try await passportPreferencesTask.value
             SocialFeedDebug.log(
                 "profile.vm.load.secondary_tasks.done user=\(startingUserId.uuidString) generation=\(generation.uuidString) " +

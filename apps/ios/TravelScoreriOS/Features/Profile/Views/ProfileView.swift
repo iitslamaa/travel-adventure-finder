@@ -169,6 +169,18 @@ struct ProfileView: View {
         }
     }
 
+    private func logCountryDestinationBuild(_ country: Country) {
+        SocialFeedDebug.log(
+            "profile.view.country_destination.build user=\(userId.uuidString) iso2=\(country.iso2.uppercased())"
+        )
+    }
+
+    private func logSettingsPresent() {
+        SocialFeedDebug.log(
+            "profile.view.settings.present user=\(userId.uuidString) \(renderGateDebugSummary)"
+        )
+    }
+
     private func resolveCountry(for isoCode: String) -> Country {
         let normalizedISO = isoCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
 
@@ -186,175 +198,203 @@ struct ProfileView: View {
         )
     }
 
+    private var loadingPlaceholder: AnyView {
+        AnyView(ProfileLoadingView()
+            .onAppear {
+                SocialFeedDebug.log(
+                    "profile.view.loading.appear user=\(userId.uuidString) " +
+                    "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading) " +
+                    "relationship_loading=\(profileVM.isRelationshipLoading)"
+                )
+            }
+            .onDisappear {
+                SocialFeedDebug.log(
+                    "profile.view.loading.disappear user=\(userId.uuidString) " +
+                    "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading) " +
+                    "relationship_loading=\(profileVM.isRelationshipLoading)"
+                )
+            }
+        )
+    }
 
-    var body: some View {
-        GeometryReader { geometry in
-            let isCompactWidth = geometry.size.width < 390
-            let contentHorizontalPadding: CGFloat = isCompactWidth ? 14 : 20
-            let bottomContentInset = max(floatingTabBarInset + 8, 28)
+    private func profileContent(
+        relationshipState: RelationshipState,
+        contentHorizontalPadding: CGFloat,
+        bottomContentInset: CGFloat
+    ) -> AnyView {
+        AnyView(ScrollViewReader { _ in
+            VStack(spacing: 0) {
+                Theme.titleBanner(navigationTitle)
 
+                ScrollView {
+                    VStack(spacing: 26) {
+                        ProfileHeaderView(
+                            profile: profileVM.profile,
+                            username: username,
+                            homeCountryCodes: homeCountryCodes,
+                            visitedCountryCodes: profileVM.orderedTraveledCountries,
+                            relationshipState: relationshipState,
+                            onToggleFriend: {
+                                switch relationshipState {
+                                case .friends, .requestSent:
+                                    showFriendsDrawer = true
+                                case .requestReceived, .none:
+                                    Task { await profileVM.toggleFriend() }
+                                case .selfProfile:
+                                    break
+                                }
+                            },
+                            onOpenCountry: { isoCode in
+                                selectedCountry = resolveCountry(for: isoCode)
+                            }
+                        )
+                        .background(
+                            Theme.profileCardBackground(corner: 22)
+                                .padding(.horizontal, -10)
+                                .padding(.vertical, -8)
+                        )
+
+                        if relationshipState == .friends || relationshipState == .selfProfile {
+                            ProfileInfoSection(
+                                relationshipState: relationshipState,
+                                viewedTraveledCountries: profileVM.viewedTraveledCountries,
+                                viewedBucketListCountries: profileVM.viewedBucketListCountries,
+                                orderedTraveledCountries: profileVM.orderedTraveledCountries,
+                                orderedBucketListCountries: profileVM.orderedBucketListCountries,
+                                mutualTraveledCountries: profileVM.mutualTraveledCountries,
+                                mutualBucketCountries: profileVM.mutualBucketCountries,
+                                languages: languages,
+                                travelMode: travelModeLabel,
+                                travelStyle: travelStyleLabel,
+                                nextDestination: nextDestination,
+                                currentCountry: profileVM.profile?.currentCountry,
+                                favoriteCountries: profileVM.profile?.favoriteCountries ?? [],
+                                onOpenCountry: { isoCode in
+                                    selectedCountry = resolveCountry(for: isoCode)
+                                }
+                            )
+                        } else {
+                            LockedProfileView()
+                                .padding(.top, 40)
+                        }
+                    }
+                    .id("profileTop")
+                    .padding(.horizontal, contentHorizontalPadding)
+                    .padding(.top, 6)
+                    .padding(.bottom, bottomContentInset)
+                }
+                .refreshable {
+                    SocialFeedDebug.log(
+                        "profile.view.refresh.start user=\(userId.uuidString) \(renderGateDebugSummary)"
+                    )
+                    await profileVM.reloadProfile()
+                    SocialFeedDebug.log(
+                        "profile.view.refresh.end user=\(userId.uuidString) \(renderGateDebugSummary)"
+                    )
+                }
+                .navigationDestination(item: $selectedCountry) { country in
+                    CountryDetailView(country: country)
+                        .onAppear {
+                            logCountryDestinationBuild(country)
+                        }
+                }
+                .background(Color.clear)
+                .sheet(isPresented: $showFriendsDrawer) {
+                    FriendsSection(
+                        relationshipState: relationshipState,
+                        username: username,
+                        friendCount: friendCount,
+                        onToggleFriend: {
+                            Task { await profileVM.toggleFriend() }
+                        },
+                        onCancelRequest: {
+                            Task { await profileVM.toggleFriend() }
+                        },
+                        onViewFriends: {
+                            showFriendsDrawer = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                socialNav.push(.friends(userId))
+                            }
+                        }
+                    )
+                }
+            }
+        })
+    }
+
+    private var chromeOverlay: AnyView {
+        AnyView(VStack {
+            HStack {
+                if showsBackButton {
+                    Button {
+                        SocialFeedDebug.log(
+                            "profile.view.back.tap user=\(userId.uuidString) \(renderGateDebugSummary)"
+                        )
+                        dismiss()
+                    } label: {
+                        ZStack {
+                            Theme.chromeIconButtonBackground(size: 40)
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(.black)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Spacer()
+
+                if SupabaseManager.shared.currentUserId == userId {
+                    Button {
+                        SocialFeedDebug.log(
+                            "profile.view.settings.tap user=\(userId.uuidString) \(renderGateDebugSummary)"
+                        )
+                        showSettings = true
+                    } label: {
+                        ZStack {
+                            Theme.chromeIconButtonBackground(size: 40)
+                            Image(systemName: "gearshape")
+                                .font(TAFTypography.title(.bold))
+                                .foregroundStyle(.black)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+
+            Spacer()
+        })
+    }
+
+    private func profileGeometryContent(width: CGFloat) -> AnyView {
+        let isCompactWidth = width < 390
+        let contentHorizontalPadding: CGFloat = isCompactWidth ? 14 : 20
+        let bottomContentInset = max(floatingTabBarInset + 8, 28)
+
+        return AnyView(
             ZStack {
                 Color.clear
 
                 if !isReadyToRenderProfile {
-                    ProfileLoadingView()
-                        .onAppear {
-                            SocialFeedDebug.log(
-                                "profile.view.loading.appear user=\(userId.uuidString) " +
-                                "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading) " +
-                                "relationship_loading=\(profileVM.isRelationshipLoading)"
-                            )
-                        }
-                        .onDisappear {
-                            SocialFeedDebug.log(
-                                "profile.view.loading.disappear user=\(userId.uuidString) " +
-                                "vm_profile=\(logField(profileVM.profile?.id.uuidString)) is_loading=\(profileVM.isLoading) " +
-                                "relationship_loading=\(profileVM.isRelationshipLoading)"
-                            )
-                        }
+                    loadingPlaceholder
                 } else {
-                    let relationshipState = profileVM.relationshipState
-
-                    ScrollViewReader { proxy in
-                        VStack(spacing: 0) {
-                            Theme.titleBanner(navigationTitle)
-
-                            ScrollView {
-                                VStack(spacing: 26) {
-                                    ProfileHeaderView(
-                                        profile: profileVM.profile,
-                                        username: username,
-                                        homeCountryCodes: homeCountryCodes,
-                                        visitedCountryCodes: profileVM.orderedTraveledCountries,
-                                        relationshipState: relationshipState,
-                                        onToggleFriend: {
-                                            switch relationshipState {
-                                            case .friends:
-                                                showFriendsDrawer = true
-                                            case .requestSent:
-                                                showFriendsDrawer = true
-                                            case .requestReceived:
-                                                Task { await profileVM.toggleFriend() }
-                                            case .none:
-                                                Task { await profileVM.toggleFriend() }
-                                            case .selfProfile:
-                                                break
-                                            }
-                                        },
-                                        onOpenCountry: { isoCode in
-                                            selectedCountry = resolveCountry(for: isoCode)
-                                        }
-                                    )
-                                    .background(
-                                        Theme.profileCardBackground(corner: 22)
-                                            .padding(.horizontal, -10)
-                                            .padding(.vertical, -8)
-                                    )
-
-                                    if relationshipState == .friends ||
-                                        relationshipState == .selfProfile {
-
-                                        ProfileInfoSection(
-                                            relationshipState: relationshipState,
-                                            viewedTraveledCountries: profileVM.viewedTraveledCountries,
-                                            viewedBucketListCountries: profileVM.viewedBucketListCountries,
-                                            orderedTraveledCountries: profileVM.orderedTraveledCountries,
-                                            orderedBucketListCountries: profileVM.orderedBucketListCountries,
-                                            mutualTraveledCountries: profileVM.mutualTraveledCountries,
-                                            mutualBucketCountries: profileVM.mutualBucketCountries,
-                                            languages: languages,
-                                            travelMode: travelModeLabel,
-                                            travelStyle: travelStyleLabel,
-                                            nextDestination: nextDestination,
-                                            currentCountry: profileVM.profile?.currentCountry,
-                                            favoriteCountries: profileVM.profile?.favoriteCountries ?? [],
-                                            onOpenCountry: { isoCode in
-                                                selectedCountry = resolveCountry(for: isoCode)
-                                            }
-                                        )
-
-                                    } else {
-                                        LockedProfileView()
-                                            .padding(.top, 40)
-                                    }
-                                }
-                                .id("profileTop")
-                                .padding(.horizontal, contentHorizontalPadding)
-                                .padding(.top, 6)
-                                .padding(.bottom, bottomContentInset)
-                            }
-                            .refreshable {
-                                await profileVM.reloadProfile()
-                            }
-                            .navigationDestination(item: $selectedCountry) { country in
-                                CountryDetailView(country: country)
-                            }
-                            .background(Color.clear)
-                            .sheet(isPresented: $showFriendsDrawer) {
-                                FriendsSection(
-                                    relationshipState: relationshipState,
-                                    username: username,
-                                    friendCount: friendCount,
-                                    onToggleFriend: {
-                                        Task {
-                                            await profileVM.toggleFriend()
-                                        }
-                                    },
-                                    onCancelRequest: {
-                                        Task {
-                                            await profileVM.toggleFriend()
-                                        }
-                                    },
-                                    onViewFriends: {
-                                        showFriendsDrawer = false
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                            socialNav.push(.friends(userId))
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
+                    profileContent(
+                        relationshipState: profileVM.relationshipState,
+                        contentHorizontalPadding: contentHorizontalPadding,
+                        bottomContentInset: bottomContentInset
+                    )
                 }
 
-                VStack {
-                    HStack {
-                        if showsBackButton {
-                            Button {
-                                dismiss()
-                            } label: {
-                                ZStack {
-                                    Theme.chromeIconButtonBackground(size: 40)
-                                    Image(systemName: "chevron.left")
-                                        .font(.system(size: 18, weight: .semibold))
-                                        .foregroundStyle(.black)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                        }
-
-                        Spacer()
-
-                        if SupabaseManager.shared.currentUserId == userId {
-                            Button {
-                                showSettings = true
-                            } label: {
-                                ZStack {
-                                    Theme.chromeIconButtonBackground(size: 40)
-                                    Image(systemName: "gearshape")
-                                        .font(TAFTypography.title(.bold))
-                                        .foregroundStyle(.black)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 12)
-
-                    Spacer()
-                }
+                chromeOverlay
             }
+        )
+    }
+
+    private var profileBase: AnyView {
+        AnyView(GeometryReader { geometry in
+            profileGeometryContent(width: geometry.size.width)
         }
         .background(
             Theme.pageBackground("travel4")
@@ -370,6 +410,9 @@ struct ProfileView: View {
                     profileVM: profileVM,
                     viewedUserId: userId
                 )
+            }
+            .onAppear {
+                logSettingsPresent()
             }
         }
         .onAppear {
@@ -396,6 +439,11 @@ struct ProfileView: View {
                 )
                 clearProfileNavigationLoadingIfReady(reason: "load_task_end")
             }
+        }
+        .onDisappear {
+            SocialFeedDebug.log(
+                "profile.view.disappear user=\(userId.uuidString) \(renderGateDebugSummary)"
+            )
         }
         .onChange(of: isReadyToRenderProfile) { oldValue, newValue in
             SocialFeedDebug.log(
@@ -424,5 +472,10 @@ struct ProfileView: View {
                 "old=\(logField(oldValue?.uuidString)) new=\(logField(newValue?.uuidString)) \(renderGateDebugSummary)"
             )
         }
+        )
+    }
+
+    var body: some View {
+        profileBase
     }
 }
