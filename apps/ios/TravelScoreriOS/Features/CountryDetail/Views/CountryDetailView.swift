@@ -81,6 +81,7 @@ struct CountryDetailView: View {
     @State private var profileWarmupTask: Task<Void, Never>?
     @State private var passportContextWarmupTask: Task<Void, Never>?
     @State private var languageProfileTask: Task<Void, Never>?
+    @State private var isPreparingContent: Bool = true
     @State private var isLoadingLanguageCompatibility: Bool = false
 
     private var passportFallbackCountryCode: String {
@@ -302,99 +303,105 @@ struct CountryDetailView: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(spacing: 28) {
+        Group {
+            if isPreparingContent {
+                CountryDetailLoadingView(countryName: country.localizedDisplayName)
+            } else {
+                GeometryReader { geometry in
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(spacing: 28) {
 
-                        // Header polaroid style
-                        CountryHeaderCard(country: displayedCountry)
-                            .padding()
-                            .background(
-                                Theme.countryDetailCardBackground(corner: 20)
-                            )
-                            .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
+                                // Header polaroid style
+                                CountryHeaderCard(country: displayedCountry)
+                                    .padding()
+                                    .background(
+                                        Theme.countryDetailCardBackground(corner: 20)
+                                    )
+                                    .shadow(color: .black.opacity(0.08), radius: 12, y: 8)
 
-                        scrapbookSection {
-                            CountryOverviewCard(country: displayedCountry)
-                        }
-
-                        if sessionManager.isAuthenticated {
-                            scrapbookSection {
-                                CountryFriendEngagementPreviewCard(
-                                    country: displayedCountry,
-                                    engagement: engagementVM.engagement,
-                                    isLoading: engagementVM.isLoading,
-                                    onOpen: {
-                                        activeSheet = .engagement
-                                    }
-                                )
-                            }
-                        }
-
-                        // Advisory card stack
-                        scrapbookSection {
-                            CountryAdvisoryCard(
-                                country: displayedCountry,
-                                weightPercentage: weightsStore.advisoryPercentage
-                            )
-                        }
-
-                        // Seasonality card stack
-                        scrapbookSection {
-                            CountrySeasonalityCard(
-                                country: displayedCountry,
-                                weightPercentage: weightsStore.seasonalityPercentage
-                            )
-                        }
-
-                        // Visa card stack
-                        scrapbookSection {
-                            CountryVisaCard(
-                                country: displayedCountry,
-                                weightPercentage: weightsStore.visaPercentage,
-                                isLoading: isResolvingVisaContext,
-                                passportLabel: visaPassportLabel,
-                                recommendedPassportLabel: recommendedPassportLabel,
-                                equalBestPassportLabels: equalBestPassportLabels,
-                                showPassportRecommendation: shouldShowPassportRecommendation,
-                                showsPassportSetupPrompt: shouldPromptForPassportSetup,
-                                onOpenPassportSettings: {
-                                    guard let userId = sessionManager.userId else { return }
-                                    activeSheet = .passportSettings(userId)
+                                scrapbookSection {
+                                    CountryOverviewCard(country: displayedCountry)
                                 }
-                            )
-                        }
 
-                        // Affordability card stack
-                        if displayedCountry.affordabilityScore != nil {
-                            scrapbookSection {
-                                CountryAffordabilityCard(
-                                    country: displayedCountry,
-                                    weightPercentage: weightsStore.affordabilityPercentage
-                                )
-                            }
-                        }
+                                if sessionManager.isAuthenticated {
+                                    scrapbookSection {
+                                        CountryFriendEngagementPreviewCard(
+                                            country: displayedCountry,
+                                            engagement: engagementVM.engagement,
+                                            isLoading: engagementVM.isLoading,
+                                            onOpen: {
+                                                activeSheet = .engagement
+                                            }
+                                        )
+                                    }
+                                }
 
-                        scrapbookSection {
-                            if shouldShowLanguageCompatibilityLoading {
-                                CountryLanguageCompatibilityLoadingCard(
-                                    weightPercentage: weightsStore.languagePercentage
-                                )
-                            } else {
-                                CountryLanguageCompatibilityCard(
-                                    result: languageCompatibility,
-                                    countryLanguages: countryLanguageProfile?.languages ?? [],
-                                    weightPercentage: weightsStore.languagePercentage
-                                )
+                                // Advisory card stack
+                                scrapbookSection {
+                                    CountryAdvisoryCard(
+                                        country: displayedCountry,
+                                        weightPercentage: weightsStore.advisoryPercentage
+                                    )
+                                }
+
+                                // Seasonality card stack
+                                scrapbookSection {
+                                    CountrySeasonalityCard(
+                                        country: displayedCountry,
+                                        weightPercentage: weightsStore.seasonalityPercentage
+                                    )
+                                }
+
+                                // Visa card stack
+                                scrapbookSection {
+                                    CountryVisaCard(
+                                        country: displayedCountry,
+                                        weightPercentage: weightsStore.visaPercentage,
+                                        isLoading: isResolvingVisaContext,
+                                        passportLabel: visaPassportLabel,
+                                        recommendedPassportLabel: recommendedPassportLabel,
+                                        equalBestPassportLabels: equalBestPassportLabels,
+                                        showPassportRecommendation: shouldShowPassportRecommendation,
+                                        showsPassportSetupPrompt: shouldPromptForPassportSetup,
+                                        onOpenPassportSettings: {
+                                            guard let userId = sessionManager.userId else { return }
+                                            activeSheet = .passportSettings(userId)
+                                        }
+                                    )
+                                }
+
+                                // Affordability card stack
+                                if displayedCountry.affordabilityScore != nil {
+                                    scrapbookSection {
+                                        CountryAffordabilityCard(
+                                            country: displayedCountry,
+                                            weightPercentage: weightsStore.affordabilityPercentage
+                                        )
+                                    }
+                                }
+
+                                scrapbookSection {
+                                    if shouldShowLanguageCompatibilityLoading {
+                                        CountryLanguageCompatibilityLoadingCard(
+                                            weightPercentage: weightsStore.languagePercentage
+                                        )
+                                    } else {
+                                        CountryLanguageCompatibilityCard(
+                                            result: languageCompatibility,
+                                            countryLanguages: countryLanguageProfile?.languages ?? [],
+                                            weightPercentage: weightsStore.languagePercentage
+                                        )
+                                    }
+                                }
                             }
+                            .id("countryDetailTop")
+                            .padding(.top, 24)
+                            .padding(.horizontal)
+                            .safeAreaPadding(.bottom)
+                            .frame(width: geometry.size.width, alignment: .top)
                         }
                     }
-                    .id("countryDetailTop")
-                    .padding(.top, 24)
-                    .padding(.horizontal)
-                    .safeAreaPadding(.bottom)
-                    .frame(width: geometry.size.width, alignment: .top)
                 }
             }
         }
@@ -425,26 +432,29 @@ struct CountryDetailView: View {
         .presentationDragIndicator(.visible)
         .interactiveDismissDisabled(false)
         .overlay(alignment: .topTrailing) {
-            VStack(spacing: 10) {
-                PlanningListActionButton(kind: .bucket, isActive: isBucketed) {
-                    Task {
-                        await toggleBucket()
+            if !isPreparingContent {
+                VStack(spacing: 10) {
+                    PlanningListActionButton(kind: .bucket, isActive: isBucketed) {
+                        Task {
+                            await toggleBucket()
+                        }
                     }
-                }
 
-                PlanningListActionButton(kind: .visited, isActive: isVisited) {
-                    Task {
-                        await toggleVisited()
+                    PlanningListActionButton(kind: .visited, isActive: isVisited) {
+                        Task {
+                            await toggleVisited()
+                        }
                     }
                 }
+                .padding(.top, 18)
+                .padding(.trailing, 18)
             }
-            .padding(.top, 18)
-            .padding(.trailing, 18)
         }
         .task(id: country.iso2.uppercased()) {
             let loadStart = Date().timeIntervalSinceReferenceDate
             let iso2 = country.iso2.uppercased()
             let shouldResolveVisaContext = shouldResolveVisaContextBeforeDisplay
+            isPreparingContent = true
             isResolvingVisaContext = shouldResolveVisaContext
 
             if countryLanguageProfile?.countryISO2.uppercased() != iso2 {
@@ -478,6 +488,7 @@ struct CountryDetailView: View {
                 iso2: iso2,
                 loadStart: loadStart
             )
+            isPreparingContent = false
 
             CountryDetailDebugLog.message(
                 "screen.load.finish iso2=\(iso2) languageProfileLoaded=\(countryLanguageProfile != nil) profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
@@ -572,6 +583,26 @@ struct CountryDetailView: View {
         }
     }
 
+    private func loadLanguageProfileAfterTimeout(iso2: String, loadStart: TimeInterval) async -> CountryLanguageProfile? {
+        let retryStart = Date().timeIntervalSinceReferenceDate
+        CountryDetailDebugLog.message(
+            "screen.language_profile.retry_after_timeout.start iso2=\(iso2) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+
+        do {
+            let profile = try await CountryLanguageProfileStore.shared.refreshProfile(for: iso2)
+            CountryDetailDebugLog.message(
+                "screen.language_profile.retry_after_timeout.finish iso2=\(iso2) loaded=\(profile != nil) language_count=\(profile?.languages.count ?? 0) duration=\(CountryDetailDebugLog.durationText(since: retryStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            return profile
+        } catch {
+            CountryDetailDebugLog.message(
+                "screen.language_profile.retry_after_timeout.error iso2=\(iso2) error_type=\(String(describing: type(of: error))) error=\(error.localizedDescription) duration=\(CountryDetailDebugLog.durationText(since: retryStart)) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            return nil
+        }
+    }
+
     @MainActor
     private func startLanguageProfileLoadInBackground(iso2: String, loadStart: TimeInterval) {
         languageProfileTask?.cancel()
@@ -594,9 +625,34 @@ struct CountryDetailView: View {
                 }
 
                 countryLanguageProfile = profile
-                isLoadingLanguageCompatibility = false
                 CountryDetailDebugLog.message(
                     "screen.language_profile.assigned iso2=\(iso2) loaded=\(countryLanguageProfile != nil) language_count=\(countryLanguageProfile?.languages.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile?.languages ?? []))] total_duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+            }
+
+            guard profile == nil else {
+                await MainActor.run {
+                    isLoadingLanguageCompatibility = false
+                }
+                return
+            }
+
+            let retryProfile = await loadLanguageProfileAfterTimeout(iso2: iso2, loadStart: loadStart)
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard country.iso2.uppercased() == iso2 else {
+                    CountryDetailDebugLog.message(
+                        "screen.language_profile.retry_after_timeout.discard iso2=\(iso2) current_iso2=\(country.iso2.uppercased()) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                    )
+                    isLoadingLanguageCompatibility = false
+                    return
+                }
+
+                countryLanguageProfile = retryProfile
+                isLoadingLanguageCompatibility = false
+                CountryDetailDebugLog.message(
+                    "screen.language_profile.retry_after_timeout.assigned iso2=\(iso2) loaded=\(countryLanguageProfile != nil) language_count=\(countryLanguageProfile?.languages.count ?? 0) preview=[\(CountryDetailDebugLog.languageSummary(countryLanguageProfile?.languages ?? []))] total_duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
                 )
             }
         }
@@ -1482,7 +1538,6 @@ private actor CountryLanguageProfileStore {
     static let shared = CountryLanguageProfileStore()
 
     private var cache: [String: CountryLanguageProfile] = [:]
-    private var missingISO2: Set<String> = []
 
     func profile(for iso2: String) async throws -> CountryLanguageProfile? {
         let loadStart = Date().timeIntervalSinceReferenceDate
@@ -1495,31 +1550,15 @@ private actor CountryLanguageProfileStore {
             return cached
         }
 
-        if missingISO2.contains(normalizedISO2) {
-            CountryDetailDebugLog.message(
-                "language_profile.store.known_missing iso2=\(normalizedISO2) missing_cache_count=\(missingISO2.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
-            )
-            return nil
-        }
-
-        CountryDetailDebugLog.message(
-            "language_profile.store.remote.start iso2=\(normalizedISO2) table=country_language_profiles select=country_iso2,source,source_version,notes,evidence,languages,baseline_source cache_count=\(cache.count) missing_cache_count=\(missingISO2.count)"
-        )
-        let response: PostgrestResponse<[CountryLanguageProfile]> = try await SupabaseManager.shared.client
-            .from("country_language_profiles")
-            .select("country_iso2,source,source_version,notes,evidence,languages,baseline_source")
-            .eq("country_iso2", value: normalizedISO2)
-            .limit(1)
-            .execute()
-
-        CountryDetailDebugLog.message(
-            "language_profile.store.remote.response iso2=\(normalizedISO2) rows=\(response.value.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        let response = try await fetchRemoteProfile(
+            normalizedISO2: normalizedISO2,
+            loadStart: loadStart,
+            reason: "profile"
         )
 
         guard let profile = response.value.first else {
-            missingISO2.insert(normalizedISO2)
             CountryDetailDebugLog.message(
-                "language_profile.store.remote.missing iso2=\(normalizedISO2) inserted_missing_cache=true missing_cache_count=\(missingISO2.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                "language_profile.store.remote.missing iso2=\(normalizedISO2) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
             )
             return nil
         }
@@ -1538,32 +1577,79 @@ private actor CountryLanguageProfileStore {
         CountryDetailDebugLog.message(
             "language_profile.store.refresh.start iso2=\(normalizedISO2)"
         )
-        let response: PostgrestResponse<[CountryLanguageProfile]> = try await SupabaseManager.shared.client
-            .from("country_language_profiles")
-            .select("country_iso2,source,source_version,notes,evidence,languages,baseline_source")
-            .eq("country_iso2", value: normalizedISO2)
-            .limit(1)
-            .execute()
-
-        CountryDetailDebugLog.message(
-            "language_profile.store.refresh.response iso2=\(normalizedISO2) rows=\(response.value.count) duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
+        let response = try await fetchRemoteProfile(
+            normalizedISO2: normalizedISO2,
+            loadStart: refreshStart,
+            reason: "refresh"
         )
 
         guard let profile = response.value.first else {
             cache.removeValue(forKey: normalizedISO2)
-            missingISO2.insert(normalizedISO2)
             CountryDetailDebugLog.message(
-                "language_profile.store.refresh.missing iso2=\(normalizedISO2) cache_removed=true missing_cache_count=\(missingISO2.count)"
+                "language_profile.store.refresh.missing iso2=\(normalizedISO2) cache_removed=true"
             )
             return nil
         }
 
-        missingISO2.remove(normalizedISO2)
         cache[normalizedISO2] = profile
         CountryDetailDebugLog.message(
             "language_profile.store.refresh.success iso2=\(normalizedISO2) languages=\(profile.languages.count) preview=[\(CountryDetailDebugLog.languageSummary(profile.languages))] duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
         )
         return profile
+    }
+
+    private func fetchRemoteProfile(
+        normalizedISO2: String,
+        loadStart: TimeInterval,
+        reason: String
+    ) async throws -> PostgrestResponse<[CountryLanguageProfile]> {
+        let fullSelection = "country_iso2,source,source_version,notes,evidence,languages,baseline_source"
+        let legacySelection = "country_iso2,source,source_version,notes,evidence,languages"
+
+        do {
+            return try await fetchRemoteProfile(
+                normalizedISO2: normalizedISO2,
+                selection: fullSelection,
+                loadStart: loadStart,
+                reason: reason,
+                variant: "full"
+            )
+        } catch {
+            CountryDetailDebugLog.message(
+                "language_profile.store.remote.fallback iso2=\(normalizedISO2) reason=\(reason) error_type=\(String(describing: type(of: error))) error=\(error.localizedDescription) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+            return try await fetchRemoteProfile(
+                normalizedISO2: normalizedISO2,
+                selection: legacySelection,
+                loadStart: loadStart,
+                reason: reason,
+                variant: "legacy"
+            )
+        }
+    }
+
+    private func fetchRemoteProfile(
+        normalizedISO2: String,
+        selection: String,
+        loadStart: TimeInterval,
+        reason: String,
+        variant: String
+    ) async throws -> PostgrestResponse<[CountryLanguageProfile]> {
+        CountryDetailDebugLog.message(
+            "language_profile.store.remote.start iso2=\(normalizedISO2) reason=\(reason) variant=\(variant) table=country_language_profiles select=\(selection) cache_count=\(cache.count)"
+        )
+
+        let response: PostgrestResponse<[CountryLanguageProfile]> = try await SupabaseManager.shared.client
+            .from("country_language_profiles")
+            .select(selection)
+            .eq("country_iso2", value: normalizedISO2)
+            .limit(1)
+            .execute()
+
+        CountryDetailDebugLog.message(
+            "language_profile.store.remote.response iso2=\(normalizedISO2) reason=\(reason) variant=\(variant) rows=\(response.value.count) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+        return response
     }
 }
 
@@ -1985,6 +2071,53 @@ private struct CountryLanguageCompatibilityLoadingCard: View {
             CountryDetailDebugLog.message(
                 "language.loading_card.appear weight=\(weightPercentage)"
             )
+        }
+    }
+}
+
+private struct CountryDetailLoadingView: View {
+    let countryName: String
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Spacer()
+
+            VStack(spacing: 12) {
+                ProgressView()
+                    .controlSize(.large)
+                    .tint(.black)
+
+                Text(
+                    String(
+                        localized: "country_detail.loading.title",
+                        defaultValue: "Loading country details"
+                    )
+                )
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.black.opacity(0.78))
+
+                if !countryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(countryName)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.black.opacity(0.58))
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .padding(.horizontal, 22)
+            .padding(.vertical, 18)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(.white.opacity(0.92))
+                    .shadow(color: .black.opacity(0.12), radius: 14, y: 8)
+            )
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 24)
+        .onAppear {
+            CountryDetailDebugLog.message("screen.loading.appear country=\(countryName)")
         }
     }
 }
