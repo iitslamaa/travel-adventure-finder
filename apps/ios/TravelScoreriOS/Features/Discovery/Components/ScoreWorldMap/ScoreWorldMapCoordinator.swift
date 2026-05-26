@@ -127,9 +127,29 @@ final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
     }
     
     // MARK: - Highlight Updates
+
+    func updateSelection(_ newISO: String?) {
+        let normalizedSelection = newISO?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+        let currentSelection = selectedCountryISO?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+
+        guard normalizedSelection != currentSelection else {
+            selectedCountryISO = normalizedSelection
+            return
+        }
+
+        selectedCountryISO = normalizedSelection
+        rebuildOverlays()
+    }
     
     func updateHighlights(_ newISOs: [String]) {
-        self.highlightedISOs = newISOs.map { $0.uppercased() }
+        let normalizedISOs = newISOs.map { $0.uppercased() }
+        guard normalizedISOs != highlightedISOs else { return }
+
+        self.highlightedISOs = normalizedISOs
         rebuildOverlays()
     }
     
