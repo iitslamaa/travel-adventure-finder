@@ -2425,7 +2425,7 @@ private struct CountryStaticMapView: UIViewRepresentable {
             }
 
             let renderer = MKMultiPolygonRenderer(overlay: polygon)
-            renderer.fillColor = UIColor(red: 1.0, green: 0.82, blue: 0.0, alpha: 1.0)
+            renderer.fillColor = UIColor(red: 1.0, green: 0.82, blue: 0.0, alpha: 0.32)
             renderer.strokeColor = UIColor(red: 1.0, green: 0.45, blue: 0.0, alpha: 0.92)
             renderer.lineWidth = 1.6
             renderer.lineJoin = .round
@@ -2436,11 +2436,17 @@ private struct CountryStaticMapView: UIViewRepresentable {
 }
 
 private enum CountryMapRegionResolver {
+    private static let fullDetailOverlayISOs: Set<String> = ["AD"]
+
     static func overlays(for iso: String) -> [CountryPolygon] {
         // The full-resolution dataset produces a broken partial fill for a few small countries
         // in the static detail card map (notably Albania). The simplified geometry is more stable
         // for this non-interactive preview while still preserving the country silhouette well.
-        WorldGeoJSONLoader.loadPolygons()
+        let polygons = fullDetailOverlayISOs.contains(iso)
+            ? WorldGeoJSONLoader.loadPolygons(selectedIso: iso)
+            : WorldGeoJSONLoader.loadPolygons()
+
+        return polygons
             .filter { $0.isoCode?.uppercased() == iso }
     }
 
