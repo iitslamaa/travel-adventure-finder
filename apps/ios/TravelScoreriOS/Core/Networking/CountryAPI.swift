@@ -292,10 +292,10 @@ extension CountryAPI {
     }
 
     private enum CountriesCache {
-        static let lastRefreshKey = "countries_last_refresh_ts_v2"
-        private static let etagKey = "countries_cache_etag_v1"
-        private static let fileName = "countries_cache_v3.json"
-        private static let legacyFileNames = ["countries_cache_v4.json"]
+        static let lastRefreshKey = "countries_last_refresh_ts_v3"
+        private static let etagKey = "countries_cache_etag_v2"
+        private static let fileName = "countries_cache_v5.json"
+        private static let legacyFileNames: [String] = []
 
         private static var cacheURL: URL {
             cacheURL(for: fileName)
