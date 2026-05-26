@@ -12,7 +12,6 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
     private static var cachedFull: [MKOverlay]?
     private static var isLoadingFullDataset: Bool = false
     private static var didInstallFullDataset: Bool = false
-    private static let simplifiedSelectionISOs: Set<String> = ["CA"]
     
     let countries: [Country]
     let highlightedISOs: [String]
@@ -59,21 +58,26 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: MKMapView, context: Context) {
-        context.coordinator.updateSelection(selectedCountryISO)
-        context.coordinator.updateHighlights(highlightedISOs)
-
-        guard let iso = selectedCountryISO?
+        let normalizedSelection = selectedCountryISO?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .uppercased()
-        else {
+
+        if let normalizedSelection,
+           ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(normalizedSelection) {
+            installSimplifiedDatasetIfNeeded(into: uiView)
+        }
+
+        context.coordinator.updateSelection(normalizedSelection)
+        context.coordinator.updateHighlights(highlightedISOs)
+
+        guard let iso = normalizedSelection else {
             return
         }
         
-        if Self.simplifiedSelectionISOs.contains(iso) {
-            installSimplifiedDatasetIfNeeded(into: uiView)
-        }
         // Ensure full dataset overlays are loaded when selecting countries that benefit from detail.
-        else if Self.cachedFull == nil && !Self.isLoadingFullDataset {
+        if !ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(iso),
+           Self.cachedFull == nil,
+           !Self.isLoadingFullDataset {
             Self.isLoadingFullDataset = true
 
             DispatchQueue.global(qos: .userInitiated).async {
@@ -92,7 +96,7 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
                         .trimmingCharacters(in: .whitespacesAndNewlines)
                         .uppercased()
                     if let currentSelection,
-                       Self.simplifiedSelectionISOs.contains(currentSelection) {
+                       ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(currentSelection) {
                         return
                     }
 
@@ -107,7 +111,7 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
             }
         }
 
-        if !Self.simplifiedSelectionISOs.contains(iso),
+        if !ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(iso),
            let full = Self.cachedFull,
            !Self.didInstallFullDataset {
             guard uiView.delegate != nil else { return }

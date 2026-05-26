@@ -7,6 +7,12 @@ import Foundation
 import SwiftUI
 import MapKit
 
+enum ScoreWorldMapSelectionPolicy {
+    static let simplifiedSelectionISOs: Set<String> = [
+        "AQ", "AU", "BR", "CA", "CL", "CN", "GB", "GL", "ID", "IN", "NO", "RU", "US"
+    ]
+}
+
 final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
     
     private let coordinatorId = UUID()
@@ -113,13 +119,17 @@ final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
                     return polygon.countryName
                 }()
 
-                if selectedCountryISO != identifier {
-                    selectedCountryISO = identifier
+                let normalizedIdentifier = normalizeISO(identifier) ?? identifier?.uppercased()
+
+                if selectedCountryISO != normalizedIdentifier {
+                    selectedCountryISO = normalizedIdentifier
                     onSelectionChange?(identifier)
                 }
 
-                // Force repaint immediately after selection
-                rebuildOverlays()
+                if let normalizedIdentifier,
+                   !ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(normalizedIdentifier) {
+                    rebuildOverlays()
+                }
 
                 break
             }
