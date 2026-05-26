@@ -3,10 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { COUNTRY_SEEDS } from '@/lib/seed';
 import { loadFacts } from '@/lib/facts';
 import type { CountryFacts } from '@travel-af/shared';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { buildVisaIndex } from '@/lib/providers/visa';
 import { gdpPerCapitaUSDMap } from '@/lib/providers/worldbank';
 import { fxLocalPerUSDMapByIso2 } from '@/lib/providers/fx';
 import { estimateDailySpendHotel } from '@/lib/providers/costs';
+import { computeAffordabilityFromDailySpend } from '@travel-af/domain/src/affordability';
 import { buildRows, DEFAULT_WEIGHTS } from '@travel-af/domain/src/scoring';
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
@@ -35,6 +38,13 @@ type CountryRouteFacts = Partial<CountryFacts> & {
   housingCostIndex?: number;
   transportCostIndex?: number;
   dailySpend?: CountryFacts['dailySpend'];
+  averageDailyCostUsd?: number;
+  affordabilityCategory?: number;
+  affordability?: number;
+  affordabilityBand?: 'good' | 'warn' | 'bad' | 'danger';
+  affordabilityExplanation?: string;
+  affordabilitySource?: 'direct_cost_seed' | 'price_index_estimate';
+  affordabilityDataQuality?: 'direct' | 'estimated';
   fmSeasonalityBestMonths?: number[];
   fmSeasonalityShoulderMonths?: number[];
   fmSeasonalityGoodMonths?: number[];
@@ -43,6 +53,35 @@ type CountryRouteFacts = Partial<CountryFacts> & {
   fmSeasonalityTodayLabel?: 'best' | 'good' | 'shoulder' | 'poor';
   languageCompatibilityScore?: number;
 };
+
+async function safeJsonImport<T = Record<string, unknown>>(relativePath: string): Promise<T | null> {
+  try {
+    const fullPath = path.join(process.cwd(), relativePath);
+    const raw = await fs.readFile(fullPath, 'utf8');
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+function affordabilityExplanationFromCategory(
+  category: number,
+  usd: number
+): string {
+  if (category <= 2) {
+    return `Very low daily costs (≈ $${usd.toFixed(0)}/day). Strong value for accommodation, food, and transport compared to global averages.`;
+  }
+  if (category <= 4) {
+    return `Generally affordable (≈ $${usd.toFixed(0)}/day). Costs are below Western Europe and North America averages.`;
+  }
+  if (category <= 6) {
+    return `Moderate travel costs (≈ $${usd.toFixed(0)}/day). Expect typical mid-range international pricing.`;
+  }
+  if (category <= 8) {
+    return `Higher daily costs (≈ $${usd.toFixed(0)}/day). Accommodation and dining are noticeably above global median levels.`;
+  }
+  return `Premium pricing (≈ $${usd.toFixed(0)}/day). Among the most expensive destinations globally for hotels and services.`;
+}
 
 function clusterConsecutiveMonths(months: number[]): number[][] {
   if (!months.length) return [];
@@ -156,6 +195,17 @@ export async function GET(
     gdpPerCapitaUSDMap(isoList),
     fxLocalPerUSDMapByIso2(isoList),
   ]);
+  const [
+    colJson,
+    foodJson,
+    housingJson,
+    transportJson,
+  ] = await Promise.all([
+    safeJsonImport<Record<string, number>>('data/sources/cost_of_living.json'),
+    safeJsonImport<Record<string, number>>('data/sources/food_index.json'),
+    safeJsonImport<Record<string, number>>('data/sources/housing_index.json'),
+    safeJsonImport<Record<string, number>>('data/sources/transport_index.json'),
+  ]);
 
   const facts = factsByIso2[isoUpper] as CountryFacts | undefined;
 
@@ -221,6 +271,25 @@ export async function GET(
     enriched.facts.fxLocalPerUSD = fxMap[isoUpper];
   }
 
+  if (colJson?.[isoUpper] != null) {
+    enriched.facts.costOfLivingIndex = Number(colJson[isoUpper]);
+  }
+  if (foodJson?.[isoUpper] != null) {
+    enriched.facts.foodCostIndex = Number(foodJson[isoUpper]);
+  } else if (colJson?.[isoUpper] != null) {
+    enriched.facts.foodCostIndex = Number(colJson[isoUpper]);
+  }
+  if (housingJson?.[isoUpper] != null) {
+    enriched.facts.housingCostIndex = Number(housingJson[isoUpper]);
+  } else if (colJson?.[isoUpper] != null) {
+    enriched.facts.housingCostIndex = Number(colJson[isoUpper]);
+  }
+  if (transportJson?.[isoUpper] != null) {
+    enriched.facts.transportCostIndex = Number(transportJson[isoUpper]);
+  } else if (colJson?.[isoUpper] != null) {
+    enriched.facts.transportCostIndex = Number(colJson[isoUpper]);
+  }
+
   // --- Attach seasonality using same FM override logic as list endpoint
   try {
     const todayMonth = new Date().getMonth() + 1;
@@ -274,6 +343,21 @@ export async function GET(
 
     if (spend) {
       enriched.facts.dailySpend = spend;
+      const affordability = computeAffordabilityFromDailySpend(spend);
+
+      if (affordability) {
+        enriched.facts.averageDailyCostUsd = affordability.averageDailyCostUsd;
+        enriched.facts.affordabilityCategory = affordability.category;
+        enriched.facts.affordability = affordability.score;
+        enriched.facts.affordabilityBand = affordability.band;
+        enriched.facts.affordabilitySource =
+          affordability.dailySpend?.source ?? 'price_index_estimate';
+        enriched.facts.affordabilityDataQuality = affordability.quality;
+        enriched.facts.affordabilityExplanation = affordabilityExplanationFromCategory(
+          affordability.category,
+          affordability.averageDailyCostUsd
+        );
+      }
     }
   } catch {}
 
