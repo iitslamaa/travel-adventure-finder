@@ -2425,7 +2425,7 @@ private struct CountryStaticMapView: UIViewRepresentable {
             }
 
             let renderer = MKMultiPolygonRenderer(overlay: polygon)
-            renderer.fillColor = UIColor(red: 1.0, green: 0.82, blue: 0.0, alpha: 0.32)
+            renderer.fillColor = UIColor(red: 1.0, green: 0.82, blue: 0.0, alpha: 1.0)
             renderer.strokeColor = UIColor(red: 1.0, green: 0.45, blue: 0.0, alpha: 0.92)
             renderer.lineWidth = 1.6
             renderer.lineJoin = .round
@@ -2455,6 +2455,11 @@ private enum CountryMapRegionResolver {
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: -14.27, longitude: -170.70),
                 span: MKCoordinateSpan(latitudeDelta: 3.0, longitudeDelta: 3.0)
+            )
+        case "AI":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 18.22, longitude: -63.06),
+                span: MKCoordinateSpan(latitudeDelta: 0.55, longitudeDelta: 0.75)
             )
         case "CN":
             return MKCoordinateRegion(

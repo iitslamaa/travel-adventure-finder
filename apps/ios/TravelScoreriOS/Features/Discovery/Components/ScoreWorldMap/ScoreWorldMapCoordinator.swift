@@ -9,7 +9,7 @@ import MapKit
 
 enum ScoreWorldMapSelectionPolicy {
     static let simplifiedSelectionISOs: Set<String> = [
-        "AQ", "AU", "BR", "CA", "CL", "CN", "GB", "GL", "ID", "IN", "NO", "RU", "US"
+        "AL", "AQ", "AU", "BR", "CA", "CL", "CN", "GB", "GL", "ID", "IN", "NO", "RU", "US"
     ]
 }
 

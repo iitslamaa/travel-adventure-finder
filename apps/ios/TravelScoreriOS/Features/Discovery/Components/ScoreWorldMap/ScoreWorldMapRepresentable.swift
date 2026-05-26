@@ -138,6 +138,12 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
                 span: MKCoordinateSpan(latitudeDelta: 3.0, longitudeDelta: 3.0)
             ),
 
+            // Anguilla
+            "AI": MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 18.22, longitude: -63.06),
+                span: MKCoordinateSpan(latitudeDelta: 0.55, longitudeDelta: 0.75)
+            ),
+
             // Australia (mainland and Tasmania only)
             "AU": MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: -26.0, longitude: 134.0),
