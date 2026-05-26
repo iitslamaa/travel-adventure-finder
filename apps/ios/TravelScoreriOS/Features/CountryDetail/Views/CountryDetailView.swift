@@ -2436,11 +2436,17 @@ private struct CountryStaticMapView: UIViewRepresentable {
 }
 
 private enum CountryMapRegionResolver {
+    private static let fullDetailOverlayISOs: Set<String> = ["AD"]
+
     static func overlays(for iso: String) -> [CountryPolygon] {
         // The full-resolution dataset produces a broken partial fill for a few small countries
         // in the static detail card map (notably Albania). The simplified geometry is more stable
         // for this non-interactive preview while still preserving the country silhouette well.
-        WorldGeoJSONLoader.loadPolygons()
+        let polygons = fullDetailOverlayISOs.contains(iso)
+            ? WorldGeoJSONLoader.loadPolygons(selectedIso: iso)
+            : WorldGeoJSONLoader.loadPolygons()
+
+        return polygons
             .filter { $0.isoCode?.uppercased() == iso }
     }
 
@@ -2455,6 +2461,11 @@ private enum CountryMapRegionResolver {
             return MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: -14.27, longitude: -170.70),
                 span: MKCoordinateSpan(latitudeDelta: 3.0, longitudeDelta: 3.0)
+            )
+        case "AI":
+            return MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 18.22, longitude: -63.06),
+                span: MKCoordinateSpan(latitudeDelta: 0.55, longitudeDelta: 0.75)
             )
         case "CN":
             return MKCoordinateRegion(

@@ -7,9 +7,17 @@ import Foundation
 import SwiftUI
 import MapKit
 
+enum ScoreWorldMapSelectionPolicy {
+    static let simplifiedSelectionISOs: Set<String> = [
+        "AL", "AQ", "AU", "BR", "CA", "CL", "CN", "GB", "GL", "ID", "IN", "NO", "RU", "US"
+    ]
+}
+
 final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
     
     private let coordinatorId = UUID()
+    private let selectedFillColor = UIColor(red: 1.0, green: 0.82, blue: 0.0, alpha: 1.0)
+    private let selectedStrokeColor = UIColor(red: 1.0, green: 0.45, blue: 0.0, alpha: 0.9)
     
     private func normalizeISO(_ value: String?) -> String? {
         value?
@@ -111,13 +119,17 @@ final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
                     return polygon.countryName
                 }()
 
-                if selectedCountryISO != identifier {
-                    selectedCountryISO = identifier
+                let normalizedIdentifier = normalizeISO(identifier) ?? identifier?.uppercased()
+
+                if selectedCountryISO != normalizedIdentifier {
+                    selectedCountryISO = normalizedIdentifier
                     onSelectionChange?(identifier)
                 }
 
-                // Force repaint immediately after selection
-                rebuildOverlays()
+                if let normalizedIdentifier,
+                   !ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(normalizedIdentifier) {
+                    rebuildOverlays()
+                }
 
                 break
             }
@@ -125,9 +137,29 @@ final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
     }
     
     // MARK: - Highlight Updates
+
+    func updateSelection(_ newISO: String?) {
+        let normalizedSelection = newISO?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+        let currentSelection = selectedCountryISO?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+
+        guard normalizedSelection != currentSelection else {
+            selectedCountryISO = normalizedSelection
+            return
+        }
+
+        selectedCountryISO = normalizedSelection
+        rebuildOverlays()
+    }
     
     func updateHighlights(_ newISOs: [String]) {
-        self.highlightedISOs = newISOs.map { $0.uppercased() }
+        let normalizedISOs = newISOs.map { $0.uppercased() }
+        guard normalizedISOs != highlightedISOs else { return }
+
+        self.highlightedISOs = normalizedISOs
         rebuildOverlays()
     }
     
@@ -225,14 +257,14 @@ final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
         renderer.alpha = 1.0
         
         if isSelected {
-            renderer.fillColor = UIColor(red: 1.0, green: 0.82, blue: 0.0, alpha: 1.0)
+            renderer.fillColor = isHighlighted ? selectedFillColor : UIColor.clear
             let delta = mapView.region.span.longitudeDelta
             let vertexCount = polygon.polygons.reduce(0) { $0 + $1.pointCount }
             let isComplex = vertexCount > 5000
 
-            // Always show stroke for China and Antarctica
-            if polygon.isoCode == "CN" || polygon.isoCode == "AQ" {
-                renderer.strokeColor = UIColor(red: 1.0, green: 0.45, blue: 0.0, alpha: 0.9)
+            // Always show stroke for complex selections that rely on custom zoom framing.
+            if polygon.isoCode == "AU" || polygon.isoCode == "CA" || polygon.isoCode == "CN" || polygon.isoCode == "IN" || polygon.isoCode == "AQ" {
+                renderer.strokeColor = selectedStrokeColor
                 renderer.lineWidth = 2.0
             }
             else if isComplex && delta > 60 {
@@ -240,14 +272,14 @@ final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
                 renderer.lineWidth = 0
             }
             else {
-                renderer.strokeColor = UIColor(red: 1.0, green: 0.45, blue: 0.0, alpha: 0.9)
+                renderer.strokeColor = selectedStrokeColor
                 renderer.lineWidth = 2.0
             }
             renderer.lineJoin = .round
             renderer.lineCap = .round
         }
         else if isHighlighted {
-            renderer.fillColor = UIColor(red: 1.0, green: 0.82, blue: 0.0, alpha: 0.25)
+            renderer.fillColor = selectedFillColor
         }
         
         return renderer

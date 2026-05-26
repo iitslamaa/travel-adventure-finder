@@ -58,18 +58,26 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: MKMapView, context: Context) {
-        context.coordinator.selectedCountryISO = selectedCountryISO
-        context.coordinator.updateHighlights(highlightedISOs)
-
-        guard let iso = selectedCountryISO?
+        let normalizedSelection = selectedCountryISO?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .uppercased()
-        else {
+
+        if let normalizedSelection,
+           ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(normalizedSelection) {
+            installSimplifiedDatasetIfNeeded(into: uiView)
+        }
+
+        context.coordinator.updateSelection(normalizedSelection)
+        context.coordinator.updateHighlights(highlightedISOs)
+
+        guard let iso = normalizedSelection else {
             return
         }
         
-        // Ensure full dataset overlays are loaded when selecting
-        if Self.cachedFull == nil && !Self.isLoadingFullDataset {
+        // Ensure full dataset overlays are loaded when selecting countries that benefit from detail.
+        if !ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(iso),
+           Self.cachedFull == nil,
+           !Self.isLoadingFullDataset {
             Self.isLoadingFullDataset = true
 
             DispatchQueue.global(qos: .userInitiated).async {
@@ -84,6 +92,14 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
                     Self.cachedFull = fullPolygons
                     Self.isLoadingFullDataset = false
 
+                    let currentSelection = context.coordinator.selectedCountryISO?
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .uppercased()
+                    if let currentSelection,
+                       ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(currentSelection) {
+                        return
+                    }
+
                     if !Self.didInstallFullDataset {
                         UIView.performWithoutAnimation {
                             uiView.removeOverlays(uiView.overlays)
@@ -95,7 +111,9 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
             }
         }
 
-        if let full = Self.cachedFull, !Self.didInstallFullDataset {
+        if !ScoreWorldMapSelectionPolicy.simplifiedSelectionISOs.contains(iso),
+           let full = Self.cachedFull,
+           !Self.didInstallFullDataset {
             guard uiView.delegate != nil else { return }
 
             UIView.performWithoutAnimation {
@@ -118,6 +136,24 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
             "AS": MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: -14.27, longitude: -170.70),
                 span: MKCoordinateSpan(latitudeDelta: 3.0, longitudeDelta: 3.0)
+            ),
+
+            // Anguilla
+            "AI": MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 18.22, longitude: -63.06),
+                span: MKCoordinateSpan(latitudeDelta: 0.55, longitudeDelta: 0.75)
+            ),
+
+            // Australia (mainland and Tasmania only)
+            "AU": MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: -26.0, longitude: 134.0),
+                span: MKCoordinateSpan(latitudeDelta: 40.0, longitudeDelta: 48.0)
+            ),
+
+            // Canada (mainland-focused to avoid expensive Arctic geometry during pan)
+            "CA": MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 58.0, longitude: -101.0),
+                span: MKCoordinateSpan(latitudeDelta: 42.0, longitudeDelta: 78.0)
             ),
 
             // China (mainland)
@@ -251,6 +287,19 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
 // MARK: - Private Helpers
 
 private extension ScoreWorldMapRepresentable {
+
+    func installSimplifiedDatasetIfNeeded(into mapView: MKMapView) {
+        guard Self.didInstallFullDataset,
+              let simplified = Self.cachedSimplified,
+              mapView.delegate != nil
+        else { return }
+
+        UIView.performWithoutAnimation {
+            mapView.removeOverlays(mapView.overlays)
+            mapView.addOverlays(simplified)
+        }
+        Self.didInstallFullDataset = false
+    }
     
     func loadPolygons(into mapView: MKMapView) {
 
