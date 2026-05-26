@@ -22,8 +22,8 @@ enum CountryAPI {
     private static let cacheLock = NSLock()
     private static var memoryCachedCountries: [Country]?
     private static var inFlightRefreshTask: Task<[Country]?, Never>?
-    private static let requestTimeout: TimeInterval = 4
-    private static let resourceTimeout: TimeInterval = 6
+    private static let requestTimeout: TimeInterval = 12
+    private static let resourceTimeout: TimeInterval = 20
     private static let networkSession: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = requestTimeout
@@ -295,7 +295,10 @@ extension CountryAPI {
         static let lastRefreshKey = "countries_last_refresh_ts_v3"
         private static let etagKey = "countries_cache_etag_v2"
         private static let fileName = "countries_cache_v5.json"
-        private static let legacyFileNames: [String] = []
+        private static let legacyFileNames = [
+            "countries_cache_v4.json",
+            "countries_cache_v3.json"
+        ]
 
         private static var cacheURL: URL {
             cacheURL(for: fileName)
