@@ -227,7 +227,7 @@ final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
         renderer.alpha = 1.0
         
         if isSelected {
-            renderer.fillColor = selectedFillColor
+            renderer.fillColor = isHighlighted ? selectedFillColor : UIColor.clear
             let delta = mapView.region.span.longitudeDelta
             let vertexCount = polygon.polygons.reduce(0) { $0 + $1.pointCount }
             let isComplex = vertexCount > 5000
