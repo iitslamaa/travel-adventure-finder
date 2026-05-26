@@ -215,26 +215,64 @@ final class LanguageRepository {
     private var languageByTravelCode: [String: AppLanguage] = [:]
     private var travelCodeByDisplayName: [String: String] = [:]
     private var travelCodeByAlias: [String: String] = [:]
+    private var localizedAliasesBuilt = false
 
     private init() {
         loadLanguages()
     }
 
     private func loadLanguages() {
+        let startedAt = Date()
+        SocialFeedDebug.log("language.repository.load.start")
         guard
-            let url = Bundle.main.url(forResource: "global_languages", withExtension: "json"),
-            let data = try? Data(contentsOf: url),
-            let decoded = try? JSONDecoder().decode([AppLanguage].self, from: data)
+            let url = Bundle.main.url(forResource: "global_languages", withExtension: "json")
         else {
+            SocialFeedDebug.log(
+                "language.repository.load.miss duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             return
         }
 
+        let dataStartedAt = Date()
+        guard let data = try? Data(contentsOf: url) else {
+            SocialFeedDebug.log(
+                "language.repository.load.data_error duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return
+        }
+        SocialFeedDebug.log(
+            "language.repository.load.data bytes=\(data.count) " +
+            "duration=\(SocialFeedDebug.duration(since: dataStartedAt))"
+        )
+
+        let decodeStartedAt = Date()
+        guard let decoded = try? JSONDecoder().decode([AppLanguage].self, from: data) else {
+            SocialFeedDebug.log(
+                "language.repository.load.decode_error duration=\(SocialFeedDebug.duration(since: decodeStartedAt)) " +
+                "total_duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            return
+        }
+        SocialFeedDebug.log(
+            "language.repository.load.decode languages=\(decoded.count) " +
+            "duration=\(SocialFeedDebug.duration(since: decodeStartedAt))"
+        )
+
+        let sortStartedAt = Date()
         self.allLanguages = decoded.sorted { $0.displayName < $1.displayName }
+        SocialFeedDebug.log(
+            "language.repository.load.sort languages=\(allLanguages.count) " +
+            "duration=\(SocialFeedDebug.duration(since: sortStartedAt))"
+        )
         rebuildLookups()
+        SocialFeedDebug.log(
+            "language.repository.load.end languages=\(allLanguages.count) " +
+            "duration=\(SocialFeedDebug.duration(since: startedAt))"
+        )
     }
 
     func canonicalLanguageCode(for rawValue: String) -> String? {
-        guard let travelCode = resolveLanguage(for: rawValue)?.travelLanguageCode else {
+        guard let travelCode = resolveLanguage(for: rawValue, includeLocalizedAliases: false)?.travelLanguageCode else {
             return nil
         }
 
@@ -324,6 +362,10 @@ final class LanguageRepository {
     }
 
     func resolveLanguage(for rawValue: String) -> AppLanguage? {
+        resolveLanguage(for: rawValue, includeLocalizedAliases: true)
+    }
+
+    private func resolveLanguage(for rawValue: String, includeLocalizedAliases: Bool) -> AppLanguage? {
         let normalized = normalizeLookupKey(rawValue)
         guard !normalized.isEmpty else { return nil }
 
@@ -338,6 +380,16 @@ final class LanguageRepository {
         if let travelCode = travelCodeByDisplayName[normalized] {
             return languageByTravelCode[travelCode]
         }
+
+        if let travelCode = travelCodeByAlias[normalized] {
+            return languageByTravelCode[travelCode]
+        }
+
+        guard includeLocalizedAliases else {
+            return nil
+        }
+
+        buildLocalizedAliasesIfNeeded()
 
         if let travelCode = travelCodeByAlias[normalized] {
             return languageByTravelCode[travelCode]
@@ -388,12 +440,6 @@ final class LanguageRepository {
             }
         }
 
-        let supportedLocaleIdentifiers = Set(
-            Bundle.main.localizations
-                .filter { $0 != "Base" }
-                + [AppDisplayLocale.current.identifier]
-        )
-
         for language in allLanguages {
             let canonicalCode = canonicalLanguageCode(for: language.travelLanguageCode)
                 ?? language.travelLanguageCode
@@ -412,6 +458,27 @@ final class LanguageRepository {
                     travelCodeByAlias[normalizedAlias] = canonicalCode
                 }
             }
+        }
+
+        localizedAliasesBuilt = false
+    }
+
+    private func buildLocalizedAliasesIfNeeded() {
+        guard !localizedAliasesBuilt else { return }
+        localizedAliasesBuilt = true
+
+        let startedAt = Date()
+        SocialFeedDebug.log("language.repository.localized_aliases.start languages=\(allLanguages.count)")
+
+        let supportedLocaleIdentifiers = Set(
+            Bundle.main.localizations
+                .filter { $0 != "Base" }
+                + [AppDisplayLocale.current.identifier]
+        )
+
+        for language in allLanguages {
+            let canonicalCode = canonicalLanguageCode(for: language.travelLanguageCode)
+                ?? language.travelLanguageCode
 
             for localeIdentifier in supportedLocaleIdentifiers {
                 let locale = Locale(identifier: localeIdentifier)
@@ -430,6 +497,12 @@ final class LanguageRepository {
                 }
             }
         }
+
+        SocialFeedDebug.log(
+            "language.repository.localized_aliases.end languages=\(allLanguages.count) " +
+            "locales=\(supportedLocaleIdentifiers.count) aliases=\(travelCodeByAlias.count) " +
+            "duration=\(SocialFeedDebug.duration(since: startedAt))"
+        )
     }
 
     private func normalizeLookupKey(_ rawValue: String) -> String {

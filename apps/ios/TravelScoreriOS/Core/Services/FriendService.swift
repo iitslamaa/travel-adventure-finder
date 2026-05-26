@@ -9,6 +9,7 @@ import PostgREST
 
 private enum FriendServiceDebugLog {
     static func message(_ text: String) {
+        SocialFeedDebug.log("friend.service.\(text)")
     }
 
     static func duration(since start: Date) -> String {
@@ -223,15 +224,30 @@ final class FriendService {
     }
 
     func isFriend(currentUserId: UUID, otherUserId: UUID) async throws -> Bool {
+        let startedAt = Date()
+        FriendServiceDebugLog.message(
+            "relationship.is_friend.start current=\(currentUserId.uuidString) other=\(otherUserId.uuidString)"
+        )
         let filter = "and(user_id.eq.\(currentUserId.uuidString),friend_id.eq.\(otherUserId.uuidString)),and(user_id.eq.\(otherUserId.uuidString),friend_id.eq.\(currentUserId.uuidString))"
 
-        let response = try await supabase.client
-            .from("friends")
-            .select("id", count: .exact)
-            .or(filter)
-            .limit(1)
-            .execute()
-        return (response.count ?? 0) > 0
+        do {
+            let response = try await supabase.client
+                .from("friends")
+                .select("id", count: .exact)
+                .or(filter)
+                .limit(1)
+                .execute()
+            let result = (response.count ?? 0) > 0
+            FriendServiceDebugLog.message(
+                "relationship.is_friend.end current=\(currentUserId.uuidString) other=\(otherUserId.uuidString) result=\(result) count=\(response.count ?? -1) duration=\(FriendServiceDebugLog.duration(since: startedAt))"
+            )
+            return result
+        } catch {
+            FriendServiceDebugLog.message(
+                "relationship.is_friend.error current=\(currentUserId.uuidString) other=\(otherUserId.uuidString) duration=\(FriendServiceDebugLog.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
     }
 
     func removeFriend(myUserId: UUID, otherUserId: UUID) async throws {
@@ -383,39 +399,65 @@ final class FriendService {
     }
 
     func hasIncomingRequest(from otherUserId: UUID, to myUserId: UUID) async throws -> Bool {
-        
+        let startedAt = Date()
+        FriendServiceDebugLog.message(
+            "relationship.incoming_request.start current=\(myUserId.uuidString) other=\(otherUserId.uuidString)"
+        )
 
         struct RequestIDRow: Decodable { let id: UUID }
 
-        let response: PostgrestResponse<[RequestIDRow]> = try await supabase.client
-            .from("friend_requests")
-            .select("id")
-            .eq("sender_id", value: otherUserId)
-            .eq("receiver_id", value: myUserId)
-            .eq("status", value: "pending")
-            .limit(1)
-            .execute()
+        do {
+            let response: PostgrestResponse<[RequestIDRow]> = try await supabase.client
+                .from("friend_requests")
+                .select("id")
+                .eq("sender_id", value: otherUserId)
+                .eq("receiver_id", value: myUserId)
+                .eq("status", value: "pending")
+                .limit(1)
+                .execute()
 
-        
-        return !response.value.isEmpty
+            let result = !response.value.isEmpty
+            FriendServiceDebugLog.message(
+                "relationship.incoming_request.end current=\(myUserId.uuidString) other=\(otherUserId.uuidString) result=\(result) rows=\(response.value.count) duration=\(FriendServiceDebugLog.duration(since: startedAt))"
+            )
+            return result
+        } catch {
+            FriendServiceDebugLog.message(
+                "relationship.incoming_request.error current=\(myUserId.uuidString) other=\(otherUserId.uuidString) duration=\(FriendServiceDebugLog.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
     }
 
     func hasSentRequest(from myUserId: UUID, to otherUserId: UUID) async throws -> Bool {
-        
+        let startedAt = Date()
+        FriendServiceDebugLog.message(
+            "relationship.sent_request.start current=\(myUserId.uuidString) other=\(otherUserId.uuidString)"
+        )
 
         struct RequestIDRow: Decodable { let id: UUID }
 
-        let response: PostgrestResponse<[RequestIDRow]> = try await supabase.client
-            .from("friend_requests")
-            .select("id")
-            .eq("sender_id", value: myUserId)
-            .eq("receiver_id", value: otherUserId)
-            .eq("status", value: "pending")
-            .limit(1)
-            .execute()
+        do {
+            let response: PostgrestResponse<[RequestIDRow]> = try await supabase.client
+                .from("friend_requests")
+                .select("id")
+                .eq("sender_id", value: myUserId)
+                .eq("receiver_id", value: otherUserId)
+                .eq("status", value: "pending")
+                .limit(1)
+                .execute()
 
-        
-        return !response.value.isEmpty
+            let result = !response.value.isEmpty
+            FriendServiceDebugLog.message(
+                "relationship.sent_request.end current=\(myUserId.uuidString) other=\(otherUserId.uuidString) result=\(result) rows=\(response.value.count) duration=\(FriendServiceDebugLog.duration(since: startedAt))"
+            )
+            return result
+        } catch {
+            FriendServiceDebugLog.message(
+                "relationship.sent_request.error current=\(myUserId.uuidString) other=\(otherUserId.uuidString) duration=\(FriendServiceDebugLog.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
+            throw error
+        }
     }
 
     func fetchRelationshipState(currentUserId: UUID, otherUserId: UUID) async throws -> RelationshipState {

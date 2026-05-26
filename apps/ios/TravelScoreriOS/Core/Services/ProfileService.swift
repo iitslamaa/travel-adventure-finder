@@ -207,6 +207,31 @@ final class ProfileService {
         static let passportPrefix = "travelaf.profile.cache.\(version).passport."
     }
 
+    nonisolated private static let profileSelectColumns = """
+        id,
+        username,
+        full_name,
+        first_name,
+        last_name,
+        avatar_url,
+        languages,
+        lived_countries,
+        travel_style,
+        travel_mode,
+        next_destination,
+        default_currency_code,
+        current_country,
+        favorite_countries,
+        onboarding_completed,
+        friend_count
+    """
+
+    nonisolated private static let profileSelectColumnsLogValue = profileSelectColumns
+        .split(separator: "\n")
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+        .joined(separator: ",")
+
     private static var profileCache: [UUID: Profile] = [:]
     private static var inFlightProfileFetches: [UUID: Task<Profile, Error>] = [:]
     private static var inFlightProfileWarmups: [UUID: Task<Profile, Error>] = [:]
@@ -306,7 +331,7 @@ final class ProfileService {
         return cachedProfile
     }
 
-    func persistedCachedProfile(userId: UUID) async -> Profile? {
+    func persistedCachedProfile(userId: UUID) -> Profile? {
         if let cachedProfile = Self.profileCache[userId] {
             SocialFeedDebug.log(
                 "profile.service.cache.profile.memory_hit user=\(userId.uuidString) username=\(logField(cachedProfile.username)) languages=\(cachedProfile.languages.count)"
@@ -314,27 +339,39 @@ final class ProfileService {
             return cachedProfile
         }
 
+        let startedAt = Date()
         let key = Self.profileCacheKey(for: userId)
-        let cachedData: Data? = await Task.detached(priority: .utility) {
-            UserDefaults.standard.data(forKey: key)
-        }.value
+        SocialFeedDebug.log("profile.service.cache.profile.sync_disk.start user=\(userId.uuidString)")
+        let cachedData = UserDefaults.standard.data(forKey: key)
         guard let cachedData else {
-            SocialFeedDebug.log("profile.service.cache.profile.async_disk_miss user=\(userId.uuidString)")
+            SocialFeedDebug.log(
+                "profile.service.cache.profile.sync_disk_miss user=\(userId.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             return nil
         }
+        SocialFeedDebug.log(
+            "profile.service.cache.profile.sync_disk.data user=\(userId.uuidString) bytes=\(cachedData.count) " +
+            "duration=\(SocialFeedDebug.duration(since: startedAt))"
+        )
 
         let persistedProfile: Profile
         do {
             persistedProfile = try JSONDecoder().decode(Profile.self, from: cachedData)
         } catch {
             Self.removeCachedValue(forKey: key)
-            SocialFeedDebug.log("profile.service.cache.profile.async_disk_decode_error user=\(userId.uuidString) error=\(SocialFeedDebug.describe(error))")
+            SocialFeedDebug.log(
+                "profile.service.cache.profile.sync_disk_decode_error user=\(userId.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+            )
             return nil
         }
 
         Self.profileCache[userId] = persistedProfile
         SocialFeedDebug.log(
-            "profile.service.cache.profile.async_disk_hit user=\(userId.uuidString) username=\(logField(persistedProfile.username)) languages=\(persistedProfile.languages.count)"
+            "profile.service.cache.profile.sync_disk_hit user=\(userId.uuidString) " +
+            "username=\(logField(persistedProfile.username)) languages=\(persistedProfile.languages.count) " +
+            "duration=\(SocialFeedDebug.duration(since: startedAt))"
         )
         return persistedProfile
     }
@@ -556,7 +593,7 @@ final class ProfileService {
             "profile.service.fetch.memory_cache.\(useCache ? "miss" : "skipped") request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: entryStartedAt))"
         )
 
-        if useCache, let persistedProfile = await persistedCachedProfile(userId: userId) {
+        if useCache, let persistedProfile = persistedCachedProfile(userId: userId) {
             SocialFeedDebug.log(
                 "profile.service.fetch.persisted_cache_hit request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: entryStartedAt)) " +
                 "username=\(logField(persistedProfile.username)) avatar=\(logField(persistedProfile.avatarUrl)) " +
@@ -579,35 +616,75 @@ final class ProfileService {
         )
 
         let startedAt = Date()
+        SocialFeedDebug.log(
+            "profile.service.fetch.client.resolve.start request=\(requestID) user=\(userId.uuidString) " +
+            "duration=\(SocialFeedDebug.duration(since: startedAt))"
+        )
         let client = supabase.client
+        SocialFeedDebug.log(
+            "profile.service.fetch.client.resolve.end request=\(requestID) user=\(userId.uuidString) " +
+            "duration=\(SocialFeedDebug.duration(since: startedAt))"
+        )
         SocialFeedDebug.log(
             "profile.service.fetch.network.start request=\(requestID) user=\(userId.uuidString) use_cache=\(useCache) current_user=\(supabase.currentUserId?.uuidString ?? "nil") table=profiles"
         )
-        let fetchTask = Task.detached(priority: .userInitiated) {
+        let fetchTask = Task<Profile, Error>.detached(priority: .userInitiated) {
+            SocialFeedDebug.log(
+                "profile.service.fetch.detached.enter request=\(requestID) user=\(userId.uuidString) priority=userInitiated"
+            )
             let executeStartedAt = Date()
-            await MainActor.run {
-                SocialFeedDebug.log(
-                    "profile.service.fetch.network.execute.before request=\(requestID) user=\(userId.uuidString) table=profiles columns=* limit=1"
-                )
-            }
-            let response: PostgrestResponse<[Profile]> = try await client
-                .from("profiles")
-                .select()
-                .eq("id", value: userId.uuidString)
-                .limit(1)
-                .execute()
-            await MainActor.run {
-                SocialFeedDebug.log(
-                    "profile.service.fetch.network.execute.after request=\(requestID) user=\(userId.uuidString) rows=\(response.value.count) duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
-                )
-            }
-
-            guard let profile = response.value.first else {
-                await MainActor.run {
+            SocialFeedDebug.log(
+                "profile.service.fetch.network.builder.from.start request=\(requestID) user=\(userId.uuidString) table=profiles"
+            )
+            let tableQuery = client.from("profiles")
+            SocialFeedDebug.log(
+                "profile.service.fetch.network.builder.from.end request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+            )
+            let selectedQuery = tableQuery.select(Self.profileSelectColumns)
+            SocialFeedDebug.log(
+                "profile.service.fetch.network.builder.select.end request=\(requestID) user=\(userId.uuidString) " +
+                "columns=\(Self.profileSelectColumnsLogValue) duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+            )
+            let filteredQuery = selectedQuery.eq("id", value: userId.uuidString)
+            SocialFeedDebug.log(
+                "profile.service.fetch.network.builder.eq.end request=\(requestID) user=\(userId.uuidString) column=id duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+            )
+            let limitedQuery = filteredQuery.limit(1)
+            SocialFeedDebug.log(
+                "profile.service.fetch.network.builder.limit.end request=\(requestID) user=\(userId.uuidString) limit=1 duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+            )
+            let watchdogTask = Task {
+                var tick = 0
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    guard !Task.isCancelled else { return }
+                    tick += 1
                     SocialFeedDebug.log(
-                        "profile.service.fetch.network.execute.empty request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+                        "profile.service.fetch.network.execute.waiting request=\(requestID) user=\(userId.uuidString) " +
+                        "tick=\(tick) duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
                     )
                 }
+            }
+            defer {
+                watchdogTask.cancel()
+                SocialFeedDebug.log(
+                    "profile.service.fetch.network.execute.watchdog.cancel request=\(requestID) user=\(userId.uuidString) " +
+                    "duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+                )
+            }
+            SocialFeedDebug.log(
+                "profile.service.fetch.network.execute.before request=\(requestID) user=\(userId.uuidString) table=profiles " +
+                "columns=\(Self.profileSelectColumnsLogValue) limit=1 duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+            )
+            let response: PostgrestResponse<[Profile]> = try await limitedQuery.execute()
+            SocialFeedDebug.log(
+                "profile.service.fetch.network.execute.after request=\(requestID) user=\(userId.uuidString) rows=\(response.value.count) duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+            )
+
+            guard let profile = response.value.first else {
+                SocialFeedDebug.log(
+                    "profile.service.fetch.network.execute.empty request=\(requestID) user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: executeStartedAt))"
+                )
                 throw NSError(
                     domain: "ProfileService",
                     code: 404,
@@ -615,6 +692,10 @@ final class ProfileService {
                 )
             }
 
+            SocialFeedDebug.log(
+                "profile.service.fetch.detached.return request=\(requestID) user=\(userId.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: executeStartedAt)) username=\(profile.username.isEmpty ? "nil" : profile.username)"
+            )
             return profile
         }
 
@@ -807,7 +888,19 @@ final class ProfileService {
         let startedAt = Date()
         SocialFeedDebug.log("profile.service.fetch_or_create.start user=\(userId.uuidString) use_cache=\(useCache)")
         do {
+            SocialFeedDebug.log(
+                "profile.service.fetch_or_create.fetch.start user=\(userId.uuidString) use_cache=\(useCache) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             let profile = try await fetchMyProfile(userId: userId, useCache: useCache)
+            SocialFeedDebug.log(
+                "profile.service.fetch_or_create.fetch.end user=\(userId.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
+            SocialFeedDebug.log(
+                "profile.service.fetch_or_create.hydrate_background.schedule user=\(userId.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
             hydrateProfileIdentityFromAuthMetadataIfNeededInBackground(
                 userId: userId,
                 profile: profile
@@ -936,12 +1029,20 @@ final class ProfileService {
         let startedAt = Date()
         SocialFeedDebug.log("profile.service.passport.fetch.start user=\(userId.uuidString) table=user_passport_preferences")
         do {
+            SocialFeedDebug.log(
+                "profile.service.passport.fetch.execute.before user=\(userId.uuidString) table=user_passport_preferences " +
+                "columns=user_id,nationality_country_codes,passport_country_code limit=1"
+            )
             let response: PostgrestResponse<[PassportPreferencesRow]> = try await supabase.client
                 .from("user_passport_preferences")
                 .select("user_id,nationality_country_codes,passport_country_code")
                 .eq("user_id", value: userId.uuidString)
                 .limit(1)
                 .execute()
+            SocialFeedDebug.log(
+                "profile.service.passport.fetch.execute.after user=\(userId.uuidString) rows=\(response.value.count) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
 
             let preferences = PassportPreferences(
                 nationalityCountryCodes: response.value.first?.nationalityCountryCodes ?? [],
@@ -1052,13 +1153,30 @@ final class ProfileService {
         profile: Profile
     ) {
         Task { @MainActor [weak self] in
-            guard let self else { return }
+            let startedAt = Date()
+            SocialFeedDebug.log(
+                "profile.service.hydrate_background.enter user=\(userId.uuidString) profile=\(profile.id.uuidString)"
+            )
+            guard let self else {
+                SocialFeedDebug.log("profile.service.hydrate_background.skip user=\(userId.uuidString) reason=service_deallocated")
+                return
+            }
             do {
+                SocialFeedDebug.log(
+                    "profile.service.hydrate_background.check.start user=\(userId.uuidString)"
+                )
                 _ = try await self.hydrateProfileIdentityFromAuthMetadataIfNeeded(
                     userId: userId,
                     profile: profile
                 )
-            } catch { }
+                SocialFeedDebug.log(
+                    "profile.service.hydrate_background.check.end user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt))"
+                )
+            } catch {
+                SocialFeedDebug.log(
+                    "profile.service.hydrate_background.error user=\(userId.uuidString) duration=\(SocialFeedDebug.duration(since: startedAt)) error=\(SocialFeedDebug.describe(error))"
+                )
+            }
         }
     }
 
@@ -1122,12 +1240,19 @@ final class ProfileService {
         let startedAt = Date()
         SocialFeedDebug.log("profile.service.traveled.fetch.start user=\(userId.uuidString) table=user_traveled")
         do {
+            SocialFeedDebug.log(
+                "profile.service.traveled.fetch.execute.before user=\(userId.uuidString) table=user_traveled columns=country_id limit=1000"
+            )
             let response: PostgrestResponse<[CountryRow]> = try await supabase.client
                 .from("user_traveled")
                 .select("country_id")
                 .eq("user_id", value: userId.uuidString)
                 .limit(1000)
                 .execute()
+            SocialFeedDebug.log(
+                "profile.service.traveled.fetch.execute.after user=\(userId.uuidString) rows=\(response.value.count) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
 
             let traveled = Set(response.value.map { $0.countryId })
             Self.traveledCache[userId] = traveled
@@ -1152,12 +1277,19 @@ final class ProfileService {
         let startedAt = Date()
         SocialFeedDebug.log("profile.service.bucket.fetch.start user=\(userId.uuidString) table=user_bucket_list")
         do {
+            SocialFeedDebug.log(
+                "profile.service.bucket.fetch.execute.before user=\(userId.uuidString) table=user_bucket_list columns=country_id limit=1000"
+            )
             let response: PostgrestResponse<[CountryRow]> = try await supabase.client
                 .from("user_bucket_list")
                 .select("country_id")
                 .eq("user_id", value: userId.uuidString)
                 .limit(1000)
                 .execute()
+            SocialFeedDebug.log(
+                "profile.service.bucket.fetch.execute.after user=\(userId.uuidString) rows=\(response.value.count) " +
+                "duration=\(SocialFeedDebug.duration(since: startedAt))"
+            )
 
             let bucket = Set(response.value.map { $0.countryId })
             Self.bucketCache[userId] = bucket

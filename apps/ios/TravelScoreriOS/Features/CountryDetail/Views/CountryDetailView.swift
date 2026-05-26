@@ -81,8 +81,10 @@ struct CountryDetailView: View {
     @State private var profileWarmupTask: Task<Void, Never>?
     @State private var passportContextWarmupTask: Task<Void, Never>?
     @State private var languageProfileTask: Task<Void, Never>?
-    @State private var isPreparingContent: Bool = true
+    @State private var visaPresentationTask: Task<Void, Never>?
+    @State private var isPreparingContent: Bool = false
     @State private var isLoadingLanguageCompatibility: Bool = false
+    @State private var isResolvingVisaPresentation: Bool = false
 
     private var passportFallbackCountryCode: String {
         profileVM.effectivePassportCountryCode?.nilIfBlank ?? "US"
@@ -301,6 +303,33 @@ struct CountryDetailView: View {
             "Visa presentation hydrated iso2=\(country.iso2.uppercased()) passports=\(profileVM.passportNationalities.count) duration=\(CountryDetailDebugLog.durationText(since: refreshStart))"
         )
     }
+
+    @MainActor
+    private func refreshVisaPresentationInBackground(iso2: String, loadStart: TimeInterval) {
+        visaPresentationTask?.cancel()
+        isResolvingVisaPresentation = country.visaEaseScore == nil
+
+        CountryDetailDebugLog.message(
+            "screen.visa_presentation.background.start iso2=\(iso2) loading=\(isResolvingVisaPresentation) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+        )
+
+        visaPresentationTask = Task { @MainActor in
+            await refreshVisaPresentation()
+            guard !Task.isCancelled else { return }
+            guard country.iso2.uppercased() == iso2 else {
+                CountryDetailDebugLog.message(
+                    "screen.visa_presentation.background.discard iso2=\(iso2) current_iso2=\(country.iso2.uppercased()) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+                )
+                isResolvingVisaPresentation = false
+                return
+            }
+
+            isResolvingVisaPresentation = false
+            CountryDetailDebugLog.message(
+                "screen.visa_presentation.background.finish iso2=\(iso2) total_elapsed=\(CountryDetailDebugLog.durationText(since: loadStart))"
+            )
+        }
+    }
     
     var body: some View {
         Group {
@@ -358,7 +387,7 @@ struct CountryDetailView: View {
                                     CountryVisaCard(
                                         country: displayedCountry,
                                         weightPercentage: weightsStore.visaPercentage,
-                                        isLoading: isResolvingVisaContext,
+                                        isLoading: isResolvingVisaContext || isResolvingVisaPresentation,
                                         passportLabel: visaPassportLabel,
                                         recommendedPassportLabel: recommendedPassportLabel,
                                         equalBestPassportLabels: equalBestPassportLabels,
@@ -454,7 +483,7 @@ struct CountryDetailView: View {
             let loadStart = Date().timeIntervalSinceReferenceDate
             let iso2 = country.iso2.uppercased()
             let shouldResolveVisaContext = shouldResolveVisaContextBeforeDisplay
-            isPreparingContent = true
+            isPreparingContent = false
             isResolvingVisaContext = shouldResolveVisaContext
 
             if countryLanguageProfile?.countryISO2.uppercased() != iso2 {
@@ -482,13 +511,12 @@ struct CountryDetailView: View {
 
             await refreshCountryIfAvailable()
             refreshCountryInBackgroundIfNeeded()
-            await refreshVisaPresentation()
+            refreshVisaPresentationInBackground(iso2: iso2, loadStart: loadStart)
             startPassportContextWarmupIfNeeded(
                 shouldResolveVisaContext: shouldResolveVisaContext,
                 iso2: iso2,
                 loadStart: loadStart
             )
-            isPreparingContent = false
 
             CountryDetailDebugLog.message(
                 "screen.load.finish iso2=\(iso2) languageProfileLoaded=\(countryLanguageProfile != nil) profile_loaded=\(profileVM.profile != nil) profile_languages=\(profileVM.profile?.languages.count ?? 0) duration=\(CountryDetailDebugLog.durationText(since: loadStart))"
@@ -517,6 +545,7 @@ struct CountryDetailView: View {
             profileWarmupTask?.cancel()
             passportContextWarmupTask?.cancel()
             languageProfileTask?.cancel()
+            visaPresentationTask?.cancel()
             engagementVM.cancel()
         }
         .onChange(of: profileVM.passportPreferences) { _, _ in

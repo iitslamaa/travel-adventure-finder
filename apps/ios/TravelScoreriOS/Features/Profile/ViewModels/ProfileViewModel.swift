@@ -236,6 +236,7 @@ final class ProfileViewModel: ObservableObject {
     // MARK: - Identity-Safe Lifecycle
 
     func loadIfNeeded() async {
+        let loadIfNeededStartedAt = Date()
         SocialFeedDebug.log(
             "profile.vm.load_if_needed.enter user=\(userId.uuidString) profile=\(debugLogField(profile?.id.uuidString)) " +
             "has_loaded_core=\(hasLoadedCoreData) is_loading=\(isLoading) has_task=\(loadTask != nil)"
@@ -244,35 +245,66 @@ final class ProfileViewModel: ObservableObject {
         guard !hasLoadedCoreData || profile?.id != userId else {
             SocialFeedDebug.log(
                 "profile.vm.load_if_needed.skip user=\(userId.uuidString) reason=already_loaded " +
-                "profile=\(debugLogField(profile?.id.uuidString))"
+                "profile=\(debugLogField(profile?.id.uuidString)) duration=\(SocialFeedDebug.duration(since: loadIfNeededStartedAt))"
             )
             return
         }
 
         if let existingTask = loadTask {
-            SocialFeedDebug.log("profile.vm.load_if_needed.await_existing user=\(userId.uuidString)")
+            let awaitStartedAt = Date()
+            SocialFeedDebug.log(
+                "profile.vm.load_if_needed.await_existing.start user=\(userId.uuidString) " +
+                "duration=\(SocialFeedDebug.duration(since: loadIfNeededStartedAt))"
+            )
             await existingTask.value
             SocialFeedDebug.log(
-                "profile.vm.load_if_needed.existing_done user=\(userId.uuidString) profile=\(debugLogField(profile?.id.uuidString))"
+                "profile.vm.load_if_needed.await_existing.end user=\(userId.uuidString) " +
+                "profile=\(debugLogField(profile?.id.uuidString)) await_duration=\(SocialFeedDebug.duration(since: awaitStartedAt)) " +
+                "total_duration=\(SocialFeedDebug.duration(since: loadIfNeededStartedAt))"
             )
             return
         }
 
         errorMessage = nil
         let isSwitchingUsers = profile?.id != nil && profile?.id != userId
-        let cachedProfile = profileService.cachedProfile(userId: userId)
+        let profileCacheStartedAt = Date()
+        SocialFeedDebug.log("profile.vm.load_if_needed.cache.profile_memory.start user=\(userId.uuidString)")
+        let cachedProfile = profileService.memoryCachedProfile(userId: userId)
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.cache.profile_memory.end user=\(userId.uuidString) hit=\(cachedProfile != nil) " +
+            "duration=\(SocialFeedDebug.duration(since: profileCacheStartedAt))"
+        )
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.cache.profile_fallback.disabled user=\(userId.uuidString) " +
+            "reason=must_not_render_placeholder_identity"
+        )
+        let renderSeedProfile = cachedProfile
+        let traveledCacheStartedAt = Date()
+        SocialFeedDebug.log("profile.vm.load_if_needed.cache.traveled.start user=\(userId.uuidString)")
         let cachedTraveled = profileService.cachedTraveledCountries(userId: userId)
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.cache.traveled.end user=\(userId.uuidString) hit=\(cachedTraveled != nil) " +
+            "count=\(cachedTraveled?.count ?? 0) duration=\(SocialFeedDebug.duration(since: traveledCacheStartedAt))"
+        )
+        let bucketCacheStartedAt = Date()
+        SocialFeedDebug.log("profile.vm.load_if_needed.cache.bucket.start user=\(userId.uuidString)")
         let cachedBucket = profileService.cachedBucketListCountries(userId: userId)
         SocialFeedDebug.log(
-            "profile.vm.load_if_needed.cache_state user=\(userId.uuidString) switching=\(isSwitchingUsers) " +
-            "cached_profile=\(cachedProfile != nil) cached_traveled=\(cachedTraveled != nil) cached_bucket=\(cachedBucket != nil)"
+            "profile.vm.load_if_needed.cache.bucket.end user=\(userId.uuidString) hit=\(cachedBucket != nil) " +
+            "count=\(cachedBucket?.count ?? 0) duration=\(SocialFeedDebug.duration(since: bucketCacheStartedAt))"
         )
-        if let cachedProfile {
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.cache_state user=\(userId.uuidString) switching=\(isSwitchingUsers) " +
+            "cached_profile=\(cachedProfile != nil) fallback_profile=false " +
+            "cached_traveled=\(cachedTraveled != nil) cached_bucket=\(cachedBucket != nil)"
+        )
+        if let renderSeedProfile {
             SocialFeedDebug.log(
-                "profile.vm.load_if_needed.apply_cached_profile user=\(userId.uuidString) " +
-                "username=\(debugLogField(cachedProfile.username)) languages=\(cachedProfile.languages.count)"
+                "profile.vm.load_if_needed.apply_seed_profile user=\(userId.uuidString) " +
+                "source=memory_cache " +
+                "username=\(debugLogField(renderSeedProfile.username)) languages=\(renderSeedProfile.languages.count)"
             )
-            profile = cachedProfile
+            profile = renderSeedProfile
         } else if isSwitchingUsers {
             SocialFeedDebug.log("profile.vm.load_if_needed.clear_profile user=\(userId.uuidString) reason=switching_no_cache")
             profile = nil
@@ -310,10 +342,11 @@ final class ProfileViewModel: ObservableObject {
         }
 
         computeOrderedLists()
-        isLoading = cachedProfile == nil && cachedTraveled == nil && cachedBucket == nil && profile?.id != userId
+        isLoading = renderSeedProfile == nil && cachedTraveled == nil && cachedBucket == nil && profile?.id != userId
         SocialFeedDebug.log(
             "profile.vm.load_if_needed.after_seed user=\(userId.uuidString) profile=\(debugLogField(profile?.id.uuidString)) " +
-            "traveled=\(viewedTraveledCountries.count) bucket_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries)) is_loading=\(isLoading)"
+            "traveled=\(viewedTraveledCountries.count) bucket_\(SocialFeedDebug.countrySetSummary(viewedBucketListCountries)) " +
+            "is_loading=\(isLoading) duration=\(SocialFeedDebug.duration(since: loadIfNeededStartedAt))"
         )
 
         isRelationshipLoading = true
@@ -321,13 +354,19 @@ final class ProfileViewModel: ObservableObject {
             isRelationshipLoading = false
         }
 
+        let cancelStartedAt = Date()
+        SocialFeedDebug.log("profile.vm.load_if_needed.cancel_in_flight.start user=\(userId.uuidString)")
         cancelInFlightWork()
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.cancel_in_flight.end user=\(userId.uuidString) " +
+            "duration=\(SocialFeedDebug.duration(since: cancelStartedAt))"
+        )
 
         let generation = UUID()
         loadGeneration = generation
         SocialFeedDebug.log(
             "profile.vm.load_if_needed.start_task user=\(userId.uuidString) generation=\(generation.uuidString) " +
-            "is_loading=\(isLoading)"
+            "is_loading=\(isLoading) total_duration=\(SocialFeedDebug.duration(since: loadIfNeededStartedAt))"
         )
 
         let task = Task<Void, Never> { [weak self] in
@@ -336,14 +375,24 @@ final class ProfileViewModel: ObservableObject {
         }
         loadTask = task
 
+        let taskAwaitStartedAt = Date()
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.await_task.start user=\(userId.uuidString) generation=\(generation.uuidString)"
+        )
         await task.value
+        SocialFeedDebug.log(
+            "profile.vm.load_if_needed.await_task.end user=\(userId.uuidString) generation=\(generation.uuidString) " +
+            "await_duration=\(SocialFeedDebug.duration(since: taskAwaitStartedAt))"
+        )
         if loadTask == task {
             loadTask = nil
+            SocialFeedDebug.log("profile.vm.load_if_needed.clear_task user=\(userId.uuidString) generation=\(generation.uuidString)")
         }
         isRelationshipLoading = false
         SocialFeedDebug.log(
             "profile.vm.load_if_needed.complete user=\(userId.uuidString) generation=\(generation.uuidString) " +
-            "profile=\(debugLogField(profile?.id.uuidString)) is_loading=\(isLoading) has_loaded_core=\(hasLoadedCoreData)"
+            "profile=\(debugLogField(profile?.id.uuidString)) is_loading=\(isLoading) has_loaded_core=\(hasLoadedCoreData) " +
+            "total_duration=\(SocialFeedDebug.duration(since: loadIfNeededStartedAt))"
         )
     }
 
