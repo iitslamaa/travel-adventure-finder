@@ -17,6 +17,9 @@ import {
 } from '../../../../../packages/data/src/countrySeasonality';
 import { buildVisaIndex } from '@/lib/providers/visa';
 import { estimateDailySpendHotel } from '@/lib/providers/costs';
+import {
+  computeAffordabilityFromDailySpend,
+} from '@travel-af/domain/src/affordability';
 import { buildRows, DEFAULT_WEIGHTS } from '@travel-af/domain/src/scoring';
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import {
@@ -61,6 +64,8 @@ type FactsExtraServer = Partial<CountryFacts> & {
   affordabilityCategory?: number;  // 1 (cheapest) .. 10 (most expensive)
   affordabilityBand?: 'good' | 'warn' | 'bad' | 'danger';  // centralized UI band
   affordabilityExplanation?: string;
+  affordabilitySource?: 'direct_cost_seed' | 'price_index_estimate';
+  affordabilityDataQuality?: 'direct' | 'estimated';
   languageCompatibilityScore?: number;
 
   // server-computed total
@@ -180,27 +185,6 @@ function extractAverageDailyCostUsd(fx: FactsExtraServer): number | undefined {
   return parts.reduce((a, b) => a + b, 0);
 }
 
-function affordabilityBandFromCategory(
-  category?: number
-): 'good' | 'warn' | 'bad' | 'danger' | undefined {
-  if (category == null) return undefined;
-
-  // 1–3 = cheapest → green (good)
-  if (category >= 1 && category <= 3) return 'good';
-
-  // 4–5 → yellow
-  if (category >= 4 && category <= 5) return 'warn';
-
-  // 6–7 → orange
-  if (category >= 6 && category <= 7) return 'bad';
-
-  // 8–10 → red (most expensive)
-  if (category >= 8 && category <= 10) return 'danger';
-
-  return undefined;
-}
-
-
 // Best-effort optional JSON imports (files may not exist in all demos)
 // We read JSON directly from the filesystem so this works reliably in Node/Next.
 async function safeJsonImport<T = Record<string, unknown>>(relativePath: string): Promise<T | null> {
@@ -256,10 +240,13 @@ type CountryPayload = {
     visaNotes?: string;
     visaSource?: string;
     dailySpend?: CountryFacts['dailySpend'];
+    averageDailyCostUsd?: number;
     affordabilityCategory?: number;
     affordability?: number;
     affordabilityBand?: string;
     affordabilityExplanation?: string;
+    affordabilitySource?: string;
+    affordabilityDataQuality?: string;
     languageCompatibilityScore?: number;
   };
   scoreTotal: number;
@@ -307,10 +294,13 @@ function buildCountriesPayload(rows: CountryOut[]): CountryPayload[] {
             visaNotes: facts.visaNotes,
             visaSource: facts.visaSource,
             dailySpend: facts.dailySpend,
+            averageDailyCostUsd: facts.averageDailyCostUsd,
             affordabilityCategory: facts.affordabilityCategory,
             affordability: facts.affordability,
             affordabilityBand: facts.affordabilityBand,
             affordabilityExplanation: facts.affordabilityExplanation,
+            affordabilitySource: facts.affordabilitySource,
+            affordabilityDataQuality: facts.affordabilityDataQuality,
             languageCompatibilityScore: facts.languageCompatibilityScore,
           }
         : undefined,
@@ -823,43 +813,27 @@ export async function GET(request: Request) {
       return `Premium pricing (≈ $${usd.toFixed(0)}/day). Among the most expensive destinations globally for hotels and services.`;
     }
     // --- SECOND PASS: Absolute USD-based affordability buckets
-    const USD_BUCKETS = [
-      40,   // 1
-      60,   // 2
-      80,   // 3
-      100,  // 4
-      130,  // 5
-      170,  // 6
-      220,  // 7
-      300,  // 8
-      400   // 9
-      // 10 = above 400
-    ];
-
     for (const row of merged) {
       const fxFacts = row.facts as unknown as FactsExtraServer;
       const cost = fxFacts?.averageDailyCostUsd;
 
       if (typeof cost !== 'number' || !Number.isFinite(cost)) continue;
 
-      let category = 10;
+      const result = computeAffordabilityFromDailySpend({
+        ...(fxFacts.dailySpend ?? {}),
+        totalUsd: cost,
+      });
+      if (!result) continue;
 
-      for (let i = 0; i < USD_BUCKETS.length; i++) {
-        if (cost <= USD_BUCKETS[i]) {
-          category = i + 1;
-          break;
-        }
-      }
-
-      const score = (11 - category) * 10;
-
-      fxFacts.affordabilityCategory = category;
-      fxFacts.affordability = score;
-      (fxFacts as FactsExtraServer & { affordabilityScore?: number }).affordabilityScore = score;
-      fxFacts.affordabilityBand = affordabilityBandFromCategory(category);
+      fxFacts.affordabilityCategory = result.category;
+      fxFacts.affordability = result.score;
+      (fxFacts as FactsExtraServer & { affordabilityScore?: number }).affordabilityScore = result.score;
+      fxFacts.affordabilityBand = result.band;
+      fxFacts.affordabilitySource = result.dailySpend?.source ?? 'price_index_estimate';
+      fxFacts.affordabilityDataQuality = result.quality;
 
       fxFacts.affordabilityExplanation =
-        affordabilityExplanationFromCategory(category, cost);
+        affordabilityExplanationFromCategory(result.category, cost);
 
       // Recompute total score after affordability injected
       try {

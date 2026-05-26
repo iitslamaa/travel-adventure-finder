@@ -49,8 +49,8 @@ final class CountryMetadataResolver {
                     return nil
                 }()
 
-                let dailyTotal = c.dailySpendTotalUsd
-                let affordabilityScore = affordabilityFromDailySpend(totalUsd: dailyTotal)
+                let affordabilityScore = c.affordabilityScore.map(Double.init)
+                    ?? affordabilityFromDailySpend(totalUsd: c.dailySpendTotalUsd)
 
                 let visaEase = c.visaEaseScore.map(Double.init)
                 let seasonality = c.seasonalityScore.map(Double.init)
@@ -101,10 +101,12 @@ final class CountryMetadataResolver {
 
     private func affordabilityFromDailySpend(totalUsd: Double?) -> Double? {
         guard let totalUsd else { return nil }
-        let minUsd: Double = 35
-        let maxUsd: Double = 250
-        let clamped = min(max(totalUsd, minUsd), maxUsd)
-        let t = (clamped - minUsd) / (maxUsd - minUsd)
+        let minUsd: Double = 50
+        let maxUsd: Double = 375
+        if totalUsd <= minUsd { return 100 }
+        if totalUsd >= maxUsd { return 0 }
+
+        let t = (log(totalUsd) - log(minUsd)) / (log(maxUsd) - log(minUsd))
         return (1.0 - t) * 100.0
     }
 
