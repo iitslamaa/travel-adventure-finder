@@ -1,6 +1,10 @@
 // packages/domain/src/scoring.ts
 
 import type { CountryFacts } from '@travel-af/shared';
+import {
+  computeAffordabilityFromCostInputs,
+  computeAffordabilityFromDailySpend,
+} from './affordability';
 
 // --- Weights (sum = 1.0)
 export const W = {
@@ -50,20 +54,9 @@ export type FactRow = {
 
 // --- Internal helpers (pure math only)
 
-function clamp01(x: number) {
-  return Math.max(0, Math.min(1, x));
-}
-
 function toNumber(x: unknown): number | undefined {
   const n = Number(x);
   return Number.isFinite(n) ? n : undefined;
-}
-
-function scaleTo100(value: number, min: number, max: number, invert = false) {
-  if (min === max) return 50;
-  const t = clamp01((value - min) / (max - min));
-  const y = invert ? 1 - t : t;
-  return Math.round(y * 100);
 }
 
 // --- Affordability derivation (pure scoring logic only)
@@ -75,6 +68,9 @@ type FactsExtra = CountryFacts & {
   fxLocalPerUSD?: number;
   localPerUSD?: number;
   usdToLocalRate?: number;
+  housingCostIndex?: number;
+  transportCostIndex?: number;
+  dailySpend?: CountryFacts['dailySpend'];
   affordability?: number;
   languageCompatibilityScore?: number;
 };
@@ -82,24 +78,19 @@ type FactsExtra = CountryFacts & {
 export function computeAffordability(
   facts: FactsExtra
 ): number | undefined {
-  const col = toNumber(facts.costOfLivingIndex);
-  const food = toNumber(facts.foodCostIndex);
-  const gdp = toNumber(facts.gdpPerCapitaUsd);
-  const fxLocalPerUsd = toNumber(
-    facts.fxLocalPerUSD ?? facts.localPerUSD ?? facts.usdToLocalRate
-  );
+  const dailySpend = facts.dailySpend
+    ? computeAffordabilityFromDailySpend(facts.dailySpend)
+    : undefined;
+  if (dailySpend) return dailySpend.score;
 
-  const parts: number[] = [];
+  const estimated = computeAffordabilityFromCostInputs({
+    costOfLivingIndex: toNumber(facts.costOfLivingIndex),
+    foodCostIndex: toNumber(facts.foodCostIndex),
+    housingCostIndex: toNumber(facts.housingCostIndex),
+    transportCostIndex: toNumber(facts.transportCostIndex),
+  });
 
-  if (col != null) parts.push(scaleTo100(col, 30, 120, true));
-  if (food != null) parts.push(scaleTo100(food, 20, 200, true));
-  if (gdp != null) parts.push(scaleTo100(gdp, 2000, 80000, true));
-  if (fxLocalPerUsd != null)
-    parts.push(scaleTo100(fxLocalPerUsd, 0.2, 400, false));
-
-  if (parts.length === 0) return 50;
-
-  return Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
+  return estimated?.score ?? 50;
 }
 
 // --- Advisory mapping

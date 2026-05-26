@@ -29,6 +29,8 @@ export type CountryFacts = {
   affordabilityCategory?: number; // 1 (cheapest) .. 10 (most expensive)
   affordabilityBand?: 'good' | 'warn' | 'bad' | 'danger';
   affordabilityExplanation?: string;
+  affordabilitySource?: 'direct_cost_seed' | 'price_index_estimate';
+  affordabilityDataQuality?: 'direct' | 'estimated';
   averageDailyCostUsd?: number;
   dailySpend?: {
     totalUsd?: number;

@@ -1,19 +1,13 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  computeAffordabilityFromCostInputs,
+} from "../../../packages/domain/src/affordability.ts";
 
 type WdiItem = {
   country?: { id?: string };
   date?: string;
   value?: number | null;
-};
-
-type SpendBreakdown = {
-  avgDailyUsd: number;
-  hotelUsd: number;
-  hostelUsd: number;
-  foodUsd: number;
-  transportUsd: number;
-  activitiesUsd: number;
 };
 
 function labelForCategory(cat: number) {
@@ -22,52 +16,6 @@ function labelForCategory(cat: number) {
   if (cat <= 6) return "Moderate";
   if (cat <= 8) return "Expensive";
   return "Very Expensive";
-}
-
-// Fixed absolute range buckets
-function categoryFromMetric(metric: number) {
-  const MIN = 0.2;
-  const MAX = 2.7;
-  const width = (MAX - MIN) / 10;
-
-  const clamped = Math.max(MIN, Math.min(MAX, metric));
-  const idx = Math.floor((clamped - MIN) / width) + 1;
-  return Math.max(1, Math.min(10, idx === 11 ? 10 : idx));
-}
-
-function scaleFromMetric(metric: number) {
-  let scale: number;
-  if (metric <= 3) {
-    scale = metric / 0.6;
-  } else {
-    scale = metric / 100;
-  }
-
-  return Math.min(3, Math.max(0.4, scale));
-}
-
-function estimateSpendBreakdown(metric: number): SpendBreakdown {
-  const BASE_FOOD_USD = 25;
-  const BASE_TRANSPORT_USD = 15;
-  const BASE_ACTIVITIES_USD = 15;
-  const BASE_HOTEL_USD = 70;
-
-  const scale = scaleFromMetric(metric);
-  const foodUsd = Math.round(BASE_FOOD_USD * scale);
-  const transportUsd = Math.round(BASE_TRANSPORT_USD * scale);
-  const activitiesUsd = Math.round(BASE_ACTIVITIES_USD * scale);
-  const hotelUsd = Math.round(BASE_HOTEL_USD * scale);
-  const hostelUsd = Math.round(hotelUsd * 0.4);
-  const avgDailyUsd = Math.round(foodUsd + transportUsd + activitiesUsd + hotelUsd);
-
-  return {
-    avgDailyUsd,
-    hotelUsd,
-    hostelUsd,
-    foodUsd,
-    transportUsd,
-    activitiesUsd,
-  };
 }
 
 async function fetchLatestWdiIndicator(indicator: string) {
@@ -108,32 +56,41 @@ serve(async () => {
     const derivedRows: any[] = [];
 
     for (const [iso2, data] of latestByIso2.entries()) {
-      const category = categoryFromMetric(data.value);
-      const spend = estimateSpendBreakdown(data.value);
+      const affordability = computeAffordabilityFromCostInputs({
+        costOfLivingIndex: data.value,
+      });
+      if (!affordability || !affordability.dailySpend) continue;
+
+      const spend = affordability.dailySpend;
 
       sourceRows.push({
         iso2,
         price_level_ratio_ppp_to_fx: data.value,
         source_year: data.year,
         source_updated_at: new Date().toISOString(),
-        avg_daily_usd: spend.avgDailyUsd,
+        avg_daily_usd: affordability.averageDailyCostUsd,
         hotel_usd: spend.hotelUsd,
         hostel_usd: spend.hostelUsd,
         food_usd: spend.foodUsd,
         transport_usd: spend.transportUsd,
         activities_usd: spend.activitiesUsd,
-        methodology: "world_bank_price_level_baseline_v1",
+        methodology: "world_bank_price_level_affordability_v2",
+        data_quality: affordability.quality,
       });
 
       derivedRows.push({
         iso2,
-        category,
-        label: labelForCategory(category),
+        score: affordability.score,
+        category: affordability.category,
+        label: labelForCategory(affordability.category),
+        band: affordability.band,
         metric: data.value,
         metric_year: data.year,
-        version: 1,
+        version: 2,
         computed_at: new Date().toISOString(),
-        avg_daily_usd: spend.avgDailyUsd,
+        methodology: "world_bank_price_level_affordability_v2",
+        data_quality: affordability.quality,
+        avg_daily_usd: affordability.averageDailyCostUsd,
         hotel_usd: spend.hotelUsd,
         hostel_usd: spend.hostelUsd,
         food_usd: spend.foodUsd,
