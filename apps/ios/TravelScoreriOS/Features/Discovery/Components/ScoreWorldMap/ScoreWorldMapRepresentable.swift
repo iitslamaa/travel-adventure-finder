@@ -120,6 +120,12 @@ struct ScoreWorldMapRepresentable: UIViewRepresentable {
                 span: MKCoordinateSpan(latitudeDelta: 3.0, longitudeDelta: 3.0)
             ),
 
+            // Australia (mainland and Tasmania only)
+            "AU": MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: -26.0, longitude: 134.0),
+                span: MKCoordinateSpan(latitudeDelta: 40.0, longitudeDelta: 48.0)
+            ),
+
             // China (mainland)
             "CN": MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 35.0, longitude: 103.0),
