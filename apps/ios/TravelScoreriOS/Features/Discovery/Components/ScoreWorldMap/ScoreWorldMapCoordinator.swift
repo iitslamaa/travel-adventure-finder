@@ -232,8 +232,8 @@ final class ScoreWorldMapCoordinator: NSObject, MKMapViewDelegate {
             let vertexCount = polygon.polygons.reduce(0) { $0 + $1.pointCount }
             let isComplex = vertexCount > 5000
 
-            // Always show stroke for China and Antarctica
-            if polygon.isoCode == "CN" || polygon.isoCode == "AQ" {
+            // Always show stroke for complex selections that rely on custom zoom framing.
+            if polygon.isoCode == "AU" || polygon.isoCode == "CN" || polygon.isoCode == "AQ" {
                 renderer.strokeColor = selectedStrokeColor
                 renderer.lineWidth = 2.0
             }
