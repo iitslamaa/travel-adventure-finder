@@ -55,30 +55,32 @@ final class SocialFeedViewModel: ObservableObject {
 }
 
 enum SocialFeedDebug {
-    static func log(_ message: String) {
+    nonisolated static func log(_ message: String) {
         #if DEBUG
-        print("[SocialFeed] \(message)")
+        let timestamp = String(format: "%.3f", Date().timeIntervalSinceReferenceDate)
+        let uptime = String(format: "%.3f", ProcessInfo.processInfo.systemUptime)
+        print("[SocialFeed \(timestamp) uptime=\(uptime)] \(message)")
         #endif
     }
 
-    static func countrySetSummary(_ countries: Set<String>) -> String {
+    nonisolated static func countrySetSummary(_ countries: Set<String>) -> String {
         let sorted = countries.sorted()
         let preview = sorted.prefix(12).joined(separator: ",")
         let omitted = max(sorted.count - 12, 0)
         return "count=\(countries.count) has_US=\(countries.contains("US")) has_GB=\(countries.contains("GB")) preview=[\(preview)] omitted=\(omitted)"
     }
 
-    static func duration(since startTime: Date) -> String {
+    nonisolated static func duration(since startTime: Date) -> String {
         let milliseconds = Int(Date().timeIntervalSince(startTime) * 1_000)
         return "\(milliseconds)ms"
     }
 
-    static func describe(_ error: Error) -> String {
+    nonisolated static func describe(_ error: Error) -> String {
         let nsError = error as NSError
         return "\(type(of: error))(domain=\(nsError.domain), code=\(nsError.code), description=\(error.localizedDescription))"
     }
 
-    static func isCancellation(_ error: Error) -> Bool {
+    nonisolated static func isCancellation(_ error: Error) -> Bool {
         if error is CancellationError {
             return true
         }

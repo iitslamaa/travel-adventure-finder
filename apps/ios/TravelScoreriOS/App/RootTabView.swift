@@ -19,6 +19,7 @@ enum SocialRoute: Hashable {
 final class SocialNavigationController: ObservableObject {
     @Published var path = NavigationPath()
     @Published var pendingProfileLoadUserId: UUID?
+    private var profilePushStartedAt: [UUID: Date] = [:]
 
     var hasActiveRoute: Bool {
         !path.isEmpty
@@ -31,11 +32,10 @@ final class SocialNavigationController: ObservableObject {
         )
 
         if case .profile(let userId) = route {
-            showProfileLoadingScreen(for: userId, reason: "push")
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 80_000_000)
-                append(route)
-            }
+            profilePushStartedAt[userId] = Date()
+            SocialFeedDebug.log("navigation.profile.push.start user=\(userId.uuidString) path_active=\(hasActiveRoute)")
+            SocialFeedDebug.log("navigation.profile.loading.skip user=\(userId.uuidString) reason=push_direct")
+            append(route)
             return
         }
 
@@ -43,10 +43,16 @@ final class SocialNavigationController: ObservableObject {
     }
 
     private func append(_ route: SocialRoute) {
+        let appendStartedAt = Date()
+        SocialFeedDebug.log(
+            "navigation.push.append.start route=\(debugDescription(for: route)) path_count_before=\(path.count) " +
+            "path_active=\(hasActiveRoute)"
+        )
         path.append(route)
         SocialFeedDebug.log(
-            "navigation.push.appended route=\(debugDescription(for: route)) path_active=\(hasActiveRoute) " +
-            "pending_profile=\(logField(pendingProfileLoadUserId?.uuidString))"
+            "navigation.push.appended route=\(debugDescription(for: route)) path_count_after=\(path.count) " +
+            "path_active=\(hasActiveRoute) pending_profile=\(logField(pendingProfileLoadUserId?.uuidString)) " +
+            "duration=\(SocialFeedDebug.duration(since: appendStartedAt)) \(profileRouteElapsed(for: route))"
         )
     }
 
@@ -55,12 +61,14 @@ final class SocialNavigationController: ObservableObject {
             "navigation.reset path_active=\(hasActiveRoute) pending_profile=\(logField(pendingProfileLoadUserId?.uuidString))"
         )
         pendingProfileLoadUserId = nil
+        profilePushStartedAt.removeAll()
         path = NavigationPath()
     }
 
     func profileRouteDidAppear(userId: UUID) {
         SocialFeedDebug.log(
-            "navigation.profile.appear user=\(userId.uuidString) pending_profile=\(logField(pendingProfileLoadUserId?.uuidString))"
+            "navigation.profile.appear user=\(userId.uuidString) pending_profile=\(logField(pendingProfileLoadUserId?.uuidString)) " +
+            "elapsed=\(profileElapsed(for: userId))"
         )
 
         if pendingProfileLoadUserId == userId {
@@ -93,6 +101,16 @@ final class SocialNavigationController: ObservableObject {
         case .country(let country):
             return "country:\(country.iso2.uppercased())"
         }
+    }
+
+    private func profileRouteElapsed(for route: SocialRoute) -> String {
+        guard case .profile(let userId) = route else { return "profile_elapsed=na" }
+        return "profile_elapsed=\(profileElapsed(for: userId))"
+    }
+
+    private func profileElapsed(for userId: UUID) -> String {
+        guard let startedAt = profilePushStartedAt[userId] else { return "not_started" }
+        return SocialFeedDebug.duration(since: startedAt)
     }
 
     private func logField(_ value: String?) -> String {
@@ -424,20 +442,36 @@ struct RootTabView: View {
             "navigation.destination.build route=\(navigatorDebugDescription(for: route)) " +
             "pending_profile=\(navigator.pendingProfileLoadUserId?.uuidString ?? "nil")"
         )
+        let _ = SocialFeedDebug.log(
+            "navigation.destination.switch.start route=\(navigatorDebugDescription(for: route)) " +
+            "session_user=\(sessionManager.userId?.uuidString ?? "nil") authenticated=\(sessionManager.isAuthenticated)"
+        )
 
         switch route {
         case .profile(let userId):
             if sessionManager.userId == userId {
+                let _ = SocialFeedDebug.log(
+                    "navigation.destination.profile.own.construct user=\(userId.uuidString) injected_vm=true"
+                )
                 ProfileView(userId: userId, showsBackButton: true, profileViewModel: profileVM)
                     .environmentObject(navigator)
                     .onAppear {
                         SocialFeedDebug.log("navigation.destination.profile.own.appear user=\(userId.uuidString)")
                     }
+                    .onDisappear {
+                        SocialFeedDebug.log("navigation.destination.profile.own.disappear user=\(userId.uuidString)")
+                    }
             } else {
+                let _ = SocialFeedDebug.log(
+                    "navigation.destination.profile.other.construct user=\(userId.uuidString) injected_vm=false"
+                )
                 ProfileView(userId: userId, showsBackButton: true)
                     .environmentObject(navigator)
                     .onAppear {
                         SocialFeedDebug.log("navigation.destination.profile.other.appear user=\(userId.uuidString)")
+                    }
+                    .onDisappear {
+                        SocialFeedDebug.log("navigation.destination.profile.other.disappear user=\(userId.uuidString)")
                     }
             }
         case .friends(let userId):

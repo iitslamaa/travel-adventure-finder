@@ -46,6 +46,7 @@ struct ProfileView: View {
     @State private var showFriendsDrawer = false
     @State private var showSettings = false
     @State private var scrollAnchor: String? = nil
+    @State private var profileAppearStartedAt: Date?
 
     init(
         userId: UUID,
@@ -90,6 +91,7 @@ struct ProfileView: View {
 
     private var isReadyToRenderProfile: Bool {
         guard profileVM.profile?.id == userId else { return false }
+        guard profileVM.hasLoadedCoreData else { return false }
         guard !isOwnProfile else { return true }
         return !profileVM.isRelationshipLoading
     }
@@ -146,6 +148,11 @@ struct ProfileView: View {
         ].joined(separator: " ")
     }
 
+    private var profileAppearElapsed: String {
+        guard let profileAppearStartedAt else { return "not_started" }
+        return SocialFeedDebug.duration(since: profileAppearStartedAt)
+    }
+
     private func logField(_ value: String?) -> String {
         guard let value, !value.isEmpty else { return "nil" }
         return value
@@ -156,14 +163,15 @@ struct ProfileView: View {
             SocialFeedDebug.log(
                 "profile.view.navigation.clear user=\(userId.uuidString) reason=\(reason) " +
                 "ready=\(isReadyToRenderProfile) relationship_loading=\(profileVM.isRelationshipLoading) " +
-                "error=\(logField(profileVM.errorMessage))"
+                "error=\(logField(profileVM.errorMessage)) elapsed=\(profileAppearElapsed)"
             )
             socialNav.profileRouteDidAppear(userId: userId)
         } else {
             SocialFeedDebug.log(
                 "profile.view.navigation.hold user=\(userId.uuidString) reason=\(reason) " +
                 "vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
-                "relationship_loading=\(profileVM.isRelationshipLoading) is_loading=\(profileVM.isLoading)"
+                "relationship_loading=\(profileVM.isRelationshipLoading) is_loading=\(profileVM.isLoading) " +
+                "elapsed=\(profileAppearElapsed)"
             )
         }
     }
@@ -296,6 +304,13 @@ struct ProfileView: View {
                     .padding(.top, 6)
                     .padding(.bottom, bottomContentInset)
                 }
+                .onAppear {
+                    SocialFeedDebug.log(
+                        "profile.view.content.appear user=\(userId.uuidString) elapsed=\(profileAppearElapsed) " +
+                        "relationship=\(relationshipLogValue) traveled=\(profileVM.viewedTraveledCountries.count) " +
+                        "bucket=\(profileVM.viewedBucketListCountries.count) languages=\(profileVM.profile?.languages.count ?? 0)"
+                    )
+                }
                 .refreshable {
                     SocialFeedDebug.log(
                         "profile.view.refresh.start user=\(userId.uuidString) \(renderGateDebugSummary)"
@@ -379,6 +394,10 @@ struct ProfileView: View {
         let isCompactWidth = width < 390
         let contentHorizontalPadding: CGFloat = isCompactWidth ? 14 : 20
         let bottomContentInset = max(floatingTabBarInset + 8, 28)
+        SocialFeedDebug.log(
+            "profile.view.geometry.render user=\(userId.uuidString) width=\(Int(width)) compact=\(isCompactWidth) " +
+            "showing=\(isReadyToRenderProfile ? "content" : "loading") elapsed=\(profileAppearElapsed) \(renderGateDebugSummary)"
+        )
 
         return AnyView(
             ZStack {
@@ -399,7 +418,7 @@ struct ProfileView: View {
         )
     }
 
-    private var profileBase: AnyView {
+    private var profileScaffold: AnyView {
         AnyView(GeometryReader { geometry in
             profileGeometryContent(width: geometry.size.width)
         }
@@ -411,6 +430,11 @@ struct ProfileView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
+        )
+    }
+
+    private func profileWithSettings(_ content: AnyView) -> AnyView {
+        AnyView(content
         .fullScreenCover(isPresented: $showSettings) {
             NavigationStack {
                 ProfileSettingsView(
@@ -422,67 +446,139 @@ struct ProfileView: View {
                 logSettingsPresent()
             }
         }
-        .onAppear {
+        )
+    }
+
+    private func profileWithLifecycle(_ content: AnyView) -> AnyView {
+        let appeared = profileWithAppear(content)
+        let disappeared = profileWithDisappear(appeared)
+        let ready = profileWithReadyChange(disappeared)
+        let relationship = profileWithRelationshipLoadingChange(ready)
+        let core = profileWithCoreLoadedChange(relationship)
+        let profile = profileWithProfileIDChange(core)
+        let traveled = profileWithTraveledCountChange(profile)
+        return profileWithBucketCountChange(traveled)
+    }
+
+    private func profileWithAppear(_ content: AnyView) -> AnyView {
+        AnyView(content.onAppear {
+            let appearStart = Date()
+            profileAppearStartedAt = appearStart
             SocialFeedDebug.log(
                 "profile.view.appear user=\(userId.uuidString) vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
                 "ready=\(isReadyToRenderProfile) is_loading=\(profileVM.isLoading) " +
-                "relationship_loading=\(profileVM.isRelationshipLoading) has_loaded_core=\(profileVM.hasLoadedCoreData)"
+                "relationship_loading=\(profileVM.isRelationshipLoading) has_loaded_core=\(profileVM.hasLoadedCoreData) " +
+                "session_user=\(sessionManager.userId?.uuidString ?? "nil") authenticated=\(sessionManager.isAuthenticated)"
             )
             clearProfileNavigationLoadingIfReady(reason: "appear")
 
+            SocialFeedDebug.log(
+                "profile.view.load.task.schedule user=\(userId.uuidString) elapsed=\(SocialFeedDebug.duration(since: appearStart)) " +
+                "\(renderGateDebugSummary)"
+            )
             Task {
                 let loadStartTime = Date()
                 SocialFeedDebug.log(
+                    "profile.view.load.task.enter user=\(userId.uuidString) " +
+                    "elapsed=\(SocialFeedDebug.duration(since: appearStart)) \(renderGateDebugSummary)"
+                )
+                await Task.yield()
+                SocialFeedDebug.log(
+                    "profile.view.load.task.after_yield user=\(userId.uuidString) " +
+                    "elapsed=\(SocialFeedDebug.duration(since: appearStart)) \(renderGateDebugSummary)"
+                )
+                SocialFeedDebug.log(
                     "profile.view.load.task.start user=\(userId.uuidString) " +
                     "vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
-                    "relationship_loading=\(profileVM.isRelationshipLoading) has_loaded_core=\(profileVM.hasLoadedCoreData)"
+                    "relationship_loading=\(profileVM.isRelationshipLoading) has_loaded_core=\(profileVM.hasLoadedCoreData) " +
+                    "elapsed=\(SocialFeedDebug.duration(since: appearStart))"
                 )
                 await profileVM.loadIfNeeded()
                 SocialFeedDebug.log(
                     "profile.view.load.task.end user=\(userId.uuidString) vm_profile=\(logField(profileVM.profile?.id.uuidString)) " +
                     "ready=\(isReadyToRenderProfile) is_loading=\(profileVM.isLoading) " +
                     "relationship_loading=\(profileVM.isRelationshipLoading) " +
-                    "duration=\(SocialFeedDebug.duration(since: loadStartTime))"
+                    "duration=\(SocialFeedDebug.duration(since: loadStartTime)) elapsed=\(SocialFeedDebug.duration(since: appearStart))"
                 )
                 clearProfileNavigationLoadingIfReady(reason: "load_task_end")
             }
-        }
-        .onDisappear {
+        })
+    }
+
+    private func profileWithDisappear(_ content: AnyView) -> AnyView {
+        AnyView(content.onDisappear {
             SocialFeedDebug.log(
                 "profile.view.disappear user=\(userId.uuidString) \(renderGateDebugSummary)"
             )
-        }
-        .onChange(of: isReadyToRenderProfile) { oldValue, newValue in
+        })
+    }
+
+    private func profileWithReadyChange(_ content: AnyView) -> AnyView {
+        AnyView(content.onChange(of: isReadyToRenderProfile) { oldValue, newValue in
             SocialFeedDebug.log(
                 "profile.view.render_gate.ready_change user=\(userId.uuidString) old=\(oldValue) new=\(newValue) " +
-                renderGateDebugSummary
+                "\(renderGateDebugSummary) elapsed=\(profileAppearElapsed)"
             )
             if newValue {
                 clearProfileNavigationLoadingIfReady(reason: "ready_change")
             }
-        }
-        .onChange(of: profileVM.isRelationshipLoading) { oldValue, newValue in
+        })
+    }
+
+    private func profileWithRelationshipLoadingChange(_ content: AnyView) -> AnyView {
+        AnyView(content.onChange(of: profileVM.isRelationshipLoading) { oldValue, newValue in
             SocialFeedDebug.log(
                 "profile.view.render_gate.relationship_loading_change user=\(userId.uuidString) " +
-                "old=\(oldValue) new=\(newValue) \(renderGateDebugSummary)"
+                "old=\(oldValue) new=\(newValue) \(renderGateDebugSummary) elapsed=\(profileAppearElapsed)"
             )
-        }
-        .onChange(of: profileVM.hasLoadedCoreData) { oldValue, newValue in
+        })
+    }
+
+    private func profileWithCoreLoadedChange(_ content: AnyView) -> AnyView {
+        AnyView(content.onChange(of: profileVM.hasLoadedCoreData) { oldValue, newValue in
             SocialFeedDebug.log(
                 "profile.view.render_gate.core_loaded_change user=\(userId.uuidString) " +
-                "old=\(oldValue) new=\(newValue) \(renderGateDebugSummary)"
+                "old=\(oldValue) new=\(newValue) \(renderGateDebugSummary) elapsed=\(profileAppearElapsed)"
             )
-        }
-        .onChange(of: profileVM.profile?.id) { oldValue, newValue in
+        })
+    }
+
+    private func profileWithProfileIDChange(_ content: AnyView) -> AnyView {
+        AnyView(content.onChange(of: profileVM.profile?.id) { oldValue, newValue in
             SocialFeedDebug.log(
                 "profile.view.render_gate.profile_change user=\(userId.uuidString) " +
-                "old=\(logField(oldValue?.uuidString)) new=\(logField(newValue?.uuidString)) \(renderGateDebugSummary)"
+                "old=\(logField(oldValue?.uuidString)) new=\(logField(newValue?.uuidString)) " +
+                "\(renderGateDebugSummary) elapsed=\(profileAppearElapsed)"
             )
-        }
-        )
+        })
+    }
+
+    private func profileWithTraveledCountChange(_ content: AnyView) -> AnyView {
+        AnyView(content.onChange(of: profileVM.viewedTraveledCountries.count) { oldValue, newValue in
+            SocialFeedDebug.log(
+                "profile.view.render_gate.traveled_count_change user=\(userId.uuidString) " +
+                "old=\(oldValue) new=\(newValue) \(renderGateDebugSummary) elapsed=\(profileAppearElapsed)"
+            )
+        })
+    }
+
+    private func profileWithBucketCountChange(_ content: AnyView) -> AnyView {
+        AnyView(content.onChange(of: profileVM.viewedBucketListCountries.count) { oldValue, newValue in
+            SocialFeedDebug.log(
+                "profile.view.render_gate.bucket_count_change user=\(userId.uuidString) " +
+                "old=\(oldValue) new=\(newValue) \(renderGateDebugSummary) elapsed=\(profileAppearElapsed)"
+            )
+        })
+    }
+
+    private var profileBase: AnyView {
+        profileWithLifecycle(profileWithSettings(profileScaffold))
     }
 
     var body: some View {
+        let _ = SocialFeedDebug.log(
+            "profile.view.body.evaluate user=\(userId.uuidString) elapsed=\(profileAppearElapsed) \(renderGateDebugSummary)"
+        )
         profileBase
     }
 }
