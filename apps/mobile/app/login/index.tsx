@@ -47,6 +47,7 @@ export default function LandingScreen() {
   const [bypassKey, setBypassKey] = useState('');
   const [code, setCode] = useState('');
   const [verifyLoading, setVerifyLoading] = useState(false);
+  const shouldShowAuthControls = !session && !loading;
 
   const panelOpacity = useRef(new Animated.Value(0)).current;
   const panelTranslateY = useRef(new Animated.Value(18)).current;
@@ -77,6 +78,8 @@ export default function LandingScreen() {
   );
 
   useEffect(() => {
+    const revealDelay = isGuest ? 120 : 450;
+
     revealTimeoutRef.current = setTimeout(() => {
       Animated.parallel([
         Animated.timing(panelOpacity, {
@@ -90,14 +93,14 @@ export default function LandingScreen() {
           useNativeDriver: true,
         }),
       ]).start();
-    }, 2000);
+    }, revealDelay);
 
     return () => {
       if (revealTimeoutRef.current) {
         clearTimeout(revealTimeoutRef.current);
       }
     };
-  }, [panelOpacity, panelTranslateY]);
+  }, [isGuest, panelOpacity, panelTranslateY]);
 
   useEffect(() => {
     const handleUrl = async () => {
@@ -458,7 +461,7 @@ export default function LandingScreen() {
             },
           ]}
         >
-          {!session && !isGuest && !loading && (
+          {shouldShowAuthControls && (
             <>
               <View style={[styles.keyboardWrap, { height: panelMaxHeight }]}>
                 <View style={styles.authFrame}>
