@@ -152,7 +152,7 @@ export default function LandingScreen() {
     [height]
   );
   const emailCardWidth = useMemo(
-    () => Math.min(288, Math.max(248, Math.round(authButtonWidth * 0.9))),
+    () => Math.min(328, Math.max(300, Math.round(authButtonWidth * 1.05))),
     [authButtonWidth]
   );
   const verifyCardWidth = useMemo(
@@ -515,7 +515,6 @@ export default function LandingScreen() {
                         </Pressable>
 
                         <Text style={styles.panelTag}>Email sign in</Text>
-                        <Text style={styles.panelTitle}>Enter your email</Text>
 
                         <TextInput
                           placeholder="Email address"
@@ -791,7 +790,8 @@ const styles = StyleSheet.create({
   },
   emailCard: {
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 18,
+    marginTop: 34,
     borderRadius: 20,
     backgroundColor: 'rgba(247,242,234,0.98)',
     borderWidth: 1,
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
-    gap: 12,
+    gap: 14,
   },
   verifyCard: {
     paddingVertical: 12,
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignSelf: 'center',
-    width: 200,
+    width: 236,
     height: 50,
     borderRadius: 16,
     backgroundColor: '#735436',
