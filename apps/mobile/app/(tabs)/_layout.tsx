@@ -10,14 +10,16 @@ type TabIconName =
   | 'list-outline'
   | 'newspaper-outline'
   | 'people-outline'
-  | 'person-outline'
   | 'ellipsis-horizontal';
 
 function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const colors = useTheme();
   const visibleRoutes = state.routes.filter(
-    (route) => route.name !== 'when-to-go' && route.name !== 'countries'
+    (route) =>
+      route.name !== 'when-to-go' &&
+      route.name !== 'countries' &&
+      route.name !== 'profile'
   );
 
   return (
@@ -61,7 +63,6 @@ function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                   planning: 'list-outline',
                   media: 'newspaper-outline',
                   friends: 'people-outline',
-                  profile: 'person-outline',
                   more: 'ellipsis-horizontal',
                 }[route.name] as TabIconName | undefined)
               : undefined) ?? 'ellipse-outline';
@@ -198,7 +199,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="friends"
         options={{
-          title: 'Friends',
+          title: 'Social',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people-outline" size={size} color={color} />
           ),
@@ -208,10 +209,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
 
