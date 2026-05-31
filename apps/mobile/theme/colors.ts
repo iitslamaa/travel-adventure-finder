@@ -14,6 +14,8 @@ export type AppColors = {
 
   primary: string;
   primaryText: string;
+  accentBlue: string;
+  scoreGood: string;
 
   segmentBg: string;
   segmentActive: string;
@@ -50,6 +52,8 @@ export const lightColors: AppColors = {
 
   primary: '#6B4F33',
   primaryText: '#FFFFFF',
+  accentBlue: '#4D7FA3',
+  scoreGood: '#56835D',
 
   segmentBg: 'rgba(234, 220, 198, 0.92)',
   segmentActive: 'rgba(255, 252, 247, 0.95)',
@@ -86,6 +90,8 @@ export const darkColors: AppColors = {
 
   primary: '#6B4F33',
   primaryText: '#FFFFFF',
+  accentBlue: '#4D7FA3',
+  scoreGood: '#56835D',
 
   segmentBg: 'rgba(234, 220, 198, 0.92)',
   segmentActive: 'rgba(255, 252, 247, 0.95)',

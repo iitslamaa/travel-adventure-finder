@@ -57,7 +57,7 @@ export default function HeaderCard({
       duration: 400,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [fadeAnim]);
 
   const visibleFlags = flags.slice(0, 3);
   const visibleFavorites = favoriteCountries.slice(0, 4);

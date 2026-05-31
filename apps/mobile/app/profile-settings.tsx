@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useCountries } from '../hooks/useCountries';
 import { useTheme } from '../hooks/useTheme';
-import { formatLanguageList, normalizeLanguageDraft } from '../utils/language';
+import { normalizeLanguageDraft } from '../utils/language';
 
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -27,7 +27,6 @@ import ScrapbookBackground from '../components/theme/ScrapbookBackground';
 import ScrapbookCard from '../components/theme/ScrapbookCard';
 import TitleBanner from '../components/theme/TitleBanner';
 
-type EditField = 'full_name' | 'username';
 type SelectorKind =
   | 'mode'
   | 'style'
@@ -257,7 +256,7 @@ export default function ProfileSettingsScreen() {
     setDraftFirstName(profile?.first_name ?? '');
     setDraftLastName(profile?.last_name ?? '');
     setDraftUsername(profile?.username ?? '');
-  }, [profile]);
+  }, [currentMode, currentStyle, profile]);
 
   useEffect(() => {
     const loadPassportPreferences = async () => {
@@ -1195,38 +1194,6 @@ function Row({ label, value, onPress }: any) {
 
 function Divider({ color }: { color: string }) {
   return <View style={[styles.divider, { backgroundColor: color }]} />;
-}
-
-function SummaryChip({
-  label,
-  value,
-  colors,
-  wide = false,
-}: {
-  label: string;
-  value: string;
-  colors: ReturnType<typeof useTheme>;
-  wide?: boolean;
-}) {
-  return (
-    <View
-      style={[
-        styles.summaryChip,
-        {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
-          flex: wide ? undefined : 1,
-        },
-      ]}
-    >
-      <Text style={[styles.summaryChipLabel, { color: colors.textSecondary }]}>
-        {label}
-      </Text>
-      <Text style={[styles.summaryChipValue, { color: colors.textPrimary }]} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({

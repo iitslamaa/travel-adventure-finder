@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Video, ResizeMode } from 'expo-av';
 import * as Linking from 'expo-linking';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -196,29 +195,6 @@ export default function LandingScreen() {
     verifyTranslateX,
   ]);
 
-  const dumpStorage = async (label: string) => {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      const interesting = keys.filter(key =>
-        key.includes('supabase') ||
-        key.includes('sb-') ||
-        key.includes('pkce') ||
-        key.includes('auth') ||
-        key.includes('travelaf')
-      );
-
-      if (!interesting.length) return;
-
-      const pairs = await AsyncStorage.multiGet(interesting);
-      console.log(
-        `[storage.dump] ${label}`,
-        pairs.map(([key, value]) => [key, value ? `len=${value.length}` : null])
-      );
-    } catch (error) {
-      console.log('[storage.dump] error', error);
-    }
-  };
-
   const handleGoogleLogin = async () => {
     if (loginInProgressRef.current) return;
 
@@ -227,14 +203,11 @@ export default function LandingScreen() {
 
     try {
       const redirectTo = 'travelaf://auth/callback';
-      await dumpStorage('BEFORE signInWithOAuth');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo },
       });
-
-      await dumpStorage('AFTER signInWithOAuth');
 
       if (error) {
         Alert.alert('Google Login Error', error.message);

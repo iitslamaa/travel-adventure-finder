@@ -194,7 +194,7 @@ function normalizeTripPayload(raw: any): PlannedTrip | null {
   const id = typeof raw.id === 'string' ? raw.id : typeof raw.trip_id === 'string' ? raw.trip_id : null;
   if (!id) return null;
 
-  const friendIds = Array.isArray(raw.friendIds)
+  const friendIds: string[] = Array.isArray(raw.friendIds)
     ? raw.friendIds.map(String)
     : Array.isArray(raw.friends)
       ? raw.friends.map((friend: any) => String(friend?.id)).filter(Boolean)
@@ -228,7 +228,7 @@ function normalizeTripPayload(raw: any): PlannedTrip | null {
             avatarURL,
           };
         })
-        .filter((friend): friend is TripFriendSnapshot => friend !== null)
+        .filter((friend: TripFriendSnapshot | null): friend is TripFriendSnapshot => friend !== null)
     : friendIds.map((friendId, index) => {
         const fallbackName =
           Array.isArray(raw.friendNames) && typeof raw.friendNames[index] === 'string'
@@ -242,7 +242,7 @@ function normalizeTripPayload(raw: any): PlannedTrip | null {
         };
       });
 
-  const availability = Array.isArray(raw.availability)
+  const availability: TripAvailabilityProposal[] = Array.isArray(raw.availability)
     ? raw.availability.map((proposal: any) => ({
         id: typeof proposal?.id === 'string' ? proposal.id : createUuid(),
         participantId: String(proposal?.participantId ?? proposal?.participant_id ?? ''),
@@ -257,7 +257,7 @@ function normalizeTripPayload(raw: any): PlannedTrip | null {
       }))
     : [];
 
-  const dayPlans = Array.isArray(raw.dayPlans)
+  const dayPlans: TripDayPlan[] = Array.isArray(raw.dayPlans)
     ? raw.dayPlans.map((plan: any) => ({
         id: typeof plan?.id === 'string' ? plan.id : createUuid(),
         date: String(plan?.date ?? '').slice(0, 10),
@@ -277,7 +277,7 @@ function normalizeTripPayload(raw: any): PlannedTrip | null {
       }))
     : [];
 
-  const travelerPassports = Array.isArray(raw.travelerPassports)
+  const travelerPassports: TravelerPassportSelection[] = Array.isArray(raw.travelerPassports)
     ? raw.travelerPassports.map((selection: any) => ({
         travelerId: String(selection?.travelerId ?? selection?.traveler_id ?? ''),
         passportCountryCode: String(
@@ -286,7 +286,7 @@ function normalizeTripPayload(raw: any): PlannedTrip | null {
       }))
     : [];
 
-  const expenses = Array.isArray(raw.expenses)
+  const expenses: TripExpense[] = Array.isArray(raw.expenses)
     ? raw.expenses.map((expense: any) => ({
         id: typeof expense?.id === 'string' ? expense.id : createUuid(),
         title: String(expense?.title ?? ''),
@@ -3773,6 +3773,9 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     padding: 22,
   },
+  emptyCardPress: {
+    width: '100%',
+  },
   emptyEyebrow: {
     fontSize: 11,
     fontWeight: '800',
@@ -4285,6 +4288,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     marginRight: 12,
+  },
+  flag: {
+    width: 34,
+    fontSize: 24,
+    lineHeight: 30,
+    marginRight: 12,
+    textAlign: 'center',
+  },
+  countryName: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '700',
   },
   pickerMeta: {
     fontSize: 12,

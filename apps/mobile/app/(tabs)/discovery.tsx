@@ -112,7 +112,7 @@ export default function DiscoveryScreen() {
               title="Countries"
               subtitle="Browse and rank every destination."
               icon="globe-outline"
-              onPress={() => router.push('/(tabs)/countries')}
+              onPress={() => router.push('/countries' as any)}
             />
 
             <DiscoveryCard

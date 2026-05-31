@@ -21,6 +21,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
 import { formatLanguageList } from '../../utils/language';
 import ScrapbookBackground from '../../components/theme/ScrapbookBackground';
+import ScrapbookCard from '../../components/theme/ScrapbookCard';
 import TitleBanner from '../../components/theme/TitleBanner';
 
 export default function ProfileScreen() {

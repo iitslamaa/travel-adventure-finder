@@ -35,7 +35,7 @@ export default function FriendRequestsScreen() {
       // Optimistic removal
       setRequests((prev) => prev.filter((r) => r.request_id !== requestId));
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('friend_requests')
         .update({ status: 'accepted' })
         .eq('id', requestId)

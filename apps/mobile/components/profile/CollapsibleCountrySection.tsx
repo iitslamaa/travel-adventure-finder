@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  UIManager,
-  Platform,
   FlatList,
   ImageBackground,
 } from 'react-native';
@@ -15,10 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { WorldMap } from '../../src/features/map/components/WorldMap';
 import { useTheme } from '../../hooks/useTheme';
 import ScrapbookCard from '../theme/ScrapbookCard';
-
-if (Platform.OS === 'android') {
-  UIManager.setLayoutAnimationEnabledExperimental?.(true);
-}
 
 type Props = {
   title: string;

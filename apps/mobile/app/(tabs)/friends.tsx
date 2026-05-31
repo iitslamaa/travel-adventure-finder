@@ -11,8 +11,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useMemo, useState, useCallback, useEffect } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { useState, useEffect } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -145,9 +144,6 @@ export default function FriendsScreen() {
             style={styles.avatar}
             contentFit="cover"
             cachePolicy="memory-disk"
-            onError={() => {
-              console.log('Avatar failed to load for:', item.username, item.avatar_url);
-            }}
           />
         ) : (
           <Ionicons

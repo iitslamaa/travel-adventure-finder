@@ -246,9 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setHasSeenIntro(introFlag === 'true');
 
       const { data } = await supabase.auth.getSession();
-      console.log('[AUTHCTX] boot:getSession raw:', data);
       const s = data.session ?? null;
-      console.log('[AUTHCTX] boot:setSession ->', s ? 'HAS_SESSION' : 'NULL');
       setSession(s);
       setLoading(false);
 
@@ -259,12 +257,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     boot();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
-      console.log('[AUTHCTX] onAuthStateChange EVENT:', event);
-      console.log('[AUTHCTX] onAuthStateChange newSession:', newSession ? 'HAS_SESSION' : 'NULL');
-
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       const s = newSession ?? null;
-      console.log('[AUTHCTX] setting session to', s ? 'HAS_SESSION' : 'NULL');
       setSession(s);
 
       if (s?.user?.id) {
@@ -295,10 +289,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      console.log('[AUTHCTX] signOut() called');
       // Supabase sign out
       await supabase.auth.signOut();
-      console.log('[AUTHCTX] signOut() completed');
 
       // Hard-clear any app-level cached auth/session state
       // (this prevents "stuck on auth page" loops after logout)

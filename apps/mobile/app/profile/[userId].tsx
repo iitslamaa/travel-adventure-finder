@@ -8,7 +8,6 @@ import {
   RefreshControl,
   ImageBackground,
 } from 'react-native';
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';

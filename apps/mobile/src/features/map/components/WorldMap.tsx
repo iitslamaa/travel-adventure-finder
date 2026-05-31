@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import MapView, { LatLng } from 'react-native-maps';
 
@@ -18,6 +18,8 @@ type PolygonRing = {
   datasetIso: string;
   coords: LatLng[];
 };
+
+const ISO2_RE = /^[A-Z]{2}$/;
 
 function convertPolygon(coords: number[][]): LatLng[] {
   return coords.map(([lng, lat]) => ({
@@ -62,8 +64,6 @@ export function WorldMap({
 }: WorldMapProps) {
   const { fullFeatures, simplifiedFeatures } = useGeoJson();
 
-  const ISO2_RE = /^[A-Z]{2}$/;
-
   const ISO3_TO_ISO2: Record<string, string> = useMemo(() => {
     const map: Record<string, string> = {};
     for (const c of countrySeeds as SeedCountry[]) {
@@ -74,7 +74,7 @@ export function WorldMap({
     return map;
   }, []);
 
-  function normalizeIso(value?: string | null): string | undefined {
+  const normalizeIso = useCallback((value?: string | null): string | undefined => {
     if (!value) return undefined;
 
     const upper = value.trim().toUpperCase();
@@ -82,7 +82,7 @@ export function WorldMap({
     if (ISO2_RE.test(upper)) return upper;
 
     return undefined;
-  }
+  }, []);
 
   const mapRef = useRef<MapView | null>(null);
   const [isMapReady, setIsMapReady] = useState(false);
@@ -146,7 +146,7 @@ export function WorldMap({
         coords,
       }));
     });
-  }, [sourceFeatures, ISO3_TO_ISO2]);
+  }, [sourceFeatures, ISO3_TO_ISO2, normalizeIso]);
 
   const polygonsByIso = useMemo(() => {
     const map = new Map<string, PolygonRing[]>();
@@ -274,13 +274,6 @@ export function WorldMap({
     }
 
     if (selected.length === 0) {
-      console.log('❌ ZOOM FAILED');
-      console.log('Selected ISO:', selectedIso);
-      console.log('Normalized ISO:', normalized);
-      console.log(
-        'Available ISO sample:',
-        polygons.slice(0, 20).map((p: PolygonRing) => p.datasetIso)
-      );
       return;
     }
 
@@ -327,22 +320,9 @@ export function WorldMap({
       },
       500
     );
-  }, [selectedIso, isMapReady, polygons]);
+  }, [selectedIso, isMapReady, polygons, normalizeIso, polygonsByIso]);
 
   const normalizedSelected = normalizeIso(selectedIso ?? null);
-
-  if (__DEV__) {
-    console.log('===== WORLD MAP DEBUG =====');
-    console.log('selectedIso prop:', selectedIso);
-    console.log('normalizedSelected:', normalizedSelected);
-    console.log('total polygons:', polygons.length);
-    const isoCounts: Record<string, number> = {};
-    for (const p of polygons) {
-      if (!p.datasetIso) continue;
-      isoCounts[p.datasetIso] = (isoCounts[p.datasetIso] || 0) + 1;
-    }
-    console.log('ISO counts sample:', Object.entries(isoCounts).slice(0, 20));
-  }
 
   const worldPolygons = useMemo(() => {
     if (normalizedSelected) return [];
@@ -393,10 +373,6 @@ export function WorldMap({
                 highlightedIsos: countries.map((c) => normalizeIso(c)).filter((c): c is string => !!c),
               })}
               onPress={(pressedIso) => {
-                console.log('🟡 POLYGON PRESSED');
-                console.log('Pressed ISO:', pressedIso);
-                console.log('Current selectedIso prop:', selectedIso);
-                console.log('Normalized selectedIso:', normalizedSelected);
                 onSelect?.(pressedIso);
               }}
             />
