@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     color: MUTED_TEXT,
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
   },
   panelTitle: {
@@ -822,11 +822,13 @@ const styles = StyleSheet.create({
   },
   panelTag: {
     color: MUTED_TEXT,
-    fontSize: 10,
+    fontSize: 18,
     fontWeight: '800',
-    letterSpacing: 0.9,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    marginBottom: -4,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginBottom: 4,
   },
   panelEyebrow: {
     color: MUTED_TEXT,
