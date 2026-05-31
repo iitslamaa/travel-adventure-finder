@@ -25,7 +25,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 const GUEST_PILL_TEXT = '#45392E';
 const BORDER = 'rgba(73, 58, 43, 0.12)';
-const FIELD_BG = '#F7F2E8';
+const FIELD_BG = '#FFFFFF';
 const PRIMARY_FILL = '#3A2A1C';
 const PRIMARY_TEXT = '#FFFFFF';
 const MUTED_TEXT = '#786A57';
@@ -842,6 +842,8 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: 12,
     backgroundColor: FIELD_BG,
+    borderWidth: 1,
+    borderColor: 'rgba(122, 107, 84, 0.24)',
     color: PRIMARY_FILL,
     paddingHorizontal: 12,
     fontSize: 16,
