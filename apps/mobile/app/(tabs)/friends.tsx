@@ -469,11 +469,10 @@ function activityTimestamp(value: string) {
   const day = 24 * 60 * 60 * 1000;
 
   if (elapsed < 7 * day) {
-    const formatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto', style: 'short' });
-    if (elapsed < 60 * 1000) return formatter.format(0, 'second');
-    if (elapsed < 60 * 60 * 1000) return formatter.format(-Math.round(elapsed / (60 * 1000)), 'minute');
-    if (elapsed < day) return formatter.format(-Math.round(elapsed / (60 * 60 * 1000)), 'hour');
-    return formatter.format(-Math.round(elapsed / day), 'day');
+    if (elapsed < 60 * 1000) return 'now';
+    if (elapsed < 60 * 60 * 1000) return `${Math.round(elapsed / (60 * 1000))}m ago`;
+    if (elapsed < day) return `${Math.round(elapsed / (60 * 60 * 1000))}h ago`;
+    return `${Math.round(elapsed / day)}d ago`;
   }
 
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
