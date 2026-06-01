@@ -130,6 +130,10 @@ export default function HeaderCard({
                         styles.ctaButtonText,
                         { color: ctaFilled ? colors.primaryText : colors.textPrimary },
                       ]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
                     >
                       {ctaLabel}
                     </Text>
@@ -237,16 +241,20 @@ const styles = StyleSheet.create({
     minHeight: 38,
     borderRadius: 999,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    alignSelf: 'stretch',
+    maxWidth: 116,
   },
   ctaButtonText: {
     fontSize: 13,
     fontWeight: '700',
+    flexShrink: 1,
+    textAlign: 'center',
   },
   flagsRow: {
     marginTop: 10,

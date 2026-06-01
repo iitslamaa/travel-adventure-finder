@@ -29,6 +29,13 @@ import ScrapbookCard from '../../components/theme/ScrapbookCard';
 import TitleBanner from '../../components/theme/TitleBanner';
 import ProfileTravelSnapshotCard from '../../components/profile/ProfileTravelSnapshotCard';
 
+function mutualCountries(viewedCodes: string[], myCodes: string[]) {
+  const mySet = new Set(myCodes.map(code => code.trim().toUpperCase()).filter(Boolean));
+  return viewedCodes
+    .map(code => code.trim().toUpperCase())
+    .filter(code => code && mySet.has(code));
+}
+
 export default function FriendProfileScreen() {
   const router = useRouter();
   const navigation = useNavigation();
@@ -51,6 +58,11 @@ export default function FriendProfileScreen() {
     bucketIsoCodes,
     refresh: refreshUserCounts,
   } = useUserCounts(targetUserId);
+  const {
+    traveledIsoCodes: myTraveledIsoCodes,
+    bucketIsoCodes: myBucketIsoCodes,
+    refresh: refreshMyUserCounts,
+  } = useUserCounts(session?.user?.id);
   const { countries } = useCountries();
 
   const isOwnProfile = session?.user?.id === targetUserId;
@@ -110,6 +122,7 @@ export default function FriendProfileScreen() {
         refreshFriendCount(),
         refreshProfile(),
         refreshUserCounts(),
+        refreshMyUserCounts(),
       ]);
     } catch (err) {
       console.error('Profile refresh error:', err);
@@ -158,6 +171,8 @@ export default function FriendProfileScreen() {
     typeof profile.current_country === 'string' ? profile.current_country.toUpperCase() : null;
   const travelMode = travelModeLabel(profile.travel_mode) ?? 'Not set';
   const travelStyle = travelStyleLabel(profile.travel_style) ?? 'Not set';
+  const mutualTraveledIsoCodes = mutualCountries(traveledIsoCodes, myTraveledIsoCodes);
+  const mutualBucketIsoCodes = mutualCountries(bucketIsoCodes, myBucketIsoCodes);
   const friendCtaLabel = isFriend
     ? profile.username ? `@${profile.username}` : `${friendCount} Friend${friendCount === 1 ? '' : 's'}`
     : isPending
@@ -329,11 +344,13 @@ export default function FriendProfileScreen() {
                 <CollapsibleCountrySection
                   title="Countries Traveled"
                   countries={traveledIsoCodes}
+                  mutualCountries={!isOwnProfile ? mutualTraveledIsoCodes : []}
                 />
 
                 <CollapsibleCountrySection
                   title="Bucket List"
                   countries={bucketIsoCodes}
+                  mutualCountries={!isOwnProfile ? mutualBucketIsoCodes : []}
                 />
               </View>
             </ImageBackground>

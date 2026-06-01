@@ -285,8 +285,8 @@ struct FlagStrip: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
                             .stroke(
-                                isSelected ? Color.blue :
-                                (isMutual ? Color.gold : Color.clear),
+                                isMutual ? Color.gold :
+                                (isSelected ? Color.blue : Color.clear),
                                 lineWidth: 2
                             )
                     )

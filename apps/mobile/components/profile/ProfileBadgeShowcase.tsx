@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
 import { continentForCountry, totalCountryCount, uniqueCountryCodes } from '../../utils/countries';
 import { useTheme } from '../../hooks/useTheme';
 
 type Badge = {
   id: string;
   label: string;
+  asset?: ImageSourcePropType;
   tint: string;
 };
 
@@ -17,14 +18,14 @@ type TravelRank = {
 
 const milestoneThresholds = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200];
 
-const continentLabels: Record<string, string> = {
-  Africa: 'AF',
-  Antarctica: '❄',
-  Asia: 'AS',
-  Europe: 'EU',
-  'North America': 'NA',
-  Oceania: 'OC',
-  'South America': 'SA',
+const continentAssets: Record<string, ImageSourcePropType> = {
+  Africa: require('../../assets/badges/continent-africa.png'),
+  Antarctica: require('../../assets/badges/continent-antarctica.png'),
+  Asia: require('../../assets/badges/continent-asia.png'),
+  Europe: require('../../assets/badges/continent-europe.png'),
+  'North America': require('../../assets/badges/continent-north-america.png'),
+  Oceania: require('../../assets/badges/continent-oceania.png'),
+  'South America': require('../../assets/badges/continent-south-america.png'),
 };
 
 const continentTints: Record<string, string> = {
@@ -78,7 +79,8 @@ function badgesForCountries(codes: string[]): Badge[] {
     .forEach(continent => {
       badges.push({
         id: `continent-${continent}`,
-        label: continentLabels[continent] ?? continent.slice(0, 2).toUpperCase(),
+        label: '',
+        asset: continentAssets[continent],
         tint: continentTints[continent] ?? '#6B4F33',
       });
     });
@@ -145,9 +147,13 @@ export default function ProfileBadgeShowcase({
                 },
               ]}
             >
-              <Text style={[styles.badgeText, { color: colors.textPrimary }]} numberOfLines={1}>
-                {badge.label}
-              </Text>
+              {badge.asset ? (
+                <Image source={badge.asset} style={styles.badgeAsset} resizeMode="contain" />
+              ) : (
+                <Text style={[styles.badgeText, { color: colors.textPrimary }]} numberOfLines={1}>
+                  {badge.label}
+                </Text>
+              )}
             </View>
           ))
         ) : (
@@ -219,6 +225,10 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 13,
     fontWeight: '900',
+  },
+  badgeAsset: {
+    width: 24,
+    height: 24,
   },
   emptyBadge: {
     fontSize: 22,

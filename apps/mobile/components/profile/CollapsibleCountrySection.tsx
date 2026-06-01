@@ -18,23 +18,37 @@ import { countryName } from '../../utils/countries';
 type Props = {
   title: string;
   countries: string[];
+  mutualCountries?: string[];
 };
 
 export default function CollapsibleCountrySection({
   title,
   countries = [],
+  mutualCountries = [],
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [selectedIso, setSelectedIso] = useState<string | null>(null);
   const colors = useTheme();
 
-  const sortedCountries = useMemo(
+  const mutualSet = useMemo(
     () =>
-      Array.isArray(countries)
-        ? [...countries].filter(Boolean).sort()
-        : [],
-    [countries]
+      new Set(
+        mutualCountries
+          .map(code => code.trim().toUpperCase())
+          .filter(Boolean)
+      ),
+    [mutualCountries]
   );
+
+  const sortedCountries = useMemo(() => {
+    const normalizedCountries = Array.isArray(countries)
+      ? countries.map(code => code.trim().toUpperCase()).filter(Boolean)
+      : [];
+
+    const mutualFirst = normalizedCountries.filter(code => mutualSet.has(code)).sort();
+    const remaining = normalizedCountries.filter(code => !mutualSet.has(code)).sort();
+    return [...mutualFirst, ...remaining];
+  }, [countries, mutualSet]);
 
   const toggle = () => {
     setExpanded((prev) => !prev);
@@ -88,6 +102,7 @@ export default function CollapsibleCountrySection({
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.flagsList}
                     renderItem={({ item }) => {
+                      const isMutual = mutualSet.has(item);
                       const isSelected = selectedIso === item;
 
                       return (
@@ -96,11 +111,18 @@ export default function CollapsibleCountrySection({
                           style={[
                             styles.flagWrapper,
                             {
-                              backgroundColor: colors.paperAlt,
-                              borderColor: isSelected ? colors.accentBlue : colors.border,
+                              backgroundColor: isMutual
+                                ? colors.yellowBg
+                                : isSelected
+                                  ? `${colors.accentBlue}22`
+                                  : colors.paperAlt,
+                              borderColor: isMutual
+                                  ? colors.yellowBorder
+                                  : isSelected
+                                    ? colors.accentBlue
+                                  : colors.border,
                             },
                             isSelected && {
-                              backgroundColor: `${colors.accentBlue}22`,
                               shadowColor: colors.accentBlue,
                               shadowOpacity: 0.15,
                               shadowRadius: 6,
