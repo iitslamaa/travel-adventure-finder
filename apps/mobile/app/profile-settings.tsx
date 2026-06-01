@@ -19,7 +19,8 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useCountries } from '../hooks/useCountries';
 import { useTheme } from '../hooks/useTheme';
-import { normalizeLanguageDraft } from '../utils/language';
+import { formatLanguageName, normalizeLanguageDraft } from '../utils/language';
+import { travelModeLabel, travelStyleLabel } from '../utils/profileFormatting';
 
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -67,6 +68,15 @@ function proficiencyLabel(value: unknown) {
     LANGUAGE_PROFICIENCY_OPTIONS.find(option => option.value === normalizeProficiency(value))?.label ??
     'Beginner'
   );
+}
+
+function languageDisplayName(entry: unknown) {
+  const rawName =
+    typeof entry === 'string'
+      ? entry
+      : (entry as any)?.name ?? (entry as any)?.code ?? '';
+
+  return formatLanguageName(rawName) ?? '';
 }
 
 function joinFlagPreview(codes: string[], max = 4) {
@@ -398,23 +408,9 @@ export default function ProfileSettingsScreen() {
 
   /* ---------------- Labels ---------------- */
 
-  const modeLabel =
-    draftMode === 'solo'
-      ? 'Solo'
-      : draftMode === 'group'
-      ? 'Group'
-      : draftMode === 'both'
-      ? 'Solo + Group'
-      : '—';
+  const modeLabel = travelModeLabel(draftMode) ?? '—';
 
-  const styleLabel =
-    draftStyle === 'budget'
-      ? 'Budget'
-      : draftStyle === 'comfortable'
-      ? 'Comfortable'
-      : draftStyle === 'luxury'
-      ? 'Luxury'
-      : '—';
+  const styleLabel = travelStyleLabel(draftStyle) ?? '—';
 
   const localizedCountryName = (code?: string | null) =>
     code ? countries.find(c => c.iso2 === code)?.name ?? code : null;
@@ -731,10 +727,7 @@ export default function ProfileSettingsScreen() {
           {draftLanguages.length ? (
             <View style={styles.inlineSummaryStack}>
               {draftLanguages.slice(0, 3).map((entry: any, index) => {
-                const languageName =
-                  typeof entry === 'string'
-                    ? entry
-                    : entry?.name ?? entry?.code ?? '';
+                const languageName = languageDisplayName(entry);
 
                 return (
                   <View key={`${languageName}-${index}`} style={styles.languageSummaryRow}>
@@ -850,7 +843,7 @@ export default function ProfileSettingsScreen() {
 
           {selectorOpen === 'style' && (
             <>
-              {['budget','comfortable','luxury'].map(option => (
+              {['budget','comfortable','inBetween','both'].map(option => (
                 <Pressable
                   key={option}
                   style={{ paddingVertical: 14 }}
@@ -860,7 +853,7 @@ export default function ProfileSettingsScreen() {
                   }}
                 >
                   <Text style={{ color: colors.textPrimary, fontWeight: '600' }}>
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                    {travelStyleLabel(option)}
                   </Text>
                 </Pressable>
               ))}
@@ -955,8 +948,7 @@ export default function ProfileSettingsScreen() {
                   </Text>
                 ) : (
                   draftLanguages.map((entry: any, index) => {
-                    const languageName =
-                      typeof entry === 'string' ? entry : entry?.name ?? entry?.code ?? '';
+                    const languageName = languageDisplayName(entry);
                     const proficiency = normalizeProficiency(
                       typeof entry === 'string' ? 'fluent' : entry?.proficiency
                     );

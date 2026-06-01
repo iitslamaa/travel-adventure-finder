@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { WorldMap } from '../../src/features/map/components/WorldMap';
 import { useTheme } from '../../hooks/useTheme';
 import ScrapbookCard from '../theme/ScrapbookCard';
+import { countryName } from '../../utils/countries';
 
 type Props = {
   title: string;
@@ -39,9 +40,7 @@ export default function CollapsibleCountrySection({
     setExpanded((prev) => !prev);
   };
 
-  const selectedCountryName = selectedIso
-    ? new Intl.DisplayNames(['en'], { type: 'region' }).of(selectedIso) ?? selectedIso
-    : null;
+  const selectedCountryName = selectedIso ? countryName(selectedIso) : null;
 
   return (
     <ScrapbookCard innerStyle={styles.container}>

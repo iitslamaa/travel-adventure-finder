@@ -10,8 +10,8 @@ export type PublicProfile = {
 
   // optional fields (only render if present)
   languages?: any; // could be json
-  travel_mode?: string | null;
-  travel_style?: string | null;
+  travel_mode?: string[] | null;
+  travel_style?: string[] | null;
   next_destination?: string | null;
   current_country?: string | null;
   favorite_countries?: string[] | null;
