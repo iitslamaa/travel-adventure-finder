@@ -30,6 +30,7 @@ const PRIMARY_FILL = '#3A2A1C';
 const PRIMARY_TEXT = '#FFFFFF';
 const MUTED_TEXT = '#786A57';
 const PANEL_BORDER = 'rgba(122, 107, 84, 0.35)';
+const AUTH_CARD_HEIGHT = 252;
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -154,10 +155,6 @@ export default function LandingScreen() {
   const emailCardWidth = useMemo(
     () => Math.min(328, Math.max(300, Math.round(authButtonWidth * 1.05))),
     [authButtonWidth]
-  );
-  const verifyCardWidth = useMemo(
-    () => Math.min(268, Math.max(236, emailCardWidth - 12)),
-    [emailCardWidth]
   );
 
   useEffect(() => {
@@ -597,7 +594,7 @@ export default function LandingScreen() {
                         },
                       ]}
                     >
-                      <View style={[styles.emailCard, styles.verifyCard, { width: verifyCardWidth }]}>
+                      <View style={[styles.emailCard, styles.verifyCard, { width: emailCardWidth }]}>
                         <Pressable onPress={transitionBackToEmail} hitSlop={10} style={styles.backRow}>
                           <Text style={styles.backText}>Back</Text>
                         </Pressable>
@@ -789,6 +786,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   emailCard: {
+    height: AUTH_CARD_HEIGHT,
     paddingHorizontal: 16,
     paddingVertical: 18,
     marginTop: 34,
