@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScrapbookBackground from '../../components/theme/ScrapbookBackground';
 import ScrapbookCard from '../../components/theme/ScrapbookCard';
 import { useTheme } from '../../hooks/useTheme';
+import countrySeeds from '../../../web/data/seeds/countries.json';
 
 type SocialActivityEventType =
   | 'bucket_list_added'
@@ -50,10 +51,41 @@ const ACTIVITY_EMOJI: Record<SocialActivityEventType, string> = {
   favorite_country_added: '⭐️',
 };
 
-const displayNames =
-  typeof Intl !== 'undefined' && 'DisplayNames' in Intl
-    ? new Intl.DisplayNames(['en'], { type: 'region' })
-    : null;
+type CountrySeed = {
+  iso2?: string;
+  iso3?: string;
+  name?: string;
+  flagEmoji?: string;
+};
+
+const countryLookup = (countrySeeds as CountrySeed[]).reduce<
+  Record<string, { iso2: string; name: string; flagEmoji?: string }>
+>((lookup, country) => {
+  const iso2 = country.iso2?.trim().toUpperCase();
+  const iso3 = country.iso3?.trim().toUpperCase();
+  const name = country.name?.trim();
+  if (!iso2 || !name) return lookup;
+
+  const entry = {
+    iso2,
+    name,
+    flagEmoji: country.flagEmoji,
+  };
+
+  lookup[iso2] = entry;
+  if (iso3) lookup[iso3] = entry;
+  return lookup;
+}, {});
+
+const displayNames = (() => {
+  try {
+    return typeof Intl !== 'undefined' && 'DisplayNames' in Intl
+      ? new Intl.DisplayNames(['en'], { type: 'region' })
+      : null;
+  } catch {
+    return null;
+  }
+})();
 
 export default function FriendsScreen() {
   const router = useRouter();
@@ -566,11 +598,12 @@ function flagSuffix(event: SocialActivityEvent) {
 
 function regionName(code: string) {
   const normalized = code.trim().toUpperCase();
-  return displayNames?.of(normalized) ?? normalized;
+  return countryLookup[normalized]?.name ?? displayNames?.of(normalized) ?? normalized;
 }
 
 function flag(code: string) {
-  const upper = code.trim().toUpperCase();
+  const normalized = code.trim().toUpperCase();
+  const upper = countryLookup[normalized]?.iso2 ?? normalized;
   if (!/^[A-Z]{2}$/.test(upper)) return '';
 
   return upper
