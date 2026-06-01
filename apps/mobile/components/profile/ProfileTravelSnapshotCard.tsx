@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import CountryFlag from 'react-native-country-flag';
 import { countryName, flagEmoji, normalizeCountryCode, uniqueCountryCodes } from '../../utils/countries';
 import { useTheme } from '../../hooks/useTheme';
@@ -7,10 +7,12 @@ function SnapshotRow({
   title,
   code,
   emptyText,
+  onOpenCountry,
 }: {
   title: string;
   code?: string | null;
   emptyText: string;
+  onOpenCountry?: (code: string) => void;
 }) {
   const colors = useTheme();
   const normalized = normalizeCountryCode(code);
@@ -18,7 +20,11 @@ function SnapshotRow({
   return (
     <View style={styles.snapshotRow}>
       <Text style={[styles.snapshotLabel, { color: colors.textPrimary }]}>{title}:</Text>
-      <View style={[styles.snapshotValueBox, { backgroundColor: `${colors.card}8F` }]}>
+      <Pressable
+        disabled={!normalized}
+        onPress={() => normalized && onOpenCountry?.(normalized)}
+        style={[styles.snapshotValueBox, { backgroundColor: `${colors.card}8F` }]}
+      >
         {normalized ? (
           <>
             <CountryFlag isoCode={normalized} size={24} style={styles.snapshotFlag} />
@@ -29,7 +35,7 @@ function SnapshotRow({
         ) : (
           <Text style={[styles.snapshotEmpty, { color: colors.textSecondary }]}>{emptyText}</Text>
         )}
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -38,10 +44,12 @@ export default function ProfileTravelSnapshotCard({
   currentCountry,
   nextDestination,
   favoriteCountries,
+  onOpenCountry,
 }: {
   currentCountry?: string | null;
   nextDestination?: string | null;
   favoriteCountries?: string[];
+  onOpenCountry?: (code: string) => void;
 }) {
   const colors = useTheme();
   const favorites = uniqueCountryCodes(favoriteCountries ?? []).sort();
@@ -52,11 +60,13 @@ export default function ProfileTravelSnapshotCard({
         title="Currently in"
         code={currentCountry}
         emptyText="No current country yet"
+        onOpenCountry={onOpenCountry}
       />
       <SnapshotRow
         title="Next stop"
         code={nextDestination}
         emptyText="No next destination yet"
+        onOpenCountry={onOpenCountry}
       />
 
       <View style={styles.favoritesBlock}>
@@ -64,9 +74,13 @@ export default function ProfileTravelSnapshotCard({
         {favorites.length ? (
           <View style={styles.favoriteGrid}>
             {favorites.map(code => (
-              <View key={code} style={styles.favoriteFlagBox}>
+              <Pressable
+                key={code}
+                onPress={() => onOpenCountry?.(code)}
+                style={styles.favoriteFlagBox}
+              >
                 <Text style={styles.favoriteFlag}>{flagEmoji(code)}</Text>
-              </View>
+              </Pressable>
             ))}
           </View>
         ) : (
@@ -127,13 +141,15 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   favoriteFlagBox: {
-    width: 42,
-    height: 38,
+    width: 48,
+    height: 46,
     alignItems: 'center',
     justifyContent: 'center',
   },
   favoriteFlag: {
     fontSize: 34,
+    lineHeight: 42,
+    includeFontPadding: true,
   },
   favoriteEmpty: {
     fontSize: 13,

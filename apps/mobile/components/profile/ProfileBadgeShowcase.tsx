@@ -148,7 +148,11 @@ export default function ProfileBadgeShowcase({
               ]}
             >
               {badge.asset ? (
-                <Image source={badge.asset} style={styles.badgeAsset} resizeMode="contain" />
+                <Image
+                  source={badge.asset}
+                  style={[styles.badgeAsset, { tintColor: colors.textPrimary }]}
+                  resizeMode="contain"
+                />
               ) : (
                 <Text style={[styles.badgeText, { color: colors.textPrimary }]} numberOfLines={1}>
                   {badge.label}

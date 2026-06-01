@@ -30,6 +30,7 @@ type Props = {
   ctaIcon?: keyof typeof Ionicons.glyphMap;
   ctaFilled?: boolean;
   onPressCta?: (() => void) | null;
+  onOpenCountry?: (code: string) => void;
 };
 
 export default function HeaderCard({
@@ -42,6 +43,7 @@ export default function HeaderCard({
   ctaIcon = 'person-add-outline',
   ctaFilled = false,
   onPressCta,
+  onOpenCountry,
 }: Props) {
   const colors = useTheme();
 
@@ -143,12 +145,16 @@ export default function HeaderCard({
                 {visibleFlags.length > 0 && (
                   <View style={styles.flagsRow}>
                     {visibleFlags.map(iso => (
-                      <CountryFlag
+                      <Pressable
                         key={iso}
-                        isoCode={iso}
-                        size={20}
-                        style={{ marginRight: 8 }}
-                      />
+                        onPress={() => onOpenCountry?.(iso)}
+                        style={styles.headerFlagButton}
+                      >
+                        <CountryFlag
+                          isoCode={iso}
+                          size={20}
+                        />
+                      </Pressable>
                     ))}
                     {flags.length > visibleFlags.length ? (
                       <Text style={[styles.moreCount, { color: colors.textPrimary }]}>+{flags.length - visibleFlags.length}</Text>
@@ -262,6 +268,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexWrap: 'wrap',
+  },
+  headerFlagButton: {
+    marginRight: 8,
+    paddingVertical: 2,
   },
   moreCount: {
     fontSize: 12,

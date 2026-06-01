@@ -5,26 +5,26 @@ import {
   StyleSheet,
   Pressable,
   FlatList,
-  ImageBackground,
 } from 'react-native';
 import CountryFlag from 'react-native-country-flag';
 import { Ionicons } from '@expo/vector-icons';
 
 import { WorldMap } from '../../src/features/map/components/WorldMap';
 import { useTheme } from '../../hooks/useTheme';
-import ScrapbookCard from '../theme/ScrapbookCard';
 import { countryName } from '../../utils/countries';
 
 type Props = {
   title: string;
   countries: string[];
   mutualCountries?: string[];
+  onOpenCountry?: (code: string) => void;
 };
 
 export default function CollapsibleCountrySection({
   title,
   countries = [],
   mutualCountries = [],
+  onOpenCountry,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [selectedIso, setSelectedIso] = useState<string | null>(null);
@@ -57,13 +57,16 @@ export default function CollapsibleCountrySection({
   const selectedCountryName = selectedIso ? countryName(selectedIso) : null;
 
   return (
-    <ScrapbookCard innerStyle={styles.container}>
-      <ImageBackground
-        source={require('../../assets/scrapbook/profile-header.png')}
-        style={styles.background}
-        imageStyle={styles.backgroundImage}
-      >
-        <View style={[styles.backgroundWash, { backgroundColor: `${colors.paper}D4` }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.cardBorderStrong,
+          shadowColor: colors.shadow,
+        },
+      ]}
+    >
           <Pressable
             onPress={toggle}
             style={[
@@ -107,7 +110,10 @@ export default function CollapsibleCountrySection({
 
                       return (
                         <Pressable
-                          onPress={() => setSelectedIso(item)}
+                          onPress={() => {
+                            setSelectedIso(item);
+                            onOpenCountry?.(item);
+                          }}
                           style={[
                             styles.flagWrapper,
                             {
@@ -163,28 +169,22 @@ export default function CollapsibleCountrySection({
               )}
             </View>
           )}
-        </View>
-      </ImageBackground>
-    </ScrapbookCard>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     marginTop: 18,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-    overflow: 'hidden',
-  },
-  background: {
-    width: '100%',
-  },
-  backgroundImage: {
-    resizeMode: 'cover',
-  },
-  backgroundWash: {
     paddingVertical: 16,
     paddingHorizontal: 16,
+    overflow: 'hidden',
+    borderRadius: 20,
+    borderWidth: 1,
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
   },
   header: {
     flexDirection: 'row',

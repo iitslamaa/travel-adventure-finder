@@ -154,6 +154,19 @@ export default function ProfileScreen() {
     (fallbackFullName || profile?.username) ??
     'Your Profile';
 
+  const openCountry = (iso2: string) => {
+    const normalized = iso2.trim().toUpperCase();
+    if (!normalized) return;
+
+    router.push({
+      pathname: '/country/[iso2]',
+      params: {
+        iso2: normalized,
+        name: countries.find(country => country.iso2 === normalized)?.name ?? normalized,
+      },
+    });
+  };
+
   return (
     <ScrapbookBackground>
       <ImageBackground
@@ -209,6 +222,7 @@ export default function ProfileScreen() {
           favoriteCountries={favoriteCountryCodes}
           visitedCountryCodes={visitedIsoCodes}
           friendCount={profile?.friend_count ?? 0}
+          onOpenCountry={openCountry}
         />
 
         <View style={styles.section}>
@@ -237,6 +251,7 @@ export default function ProfileScreen() {
                     currentCountry={currentCountryIso}
                     nextDestination={nextDestinationIso}
                     favoriteCountries={favoriteCountryCodes}
+                    onOpenCountry={openCountry}
                   />
                 </View>
               </ImageBackground>
@@ -320,11 +335,13 @@ export default function ProfileScreen() {
               <CollapsibleCountrySection
                 title="Countries Traveled"
                 countries={visitedIsoCodes}
+                onOpenCountry={openCountry}
               />
 
               <CollapsibleCountrySection
                 title="Bucket List"
                 countries={bucketIsoCodes}
+                onOpenCountry={openCountry}
               />
             </View>
           </ImageBackground>

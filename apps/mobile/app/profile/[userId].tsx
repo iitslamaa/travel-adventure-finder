@@ -173,6 +173,18 @@ export default function FriendProfileScreen() {
   const travelStyle = travelStyleLabel(profile.travel_style) ?? 'Not set';
   const mutualTraveledIsoCodes = mutualCountries(traveledIsoCodes, myTraveledIsoCodes);
   const mutualBucketIsoCodes = mutualCountries(bucketIsoCodes, myBucketIsoCodes);
+  const openCountry = (iso2: string) => {
+    const normalized = iso2.trim().toUpperCase();
+    if (!normalized) return;
+
+    router.push({
+      pathname: '/country/[iso2]',
+      params: {
+        iso2: normalized,
+        name: countries.find(country => country.iso2 === normalized)?.name ?? normalized,
+      },
+    });
+  };
   const friendCtaLabel = isFriend
     ? profile.username ? `@${profile.username}` : `${friendCount} Friend${friendCount === 1 ? '' : 's'}`
     : isPending
@@ -227,6 +239,7 @@ export default function FriendProfileScreen() {
           ctaLabel={!isOwnProfile ? friendCtaLabel : null}
           ctaIcon={friendCtaIcon}
           ctaFilled={!isFriend && !isPending}
+          onOpenCountry={openCountry}
           onPressCta={
             !isOwnProfile
               ? () => {
@@ -264,6 +277,7 @@ export default function FriendProfileScreen() {
                       currentCountry={currentCountryIso}
                       nextDestination={nextDestinationIso}
                       favoriteCountries={favoriteCountryCodes}
+                      onOpenCountry={openCountry}
                     />
                   </View>
                 </ImageBackground>
@@ -345,12 +359,14 @@ export default function FriendProfileScreen() {
                   title="Countries Traveled"
                   countries={traveledIsoCodes}
                   mutualCountries={!isOwnProfile ? mutualTraveledIsoCodes : []}
+                  onOpenCountry={openCountry}
                 />
 
                 <CollapsibleCountrySection
                   title="Bucket List"
                   countries={bucketIsoCodes}
                   mutualCountries={!isOwnProfile ? mutualBucketIsoCodes : []}
+                  onOpenCountry={openCountry}
                 />
               </View>
             </ImageBackground>
