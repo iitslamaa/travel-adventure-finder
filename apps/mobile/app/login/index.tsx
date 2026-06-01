@@ -31,6 +31,8 @@ const PRIMARY_TEXT = '#FFFFFF';
 const MUTED_TEXT = '#786A57';
 const PANEL_BORDER = 'rgba(122, 107, 84, 0.35)';
 const AUTH_CARD_HEIGHT = 252;
+const AUTH_PHASE_TRANSITION_DISTANCE = 8;
+const AUTH_PHASE_TRANSITION_DURATION = 150;
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -171,7 +173,7 @@ export default function LandingScreen() {
       emailOpacity.setValue(1);
       emailTranslateX.setValue(0);
       verifyOpacity.setValue(0);
-      verifyTranslateX.setValue(36);
+      verifyTranslateX.setValue(AUTH_PHASE_TRANSITION_DISTANCE);
       return;
     }
 
@@ -180,7 +182,7 @@ export default function LandingScreen() {
       menuOpacity.setValue(0);
       menuTranslateX.setValue(-42);
       emailOpacity.setValue(0);
-      emailTranslateX.setValue(-36);
+      emailTranslateX.setValue(-AUTH_PHASE_TRANSITION_DISTANCE);
       verifyOpacity.setValue(1);
       verifyTranslateX.setValue(0);
     }
@@ -309,25 +311,26 @@ export default function LandingScreen() {
 
   const transitionToVerify = useCallback(() => {
     setAuthView('verify');
+    verifyTranslateX.setValue(AUTH_PHASE_TRANSITION_DISTANCE);
     Animated.parallel([
       Animated.timing(emailOpacity, {
         toValue: 0,
-        duration: 240,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(emailTranslateX, {
-        toValue: -34,
-        duration: 240,
+        toValue: -AUTH_PHASE_TRANSITION_DISTANCE,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(verifyOpacity, {
         toValue: 1,
-        duration: 240,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(verifyTranslateX, {
         toValue: 0,
-        duration: 240,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
     ]).start();
@@ -335,25 +338,26 @@ export default function LandingScreen() {
 
   const transitionBackToEmail = useCallback(() => {
     setAuthView('email');
+    emailTranslateX.setValue(-AUTH_PHASE_TRANSITION_DISTANCE);
     Animated.parallel([
       Animated.timing(verifyOpacity, {
         toValue: 0,
-        duration: 220,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(verifyTranslateX, {
-        toValue: 36,
-        duration: 220,
+        toValue: AUTH_PHASE_TRANSITION_DISTANCE,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(emailOpacity, {
         toValue: 1,
-        duration: 220,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(emailTranslateX, {
         toValue: 0,
-        duration: 220,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
     ]).start();
