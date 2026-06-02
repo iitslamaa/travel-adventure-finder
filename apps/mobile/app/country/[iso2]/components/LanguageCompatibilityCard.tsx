@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
-import ScorePill from '../../../../components/ScorePill';
-import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
 import { useTheme } from '../../../../hooks/useTheme';
+import MetricPill from './MetricPill';
 
 type Props = {
   score: number;
@@ -41,7 +40,16 @@ export default function LanguageCompatibilityCard({
   const theme = useTheme();
 
   return (
-    <ScrapbookCard innerStyle={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.cardBorderStrong,
+          shadowColor: theme.shadow,
+        },
+      ]}
+    >
       <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Communication fit</Text>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>
@@ -53,30 +61,22 @@ export default function LanguageCompatibilityCard({
       </View>
 
       <View style={styles.metricRow}>
-        <ScorePill score={Math.round(score)} size="lg" />
+        <MetricPill score={score} />
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>
             {buildHeadline(score)}
           </Text>
-          <Text style={[styles.metricSubhead, { color: theme.textMuted }]}>
-            Communication snapshot
+          <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>
+            {buildDetail(score)}
           </Text>
-          <View style={[styles.helperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Text style={[styles.helperLabel, { color: theme.textSecondary }]}>
-              Your language coverage
-            </Text>
-            <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>
-              {buildDetail(score)}
-            </Text>
-          </View>
 
           <Text style={[styles.footerText, { color: theme.textMuted }]}>
             Based on the languages saved in your profile and the country language profile.
           </Text>
         </View>
       </View>
-    </ScrapbookCard>
+    </View>
   );
 }
 
@@ -84,6 +84,12 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     marginBottom: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   eyebrow: {
     fontSize: 11,
@@ -114,26 +120,10 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 2,
   },
-  metricSubhead: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  helperCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    marginTop: 2,
-  },
-  helperLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
   metricDescription: {
     fontSize: 14,
     lineHeight: 20,
+    marginTop: 4,
   },
   footerText: {
     marginTop: 12,

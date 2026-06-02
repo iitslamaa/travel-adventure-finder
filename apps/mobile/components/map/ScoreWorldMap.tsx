@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { View, StyleSheet, Pressable, Text } from "react-native";
 import MapView, { Polygon, PROVIDER_GOOGLE } from "react-native-maps";
 import { useRouter } from "expo-router";
@@ -156,7 +156,7 @@ export default function ScoreWorldMap() {
     return map;
   }, [countries]);
 
-  const handlePress = (feature: any) => {
+  const handlePress = useCallback((feature: any) => {
     if (!feature) return;
 
     const iso3 = resolveFeatureIso3(feature);
@@ -219,7 +219,7 @@ export default function ScoreWorldMap() {
       latitudeDelta: Math.max(2, (maxLat - minLat) * 1.2),
       longitudeDelta: Math.max(2, (maxLng - minLng) * 1.2),
     });
-  };
+  }, [countryByIso3, scoreLookup]);
 
   const renderedPolygons = useMemo(
     () =>
@@ -238,7 +238,7 @@ export default function ScoreWorldMap() {
           />
         ));
       }),
-    [scoreLookup]
+    [handlePress, scoreLookup]
   );
 
   return (

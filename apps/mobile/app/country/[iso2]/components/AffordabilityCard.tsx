@@ -1,29 +1,40 @@
 import { StyleSheet, Text, View } from 'react-native';
-import ScorePill from '../../../../components/ScorePill';
-import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
 import { useTheme } from '../../../../hooks/useTheme';
+import MetricPill from './MetricPill';
 
 type Props = {
   score: number;
-  category?: number;
+  band?: string;
   averageDailyCost?: number;
-  explanation?: string;
   normalizedLabel?: string;
   weightOnlyLabel?: string;
 };
 
 export default function AffordabilityCard({
   score,
-  category,
+  band,
   averageDailyCost,
-  explanation,
   normalizedLabel,
   weightOnlyLabel,
 }: Props) {
   const theme = useTheme();
+  const tier = affordabilityTier({ band, averageDailyCost, score });
+  const formattedCost =
+    typeof averageDailyCost === 'number' ? `$${Math.round(averageDailyCost)}` : undefined;
+  const headline = affordabilityHeadline(tier, formattedCost);
+  const body = affordabilityBody(tier);
 
   return (
-    <ScrapbookCard innerStyle={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.cardBorderStrong,
+          shadowColor: theme.shadow,
+        },
+      ]}
+    >
       <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Budget and daily spend</Text>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>
@@ -35,25 +46,15 @@ export default function AffordabilityCard({
       </View>
 
       <View style={styles.metricRow}>
-        <ScorePill score={Math.round(score)} size="lg" />
+        <MetricPill score={score} />
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>
-            {category ? `Cost tier ${category}/10` : 'Budget snapshot'}
+            {headline}
           </Text>
-          <Text style={[styles.metricSubhead, { color: theme.textMuted }]}>
-            Daily cost snapshot
+          <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>
+            {body}
           </Text>
-
-          <View style={[styles.helperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Text style={[styles.helperLabel, { color: theme.textSecondary }]}>
-              Cost snapshot
-            </Text>
-            <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>
-              {explanation ??
-                'Affordability blends average daily travel cost and local price signals. Higher scores mean cheaper trips.'}
-            </Text>
-          </View>
 
           {typeof averageDailyCost === 'number' ? (
             <Text style={[styles.metaText, { color: theme.textMuted }]}>
@@ -75,9 +76,13 @@ export default function AffordabilityCard({
               ) : null}
             </View>
           )}
+
+          <Text style={[styles.disclaimer, { color: theme.textMuted }]}>
+            Costs are estimates and can vary by city, season, and travel style.
+          </Text>
         </View>
       </View>
-    </ScrapbookCard>
+    </View>
   );
 }
 
@@ -85,6 +90,12 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     marginBottom: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   eyebrow: {
     fontSize: 11,
@@ -115,26 +126,10 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 2,
   },
-  metricSubhead: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  helperCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    marginTop: 2,
-  },
-  helperLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
   metricDescription: {
     fontSize: 14,
     lineHeight: 20,
+    marginTop: 4,
   },
   metaText: {
     marginTop: 10,
@@ -150,4 +145,74 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  disclaimer: {
+    marginTop: 12,
+    fontSize: 11.5,
+    lineHeight: 16,
+    fontWeight: '600',
+  },
 });
+
+type AffordabilityTier = 'veryLow' | 'low' | 'moderate' | 'high' | 'veryHigh';
+
+function affordabilityTier({
+  band,
+  averageDailyCost,
+  score,
+}: {
+  band?: string;
+  averageDailyCost?: number;
+  score: number;
+}): AffordabilityTier {
+  const normalizedBand = band?.toLowerCase();
+  if (normalizedBand?.includes('very low')) return 'veryLow';
+  if (normalizedBand?.includes('low')) return 'low';
+  if (normalizedBand?.includes('moderate') || normalizedBand?.includes('mid')) return 'moderate';
+  if (normalizedBand?.includes('very high')) return 'veryHigh';
+  if (normalizedBand?.includes('high') || normalizedBand?.includes('expensive')) return 'high';
+
+  if (typeof averageDailyCost === 'number') {
+    if (averageDailyCost < 65) return 'veryLow';
+    if (averageDailyCost < 120) return 'low';
+    if (averageDailyCost < 220) return 'moderate';
+    if (averageDailyCost < 350) return 'high';
+    return 'veryHigh';
+  }
+
+  if (score >= 85) return 'veryLow';
+  if (score >= 70) return 'low';
+  if (score >= 45) return 'moderate';
+  if (score >= 20) return 'high';
+  return 'veryHigh';
+}
+
+function affordabilityHeadline(tier: AffordabilityTier, formattedCost?: string) {
+  const suffix = formattedCost ? ` (~ ${formattedCost}/day)` : '';
+  switch (tier) {
+    case 'veryLow':
+      return `Very low daily costs${suffix}`;
+    case 'low':
+      return `Low daily costs${suffix}`;
+    case 'moderate':
+      return `Moderate daily costs${suffix}`;
+    case 'high':
+      return `High daily costs${suffix}`;
+    case 'veryHigh':
+      return `Very high daily costs${suffix}`;
+  }
+}
+
+function affordabilityBody(tier: AffordabilityTier) {
+  switch (tier) {
+    case 'veryLow':
+      return 'Strong value for accommodation, food, and transport compared to global averages.';
+    case 'low':
+      return 'Relatively affordable for most travelers, with room to stay comfortable.';
+    case 'moderate':
+      return 'Mid-range travel costs compared with global averages.';
+    case 'high':
+      return 'Daily costs run above global averages, especially for accommodation.';
+    case 'veryHigh':
+      return 'Premium destination with consistently high travel costs.';
+  }
+}

@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   ImageBackground,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -114,13 +115,17 @@ export default function FriendsScreen() {
           cachePolicy="memory-disk"
         />
       ) : (
-        <View style={styles.avatar} />
+        <View
+          style={[
+            styles.avatarFallback,
+            { backgroundColor: colors.paperAlt, borderColor: colors.border },
+          ]}
+        >
+          <Ionicons name="person-circle" size={46} color={colors.textMuted} />
+        </View>
       )}
 
       <View style={{ flex: 1 }}>
-        <Text style={[styles.rowEyebrow, { color: colors.textSecondary }]}>
-          Travel friend
-        </Text>
         <Text style={[styles.name, { color: colors.textPrimary }]}>
           {item.full_name}
         </Text>
@@ -146,7 +151,7 @@ export default function FriendsScreen() {
           style={[
             styles.container,
             {
-              paddingTop: insets.top + 12,
+              paddingTop: Platform.OS === 'android' ? 12 : insets.top + 8,
               paddingBottom: insets.bottom + 24,
             },
           ]}
@@ -217,10 +222,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   headerRow: {
+    position: 'absolute',
+    top: 12,
+    left: 20,
+    right: 20,
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 4,
   },
   backButtonPlaceholder: {
     width: 42,
@@ -268,18 +276,20 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 3,
   },
-  rowEyebrow: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
     backgroundColor: 'rgba(228, 214, 193, 0.96)',
+    marginRight: 14,
+  },
+  avatarFallback: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 14,
   },
   name: {

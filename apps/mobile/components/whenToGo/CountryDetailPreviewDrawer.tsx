@@ -51,11 +51,13 @@ export default function CountryDetailPreviewDrawer({
   const seasonalityColors = getScoreColor(seasonality);
 
   const handleNavigate = () => {
+    if (!resolvedCountry?.iso2) return;
+
     onClose();
     router.push({
       pathname: '/country/[iso2]',
       params: {
-        iso2: resolvedCountry?.iso2,
+        iso2: resolvedCountry.iso2,
         name: resolvedCountry?.name,
       },
     });

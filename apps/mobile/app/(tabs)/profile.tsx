@@ -13,15 +13,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { useCountries } from '../../hooks/useCountries';
-import CountryFlag from 'react-native-country-flag';
 
 import HeaderCard from '../../components/profile/HeaderCard';
 import CollapsibleCountrySection from '../../components/profile/CollapsibleCountrySection';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
-import { formatLanguageList } from '../../utils/language';
+import { formatLanguageEntries } from '../../utils/language';
+import { travelModeLabel, travelStyleLabel } from '../../utils/profileFormatting';
 import ScrapbookBackground from '../../components/theme/ScrapbookBackground';
+import ScrapbookCard from '../../components/theme/ScrapbookCard';
 import TitleBanner from '../../components/theme/TitleBanner';
+import ProfileTravelSnapshotCard from '../../components/profile/ProfileTravelSnapshotCard';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -120,25 +122,9 @@ export default function ProfileScreen() {
     );
   }
 
-  const languages = formatLanguageList(profile?.languages);
-  const languageItems = languages
-    ? languages
-        .split(',')
-        .map(item => item.trim())
-        .filter(Boolean)
-    : [];
-
-  const travelMode =
-    Array.isArray(profile?.travel_mode) && profile.travel_mode.length
-      ? profile.travel_mode[0].charAt(0).toUpperCase() +
-        profile.travel_mode[0].slice(1)
-      : '—';
-
-  const travelStyle =
-    Array.isArray(profile?.travel_style) && profile.travel_style.length
-      ? profile.travel_style[0].charAt(0).toUpperCase() +
-        profile.travel_style[0].slice(1)
-      : '—';
+  const languageItems = formatLanguageEntries(profile?.languages);
+  const travelMode = travelModeLabel(profile?.travel_mode) ?? 'Not set';
+  const travelStyle = travelStyleLabel(profile?.travel_style) ?? 'Not set';
 
   const nextDestinationIso =
     typeof profile?.next_destination === 'string'
@@ -158,9 +144,6 @@ export default function ProfileScreen() {
         .filter(Boolean)
     : [];
   const currentCountry = countries?.find(c => c.iso2 === currentCountryIso);
-  const favoriteCountries = favoriteCountryCodes
-    .map(code => countries?.find(c => c.iso2 === code))
-    .filter(Boolean);
 
   const fallbackFullName = [profile?.first_name, profile?.last_name]
     .filter(Boolean)
@@ -171,7 +154,18 @@ export default function ProfileScreen() {
     (fallbackFullName || profile?.username) ??
     'Your Profile';
 
-  const detailText = (value?: string | null) => value || 'Not set';
+  const openCountry = (iso2: string) => {
+    const normalized = iso2.trim().toUpperCase();
+    if (!normalized) return;
+
+    router.push({
+      pathname: '/country/[iso2]',
+      params: {
+        iso2: normalized,
+        name: countries.find(country => country.iso2 === normalized)?.name ?? normalized,
+      },
+    });
+  };
 
   return (
     <ScrapbookBackground>
@@ -226,7 +220,9 @@ export default function ProfileScreen() {
           nextDestination={nextDestinationIso}
           nextDestinationLabel={nextDestinationCountry?.name ?? null}
           favoriteCountries={favoriteCountryCodes}
+          visitedCountryCodes={visitedIsoCodes}
           friendCount={profile?.friend_count ?? 0}
+          onOpenCountry={openCountry}
         />
 
         <View style={styles.section}>
@@ -251,16 +247,39 @@ export default function ProfileScreen() {
                     },
                   ]}
                 >
+                  <ProfileTravelSnapshotCard
+                    currentCountry={currentCountryIso}
+                    nextDestination={nextDestinationIso}
+                    favoriteCountries={favoriteCountryCodes}
+                    onOpenCountry={openCountry}
+                  />
+                </View>
+              </ImageBackground>
+
+              <ImageBackground
+                source={require('../../assets/scrapbook/profile-header.png')}
+                style={styles.groupBackground}
+                imageStyle={styles.groupBackgroundImage}
+              >
+                <View
+                  style={[
+                    styles.groupWash,
+                    {
+                      backgroundColor: `${colors.paper}D9`,
+                      borderColor: `${colors.card}66`,
+                    },
+                  ]}
+                >
                   <Text style={[styles.groupSectionTitle, { color: colors.textPrimary }]}>
                     Languages
                   </Text>
                   {languageItems.length ? (
                     <View style={styles.languageList}>
                       {languageItems.map((item, index) => (
-                        <React.Fragment key={item}>
+                        <React.Fragment key={`${item.name}-${item.proficiency}`}>
                           <ProfileDetailRow
-                            label={item.split('—')[0]?.trim() || item}
-                            value={item.split('—')[1]?.trim() || 'Added'}
+                            label={item.name}
+                            value={item.proficiency}
                             colors={colors}
                           />
                           {index < languageItems.length - 1 ? (
@@ -313,62 +332,16 @@ export default function ProfileScreen() {
                 </View>
               </ImageBackground>
 
-              <ImageBackground
-                source={require('../../assets/scrapbook/profile-header.png')}
-                style={styles.groupBackground}
-                imageStyle={styles.groupBackgroundImage}
-              >
-                <View
-                  style={[
-                    styles.groupWash,
-                    {
-                      backgroundColor: `${colors.paper}D9`,
-                      borderColor: `${colors.card}66`,
-                    },
-                  ]}
-                >
-                  <ProfileDetailRow
-                    label="Current Country"
-                    value={detailText(currentCountry?.name)}
-                    trailing={
-                      currentCountry ? (
-                        <CountryFlag isoCode={currentCountry.iso2} size={16} />
-                      ) : undefined
-                    }
-                    colors={colors}
-                  />
-                  <InlineDivider color={colors.border} />
-                  <ProfileDetailRow
-                    label="Next Destination"
-                    value={detailText(nextDestinationCountry?.name)}
-                    trailing={
-                      nextDestinationCountry ? (
-                        <CountryFlag isoCode={nextDestinationCountry.iso2} size={16} />
-                      ) : undefined
-                    }
-                    colors={colors}
-                  />
-                  <InlineDivider color={colors.border} />
-                  <ProfileDetailRow
-                    label="Favorite Trips"
-                    value={
-                      favoriteCountries.length
-                        ? favoriteCountries.map(country => country!.iso2).join(' ')
-                        : 'Not set'
-                    }
-                    colors={colors}
-                  />
-                </View>
-              </ImageBackground>
-
               <CollapsibleCountrySection
                 title="Countries Traveled"
                 countries={visitedIsoCodes}
+                onOpenCountry={openCountry}
               />
 
               <CollapsibleCountrySection
                 title="Bucket List"
                 countries={bucketIsoCodes}
+                onOpenCountry={openCountry}
               />
             </View>
           </ImageBackground>

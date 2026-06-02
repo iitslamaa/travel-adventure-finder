@@ -1,8 +1,7 @@
 import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { useMemo, useState } from 'react';
-import ScorePill from '../../../../components/ScorePill';
-import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
 import { useTheme } from '../../../../hooks/useTheme';
+import MetricPill from './MetricPill';
 
 type Props = {
   score: number;
@@ -39,7 +38,16 @@ export default function AdvisoryCard({
   const body = expanded ? summary : preview;
 
   return (
-    <ScrapbookCard innerStyle={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.cardBorderStrong,
+          shadowColor: theme.shadow,
+        },
+      ]}
+    >
       <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Safety and entry</Text>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Travel advisory</Text>
@@ -47,23 +55,13 @@ export default function AdvisoryCard({
       </View>
 
       <View style={styles.metricRow}>
-        <ScorePill score={Math.round(score)} size="lg" />
+        <MetricPill score={score} />
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>Level {level}</Text>
-          <Text style={[styles.metricSubhead, { color: theme.textMuted }]}>
-            Safety advisory snapshot
-          </Text>
-
-          <View style={[styles.helperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Text style={[styles.helperLabel, { color: theme.textSecondary }]}>
-              Advisory snapshot
-            </Text>
-
-            {!!summary && (
-              <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{body}</Text>
-            )}
-          </View>
+          {!!summary && (
+            <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{body}</Text>
+          )}
 
           {canExpand && (
             <Pressable
@@ -101,7 +99,7 @@ export default function AdvisoryCard({
           )}
         </View>
       </View>
-    </ScrapbookCard>
+    </View>
   );
 }
 
@@ -109,6 +107,12 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     marginBottom: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   eyebrow: {
     fontSize: 11,
@@ -143,23 +147,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     marginBottom: 2,
-  },
-  metricSubhead: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  helperCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    marginTop: 2,
-  },
-  helperLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
   },
 
   metricDescription: {

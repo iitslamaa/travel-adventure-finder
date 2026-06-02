@@ -19,7 +19,8 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useCountries } from '../hooks/useCountries';
 import { useTheme } from '../hooks/useTheme';
-import { formatLanguageList, normalizeLanguageDraft } from '../utils/language';
+import { formatLanguageName, normalizeLanguageDraft } from '../utils/language';
+import { travelModeLabel, travelStyleLabel } from '../utils/profileFormatting';
 
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -27,7 +28,6 @@ import ScrapbookBackground from '../components/theme/ScrapbookBackground';
 import ScrapbookCard from '../components/theme/ScrapbookCard';
 import TitleBanner from '../components/theme/TitleBanner';
 
-type EditField = 'full_name' | 'username';
 type SelectorKind =
   | 'mode'
   | 'style'
@@ -68,6 +68,15 @@ function proficiencyLabel(value: unknown) {
     LANGUAGE_PROFICIENCY_OPTIONS.find(option => option.value === normalizeProficiency(value))?.label ??
     'Beginner'
   );
+}
+
+function languageDisplayName(entry: unknown) {
+  const rawName =
+    typeof entry === 'string'
+      ? entry
+      : (entry as any)?.name ?? (entry as any)?.code ?? '';
+
+  return formatLanguageName(rawName) ?? '';
 }
 
 function joinFlagPreview(codes: string[], max = 4) {
@@ -257,7 +266,7 @@ export default function ProfileSettingsScreen() {
     setDraftFirstName(profile?.first_name ?? '');
     setDraftLastName(profile?.last_name ?? '');
     setDraftUsername(profile?.username ?? '');
-  }, [profile]);
+  }, [currentMode, currentStyle, profile]);
 
   useEffect(() => {
     const loadPassportPreferences = async () => {
@@ -399,23 +408,9 @@ export default function ProfileSettingsScreen() {
 
   /* ---------------- Labels ---------------- */
 
-  const modeLabel =
-    draftMode === 'solo'
-      ? 'Solo'
-      : draftMode === 'group'
-      ? 'Group'
-      : draftMode === 'both'
-      ? 'Solo + Group'
-      : '—';
+  const modeLabel = travelModeLabel(draftMode) ?? '—';
 
-  const styleLabel =
-    draftStyle === 'budget'
-      ? 'Budget'
-      : draftStyle === 'comfortable'
-      ? 'Comfortable'
-      : draftStyle === 'luxury'
-      ? 'Luxury'
-      : '—';
+  const styleLabel = travelStyleLabel(draftStyle) ?? '—';
 
   const localizedCountryName = (code?: string | null) =>
     code ? countries.find(c => c.iso2 === code)?.name ?? code : null;
@@ -732,10 +727,7 @@ export default function ProfileSettingsScreen() {
           {draftLanguages.length ? (
             <View style={styles.inlineSummaryStack}>
               {draftLanguages.slice(0, 3).map((entry: any, index) => {
-                const languageName =
-                  typeof entry === 'string'
-                    ? entry
-                    : entry?.name ?? entry?.code ?? '';
+                const languageName = languageDisplayName(entry);
 
                 return (
                   <View key={`${languageName}-${index}`} style={styles.languageSummaryRow}>
@@ -851,7 +843,7 @@ export default function ProfileSettingsScreen() {
 
           {selectorOpen === 'style' && (
             <>
-              {['budget','comfortable','luxury'].map(option => (
+              {['budget','comfortable','inBetween','both'].map(option => (
                 <Pressable
                   key={option}
                   style={{ paddingVertical: 14 }}
@@ -861,7 +853,7 @@ export default function ProfileSettingsScreen() {
                   }}
                 >
                   <Text style={{ color: colors.textPrimary, fontWeight: '600' }}>
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                    {travelStyleLabel(option)}
                   </Text>
                 </Pressable>
               ))}
@@ -956,8 +948,7 @@ export default function ProfileSettingsScreen() {
                   </Text>
                 ) : (
                   draftLanguages.map((entry: any, index) => {
-                    const languageName =
-                      typeof entry === 'string' ? entry : entry?.name ?? entry?.code ?? '';
+                    const languageName = languageDisplayName(entry);
                     const proficiency = normalizeProficiency(
                       typeof entry === 'string' ? 'fluent' : entry?.proficiency
                     );
@@ -1195,38 +1186,6 @@ function Row({ label, value, onPress }: any) {
 
 function Divider({ color }: { color: string }) {
   return <View style={[styles.divider, { backgroundColor: color }]} />;
-}
-
-function SummaryChip({
-  label,
-  value,
-  colors,
-  wide = false,
-}: {
-  label: string;
-  value: string;
-  colors: ReturnType<typeof useTheme>;
-  wide?: boolean;
-}) {
-  return (
-    <View
-      style={[
-        styles.summaryChip,
-        {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
-          flex: wide ? undefined : 1,
-        },
-      ]}
-    >
-      <Text style={[styles.summaryChipLabel, { color: colors.textSecondary }]}>
-        {label}
-      </Text>
-      <Text style={[styles.summaryChipValue, { color: colors.textPrimary }]} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({

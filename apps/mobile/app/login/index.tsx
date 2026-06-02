@@ -1,5 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Video, ResizeMode } from 'expo-av';
 import * as Linking from 'expo-linking';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -10,6 +8,7 @@ import {
   Animated,
   Image,
   KeyboardAvoidingView,
+  LogBox,
   Platform,
   Pressable,
   StyleSheet,
@@ -23,14 +22,23 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 WebBrowser.maybeCompleteAuthSession();
+LogBox.ignoreLogs(['[expo-av]: Expo AV has been deprecated']);
+
+// Load after LogBox is configured so Expo AV's dev warning stays hidden.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { Video, ResizeMode } = require('expo-av') as typeof import('expo-av');
+type ExpoVideo = import('expo-av').Video;
 
 const GUEST_PILL_TEXT = '#45392E';
 const BORDER = 'rgba(73, 58, 43, 0.12)';
-const FIELD_BG = '#F7F2E8';
+const FIELD_BG = '#FFFFFF';
 const PRIMARY_FILL = '#3A2A1C';
 const PRIMARY_TEXT = '#FFFFFF';
 const MUTED_TEXT = '#786A57';
 const PANEL_BORDER = 'rgba(122, 107, 84, 0.35)';
+const AUTH_CARD_HEIGHT = 252;
+const AUTH_PHASE_TRANSITION_DISTANCE = 8;
+const AUTH_PHASE_TRANSITION_DURATION = 150;
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -48,6 +56,7 @@ export default function LandingScreen() {
   const [bypassKey, setBypassKey] = useState('');
   const [code, setCode] = useState('');
   const [verifyLoading, setVerifyLoading] = useState(false);
+  const shouldShowAuthControls = !session && !loading;
 
   const panelOpacity = useRef(new Animated.Value(0)).current;
   const panelTranslateY = useRef(new Animated.Value(18)).current;
@@ -57,7 +66,7 @@ export default function LandingScreen() {
   const emailTranslateX = useRef(new Animated.Value(36)).current;
   const verifyOpacity = useRef(new Animated.Value(0)).current;
   const verifyTranslateX = useRef(new Animated.Value(36)).current;
-  const videoRef = useRef<Video>(null);
+  const videoRef = useRef<ExpoVideo>(null);
   const revealTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const loginInProgressRef = useRef(false);
@@ -78,6 +87,8 @@ export default function LandingScreen() {
   );
 
   useEffect(() => {
+    const revealDelay = isGuest ? 120 : 450;
+
     revealTimeoutRef.current = setTimeout(() => {
       Animated.parallel([
         Animated.timing(panelOpacity, {
@@ -91,14 +102,14 @@ export default function LandingScreen() {
           useNativeDriver: true,
         }),
       ]).start();
-    }, 2000);
+    }, revealDelay);
 
     return () => {
       if (revealTimeoutRef.current) {
         clearTimeout(revealTimeoutRef.current);
       }
     };
-  }, [panelOpacity, panelTranslateY]);
+  }, [isGuest, panelOpacity, panelTranslateY]);
 
   useEffect(() => {
     const handleUrl = async () => {
@@ -150,12 +161,8 @@ export default function LandingScreen() {
     [height]
   );
   const emailCardWidth = useMemo(
-    () => Math.min(288, Math.max(248, Math.round(authButtonWidth * 0.9))),
+    () => Math.min(328, Math.max(300, Math.round(authButtonWidth * 1.05))),
     [authButtonWidth]
-  );
-  const verifyCardWidth = useMemo(
-    () => Math.min(268, Math.max(236, emailCardWidth - 12)),
-    [emailCardWidth]
   );
 
   useEffect(() => {
@@ -172,7 +179,7 @@ export default function LandingScreen() {
       emailOpacity.setValue(1);
       emailTranslateX.setValue(0);
       verifyOpacity.setValue(0);
-      verifyTranslateX.setValue(36);
+      verifyTranslateX.setValue(AUTH_PHASE_TRANSITION_DISTANCE);
       return;
     }
 
@@ -181,7 +188,7 @@ export default function LandingScreen() {
       menuOpacity.setValue(0);
       menuTranslateX.setValue(-42);
       emailOpacity.setValue(0);
-      emailTranslateX.setValue(-36);
+      emailTranslateX.setValue(-AUTH_PHASE_TRANSITION_DISTANCE);
       verifyOpacity.setValue(1);
       verifyTranslateX.setValue(0);
     }
@@ -196,29 +203,6 @@ export default function LandingScreen() {
     verifyTranslateX,
   ]);
 
-  const dumpStorage = async (label: string) => {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      const interesting = keys.filter(key =>
-        key.includes('supabase') ||
-        key.includes('sb-') ||
-        key.includes('pkce') ||
-        key.includes('auth') ||
-        key.includes('travelaf')
-      );
-
-      if (!interesting.length) return;
-
-      const pairs = await AsyncStorage.multiGet(interesting);
-      console.log(
-        `[storage.dump] ${label}`,
-        pairs.map(([key, value]) => [key, value ? `len=${value.length}` : null])
-      );
-    } catch (error) {
-      console.log('[storage.dump] error', error);
-    }
-  };
-
   const handleGoogleLogin = async () => {
     if (loginInProgressRef.current) return;
 
@@ -227,14 +211,11 @@ export default function LandingScreen() {
 
     try {
       const redirectTo = 'travelaf://auth/callback';
-      await dumpStorage('BEFORE signInWithOAuth');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo },
       });
-
-      await dumpStorage('AFTER signInWithOAuth');
 
       if (error) {
         Alert.alert('Google Login Error', error.message);
@@ -336,25 +317,26 @@ export default function LandingScreen() {
 
   const transitionToVerify = useCallback(() => {
     setAuthView('verify');
+    verifyTranslateX.setValue(AUTH_PHASE_TRANSITION_DISTANCE);
     Animated.parallel([
       Animated.timing(emailOpacity, {
         toValue: 0,
-        duration: 240,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(emailTranslateX, {
-        toValue: -34,
-        duration: 240,
+        toValue: -AUTH_PHASE_TRANSITION_DISTANCE,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(verifyOpacity, {
         toValue: 1,
-        duration: 240,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(verifyTranslateX, {
         toValue: 0,
-        duration: 240,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
     ]).start();
@@ -362,25 +344,26 @@ export default function LandingScreen() {
 
   const transitionBackToEmail = useCallback(() => {
     setAuthView('email');
+    emailTranslateX.setValue(-AUTH_PHASE_TRANSITION_DISTANCE);
     Animated.parallel([
       Animated.timing(verifyOpacity, {
         toValue: 0,
-        duration: 220,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(verifyTranslateX, {
-        toValue: 36,
-        duration: 220,
+        toValue: AUTH_PHASE_TRANSITION_DISTANCE,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(emailOpacity, {
         toValue: 1,
-        duration: 220,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
       Animated.timing(emailTranslateX, {
         toValue: 0,
-        duration: 220,
+        duration: AUTH_PHASE_TRANSITION_DURATION,
         useNativeDriver: true,
       }),
     ]).start();
@@ -485,7 +468,7 @@ export default function LandingScreen() {
             },
           ]}
         >
-          {!session && !isGuest && !loading && (
+          {shouldShowAuthControls && (
             <>
               <View style={[styles.keyboardWrap, { height: panelMaxHeight }]}>
                 <View style={styles.authFrame}>
@@ -539,7 +522,6 @@ export default function LandingScreen() {
                         </Pressable>
 
                         <Text style={styles.panelTag}>Email sign in</Text>
-                        <Text style={styles.panelTitle}>Enter your email</Text>
 
                         <TextInput
                           placeholder="Email address"
@@ -622,7 +604,7 @@ export default function LandingScreen() {
                         },
                       ]}
                     >
-                      <View style={[styles.emailCard, styles.verifyCard, { width: verifyCardWidth }]}>
+                      <View style={[styles.emailCard, styles.verifyCard, { width: emailCardWidth }]}>
                         <Pressable onPress={transitionBackToEmail} hitSlop={10} style={styles.backRow}>
                           <Text style={styles.backText}>Back</Text>
                         </Pressable>
@@ -814,8 +796,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   emailCard: {
+    height: AUTH_CARD_HEIGHT,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 18,
+    marginTop: 34,
     borderRadius: 20,
     backgroundColor: 'rgba(247,242,234,0.98)',
     borderWidth: 1,
@@ -825,7 +809,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
-    gap: 12,
+    gap: 14,
   },
   verifyCard: {
     paddingVertical: 12,
@@ -836,7 +820,7 @@ const styles = StyleSheet.create({
   },
   backText: {
     color: MUTED_TEXT,
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
   },
   panelTitle: {
@@ -846,11 +830,13 @@ const styles = StyleSheet.create({
   },
   panelTag: {
     color: MUTED_TEXT,
-    fontSize: 10,
+    fontSize: 18,
     fontWeight: '800',
-    letterSpacing: 0.9,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    marginBottom: -4,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginBottom: 4,
   },
   panelEyebrow: {
     color: MUTED_TEXT,
@@ -866,6 +852,8 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: 12,
     backgroundColor: FIELD_BG,
+    borderWidth: 1,
+    borderColor: 'rgba(122, 107, 84, 0.24)',
     color: PRIMARY_FILL,
     paddingHorizontal: 12,
     fontSize: 16,
@@ -876,7 +864,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignSelf: 'center',
-    width: 200,
+    width: 236,
     height: 50,
     borderRadius: 16,
     backgroundColor: '#735436',

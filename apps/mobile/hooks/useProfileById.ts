@@ -10,9 +10,11 @@ export type PublicProfile = {
 
   // optional fields (only render if present)
   languages?: any; // could be json
-  travel_mode?: string | null;
-  travel_style?: string | null;
+  travel_mode?: string[] | null;
+  travel_style?: string[] | null;
   next_destination?: string | null;
+  current_country?: string | null;
+  favorite_countries?: string[] | null;
   lived_countries?: string[] | null;
 };
 
@@ -42,6 +44,8 @@ export function useProfileById(userId?: string | string[]) {
           travel_mode,
           travel_style,
           next_destination,
+          current_country,
+          favorite_countries,
           lived_countries
         `)
         .eq('id', id)
@@ -56,6 +60,9 @@ export function useProfileById(userId?: string | string[]) {
           avatar_url: getResizedAvatarUrl(data?.avatar_url ?? null),
           lived_countries: Array.isArray(data?.lived_countries)
             ? data.lived_countries
+            : [],
+          favorite_countries: Array.isArray(data?.favorite_countries)
+            ? data.favorite_countries
             : [],
         } as PublicProfile;
 

@@ -25,7 +25,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         router.replace('/');
       }
     }
-  }, [loading, session, isGuest]);
+  }, [loading, session, isGuest, pathname, router]);
 
   // Logged in -> enforce onboarding gate (guest bypasses)
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       hasRedirectedRef.current = true;
       router.replace('/(tabs)/discovery');
     }
-  }, [loading, profileLoading, session, isGuest, profile]);
+  }, [loading, profileLoading, session, isGuest, profile, pathname, router]);
 
   if (loading || (session && !isGuest && profileLoading)) {
     return (

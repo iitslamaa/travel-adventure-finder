@@ -8,13 +8,10 @@ import {
   RefreshControl,
   ImageBackground,
 } from 'react-native';
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import CountryFlag from 'react-native-country-flag';
 import { useProfileById } from '../../hooks/useProfileById';
 import { useFriendshipStatus } from '../../hooks/useFriendshipStatus';
 import { useFriendCount } from '../../hooks/useFriendCount';
@@ -25,10 +22,19 @@ import { useCountries } from '../../hooks/useCountries';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { formatLanguageList } from '../../utils/language';
+import { formatLanguageEntries } from '../../utils/language';
+import { travelModeLabel, travelStyleLabel } from '../../utils/profileFormatting';
 import ScrapbookBackground from '../../components/theme/ScrapbookBackground';
 import ScrapbookCard from '../../components/theme/ScrapbookCard';
 import TitleBanner from '../../components/theme/TitleBanner';
+import ProfileTravelSnapshotCard from '../../components/profile/ProfileTravelSnapshotCard';
+
+function mutualCountries(viewedCodes: string[], myCodes: string[]) {
+  const mySet = new Set(myCodes.map(code => code.trim().toUpperCase()).filter(Boolean));
+  return viewedCodes
+    .map(code => code.trim().toUpperCase())
+    .filter(code => code && mySet.has(code));
+}
 
 export default function FriendProfileScreen() {
   const router = useRouter();
@@ -52,6 +58,11 @@ export default function FriendProfileScreen() {
     bucketIsoCodes,
     refresh: refreshUserCounts,
   } = useUserCounts(targetUserId);
+  const {
+    traveledIsoCodes: myTraveledIsoCodes,
+    bucketIsoCodes: myBucketIsoCodes,
+    refresh: refreshMyUserCounts,
+  } = useUserCounts(session?.user?.id);
   const { countries } = useCountries();
 
   const isOwnProfile = session?.user?.id === targetUserId;
@@ -111,6 +122,7 @@ export default function FriendProfileScreen() {
         refreshFriendCount(),
         refreshProfile(),
         refreshUserCounts(),
+        refreshMyUserCounts(),
       ]);
     } catch (err) {
       console.error('Profile refresh error:', err);
@@ -151,12 +163,28 @@ export default function FriendProfileScreen() {
     );
   }
 
-  const languagesText = formatLanguageList(profile.languages);
+  const languageItems = formatLanguageEntries(profile.languages);
   const favoriteCountryCodes = Array.isArray(profile.favorite_countries)
     ? profile.favorite_countries.map((code: string) => String(code).toUpperCase()).filter(Boolean)
     : [];
   const currentCountryIso =
     typeof profile.current_country === 'string' ? profile.current_country.toUpperCase() : null;
+  const travelMode = travelModeLabel(profile.travel_mode) ?? 'Not set';
+  const travelStyle = travelStyleLabel(profile.travel_style) ?? 'Not set';
+  const mutualTraveledIsoCodes = mutualCountries(traveledIsoCodes, myTraveledIsoCodes);
+  const mutualBucketIsoCodes = mutualCountries(bucketIsoCodes, myBucketIsoCodes);
+  const openCountry = (iso2: string) => {
+    const normalized = iso2.trim().toUpperCase();
+    if (!normalized) return;
+
+    router.push({
+      pathname: '/country/[iso2]',
+      params: {
+        iso2: normalized,
+        name: countries.find(country => country.iso2 === normalized)?.name ?? normalized,
+      },
+    });
+  };
   const friendCtaLabel = isFriend
     ? profile.username ? `@${profile.username}` : `${friendCount} Friend${friendCount === 1 ? '' : 's'}`
     : isPending
@@ -206,10 +234,12 @@ export default function FriendProfileScreen() {
           nextDestination={nextDestinationIso}
           nextDestinationLabel={nextDestinationCountry?.name ?? null}
           favoriteCountries={favoriteCountryCodes}
+          visitedCountryCodes={traveledIsoCodes}
           friendCount={friendCount}
           ctaLabel={!isOwnProfile ? friendCtaLabel : null}
           ctaIcon={friendCtaIcon}
           ctaFilled={!isFriend && !isPending}
+          onOpenCountry={openCountry}
           onPressCta={
             !isOwnProfile
               ? () => {
@@ -243,12 +273,50 @@ export default function FriendProfileScreen() {
                       },
                     ]}
                   >
+                    <ProfileTravelSnapshotCard
+                      currentCountry={currentCountryIso}
+                      nextDestination={nextDestinationIso}
+                      favoriteCountries={favoriteCountryCodes}
+                      onOpenCountry={openCountry}
+                    />
+                  </View>
+                </ImageBackground>
+
+                <ImageBackground
+                  source={require('../../assets/scrapbook/profile-header.png')}
+                  style={styles.infoGroupBackground}
+                  imageStyle={styles.infoGroupBackgroundImage}
+                >
+                  <View
+                    style={[
+                      styles.infoGroupWash,
+                      {
+                        backgroundColor: `${colors.paper}D9`,
+                        borderColor: `${colors.card}66`,
+                      },
+                    ]}
+                  >
                     <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
                       Languages
                     </Text>
-                    <Text style={[styles.cardValue, { color: colors.textPrimary }]}>
-                      {languagesText}
-                    </Text>
+                    {languageItems.length ? (
+                      <View style={styles.languageList}>
+                        {languageItems.map(item => (
+                          <View key={`${item.name}-${item.proficiency}`} style={styles.languageRow}>
+                            <Text style={[styles.languageName, { color: colors.textPrimary }]}>
+                              {item.name}
+                            </Text>
+                            <Text style={[styles.languageLevel, { color: colors.textPrimary }]}>
+                              {item.proficiency}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    ) : (
+                      <Text style={[styles.cardValue, { color: colors.textPrimary }]}>
+                        Not set
+                      </Text>
+                    )}
                   </View>
                 </ImageBackground>
 
@@ -272,7 +340,7 @@ export default function FriendProfileScreen() {
                           Travel Mode
                         </Text>
                         <Text style={[styles.preferenceValue, { color: colors.textPrimary }]}>
-                          {profile.travel_mode ?? '—'}
+                          {travelMode}
                         </Text>
                       </View>
                       <View style={[styles.preferenceColumn, { backgroundColor: `${colors.card}D8` }]}>
@@ -280,48 +348,25 @@ export default function FriendProfileScreen() {
                           Travel Style
                         </Text>
                         <Text style={[styles.preferenceValue, { color: colors.textPrimary }]}>
-                          {profile.travel_style ?? '—'}
+                          {travelStyle}
                         </Text>
                       </View>
                     </View>
                   </View>
                 </ImageBackground>
 
-                <ImageBackground
-                  source={require('../../assets/scrapbook/profile-header.png')}
-                  style={styles.infoGroupBackground}
-                  imageStyle={styles.infoGroupBackgroundImage}
-                >
-                  <View
-                    style={[
-                      styles.infoGroupWash,
-                      {
-                        backgroundColor: `${colors.paper}D9`,
-                        borderColor: `${colors.card}66`,
-                      },
-                    ]}
-                  >
-                    <ProfileDetailRow
-                      label="Next Destination"
-                      value={nextDestinationCountry?.name ?? 'Not set'}
-                      colors={colors}
-                      trailing={
-                        nextDestinationCountry ? (
-                          <CountryFlag isoCode={nextDestinationCountry.iso2} size={16} />
-                        ) : undefined
-                      }
-                    />
-                  </View>
-                </ImageBackground>
-
                 <CollapsibleCountrySection
                   title="Countries Traveled"
                   countries={traveledIsoCodes}
+                  mutualCountries={!isOwnProfile ? mutualTraveledIsoCodes : []}
+                  onOpenCountry={openCountry}
                 />
 
                 <CollapsibleCountrySection
                   title="Bucket List"
                   countries={bucketIsoCodes}
+                  mutualCountries={!isOwnProfile ? mutualBucketIsoCodes : []}
+                  onOpenCountry={openCountry}
                 />
               </View>
             </ImageBackground>
@@ -484,6 +529,25 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 18, fontWeight: '800' },
   cardValue: { fontSize: 16, marginTop: 2 },
+  languageList: {
+    gap: 14,
+    marginTop: 14,
+  },
+  languageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  languageName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  languageLevel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
   preferenceRow: {
     flexDirection: 'row',
     gap: 18,
@@ -539,57 +603,5 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     marginBottom: 10,
-  },
-});
-
-function ProfileDetailRow({
-  label,
-  value,
-  colors,
-  trailing,
-}: {
-  label: string;
-  value: string;
-  colors: ReturnType<typeof useTheme>;
-  trailing?: ReactNode;
-}) {
-  return (
-    <View style={stylesDetail.detailRow}>
-      <Text style={[stylesDetail.detailLabel, { color: colors.textSecondary }]}>
-        {label}
-      </Text>
-      <View style={stylesDetail.detailValueWrap}>
-        {trailing}
-        <Text style={[stylesDetail.detailValue, { color: colors.textPrimary }]}>
-          {value}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-const stylesDetail = StyleSheet.create({
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 16,
-    paddingTop: 4,
-  },
-  detailLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    flex: 1,
-  },
-  detailValueWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    maxWidth: '58%',
-  },
-  detailValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'right',
   },
 });

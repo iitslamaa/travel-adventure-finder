@@ -12,6 +12,7 @@ import CountryFlag from 'react-native-country-flag';
 import { Ionicons } from '@expo/vector-icons';
 import ScrapbookCard from '../theme/ScrapbookCard';
 import { useTheme } from '../../hooks/useTheme';
+import ProfileBadgeShowcase from './ProfileBadgeShowcase';
 
 type Props = {
   name: string;
@@ -23,11 +24,13 @@ type Props = {
   nextDestination?: string | null;
   nextDestinationLabel?: string | null;
   favoriteCountries?: string[];
+  visitedCountryCodes?: string[];
   friendCount?: number | null;
   ctaLabel?: string | null;
   ctaIcon?: keyof typeof Ionicons.glyphMap;
   ctaFilled?: boolean;
   onPressCta?: (() => void) | null;
+  onOpenCountry?: (code: string) => void;
 };
 
 export default function HeaderCard({
@@ -35,16 +38,12 @@ export default function HeaderCard({
   handle,
   avatarUrl,
   flags = [],
-  currentCountry,
-  currentCountryLabel,
-  nextDestination,
-  nextDestinationLabel,
-  favoriteCountries = [],
-  friendCount,
+  visitedCountryCodes = [],
   ctaLabel,
   ctaIcon = 'person-add-outline',
   ctaFilled = false,
   onPressCta,
+  onOpenCountry,
 }: Props) {
   const colors = useTheme();
 
@@ -57,10 +56,9 @@ export default function HeaderCard({
       duration: 400,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [fadeAnim]);
 
   const visibleFlags = flags.slice(0, 3);
-  const visibleFavorites = favoriteCountries.slice(0, 4);
   const showIdentityCta = !!ctaLabel && !!onPressCta;
 
   return (
@@ -83,11 +81,13 @@ export default function HeaderCard({
                       cachePolicy="memory-disk"
                     />
                   ) : (
-                    <Ionicons
-                      name="person-circle"
-                      size={104}
-                      color={colors.textMuted}
-                    />
+                    <View style={[styles.avatarFallback, { backgroundColor: colors.paperAlt, borderColor: `${colors.card}CC` }]}>
+                      <Ionicons
+                        name="person-circle"
+                        size={96}
+                        color={colors.textPrimary}
+                      />
+                    </View>
                   )}
                 </View>
 
@@ -100,7 +100,7 @@ export default function HeaderCard({
                   {name}
                 </Text>
 
-                {!!handle && (
+                {!!handle && !showIdentityCta && (
                   <Text
                     style={[
                       styles.handle,
@@ -132,30 +132,29 @@ export default function HeaderCard({
                         styles.ctaButtonText,
                         { color: ctaFilled ? colors.primaryText : colors.textPrimary },
                       ]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
                     >
                       {ctaLabel}
                     </Text>
                   </Pressable>
                 ) : null}
 
-                {typeof friendCount === 'number' && friendCount >= 0 && !showIdentityCta ? (
-                  <View style={[styles.friendPill, { backgroundColor: colors.paperAlt, borderColor: colors.border }]}>
-                    <Ionicons name="people-outline" size={14} color={colors.textPrimary} />
-                    <Text style={[styles.friendPillText, { color: colors.textPrimary }]}>
-                      {friendCount} {friendCount === 1 ? 'friend' : 'friends'}
-                    </Text>
-                  </View>
-                ) : null}
-
                 {visibleFlags.length > 0 && (
                   <View style={styles.flagsRow}>
                     {visibleFlags.map(iso => (
-                      <CountryFlag
+                      <Pressable
                         key={iso}
-                        isoCode={iso}
-                        size={20}
-                        style={{ marginRight: 8 }}
-                      />
+                        onPress={() => onOpenCountry?.(iso)}
+                        style={styles.headerFlagButton}
+                      >
+                        <CountryFlag
+                          isoCode={iso}
+                          size={20}
+                        />
+                      </Pressable>
                     ))}
                     {flags.length > visibleFlags.length ? (
                       <Text style={[styles.moreCount, { color: colors.textPrimary }]}>+{flags.length - visibleFlags.length}</Text>
@@ -164,57 +163,8 @@ export default function HeaderCard({
                 )}
               </View>
 
-              <View style={styles.detailsColumn}>
-                <View style={styles.detailBlock}>
-                  <Text style={[styles.detailLabel, { color: colors.textPrimary }]}>Current Country</Text>
-                  {currentCountry ? (
-                    <View style={styles.flagLine}>
-                      <CountryFlag isoCode={currentCountry} size={18} style={styles.inlineFlag} />
-                      <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
-                        {currentCountryLabel ?? currentCountry}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text style={[styles.detailFallback, { color: colors.textSecondary }]}>Not set</Text>
-                  )}
-                </View>
-
-                <View style={styles.detailBlock}>
-                  <Text style={[styles.detailLabel, { color: colors.textPrimary }]}>Next Destination</Text>
-                  {nextDestination ? (
-                    <View style={styles.flagLine}>
-                      <CountryFlag isoCode={nextDestination} size={18} style={styles.inlineFlag} />
-                      <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
-                        {nextDestinationLabel ?? nextDestination}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text style={[styles.detailFallback, { color: colors.textSecondary }]}>Not set</Text>
-                  )}
-                </View>
-
-                <View style={styles.detailBlock}>
-                  <Text style={[styles.detailLabel, { color: colors.textPrimary }]}>Favorite Trips</Text>
-                  {visibleFavorites.length ? (
-                    <View style={styles.favoriteFlagsRow}>
-                      {visibleFavorites.map(iso => (
-                        <CountryFlag
-                          key={iso}
-                          isoCode={iso}
-                          size={18}
-                          style={styles.inlineFlag}
-                        />
-                      ))}
-                      {favoriteCountries.length > visibleFavorites.length ? (
-                        <Text style={[styles.moreCount, { color: colors.textPrimary }]}>
-                          +{favoriteCountries.length - visibleFavorites.length}
-                        </Text>
-                      ) : null}
-                    </View>
-                  ) : (
-                    <Text style={[styles.detailFallback, { color: colors.textSecondary }]}>Not set</Text>
-                  )}
-                </View>
+              <View style={styles.badgesColumn}>
+                <ProfileBadgeShowcase visitedCountryCodes={visitedCountryCodes} />
               </View>
             </View>
           </View>
@@ -247,45 +197,18 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     minHeight: 198,
   },
   identityColumn: {
-    width: 128,
+    width: 116,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 22,
+    marginRight: 10,
   },
-  detailsColumn: {
+  badgesColumn: {
     flex: 1,
     justifyContent: 'center',
-    gap: 20,
-  },
-  detailBlock: {
-    gap: 5,
-  },
-  detailLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  detailValue: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  detailFallback: {
-    fontSize: 14,
-  },
-  flagLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  favoriteFlagsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  inlineFlag: {
-    marginRight: 8,
   },
   avatarContainer: {
     marginBottom: 10,
@@ -294,6 +217,19 @@ const styles = StyleSheet.create({
     width: 104,
     height: 104,
     borderRadius: 52,
+  },
+  avatarFallback: {
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
   },
   name: {
     fontSize: 24,
@@ -311,30 +247,20 @@ const styles = StyleSheet.create({
     minHeight: 38,
     borderRadius: 999,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    alignSelf: 'stretch',
+    maxWidth: 116,
   },
   ctaButtonText: {
     fontSize: 13,
     fontWeight: '700',
-  },
-  friendPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    marginTop: 10,
-  },
-  friendPillText: {
-    marginLeft: 6,
-    fontSize: 13,
-    fontWeight: '700',
+    flexShrink: 1,
+    textAlign: 'center',
   },
   flagsRow: {
     marginTop: 10,
@@ -342,6 +268,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexWrap: 'wrap',
+  },
+  headerFlagButton: {
+    marginRight: 8,
+    paddingVertical: 2,
   },
   moreCount: {
     fontSize: 12,

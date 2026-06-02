@@ -4,59 +4,69 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  UIManager,
-  Platform,
   FlatList,
-  ImageBackground,
 } from 'react-native';
 import CountryFlag from 'react-native-country-flag';
 import { Ionicons } from '@expo/vector-icons';
 
 import { WorldMap } from '../../src/features/map/components/WorldMap';
 import { useTheme } from '../../hooks/useTheme';
-import ScrapbookCard from '../theme/ScrapbookCard';
-
-if (Platform.OS === 'android') {
-  UIManager.setLayoutAnimationEnabledExperimental?.(true);
-}
+import { countryName } from '../../utils/countries';
 
 type Props = {
   title: string;
   countries: string[];
+  mutualCountries?: string[];
+  onOpenCountry?: (code: string) => void;
 };
 
 export default function CollapsibleCountrySection({
   title,
   countries = [],
+  mutualCountries = [],
+  onOpenCountry,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [selectedIso, setSelectedIso] = useState<string | null>(null);
   const colors = useTheme();
 
-  const sortedCountries = useMemo(
+  const mutualSet = useMemo(
     () =>
-      Array.isArray(countries)
-        ? [...countries].filter(Boolean).sort()
-        : [],
-    [countries]
+      new Set(
+        mutualCountries
+          .map(code => code.trim().toUpperCase())
+          .filter(Boolean)
+      ),
+    [mutualCountries]
   );
+
+  const sortedCountries = useMemo(() => {
+    const normalizedCountries = Array.isArray(countries)
+      ? countries.map(code => code.trim().toUpperCase()).filter(Boolean)
+      : [];
+
+    const mutualFirst = normalizedCountries.filter(code => mutualSet.has(code)).sort();
+    const remaining = normalizedCountries.filter(code => !mutualSet.has(code)).sort();
+    return [...mutualFirst, ...remaining];
+  }, [countries, mutualSet]);
 
   const toggle = () => {
     setExpanded((prev) => !prev);
   };
 
-  const selectedCountryName = selectedIso
-    ? new Intl.DisplayNames(['en'], { type: 'region' }).of(selectedIso) ?? selectedIso
-    : null;
+  const selectedCountryName = selectedIso ? countryName(selectedIso) : null;
 
   return (
-    <ScrapbookCard innerStyle={styles.container}>
-      <ImageBackground
-        source={require('../../assets/scrapbook/profile-header.png')}
-        style={styles.background}
-        imageStyle={styles.backgroundImage}
-      >
-        <View style={[styles.backgroundWash, { backgroundColor: `${colors.paper}D4` }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.cardBorderStrong,
+          shadowColor: colors.shadow,
+        },
+      ]}
+    >
           <Pressable
             onPress={toggle}
             style={[
@@ -95,19 +105,30 @@ export default function CollapsibleCountrySection({
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.flagsList}
                     renderItem={({ item }) => {
+                      const isMutual = mutualSet.has(item);
                       const isSelected = selectedIso === item;
 
                       return (
                         <Pressable
-                          onPress={() => setSelectedIso(item)}
+                          onPress={() => {
+                            setSelectedIso(item);
+                            onOpenCountry?.(item);
+                          }}
                           style={[
                             styles.flagWrapper,
                             {
-                              backgroundColor: colors.paperAlt,
-                              borderColor: isSelected ? colors.accentBlue : colors.border,
+                              backgroundColor: isMutual
+                                ? colors.yellowBg
+                                : isSelected
+                                  ? `${colors.accentBlue}22`
+                                  : colors.paperAlt,
+                              borderColor: isMutual
+                                  ? colors.yellowBorder
+                                  : isSelected
+                                    ? colors.accentBlue
+                                  : colors.border,
                             },
                             isSelected && {
-                              backgroundColor: `${colors.accentBlue}22`,
                               shadowColor: colors.accentBlue,
                               shadowOpacity: 0.15,
                               shadowRadius: 6,
@@ -148,28 +169,22 @@ export default function CollapsibleCountrySection({
               )}
             </View>
           )}
-        </View>
-      </ImageBackground>
-    </ScrapbookCard>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     marginTop: 18,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-    overflow: 'hidden',
-  },
-  background: {
-    width: '100%',
-  },
-  backgroundImage: {
-    resizeMode: 'cover',
-  },
-  backgroundWash: {
     paddingVertical: 16,
     paddingHorizontal: 16,
+    overflow: 'hidden',
+    borderRadius: 20,
+    borderWidth: 1,
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
   },
   header: {
     flexDirection: 'row',

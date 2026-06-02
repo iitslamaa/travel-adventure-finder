@@ -8,15 +8,18 @@ import { useTheme } from '../../hooks/useTheme';
 type TabIconName =
   | 'compass-outline'
   | 'list-outline'
+  | 'newspaper-outline'
   | 'people-outline'
-  | 'person-outline'
   | 'ellipsis-horizontal';
 
 function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const colors = useTheme();
   const visibleRoutes = state.routes.filter(
-    (route) => route.name !== 'when-to-go' && route.name !== 'countries'
+    (route) =>
+      route.name !== 'when-to-go' &&
+      route.name !== 'countries' &&
+      route.name !== 'profile'
   );
 
   return (
@@ -55,11 +58,11 @@ function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             const routeIndex = state.routes.findIndex((candidate) => candidate.key === route.key);
             const isFocused = state.index === routeIndex;
             const iconName = (options.tabBarIcon
-              ? ({
+                ? ({
                   discovery: 'compass-outline',
                   planning: 'list-outline',
+                  media: 'newspaper-outline',
                   friends: 'people-outline',
-                  profile: 'person-outline',
                   more: 'ellipsis-horizontal',
                 }[route.name] as TabIconName | undefined)
               : undefined) ?? 'ellipse-outline';
@@ -170,6 +173,16 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="media"
+        options={{
+          title: 'Media',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="newspaper-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="when-to-go"
         options={{
           href: null,
@@ -186,7 +199,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="friends"
         options={{
-          title: 'Friends',
+          title: 'Social',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people-outline" size={size} color={color} />
           ),
@@ -196,10 +209,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
 
@@ -233,8 +243,8 @@ const styles = StyleSheet.create({
   tabBarOverlay: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
+    gap: 4,
+    paddingHorizontal: 8,
     paddingVertical: 10,
     borderWidth: 1,
     borderRadius: 30,

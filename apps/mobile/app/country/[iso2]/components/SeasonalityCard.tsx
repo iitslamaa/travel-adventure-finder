@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
-import ScorePill from '../../../../components/ScorePill';
-import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
 import { useTheme } from '../../../../hooks/useTheme';
+import MetricPill from './MetricPill';
 
 type Props = {
   score: number;
@@ -10,6 +9,7 @@ type Props = {
   normalizedLabel?: string;
   weightOnlyLabel?: string;
   weightLabel?: string;
+  title?: string;
 };
 
 const MONTHS = [
@@ -30,6 +30,7 @@ export default function SeasonalityCard({
   normalizedLabel,
   weightOnlyLabel,
   weightLabel = 'Today · 5%',
+  title = 'Seasonality',
 }: Props) {
   // SAFE: bestMonths may not be an array at runtime
   const safeMonths = Array.isArray(bestMonths) ? bestMonths : [];
@@ -38,31 +39,32 @@ export default function SeasonalityCard({
   const theme = useTheme();
 
   return (
-    <ScrapbookCard innerStyle={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.cardBorderStrong,
+          shadowColor: theme.shadow,
+        },
+      ]}
+    >
       <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Timing and weather</Text>
       <View style={styles.headerRow}>
-        <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Seasonality</Text>
+        <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>{title}</Text>
         <Text style={[styles.weightText, { color: theme.textSecondary }]}>{weightLabel}</Text>
       </View>
 
       <View style={styles.metricRow}>
-        <ScorePill score={Math.round(score)} size="lg" />
+        <MetricPill score={score} />
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>
-            {score >= 80 ? 'Peak time to go ✅' : 'Shoulder season'}
+            {score >= 80 ? 'Peak time to go' : 'Shoulder season'}
           </Text>
-          <Text style={[styles.metricSubhead, { color: theme.textMuted }]}>
-            Seasonal travel snapshot
-          </Text>
-          <View style={[styles.helperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Text style={[styles.helperLabel, { color: theme.textSecondary }]}>
-              Monthly conditions
-            </Text>
-            {!!description && (
-              <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{description}</Text>
-            )}
-          </View>
+          {!!description && (
+            <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{description}</Text>
+          )}
 
           {labels.length > 0 && (
             <>
@@ -77,10 +79,6 @@ export default function SeasonalityCard({
             </>
           )}
 
-          <Text style={[styles.disclaimer, { color: theme.textMuted }]}>
-            Seasonality insights are based on historical climate averages and typical travel patterns. Timing may vary year to year.
-          </Text>
-
           {(!!normalizedLabel || !!weightOnlyLabel) && (
             <View style={styles.footerRow}>
               {!!normalizedLabel && (
@@ -91,9 +89,13 @@ export default function SeasonalityCard({
               )}
             </View>
           )}
+
+          <Text style={[styles.disclaimer, { color: theme.textMuted }]}>
+            Seasonality insights are based on historical climate averages and typical travel patterns. Timing may vary year to year.
+          </Text>
         </View>
       </View>
-    </ScrapbookCard>
+    </View>
   );
 }
 
@@ -101,6 +103,12 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     marginBottom: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   eyebrow: {
     fontSize: 11,
@@ -136,27 +144,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 2,
   },
-  metricSubhead: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  helperCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    marginTop: 2,
-  },
-  helperLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
 
   metricDescription: {
     fontSize: 14,
     lineHeight: 19,
+    marginTop: 4,
   },
 
   bestLabel: {
@@ -186,8 +178,8 @@ const styles = StyleSheet.create({
 
   disclaimer: {
     marginTop: 12,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 17,
   },
 
   footerRow: {
