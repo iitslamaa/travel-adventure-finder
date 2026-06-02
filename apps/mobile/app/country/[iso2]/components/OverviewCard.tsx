@@ -1,30 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../../../hooks/useTheme';
 import { WorldMap } from '../../../../src/features/map/components/WorldMap';
+import { countryOverviewDescription } from '../../../../utils/countryOverviewDescriptions';
 
 type Props = {
   country: any;
   iso2: string;
 };
-
-function overviewText(country: any) {
-  const explicit =
-    country?.overview ??
-    country?.description ??
-    country?.facts?.overview ??
-    country?.facts?.summary ??
-    country?.facts?.description;
-
-  if (typeof explicit === 'string' && explicit.trim()) {
-    return explicit.trim();
-  }
-
-  const name = country?.name ?? 'This destination';
-  const region = [country?.subregion, country?.region].filter(Boolean).join(', ');
-  return region
-    ? `${name} is in ${region}. Use this snapshot to compare safety, timing, visa context, affordability, language fit, and friend signals before you plan.`
-    : `${name} combines safety, timing, visa context, affordability, language fit, and friend signals in one planning snapshot.`;
-}
 
 export default function OverviewCard({ country, iso2 }: Props) {
   const colors = useTheme();
@@ -42,7 +24,7 @@ export default function OverviewCard({ country, iso2 }: Props) {
       ]}
     >
       <Text style={[styles.body, { color: colors.textPrimary }]}>
-        {overviewText(country)}
+        {countryOverviewDescription({ ...country, iso2: normalizedIso })}
       </Text>
       <View style={[styles.map, { borderColor: colors.border }]}>
         <WorldMap
