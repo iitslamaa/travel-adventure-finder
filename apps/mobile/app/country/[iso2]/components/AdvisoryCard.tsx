@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { useMemo, useState } from 'react';
-import ScorePill from '../../../../components/ScorePill';
 import { useTheme } from '../../../../hooks/useTheme';
+import MetricPill from './MetricPill';
 
 type Props = {
   score: number;
@@ -55,23 +55,13 @@ export default function AdvisoryCard({
       </View>
 
       <View style={styles.metricRow}>
-        <ScorePill score={Math.round(score)} size="lg" />
+        <MetricPill score={score} />
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>Level {level}</Text>
-          <Text style={[styles.metricSubhead, { color: theme.textMuted }]}>
-            Safety advisory snapshot
-          </Text>
-
-          <View style={[styles.helperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Text style={[styles.helperLabel, { color: theme.textSecondary }]}>
-              Advisory snapshot
-            </Text>
-
-            {!!summary && (
-              <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{body}</Text>
-            )}
-          </View>
+          {!!summary && (
+            <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{body}</Text>
+          )}
 
           {canExpand && (
             <Pressable
@@ -157,23 +147,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     marginBottom: 2,
-  },
-  metricSubhead: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  helperCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    marginTop: 2,
-  },
-  helperLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
   },
 
   metricDescription: {

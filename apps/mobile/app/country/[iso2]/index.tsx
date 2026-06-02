@@ -32,6 +32,14 @@ function flagEmojiFromIso2(iso2: string) {
   );
 }
 
+function advisoryLevelForScore(score?: number) {
+  if (typeof score !== 'number') return undefined;
+  if (score >= 88) return 1;
+  if (score >= 63) return 2;
+  if (score >= 38) return 3;
+  return 4;
+}
+
 export default function CountryDetailScreen() {
   const { iso2, name } = useLocalSearchParams<{ iso2: string; name?: string }>();
   const navigation = useNavigation();
@@ -130,10 +138,15 @@ export default function CountryDetailScreen() {
   const advisoryScore =
     country.facts?.advisoryScore ??
     country.facts?.advisoryNormalized ??
-    country.facts?.advisoryWeighted ??
-    0;
+    country.facts?.advisoryWeighted;
+  const seasonalityScore = seasonalityScoreForMonth(country, selectedMonth);
+  const visaScore = country.facts?.visaEase;
+  const affordabilityScore = country.facts?.affordability;
   const flagEmoji =
     (country as any).flagEmoji ?? flagEmojiFromIso2(normalizedIso2);
+  const selectedMonthDate = new Date(2026, selectedMonth - 1, 1);
+  const selectedMonthName = selectedMonthDate.toLocaleString('en-US', { month: 'long' });
+  const selectedMonthShortName = selectedMonthDate.toLocaleString('en-US', { month: 'short' });
 
   return (
     <ImageBackground
@@ -208,56 +221,64 @@ export default function CountryDetailScreen() {
 
         {session ? (
           <FriendEngagementCard
+            countryName={country.name}
             totalFriends={engagement.totalFriends}
             visited={engagement.visited}
             bucketList={engagement.bucketList}
             fromHere={engagement.fromHere}
             loading={engagementLoading}
-            onSelectProfile={userId => router.push(`/profile/${userId}`)}
           />
         ) : null}
 
-        <AdvisoryCard
-          score={advisoryScore}
-          level={advisoryLevel}
-          summary={country.facts?.advisorySummary}
-          url={country.facts?.advisoryUrl}
-          updatedAtLabel={
-            (country as any).advisory?.updatedAt
-              ? `Last updated: ${(country as any).advisory.updatedAt}`
-              : undefined
-          }
-          normalizedLabel={`Normalized: ${advisoryScore}`}
-          weightOnlyLabel={'Weight: 10%'}
-        />
+        {typeof advisoryScore === 'number' ? (
+          <AdvisoryCard
+            score={advisoryScore}
+            level={advisoryLevelForScore(advisoryScore) ?? advisoryLevel}
+            summary={country.facts?.advisorySummary}
+            url={country.facts?.advisoryUrl}
+            updatedAtLabel={
+              (country as any).advisory?.updatedAt
+                ? `Last updated: ${(country as any).advisory.updatedAt}`
+                : undefined
+            }
+            normalizedLabel={`Normalized: ${advisoryScore}`}
+            weightOnlyLabel={'Weight: 10%'}
+          />
+        ) : null}
 
         <SeasonalityCard
-          score={seasonalityScoreForMonth(country, selectedMonth)}
+          score={seasonalityScore}
           bestMonths={country.facts?.fmSeasonalityBestMonths ?? []}
           description={country.facts?.fmSeasonalityNotes}
-          normalizedLabel={`Normalized: ${seasonalityScoreForMonth(country, selectedMonth)}`}
+          normalizedLabel={`Normalized: ${seasonalityScore}`}
           weightOnlyLabel={'Weight: 5%'}
-          weightLabel={`${new Date(2026, selectedMonth - 1, 1).toLocaleString('en-US', { month: 'short' })} · 5%`}
+          weightLabel={`${selectedMonthShortName} · 5%`}
+          title={`${selectedMonthName} Seasonality`}
         />
 
-        <VisaCard
-          score={country.facts?.visaEase ?? 0}
-          visaType={country.facts?.visaType}
-          allowedDays={country.facts?.visaAllowedDays}
-          notes={country.facts?.visaNotes}
-          sourceUrl={country.facts?.visaSource}
-          normalizedLabel={`Normalized: ${country.facts?.visaEase ?? 0}`}
-          weightOnlyLabel={'Weight: 5%'}
-        />
+        {typeof visaScore === 'number' || country.facts?.visaType ? (
+          <VisaCard
+            score={typeof visaScore === 'number' ? visaScore : 0}
+            visaType={country.facts?.visaType}
+            allowedDays={country.facts?.visaAllowedDays}
+            notes={country.facts?.visaNotes}
+            sourceUrl={country.facts?.visaSource}
+            normalizedLabel={
+              typeof visaScore === 'number' ? `Normalized: ${visaScore}` : undefined
+            }
+            weightOnlyLabel={'Weight: 5%'}
+          />
+        ) : null}
 
-        <AffordabilityCard
-          score={country.facts?.affordability ?? 0}
-          category={country.facts?.affordabilityCategory}
-          averageDailyCost={country.facts?.averageDailyCostUsd}
-          explanation={country.facts?.affordabilityExplanation}
-          normalizedLabel={`Normalized: ${country.facts?.affordability ?? 0}`}
-          weightOnlyLabel={'Weight: 15%'}
-        />
+        {typeof affordabilityScore === 'number' ? (
+          <AffordabilityCard
+            score={affordabilityScore}
+            band={country.facts?.affordabilityBand}
+            averageDailyCost={country.facts?.averageDailyCostUsd}
+            normalizedLabel={`Normalized: ${affordabilityScore}`}
+            weightOnlyLabel={'Weight: 15%'}
+          />
+        ) : null}
 
         {typeof country.facts?.languageCompatibilityScore === 'number' ? (
           <LanguageCompatibilityCard

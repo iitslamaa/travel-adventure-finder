@@ -55,12 +55,14 @@ type WorldMapProps = {
   countries?: string[];
   selectedIso?: string | null;
   onSelect?: (iso: string) => void;
+  interactive?: boolean;
 };
 
 export function WorldMap({
   countries = [],
   selectedIso,
   onSelect,
+  interactive = true,
 }: WorldMapProps) {
   const { fullFeatures, simplifiedFeatures } = useGeoJson();
 
@@ -126,12 +128,6 @@ export function WorldMap({
       const datasetIso = normalizeIso(rawIso);
 
       if (!datasetIso) {
-        if (__DEV__) {
-          console.warn(
-            'Missing ISO_A2 on feature:',
-            feature?.properties?.NAME
-          );
-        }
         return [];
       }
 
@@ -357,6 +353,10 @@ export function WorldMap({
           latitudeDelta: 60,
           longitudeDelta: 60,
         }}
+        pitchEnabled={interactive}
+        rotateEnabled={interactive}
+        scrollEnabled={interactive}
+        zoomEnabled={interactive}
       >
         {(normalizedSelected ? selectedPolygons : worldPolygons).map((item: PolygonRing) => {
           const iso = item.datasetIso;
@@ -373,7 +373,9 @@ export function WorldMap({
                 highlightedIsos: countries.map((c) => normalizeIso(c)).filter((c): c is string => !!c),
               })}
               onPress={(pressedIso) => {
-                onSelect?.(pressedIso);
+                if (interactive) {
+                  onSelect?.(pressedIso);
+                }
               }}
             />
           );

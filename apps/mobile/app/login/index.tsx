@@ -1,4 +1,3 @@
-import { Video, ResizeMode } from 'expo-av';
 import * as Linking from 'expo-linking';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -9,6 +8,7 @@ import {
   Animated,
   Image,
   KeyboardAvoidingView,
+  LogBox,
   Platform,
   Pressable,
   StyleSheet,
@@ -22,6 +22,12 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 WebBrowser.maybeCompleteAuthSession();
+LogBox.ignoreLogs(['[expo-av]: Expo AV has been deprecated']);
+
+// Load after LogBox is configured so Expo AV's dev warning stays hidden.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { Video, ResizeMode } = require('expo-av') as typeof import('expo-av');
+type ExpoVideo = import('expo-av').Video;
 
 const GUEST_PILL_TEXT = '#45392E';
 const BORDER = 'rgba(73, 58, 43, 0.12)';
@@ -60,7 +66,7 @@ export default function LandingScreen() {
   const emailTranslateX = useRef(new Animated.Value(36)).current;
   const verifyOpacity = useRef(new Animated.Value(0)).current;
   const verifyTranslateX = useRef(new Animated.Value(36)).current;
-  const videoRef = useRef<Video>(null);
+  const videoRef = useRef<ExpoVideo>(null);
   const revealTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const loginInProgressRef = useRef(false);

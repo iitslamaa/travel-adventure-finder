@@ -30,6 +30,7 @@ export default function OverviewCard({ country, iso2 }: Props) {
         <WorldMap
           countries={[normalizedIso]}
           selectedIso={normalizedIso}
+          interactive={false}
         />
       </View>
     </View>
@@ -50,7 +51,6 @@ const styles = StyleSheet.create({
   body: {
     fontSize: 15,
     lineHeight: 21,
-    fontWeight: '600',
     marginBottom: 16,
   },
   map: {

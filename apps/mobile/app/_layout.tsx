@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { LogBox, View, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
-import { Video, ResizeMode } from 'expo-av';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ScorePreferencesProvider } from '../context/ScorePreferencesContext';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +9,11 @@ import { useTheme } from '../hooks/useTheme';
 import * as WebBrowser from 'expo-web-browser';
 
 WebBrowser.maybeCompleteAuthSession();
+LogBox.ignoreLogs(['[expo-av]: Expo AV has been deprecated']);
+
+// Load after LogBox is configured so Expo AV's dev warning stays hidden.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { Video, ResizeMode } = require('expo-av') as typeof import('expo-av');
 
 function RootLayoutInner() {
   const colors = useTheme();
