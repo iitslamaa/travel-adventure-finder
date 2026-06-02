@@ -2,7 +2,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../../hooks/useTheme';
-import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
 
 type EngagementProfile = {
   id: string;
@@ -96,7 +95,16 @@ export default function FriendEngagementCard({
   ].filter(Boolean);
 
   return (
-    <ScrapbookCard innerStyle={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.cardBorderStrong,
+          shadowColor: colors.shadow,
+        },
+      ]}
+    >
       <Text style={[styles.eyebrow, { color: colors.textMuted }]}>Social signals</Text>
       <Text style={[styles.title, { color: colors.textPrimary }]}>Friends</Text>
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -143,7 +151,7 @@ export default function FriendEngagementCard({
           </View>
         </View>
       ) : null}
-    </ScrapbookCard>
+    </View>
   );
 }
 
@@ -151,6 +159,12 @@ const styles = StyleSheet.create({
   card: {
     padding: 18,
     marginBottom: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   eyebrow: {
     fontSize: 11,

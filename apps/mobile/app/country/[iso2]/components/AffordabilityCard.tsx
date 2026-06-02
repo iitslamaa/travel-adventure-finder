@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
 import ScorePill from '../../../../components/ScorePill';
-import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
 import { useTheme } from '../../../../hooks/useTheme';
 
 type Props = {
@@ -23,7 +22,16 @@ export default function AffordabilityCard({
   const theme = useTheme();
 
   return (
-    <ScrapbookCard innerStyle={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.cardBorderStrong,
+          shadowColor: theme.shadow,
+        },
+      ]}
+    >
       <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Budget and daily spend</Text>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>
@@ -77,7 +85,7 @@ export default function AffordabilityCard({
           )}
         </View>
       </View>
-    </ScrapbookCard>
+    </View>
   );
 }
 
@@ -85,6 +93,12 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     marginBottom: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   eyebrow: {
     fontSize: 11,

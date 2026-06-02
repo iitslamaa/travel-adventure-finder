@@ -1,6 +1,5 @@
 import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import ScorePill from '../../../../components/ScorePill';
-import ScrapbookCard from '../../../../components/theme/ScrapbookCard';
 import { useTheme } from '../../../../hooks/useTheme';
 
 type Props = {
@@ -43,7 +42,16 @@ export default function VisaCard({
   const theme = useTheme();
 
   return (
-    <ScrapbookCard innerStyle={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.cardBorderStrong,
+          shadowColor: theme.shadow,
+        },
+      ]}
+    >
       <Text style={[styles.eyebrow, { color: theme.textMuted }]}>Passport context</Text>
       <View style={styles.headerRow}>
         <Text style={[styles.cardTitle, { color: theme.textPrimary }]}>Visa</Text>
@@ -92,12 +100,21 @@ export default function VisaCard({
           )}
         </View>
       </View>
-    </ScrapbookCard>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 18, marginBottom: 18 },
+  card: {
+    padding: 18,
+    marginBottom: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
+  },
   eyebrow: {
     fontSize: 11,
     fontWeight: '800',
