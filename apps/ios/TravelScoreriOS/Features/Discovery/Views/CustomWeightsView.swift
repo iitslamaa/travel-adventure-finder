@@ -7,7 +7,6 @@
 
 import Foundation
 import SwiftUI
-import Supabase
 
 struct CustomWeightsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -422,29 +421,12 @@ struct CustomWeightsView: View {
         guard let userId else { return }
 
         do {
-            struct PreferencesRow: Encodable {
-                let user_id: UUID
-                let advisory: Double
-                let seasonality: Double
-                let visa: Double
-                let affordability: Double
-                let language: Double
-            }
-
-            let row = PreferencesRow(
-                user_id: userId,
-                advisory: draftWeights.advisory,
-                seasonality: draftWeights.seasonality,
-                visa: draftWeights.visa,
-                affordability: draftWeights.affordability,
-                language: draftWeights.language
+            try await weightsStore.savePreferencesToSupabase(
+                userId: userId,
+                supabase: SupabaseManager.shared
             )
-
-            try await SupabaseManager.shared.client
-                .from("user_score_preferences")
-                .upsert(row)
-                .execute()
         } catch {
+            SocialFeedDebug.log("score_preferences.remote.save.error user=\(userId.uuidString) error=\(SocialFeedDebug.describe(error))")
         }
     }
 
