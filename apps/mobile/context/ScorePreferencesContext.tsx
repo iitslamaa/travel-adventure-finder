@@ -82,11 +82,13 @@ export const WEIGHT_PRESETS: WeightPreset[] = [
 type ScorePreferencesContextValue = {
   weights: ScoreWeights;
   selectedMonth: number;
+  excludeVisitedCountries: boolean;
   loading: boolean;
   setSelectedMonth: (month: number) => void;
   savePreferences: (input: {
     weights: ScoreWeights;
     selectedMonth: number;
+    excludeVisitedCountries: boolean;
   }) => Promise<void>;
   resetToDefault: () => Promise<void>;
 };
@@ -122,6 +124,7 @@ export function ScorePreferencesProvider({
   const { session } = useAuth();
   const [weights, setWeights] = useState<ScoreWeights>(DEFAULT_SCORE_WEIGHTS);
   const [selectedMonth, setSelectedMonthState] = useState(new Date().getMonth() + 1);
+  const [excludeVisitedCountries, setExcludeVisitedCountries] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -136,6 +139,7 @@ export function ScorePreferencesProvider({
           const parsed = JSON.parse(localValue) as {
             weights?: Partial<ScoreWeights>;
             selectedMonth?: number;
+            excludeVisitedCountries?: boolean;
           };
 
           if (parsed.weights) {
@@ -155,12 +159,16 @@ export function ScorePreferencesProvider({
           if (typeof parsed.selectedMonth === 'number') {
             setSelectedMonthState(Math.min(Math.max(parsed.selectedMonth, 1), 12));
           }
+
+          if (typeof parsed.excludeVisitedCountries === 'boolean') {
+            setExcludeVisitedCountries(parsed.excludeVisitedCountries);
+          }
         }
 
         if (session?.user?.id) {
           const { data } = await supabase
             .from('user_score_preferences')
-            .select('advisory, seasonality, visa, affordability, language')
+            .select('advisory, seasonality, visa, affordability, language, selected_month, exclude_visited_countries')
             .eq('user_id', session.user.id)
             .maybeSingle();
 
@@ -175,6 +183,14 @@ export function ScorePreferencesProvider({
                 language: data.language ?? DEFAULT_SCORE_WEIGHTS.language,
               })
             );
+
+            if (typeof data.selected_month === 'number') {
+              setSelectedMonthState(Math.min(Math.max(data.selected_month, 1), 12));
+            }
+
+            if (typeof data.exclude_visited_countries === 'boolean') {
+              setExcludeVisitedCountries(data.exclude_visited_countries);
+            }
           }
         }
       } catch (error) {
@@ -194,12 +210,17 @@ export function ScorePreferencesProvider({
   }, [session?.user?.id]);
 
   const persistLocal = useCallback(
-    async (nextWeights: ScoreWeights, nextMonth: number) => {
+    async (
+      nextWeights: ScoreWeights,
+      nextMonth: number,
+      nextExcludeVisitedCountries: boolean
+    ) => {
       await AsyncStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
           weights: nextWeights,
           selectedMonth: nextMonth,
+          excludeVisitedCountries: nextExcludeVisitedCountries,
         })
       );
     },
@@ -210,16 +231,19 @@ export function ScorePreferencesProvider({
     async ({
       weights: draftWeights,
       selectedMonth: draftMonth,
+      excludeVisitedCountries: draftExcludeVisitedCountries,
     }: {
       weights: ScoreWeights;
       selectedMonth: number;
+      excludeVisitedCountries: boolean;
     }) => {
       const normalized = normalizeWeights(draftWeights);
       const clampedMonth = Math.min(Math.max(draftMonth, 1), 12);
 
       setWeights(normalized);
       setSelectedMonthState(clampedMonth);
-      await persistLocal(normalized, clampedMonth);
+      setExcludeVisitedCountries(draftExcludeVisitedCountries);
+      await persistLocal(normalized, clampedMonth, draftExcludeVisitedCountries);
 
       if (!session?.user?.id) {
         return;
@@ -232,6 +256,9 @@ export function ScorePreferencesProvider({
         visa: normalized.visa,
         affordability: normalized.affordability,
         language: normalized.language,
+        selected_month: clampedMonth,
+        exclude_visited_countries: draftExcludeVisitedCountries,
+        updated_at: new Date().toISOString(),
       });
 
       if (error) {
@@ -245,25 +272,35 @@ export function ScorePreferencesProvider({
     await savePreferences({
       weights: DEFAULT_SCORE_WEIGHTS,
       selectedMonth,
+      excludeVisitedCountries: false,
     });
   }, [savePreferences, selectedMonth]);
 
   const setSelectedMonth = useCallback((month: number) => {
     const clampedMonth = Math.min(Math.max(month, 1), 12);
     setSelectedMonthState(clampedMonth);
-    void persistLocal(weights, clampedMonth);
-  }, [persistLocal, weights]);
+    void persistLocal(weights, clampedMonth, excludeVisitedCountries);
+  }, [excludeVisitedCountries, persistLocal, weights]);
 
   const value = useMemo(
     () => ({
       weights,
       selectedMonth,
+      excludeVisitedCountries,
       loading,
       setSelectedMonth,
       savePreferences,
       resetToDefault,
     }),
-    [loading, resetToDefault, savePreferences, selectedMonth, setSelectedMonth, weights]
+    [
+      excludeVisitedCountries,
+      loading,
+      resetToDefault,
+      savePreferences,
+      selectedMonth,
+      setSelectedMonth,
+      weights,
+    ]
   );
 
   return (

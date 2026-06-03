@@ -256,10 +256,10 @@ export default function FriendsScreen() {
                 </View>
 
                 <Text style={[styles.emptyHeadline, { color: colors.textPrimary }]}>
-                  Create an account to build your travel circle
+                  Friends are waiting
                 </Text>
                 <Text style={[styles.emptyBody, { color: colors.textSecondary }]}>
-                  Add friends, review requests, and follow friend activity once you sign in.
+                  Create an account to add your friends!
                 </Text>
               </ScrapbookCard>
 
@@ -272,7 +272,7 @@ export default function FriendsScreen() {
               >
                 <Ionicons name="paper-plane" size={16} color={colors.textPrimary} />
                 <Text style={[styles.ctaText, { color: colors.textPrimary }]}>
-                  Create Account or Log In
+                  Create Account / Log In
                 </Text>
               </Pressable>
             </View>

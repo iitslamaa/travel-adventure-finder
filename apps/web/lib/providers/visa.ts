@@ -359,7 +359,7 @@ export async function buildVisaIndex(): Promise<Map<string, VisaRow>> {
       notes: matchedRow.notes || undefined,
       visaRequirementText: matchedRow.requirement || undefined,
       allowedStayText: matchedRow.allowed_stay || undefined,
-      sourceUrl: 'wikipedia',
+      sourceUrl: WP_URL,
       visaEase,
     });
   }

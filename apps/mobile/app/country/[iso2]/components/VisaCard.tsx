@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useTheme } from '../../../../hooks/useTheme';
+import { normalizeExternalUrl, openExternalUrl } from '../../../../utils/externalLinks';
 import MetricPill from './MetricPill';
 
 type Props = {
@@ -93,6 +94,7 @@ export default function VisaCard({
   const title = prettyVisaType(visaType);
   const headline = visaHeadline(visaType);
   const body = visaBody(visaType, notes);
+  const normalizedSourceUrl = normalizeExternalUrl(sourceUrl);
 
   const theme = useTheme();
 
@@ -130,8 +132,8 @@ export default function VisaCard({
             </Text>
           )}
 
-          {!!sourceUrl && (
-            <Pressable onPress={() => Linking.openURL(sourceUrl)} hitSlop={10} style={[styles.linkButton, { backgroundColor: theme.paperAlt, borderColor: theme.border }]}>
+          {!!normalizedSourceUrl && (
+            <Pressable onPress={() => openExternalUrl(normalizedSourceUrl)} hitSlop={10} style={[styles.linkButton, { backgroundColor: theme.paperAlt, borderColor: theme.border }]}>
               <Text style={[styles.link, { color: theme.textPrimary }]}>View visa source</Text>
             </Pressable>
           )}

@@ -104,27 +104,27 @@ export default function DiscoveryScreen() {
           contentContainerStyle={styles.content}
         >
           <View style={styles.headerWrap}>
-            <TitleBanner title="Discover" />
+            <TitleBanner title="Explore" />
           </View>
 
           <View style={styles.stack}>
             <DiscoveryCard
               title="Countries"
-              subtitle="Browse and rank every destination."
-              icon="globe-outline"
+              subtitle="Browse every destination"
+              icon="earth"
               onPress={() => router.push('/countries' as any)}
             />
 
             <DiscoveryCard
-              title="When to Go"
-              subtitle="Explore peak and shoulder seasons by month."
+              title="When To Go"
+              subtitle="Find peak seasons"
               icon="calendar-outline"
               onPress={() => router.push('/(tabs)/when-to-go')}
             />
 
             <DiscoveryCard
-              title="Score Map"
-              subtitle="Compare destinations on the world map."
+              title="Explore the World"
+              subtitle="Open the interactive world map"
               icon="map-outline"
               onPress={() => router.push('/score-map')}
             />

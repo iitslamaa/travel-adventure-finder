@@ -20,12 +20,16 @@ import ScrapbookBackground from '../theme/ScrapbookBackground';
 import ScrapbookCard from '../theme/ScrapbookCard';
 import TitleBanner from '../theme/TitleBanner';
 
-export default function CountryDirectoryScreen() {
-  const { countries, loading } = useCountries();
+type Props = {
+  showsBackButton?: boolean;
+};
+
+export default function CountryDirectoryScreen({ showsBackButton = false }: Props) {
+  const { countries, loading } = useCountries({ excludeVisitedCountries: true });
   const insets = useSafeAreaInsets();
   const colors = useTheme();
-  const [sortBy, setSortBy] = useState<'name' | 'score'>('score');
-  const [ascending, setAscending] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'score'>('name');
+  const [ascending, setAscending] = useState(true);
   const [search, setSearch] = useState('');
   const { toggleBucket, toggleVisited, isBucketed, isVisited } = useAuth();
 
@@ -74,7 +78,17 @@ export default function CountryDirectoryScreen() {
       <View style={styles.screen}>
       {loading ? (
         <View style={[styles.loadingWrap, { paddingTop: insets.top + 16 }]}>
-          <TitleBanner title="Countries" />
+          {showsBackButton ? (
+            <DirectoryControls
+              ascending={ascending}
+              colors={colors}
+              onBack={() => router.back()}
+              onToggleSort={toggleSort}
+              sortBy={sortBy}
+            />
+          ) : (
+            <TitleBanner title="Countries" />
+          )}
           <ScrapbookCard
             style={styles.loadingCardShell}
             innerStyle={styles.loadingCard}
@@ -87,7 +101,17 @@ export default function CountryDirectoryScreen() {
         </View>
       ) : (
         <View style={[styles.contentWrap, { paddingTop: insets.top + 8 }]}>
-          <TitleBanner title="Countries" />
+          {showsBackButton ? (
+            <DirectoryControls
+              ascending={ascending}
+              colors={colors}
+              onBack={() => router.back()}
+              onToggleSort={toggleSort}
+              sortBy={sortBy}
+            />
+          ) : (
+            <TitleBanner title="Countries" />
+          )}
 
           <View
             style={[
@@ -140,56 +164,14 @@ export default function CountryDirectoryScreen() {
                     )}
                   </View>
 
-                  <View style={styles.controlsRow}>
-                    <View
-                      style={[
-                        styles.segmented,
-                        {
-                          backgroundColor: colors.segmentBg,
-                        },
-                      ]}
-                    >
-                      <Pressable
-                        onPress={() => toggleSort('name')}
-                        style={[
-                          styles.segmentButton,
-                          {
-                            backgroundColor:
-                              sortBy === 'name' ? colors.segmentActive : 'transparent',
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.segmentText,
-                            { color: colors.textPrimary },
-                          ]}
-                        >
-                          Name {sortBy === 'name' ? (ascending ? '↓' : '↑') : ''}
-                        </Text>
-                      </Pressable>
-
-                      <Pressable
-                        onPress={() => toggleSort('score')}
-                        style={[
-                          styles.segmentButton,
-                          {
-                            backgroundColor:
-                              sortBy === 'score' ? colors.segmentActive : 'transparent',
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.segmentText,
-                            { color: colors.textPrimary },
-                          ]}
-                        >
-                          Score {sortBy === 'score' ? (ascending ? '↓' : '↑') : ''}
-                        </Text>
-                      </Pressable>
-                    </View>
-                  </View>
+                  {!showsBackButton && (
+                    <SortControl
+                      ascending={ascending}
+                      colors={colors}
+                      onToggleSort={toggleSort}
+                      sortBy={sortBy}
+                    />
+                  )}
                 </View>
               }
               renderItem={({ item }) => (
@@ -219,6 +201,84 @@ export default function CountryDirectoryScreen() {
   );
 }
 
+type DirectoryControlsProps = {
+  ascending: boolean;
+  colors: ReturnType<typeof useTheme>;
+  onBack: () => void;
+  onToggleSort: (type: 'name' | 'score') => void;
+  sortBy: 'name' | 'score';
+};
+
+function DirectoryControls({
+  ascending,
+  colors,
+  onBack,
+  onToggleSort,
+  sortBy,
+}: DirectoryControlsProps) {
+  return (
+    <View style={styles.pushedHeader}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onBack}
+        style={[styles.backButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+      >
+        <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
+      </Pressable>
+
+      <SortControl
+        ascending={ascending}
+        colors={colors}
+        onToggleSort={onToggleSort}
+        sortBy={sortBy}
+      />
+    </View>
+  );
+}
+
+function SortControl({
+  ascending,
+  colors,
+  onToggleSort,
+  sortBy,
+}: Omit<DirectoryControlsProps, 'onBack'>) {
+  return (
+    <View style={styles.controlsRow}>
+      <View style={[styles.segmented, { backgroundColor: colors.segmentBg }]}>
+        <Pressable
+          onPress={() => onToggleSort('name')}
+          style={[
+            styles.segmentButton,
+            {
+              backgroundColor:
+                sortBy === 'name' ? colors.segmentActive : 'transparent',
+            },
+          ]}
+        >
+          <Text style={[styles.segmentText, { color: colors.textPrimary }]}>
+            Name {sortBy === 'name' ? (ascending ? '↓' : '↑') : ''}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => onToggleSort('score')}
+          style={[
+            styles.segmentButton,
+            {
+              backgroundColor:
+                sortBy === 'score' ? colors.segmentActive : 'transparent',
+            },
+          ]}
+        >
+          <Text style={[styles.segmentText, { color: colors.textPrimary }]}>
+            Score {sortBy === 'score' ? (ascending ? '↓' : '↑') : ''}
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -244,6 +304,21 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingBottom: 112,
+  },
+  pushedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingTop: 4,
+    paddingBottom: 8,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   directoryShell: {
     flex: 1,

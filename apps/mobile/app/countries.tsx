@@ -1,5 +1,5 @@
-import { Redirect } from 'expo-router';
+import CountryDirectoryScreen from '../components/discovery/CountryDirectoryScreen';
 
 export default function CountriesScreen() {
-  return <Redirect href={'/(tabs)/countries' as any} />;
+  return <CountryDirectoryScreen showsBackButton />;
 }

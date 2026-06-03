@@ -10,7 +10,7 @@ import TitleBanner from "../../components/theme/TitleBanner";
 import ScrapbookCard from "../../components/theme/ScrapbookCard";
 
 export default function WhenToGoScreen() {
-  const { countries, loading } = useCountries();
+  const { countries, loading } = useCountries({ excludeVisitedCountries: true });
   const { selectedMonth, setSelectedMonth } = useScorePreferences();
 
   const colors = useTheme();

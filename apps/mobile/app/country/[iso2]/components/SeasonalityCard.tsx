@@ -6,6 +6,7 @@ type Props = {
   score: number;
   bestMonths?: (string | number)[];
   description?: string;
+  seasonalityLabel?: 'best' | 'good' | 'shoulder' | 'poor' | string;
   normalizedLabel?: string;
   weightOnlyLabel?: string;
   weightLabel?: string;
@@ -23,10 +24,26 @@ function toMonthLabel(m: string | number) {
   return m;
 }
 
+function headlineForLabel(label?: string) {
+  switch (label) {
+    case 'best':
+      return 'Peak time to go ✅';
+    case 'good':
+      return 'Good time to go ✅';
+    case 'shoulder':
+      return 'Shoulder season';
+    case 'poor':
+      return 'Less ideal timing';
+    default:
+      return 'Current timing';
+  }
+}
+
 export default function SeasonalityCard({
   score,
   bestMonths = [],
   description,
+  seasonalityLabel,
   normalizedLabel,
   weightOnlyLabel,
   weightLabel = 'Today · 5%',
@@ -60,7 +77,7 @@ export default function SeasonalityCard({
 
         <View style={{ flex: 1 }}>
           <Text style={[styles.metricTitle, { color: theme.textPrimary }]}>
-            {score >= 80 ? 'Peak time to go' : 'Shoulder season'}
+            {headlineForLabel(seasonalityLabel)}
           </Text>
           {!!description && (
             <Text style={[styles.metricDescription, { color: theme.textSecondary }]}>{description}</Text>

@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useScorePreferences } from '../context/ScorePreferencesContext';
+import { useAuth } from '../context/AuthContext';
 import { Country } from '../types/Country';
 import { applyScoreToCountry } from '../utils/scoring';
+
+type UseCountriesOptions = {
+  excludeVisitedCountries?: boolean;
+};
 
 function iso2ToFlagEmoji(iso2?: string) {
   if (!iso2 || iso2.length !== 2) return undefined;
@@ -12,10 +17,11 @@ function iso2ToFlagEmoji(iso2?: string) {
     .join('');
 }
 
-export function useCountries() {
+export function useCountries(options: UseCountriesOptions = {}) {
   const [rawCountries, setRawCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
-  const { weights, selectedMonth } = useScorePreferences();
+  const { weights, selectedMonth, excludeVisitedCountries } = useScorePreferences();
+  const { visitedIsoCodes } = useAuth();
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -54,11 +60,26 @@ export function useCountries() {
   }, []);
 
   const countries = useMemo(
-    () =>
-      rawCountries.map(country =>
+    () => {
+      const shouldExcludeVisited =
+        options.excludeVisitedCountries && excludeVisitedCountries;
+      const visitedSet = new Set(visitedIsoCodes.map(code => code.toUpperCase()));
+      const baseCountries = shouldExcludeVisited
+        ? rawCountries.filter(country => !visitedSet.has(country.iso2?.toUpperCase() ?? ''))
+        : rawCountries;
+
+      return baseCountries.map(country =>
         applyScoreToCountry(country, weights, selectedMonth)
-      ),
-    [rawCountries, selectedMonth, weights]
+      );
+    },
+    [
+      excludeVisitedCountries,
+      options.excludeVisitedCountries,
+      rawCountries,
+      selectedMonth,
+      visitedIsoCodes,
+      weights,
+    ]
   );
 
   return { countries, loading };
