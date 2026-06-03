@@ -62,7 +62,8 @@ struct TravelScoreriOSApp: App {
         let session = SessionManager(
             supabase: SupabaseManager.shared,
             bucketListStore: bucket,
-            traveledStore: traveled
+            traveledStore: traveled,
+            scoreWeightsStore: weights
         )
 
         _bucketListStore = StateObject(wrappedValue: bucket)

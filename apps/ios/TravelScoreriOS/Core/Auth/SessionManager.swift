@@ -33,6 +33,7 @@ final class SessionManager: ObservableObject {
 
     private let bucketListStore: BucketListStore
     private let traveledStore: TraveledStore
+    private let scoreWeightsStore: ScoreWeightsStore
     private let listSync: ListSyncService
 
     private var guestBucketSnapshot: Set<String> = []
@@ -41,17 +42,21 @@ final class SessionManager: ObservableObject {
     private var hasMergedGuestData = false
     private var syncTask: Task<Void, Never>?
     private var syncingUserId: UUID?
+    private var scorePreferencesSyncTask: Task<Void, Never>?
+    private var scorePreferencesSyncingUserId: UUID?
 
     // MARK: - Initializers
 
     init(
         supabase: SupabaseManager,
         bucketListStore: BucketListStore,
-        traveledStore: TraveledStore
+        traveledStore: TraveledStore,
+        scoreWeightsStore: ScoreWeightsStore
     ) {
         self.supabase = supabase
         self.bucketListStore = bucketListStore
         self.traveledStore = traveledStore
+        self.scoreWeightsStore = scoreWeightsStore
         self.listSync = ListSyncService(supabase: supabase)
 
         SocialFeedDebug.log("launch.session.init instance=\(instanceId.uuidString)")
@@ -96,6 +101,9 @@ final class SessionManager: ObservableObject {
         syncTask?.cancel()
         syncTask = nil
         syncingUserId = nil
+        scorePreferencesSyncTask?.cancel()
+        scorePreferencesSyncTask = nil
+        scorePreferencesSyncingUserId = nil
         
         bumpAuthScreen()
     }
@@ -116,6 +124,9 @@ final class SessionManager: ObservableObject {
         syncTask?.cancel()
         syncTask = nil
         syncingUserId = nil
+        scorePreferencesSyncTask?.cancel()
+        scorePreferencesSyncTask = nil
+        scorePreferencesSyncingUserId = nil
         bumpAuthScreen()
     }
 
@@ -154,6 +165,7 @@ final class SessionManager: ObservableObject {
                     if userId != session.user.id { userId = session.user.id }
 
                     synchronizeListsIfNeeded(for: session.user.id)
+                    synchronizeScorePreferencesIfNeeded(for: session.user.id)
                 }
             } else {
                 
@@ -161,6 +173,7 @@ final class SessionManager: ObservableObject {
                 if userId != nil { userId = nil }
                 hasMergedGuestData = false
                 syncingUserId = nil
+                scorePreferencesSyncingUserId = nil
             }
         } catch {
             // 🔥 DO NOT clear userId or isAuthenticated on transient error
@@ -293,6 +306,23 @@ final class SessionManager: ObservableObject {
         }
     }
 
+    private func synchronizeScorePreferencesIfNeeded(for userId: UUID) {
+        guard scorePreferencesSyncingUserId != userId else { return }
+
+        scorePreferencesSyncTask?.cancel()
+        scorePreferencesSyncingUserId = userId
+
+        scorePreferencesSyncTask = Task { [weak self] in
+            guard let self else { return }
+            await self.scoreWeightsStore.hydrateFromSupabase(userId: userId, supabase: self.supabase)
+
+            if !Task.isCancelled, self.scorePreferencesSyncingUserId == userId {
+                self.scorePreferencesSyncingUserId = nil
+                self.scorePreferencesSyncTask = nil
+            }
+        }
+    }
+
     private func observeGuestListSnapshots() {
         bucketListStore.$ids
             .dropFirst()
@@ -367,12 +397,14 @@ final class SessionManager: ObservableObject {
                     if userId != session.user.id { userId = session.user.id }
 
                     synchronizeListsIfNeeded(for: session.user.id)
+                    synchronizeScorePreferencesIfNeeded(for: session.user.id)
                 } else {
                     
                     if isAuthenticated != false { isAuthenticated = false }
                     if userId != nil { userId = nil }
                     hasMergedGuestData = false
                     syncingUserId = nil
+                    scorePreferencesSyncingUserId = nil
                 }
             } catch {
                 // 🔥 DO NOT clear userId or isAuthenticated on transient error
