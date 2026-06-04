@@ -5,6 +5,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   View,
   ImageBackground,
@@ -17,7 +18,6 @@ import {
   type ScoreWeights,
 } from '../context/ScorePreferencesContext';
 import { useTheme } from '../hooks/useTheme';
-import ScrapbookBackground from '../components/theme/ScrapbookBackground';
 
 const MONTHS = [
   'Jan',
@@ -51,27 +51,28 @@ function normalize(weights: ScoreWeights): ScoreWeights {
 function WeightStepper({
   label,
   value,
+  percentage,
   colors,
   onChange,
   children,
 }: {
   label: string;
   value: number;
+  percentage: number;
   colors: ReturnType<typeof useTheme>;
   onChange: (value: number) => void;
   children?: React.ReactNode;
 }) {
-  const percentage = Math.round(value * 100);
   const decreaseDisabled = value <= 0;
   const increaseDisabled = value >= 1;
 
   return (
     <View style={styles.sliderBlock}>
       <View style={styles.sliderHeader}>
-        <Text style={[styles.sliderTitle, { color: colors.textPrimary }]}>
+        <Text style={styles.sliderTitle}>
           {label}
         </Text>
-        <Text style={[styles.sliderValue, { color: colors.textSecondary }]}>
+        <Text style={styles.sliderValue}>
           {percentage}%
         </Text>
       </View>
@@ -152,18 +153,27 @@ export default function WeightsScreen() {
   const {
     weights,
     selectedMonth,
+    excludeVisitedCountries,
     loading,
     savePreferences,
   } = useScorePreferences();
   const [draftWeights, setDraftWeights] = useState<ScoreWeights>(weights);
   const [draftMonth, setDraftMonth] = useState(selectedMonth);
+  const [draftExcludeVisitedCountries, setDraftExcludeVisitedCountries] =
+    useState(excludeVisitedCountries);
   const [saving, setSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
 
   const normalizedDraft = useMemo(() => normalize(draftWeights), [draftWeights]);
+  const totalWeight = useMemo(
+    () => Object.values(draftWeights).reduce((total, value) => total + value, 0),
+    [draftWeights]
+  );
+  const isZeroSum = totalWeight <= 0.0001;
   const isDirty =
     JSON.stringify(normalizedDraft) !== JSON.stringify(weights) ||
-    draftMonth !== selectedMonth;
+    draftMonth !== selectedMonth ||
+    draftExcludeVisitedCountries !== excludeVisitedCountries;
 
   const applyPreset = (presetWeights: ScoreWeights) => {
     setDraftWeights(presetWeights);
@@ -182,6 +192,7 @@ export default function WeightsScreen() {
       await savePreferences({
         weights: normalizedDraft,
         selectedMonth: draftMonth,
+        excludeVisitedCountries: draftExcludeVisitedCountries,
       });
       setHasSaved(true);
       setTimeout(() => setHasSaved(false), 1500);
@@ -206,43 +217,43 @@ export default function WeightsScreen() {
   }
 
   return (
-    <ScrapbookBackground>
-      <ImageBackground
-        source={require('../assets/scrapbook/travel1.png')}
-        style={styles.background}
-        imageStyle={styles.backgroundImage}
+    <ImageBackground
+      source={require('../assets/scrapbook/travel1.png')}
+      style={styles.background}
+      imageStyle={styles.backgroundImage}
+    >
+      <View style={styles.backgroundTint} />
+      <Pressable
+        onPress={() => router.back()}
+        style={[
+          styles.closeButton,
+          {
+            top: insets.top + 12,
+          },
+        ]}
       >
-        <View style={styles.backgroundTint} />
-        <ScrollView
-          style={{ flex: 1, backgroundColor: 'transparent' }}
-          contentContainerStyle={{
-            paddingTop: insets.top + 18,
-            paddingHorizontal: 20,
-            paddingBottom: insets.bottom + 32,
-          }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.headerRow}>
-            <View />
-            <Pressable onPress={() => router.back()} style={styles.closeButton}>
-              <Text style={[styles.closeText, { color: colors.textPrimary }]}>
-                ×
-              </Text>
-            </Pressable>
-          </View>
-
+        <Text style={styles.closeText}>×</Text>
+      </Pressable>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: 'transparent' }}
+        contentContainerStyle={{
+          paddingTop: insets.top + 18,
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom + 36,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
           <View
             style={[
               styles.bannerCard,
               styles.simpleCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
             ]}
           >
-            <Text style={[styles.bannerTitle, { color: '#111111' }]}>
-              Custom Weights
+            <Text style={styles.bannerTitle}>
+              Travel Preferences
             </Text>
-            <Text style={[styles.bannerSubtitle, { color: 'rgba(17,17,17,0.58)' }]}>
-              Tune your discovery score blend with presets, manual weights, and a seasonality month.
+            <Text style={styles.bannerSubtitle}>
+              Your selected weights determine how Travelability Scores are calculated throughout the app. Rankings update after you save.
             </Text>
           </View>
 
@@ -250,10 +261,9 @@ export default function WeightsScreen() {
             style={[
               styles.sectionCard,
               styles.simpleCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
             ]}
           >
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            <Text style={styles.sectionTitle}>
               Quick Presets
             </Text>
             <View style={styles.presetGrid}>
@@ -261,12 +271,9 @@ export default function WeightsScreen() {
                 <Pressable
                   key={preset.id}
                   onPress={() => applyPreset(preset.weights)}
-                  style={[
-                    styles.presetCard,
-                    { backgroundColor: colors.surface, borderColor: colors.border },
-                  ]}
+                  style={[styles.presetCard]}
                 >
-                  <Text style={[styles.presetTitle, { color: colors.textPrimary }]}>
+                  <Text style={styles.presetTitle}>
                     {preset.title}
                   </Text>
                 </Pressable>
@@ -277,12 +284,18 @@ export default function WeightsScreen() {
           <View
             style={[
               styles.sectionCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
+              styles.simpleCard,
             ]}
           >
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            <Text style={styles.sectionTitle}>
               Weights
             </Text>
+
+            {isZeroSum ? (
+              <Text style={styles.errorText}>
+                At least one category must have weight.
+              </Text>
+            ) : null}
 
             {(
               [
@@ -297,6 +310,11 @@ export default function WeightsScreen() {
                 key={key}
                 label={label}
                 value={draftWeights[key]}
+                percentage={
+                  totalWeight > 0
+                    ? Math.round((draftWeights[key] / totalWeight) * 100)
+                    : 0
+                }
                 colors={colors}
                 onChange={value => updateWeight(key, value)}
               >
@@ -318,7 +336,6 @@ export default function WeightsScreen() {
                               styles.monthChip,
                               {
                                 backgroundColor: selected ? 'rgba(255,255,255,0.78)' : 'transparent',
-                                borderColor: selected ? 'rgba(0,0,0,0.06)' : 'transparent',
                               },
                             ]}
                           >
@@ -334,36 +351,73 @@ export default function WeightsScreen() {
                         );
                       })}
                     </ScrollView>
-                    <Text style={[styles.helperText, { color: colors.textSecondary }]}>
-                      Pick the month you want discovery and seasonality results to optimize around.
+                    <Text style={styles.helperText}>
+                      Uses your selected travel month. Changing it here also updates When To Go.
                     </Text>
                   </>
                 ) : null}
               </WeightStepper>
             ))}
-
-            <Text style={[styles.helperText, { color: colors.textSecondary }]}>
-              Percentages auto-normalize so the final blend always sums to 100%.
-            </Text>
           </View>
 
           <View
             style={[
               styles.sectionCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
+              styles.simpleCard,
             ]}
           >
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            <Text style={styles.sectionTitle}>
+              Discovery Mode
+            </Text>
+            <View
+              style={[
+                styles.discoveryModeButton,
+                draftExcludeVisitedCountries && styles.discoveryModeButtonSelected,
+              ]}
+            >
+              <Pressable
+                onPress={() =>
+                  setDraftExcludeVisitedCountries(current => !current)
+                }
+                style={styles.discoveryModeCopy}
+              >
+                <Text style={styles.discoveryModeTitle}>Go someplace new!</Text>
+                <Text style={styles.discoveryModeSubtitle}>
+                  Hide countries you&apos;ve already visited across Discovery so the list, map, and seasonality views focus on new places.
+                </Text>
+              </Pressable>
+              <Switch
+                value={draftExcludeVisitedCountries}
+                onValueChange={setDraftExcludeVisitedCountries}
+                trackColor={{
+                  false: 'rgba(0,0,0,0.16)',
+                  true: 'rgba(194,122,79,0.42)',
+                }}
+                thumbColor={draftExcludeVisitedCountries ? colors.primary : '#f7f0e5'}
+              />
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.sectionCard,
+              styles.simpleCard,
+            ]}
+          >
+            <Text style={styles.sectionTitle}>
               Actions
             </Text>
             <View style={styles.actionStack}>
               <Pressable
                 onPress={handleSave}
-                disabled={!isDirty || saving}
+                disabled={!isDirty || saving || isZeroSum}
                 style={[
                   styles.primaryAction,
                   {
-                    backgroundColor: isDirty ? colors.primary : 'rgba(0,0,0,0.18)',
+                    backgroundColor:
+                      isDirty && !isZeroSum
+                        ? colors.primary
+                        : 'rgba(0,0,0,0.18)',
                   },
                 ]}
               >
@@ -379,7 +433,8 @@ export default function WeightsScreen() {
               <Pressable
                 onPress={() => {
                   setDraftWeights(DEFAULT_SCORE_WEIGHTS);
-                  setDraftMonth(selectedMonth);
+                  setDraftMonth(new Date().getMonth() + 1);
+                  setDraftExcludeVisitedCountries(false);
                 }}
                 style={[styles.secondaryAction, { backgroundColor: 'rgba(0,0,0,0.06)' }]}
               >
@@ -389,9 +444,8 @@ export default function WeightsScreen() {
               </Pressable>
             </View>
           </View>
-        </ScrollView>
-      </ImageBackground>
-    </ScrapbookBackground>
+      </ScrollView>
+    </ImageBackground>
   );
 }
 
@@ -406,13 +460,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.12)',
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   closeButton: {
+    position: 'absolute',
+    right: 20,
+    zIndex: 4,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -433,22 +484,26 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   simpleCard: {
+    backgroundColor: 'rgba(242, 237, 224, 0.97)',
     borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
     borderRadius: 24,
     shadowColor: '#000000',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
   bannerTitle: {
     fontSize: 32,
     fontWeight: '700',
     marginBottom: 10,
+    color: '#111111',
   },
   bannerSubtitle: {
     fontSize: 15,
     lineHeight: 21,
+    color: 'rgba(17,17,17,0.58)',
   },
   sectionCard: {
     padding: 20,
@@ -458,6 +513,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     marginBottom: 14,
+    color: '#111111',
   },
   presetGrid: {
     flexDirection: 'row',
@@ -466,14 +522,17 @@ const styles = StyleSheet.create({
   },
   presetCard: {
     borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
     borderRadius: 16,
     padding: 14,
     width: '48%',
+    backgroundColor: 'rgba(245,240,224,0.96)',
   },
   presetTitle: {
     fontSize: 15,
     fontWeight: '600',
     textAlign: 'center',
+    color: '#111111',
   },
   sliderBlock: {
     marginBottom: 18,
@@ -516,14 +575,23 @@ const styles = StyleSheet.create({
   sliderTitle: {
     fontSize: 15,
     fontWeight: '700',
+    color: '#111111',
   },
   sliderValue: {
     fontSize: 14,
     fontWeight: '600',
+    color: 'rgba(0,0,0,0.55)',
   },
   helperText: {
     fontSize: 13,
     lineHeight: 18,
+    color: 'rgba(0,0,0,0.52)',
+  },
+  errorText: {
+    marginBottom: 12,
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#c62828',
   },
   monthRow: {
     flexDirection: 'row',
@@ -532,6 +600,7 @@ const styles = StyleSheet.create({
   },
   monthChip: {
     borderWidth: 1,
+    borderColor: 'transparent',
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -541,6 +610,34 @@ const styles = StyleSheet.create({
   },
   actionStack: {
     gap: 12,
+  },
+  discoveryModeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    padding: 18,
+  },
+  discoveryModeButtonSelected: {
+    borderColor: 'rgba(0,0,0,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.65)',
+  },
+  discoveryModeCopy: {
+    flex: 1,
+    gap: 6,
+  },
+  discoveryModeTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111111',
+  },
+  discoveryModeSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: 'rgba(0,0,0,0.6)',
   },
   primaryAction: {
     minHeight: 54,

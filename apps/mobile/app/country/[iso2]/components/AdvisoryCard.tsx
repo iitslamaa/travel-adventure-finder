@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useMemo, useState } from 'react';
 import { useTheme } from '../../../../hooks/useTheme';
+import { normalizeExternalUrl, openExternalUrl } from '../../../../utils/externalLinks';
 import MetricPill from './MetricPill';
 
 type Props = {
@@ -36,6 +37,7 @@ export default function AdvisoryCard({
   }, [summary]);
 
   const body = expanded ? summary : preview;
+  const normalizedUrl = normalizeExternalUrl(url);
 
   return (
     <View
@@ -78,9 +80,9 @@ export default function AdvisoryCard({
             <Text style={[styles.metaText, { color: theme.textMuted }]}>{updatedAtLabel}</Text>
           )}
 
-          {!!url && (
+          {!!normalizedUrl && (
             <Pressable
-              onPress={() => Linking.openURL(url)}
+              onPress={() => openExternalUrl(normalizedUrl)}
               style={[styles.inlineButton, { backgroundColor: theme.paperAlt, borderColor: theme.border }]}
             >
               <Text style={[styles.link, { color: theme.textPrimary }]}>View official advisory</Text>

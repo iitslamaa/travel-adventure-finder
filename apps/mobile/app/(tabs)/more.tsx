@@ -36,9 +36,6 @@ export default function MoreScreen() {
         <View style={styles.stack}>
           <Pressable onPress={() => router.push('/feedback' as any)} style={styles.cardWrap}>
             <ScrapbookCard innerStyle={styles.row}>
-              <Text style={[styles.rowEyebrow, { color: colors.textSecondary }]}>
-                Support
-              </Text>
               <View style={styles.rowTop}>
                 <View
                   style={[
@@ -47,7 +44,7 @@ export default function MoreScreen() {
                   ]}
                 >
                   <Ionicons
-                    name="chatbubble-ellipses-outline"
+                    name="chatbubbles-outline"
                     size={18}
                     color={colors.textPrimary}
                   />
@@ -59,19 +56,16 @@ export default function MoreScreen() {
                 />
               </View>
               <Text style={[styles.rowText, { color: colors.textPrimary }]}>
-                Feedback
+                Send Feedback
               </Text>
               <Text style={[styles.rowSubtext, { color: colors.textSecondary }]}>
-                Send product notes directly from the app.
+                Let us know what you think
               </Text>
             </ScrapbookCard>
           </Pressable>
 
           <Pressable style={styles.cardWrap} onPress={() => router.push('/legal')}>
             <ScrapbookCard innerStyle={styles.row}>
-              <Text style={[styles.rowEyebrow, { color: colors.textSecondary }]}>
-                Reference
-              </Text>
               <View style={styles.rowTop}>
                 <View
                   style={[
@@ -95,7 +89,7 @@ export default function MoreScreen() {
                 Legal
               </Text>
               <Text style={[styles.rowSubtext, { color: colors.textSecondary }]}>
-                Privacy, advisories, and app disclaimers.
+                Privacy, terms, and app policies
               </Text>
             </ScrapbookCard>
           </Pressable>
@@ -134,20 +128,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 18,
     borderRadius: 20,
-    minHeight: 128,
-  },
-  rowEyebrow: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 12,
+    minHeight: 118,
   },
   rowTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   iconShell: {
     width: 42,
@@ -158,12 +145,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rowText: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
   },
   rowSubtext: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 5,
   },
 });

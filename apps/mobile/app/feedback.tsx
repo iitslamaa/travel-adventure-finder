@@ -19,7 +19,6 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { supabase } from '../lib/supabase';
 import ScrapbookBackground from '../components/theme/ScrapbookBackground';
-import ScrapbookCard from '../components/theme/ScrapbookCard';
 import TitleBanner from '../components/theme/TitleBanner';
 
 export default function FeedbackScreen() {
@@ -81,32 +80,55 @@ export default function FeedbackScreen() {
       >
         <TitleBanner title="Feedback" />
 
-        <ScrapbookCard innerStyle={styles.introCard}>
+        <View
+          style={[
+            styles.sectionCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.cardBorderStrong,
+              shadowColor: colors.shadow,
+            },
+            styles.introCard,
+          ]}
+        >
           <View style={styles.introRow}>
             <Image
-              source={require('../assets/scrapbook/profile-header.png')}
+              source={require('../assets/scrapbook/lama-profile.png')}
               style={styles.introImage}
               contentFit="cover"
             />
             <Text style={[styles.introHeadline, { color: colors.textPrimary }]}>
-              I read every note and use them to keep shaping the app.
+              I am Lama, the developer behind Travel Adventure Finder!
             </Text>
           </View>
 
           <View style={styles.introCopy}>
             <Text style={[styles.introBody, { color: colors.textSecondary }]}>
-              If something feels off, clunky, or unfinished, I want to hear it.
+              I built TAF because I kept looking up the same travel statistics when deciding where to go, and I could not believe a tool like this did not already exist.
             </Text>
             <Text style={[styles.introBody, { color: colors.textSecondary }]}>
-              Bugs, wishlist ideas, confusing flows, and design feedback are all useful.
+              I am passionate about traveling and connecting with people, and I genuinely want TAF to be something travelers find useful.
             </Text>
             <Text style={[styles.introBodyStrong, { color: colors.textPrimary }]}>
-              The more specific you are, the faster I can improve it.
+              I truly want to hear from you.
+            </Text>
+            <Text style={[styles.introBody, { color: colors.textSecondary }]}>
+              I read every message personally and work daily to make TAF better. Thank you for being here and travel on!
             </Text>
           </View>
-        </ScrapbookCard>
+        </View>
 
-        <ScrapbookCard innerStyle={styles.card}>
+        <View
+          style={[
+            styles.sectionCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.cardBorderStrong,
+              shadowColor: colors.shadow,
+            },
+            styles.card,
+          ]}
+        >
           <TextInput
             multiline
             value={message}
@@ -118,7 +140,7 @@ export default function FeedbackScreen() {
               {
                 color: colors.textPrimary,
                 backgroundColor: colors.surface,
-                borderColor: colors.border,
+                borderColor: 'rgba(119, 92, 63, 0.22)',
               },
             ]}
             textAlignVertical="top"
@@ -151,7 +173,7 @@ export default function FeedbackScreen() {
               </Text>
             )}
           </Pressable>
-        </ScrapbookCard>
+        </View>
       </ScrollView>
       </ScrapbookBackground>
     </KeyboardAvoidingView>
@@ -165,9 +187,16 @@ const styles = StyleSheet.create({
   backText: {
     display: 'none',
   },
+  sectionCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 20,
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
   introCard: {
-    borderRadius: 22,
-    padding: 18,
     marginBottom: 20,
   },
   introRow: {
@@ -183,8 +212,8 @@ const styles = StyleSheet.create({
   },
   introHeadline: {
     flex: 1,
-    fontSize: 21,
-    lineHeight: 28,
+    fontSize: 20,
+    lineHeight: 26,
     fontWeight: '600',
   },
   introCopy: {
@@ -200,11 +229,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   card: {
-    borderRadius: 22,
-    padding: 18,
+    gap: 0,
   },
   input: {
-    minHeight: 180,
+    minHeight: 150,
     borderWidth: 1,
     borderRadius: 16,
     padding: 14,

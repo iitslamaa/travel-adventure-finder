@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
 
 type TabIconName =
-  | 'compass-outline'
+  | 'earth'
   | 'list-outline'
   | 'newspaper-outline'
   | 'people-outline'
@@ -59,7 +59,7 @@ function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             const isFocused = state.index === routeIndex;
             const iconName = (options.tabBarIcon
                 ? ({
-                  discovery: 'compass-outline',
+                  discovery: 'earth',
                   planning: 'list-outline',
                   media: 'newspaper-outline',
                   friends: 'people-outline',
@@ -157,7 +157,7 @@ export default function TabLayout() {
         options={{
           title: 'Discover',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="compass-outline" size={size} color={color} />
+            <Ionicons name="earth" size={size} color={color} />
           ),
         }}
       />

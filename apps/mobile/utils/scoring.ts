@@ -40,6 +40,29 @@ export function seasonalityScoreForMonth(country: Country, selectedMonth: number
     : 50;
 }
 
+export function seasonalityLabelForMonth(country: Country, selectedMonth: number) {
+  const month = selectedMonth;
+  const bestMonths = uniqueMonthList(country.facts?.fmSeasonalityBestMonths);
+  const shoulderMonths = uniqueMonthList(country.facts?.fmSeasonalityShoulderMonths);
+  const goodMonths = uniqueMonthList(country.facts?.fmSeasonalityGoodMonths);
+  const avoidMonths = uniqueMonthList(country.facts?.fmSeasonalityAvoidMonths);
+
+  if (bestMonths.includes(month)) return 'best';
+  if (shoulderMonths.includes(month)) return 'shoulder';
+  if (goodMonths.includes(month)) return 'good';
+  if (avoidMonths.includes(month)) return 'poor';
+
+  const hasExplicitSeasonality =
+    bestMonths.length > 0 ||
+    shoulderMonths.length > 0 ||
+    goodMonths.length > 0 ||
+    avoidMonths.length > 0;
+
+  return hasExplicitSeasonality
+    ? 'shoulder'
+    : country.facts?.fmSeasonalityTodayLabel;
+}
+
 function normalizeWeights(weights: ScoreWeights): ScoreWeights {
   const sum = Object.values(weights).reduce((total, value) => total + value, 0);
   if (!Number.isFinite(sum) || sum <= 0) {

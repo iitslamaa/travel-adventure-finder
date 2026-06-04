@@ -11,11 +11,10 @@ type PlanningCardProps = {
   title: string;
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
-  eyebrow: string;
   onPress: () => void;
 };
 
-function PlanningCard({ title, subtitle, icon, eyebrow, onPress }: PlanningCardProps) {
+function PlanningCard({ title, subtitle, icon, onPress }: PlanningCardProps) {
   const colors = useTheme();
 
   return (
@@ -26,9 +25,6 @@ function PlanningCard({ title, subtitle, icon, eyebrow, onPress }: PlanningCardP
       <ScrapbookCard innerStyle={styles.card}>
         <View style={styles.cardTopRow}>
           <View style={styles.cardTitleBlock}>
-            <Text style={[styles.cardEyebrow, { color: colors.textSecondary }]}>
-              {eyebrow}
-            </Text>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
               {title}
             </Text>
@@ -60,7 +56,6 @@ function PlanningCard({ title, subtitle, icon, eyebrow, onPress }: PlanningCardP
 
 export default function PlanningScreen() {
   const insets = useSafeAreaInsets();
-  const colors = useTheme();
 
   return (
     <ScrapbookBackground overlay={0}>
@@ -79,50 +74,27 @@ export default function PlanningScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <TitleBanner title="Plan" />
-
-        <View style={styles.summaryStrip}>
-          <View style={[styles.summaryChip, { backgroundColor: colors.paperAlt, borderColor: colors.border }]}>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-              Saved lists
-            </Text>
-            <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>
-              Bucket + Visited
-            </Text>
-          </View>
-
-          <View style={[styles.summaryChip, { backgroundColor: colors.paperAlt, borderColor: colors.border }]}>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-              Trip space
-            </Text>
-            <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>
-              Shared plans
-            </Text>
-          </View>
-        </View>
+        <TitleBanner title="Planning" />
 
         <View style={styles.stack}>
           <PlanningCard
             title="Bucket List"
-            subtitle="Countries you want to visit next."
-            icon="bookmark-outline"
-            eyebrow="Saved list"
+            subtitle="Places you want to visit"
+            icon="bookmark"
             onPress={() => router.push('/lists/bucket')}
           />
 
           <PlanningCard
-            title="Visited"
-            subtitle="The places you have already checked off."
-            icon="checkmark-circle-outline"
-            eyebrow="Travel history"
+            title="Visited Countries"
+            subtitle="Track places you've been"
+            icon="checkmark-circle"
             onPress={() => router.push('/lists/visited')}
           />
 
           <PlanningCard
             title="Trip Planner"
-            subtitle="Save trip ideas with dates, countries, and travel buddies."
-            icon="airplane-outline"
-            eyebrow="Shared plans"
+            subtitle="Build a trip with dates, countries, and friends"
+            icon="airplane"
             onPress={() => router.push('/trip-planner' as any)}
           />
         </View>
@@ -143,53 +115,21 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(250,245,237,0.18)',
   },
-  summaryStrip: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
-  },
-  summaryChip: {
-    flex: 1,
-    minHeight: 58,
-    borderRadius: 18,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    justifyContent: 'center',
-  },
-  summaryLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  summaryValue: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
   stack: {
-    gap: 22,
-    marginTop: 16,
+    gap: 24,
+    marginTop: 18,
   },
   cardPressable: {
     marginHorizontal: 2,
   },
   card: {
     padding: 18,
-    minHeight: 146,
+    minHeight: 118,
   },
   cardTitleBlock: {
     flex: 1,
     minWidth: 0,
     marginRight: 12,
-  },
-  cardEyebrow: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
-    marginBottom: 6,
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -216,7 +156,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   cardTitle: {
-    fontSize: 21,
+    fontSize: 18,
     fontWeight: '700',
   },
   cardSubtitle: {

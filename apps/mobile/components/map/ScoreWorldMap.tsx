@@ -130,7 +130,7 @@ const precomputedFeatures: PrecomputedFeature[] = worldGeo.features.flatMap((fea
 export default function ScoreWorldMap() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
-  const { countries } = useCountries();
+  const { countries } = useCountries({ excludeVisitedCountries: true });
   const colors = useTheme();
 
   const [selected, setSelected] = useState<SelectedCountry | null>(null);

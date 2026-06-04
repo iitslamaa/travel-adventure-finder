@@ -51,6 +51,7 @@ type CountryRouteFacts = Partial<CountryFacts> & {
   fmSeasonalityAvoidMonths?: number[];
   fmSeasonalityTodayScore?: number;
   fmSeasonalityTodayLabel?: 'best' | 'good' | 'shoulder' | 'poor';
+  fmSeasonalityNotes?: string;
   languageCompatibilityScore?: number;
 };
 
@@ -318,6 +319,7 @@ export async function GET(
       enriched.facts.fmSeasonalityShoulderMonths = override.shoulder ?? [];
       enriched.facts.fmSeasonalityGoodMonths = override.good ?? [];
       enriched.facts.fmSeasonalityAvoidMonths = override.avoid ?? [];
+      enriched.facts.fmSeasonalityNotes = override.notes;
       enriched.facts.fmSeasonalityTodayScore = todayScore;
       enriched.facts.fmSeasonalityTodayLabel =
         inBest ? 'best' :

@@ -20,9 +20,19 @@ import LanguageCompatibilityCard from './components/LanguageCompatibilityCard';
 import FriendEngagementCard from './components/FriendEngagementCard';
 import { useAuth } from '../../../context/AuthContext';
 import { useScorePreferences } from '../../../context/ScorePreferencesContext';
-import { scoreCountry, seasonalityScoreForMonth } from '../../../utils/scoring';
+import {
+  scoreCountry,
+  seasonalityLabelForMonth,
+  seasonalityScoreForMonth,
+} from '../../../utils/scoring';
 import { useCountryFriendEngagement } from '../../../hooks/useCountryFriendEngagement';
 import { useTheme } from '../../../hooks/useTheme';
+import { supabase } from '../../../lib/supabase';
+import {
+  computeLanguageCompatibilityScore,
+  parseProfileLanguages,
+  type CountryLanguageCoverage,
+} from '../../../utils/languageCompatibility';
 
 function flagEmojiFromIso2(iso2: string) {
   const code = iso2.trim().toUpperCase();
@@ -44,7 +54,7 @@ export default function CountryDetailScreen() {
   const { iso2, name } = useLocalSearchParams<{ iso2: string; name?: string }>();
   const navigation = useNavigation();
   const { weights, selectedMonth } = useScorePreferences();
-  const { session, toggleBucket, toggleVisited, isBucketed, isVisited } = useAuth();
+  const { session, profile, toggleBucket, toggleVisited, isBucketed, isVisited } = useAuth();
 
   const colors = useTheme();
   const normalizedIso2 = typeof iso2 === 'string' ? iso2.toUpperCase() : '';
@@ -52,6 +62,7 @@ export default function CountryDetailScreen() {
   const visited = normalizedIso2 ? isVisited(normalizedIso2) : false;
 
   const [country, setCountry] = useState<any | null>(null);
+  const [languageCompatibilityScore, setLanguageCompatibilityScore] = useState<number | undefined>();
   const [loading, setLoading] = useState(true);
   const { engagement, loading: engagementLoading } = useCountryFriendEngagement(
     normalizedIso2 || undefined
@@ -84,6 +95,40 @@ export default function CountryDetailScreen() {
 
     fetchCountry();
   }, [normalizedIso2]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLanguageCompatibility = async () => {
+      const userLanguages = parseProfileLanguages(profile?.languages);
+
+      if (!normalizedIso2 || !userLanguages.length) {
+        setLanguageCompatibilityScore(undefined);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('country_language_profiles')
+        .select('languages')
+        .eq('country_iso2', normalizedIso2)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      setLanguageCompatibilityScore(
+        computeLanguageCompatibilityScore(
+          userLanguages,
+          data?.languages as CountryLanguageCoverage[] | null | undefined
+        )
+      );
+    };
+
+    loadLanguageCompatibility();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [normalizedIso2, profile?.languages]);
 
   useEffect(() => {
     if (!country?.name) return;
@@ -128,11 +173,6 @@ export default function CountryDetailScreen() {
     );
   }
 
-  const score =
-    scoreCountry(country, weights, selectedMonth) ??
-    country.scoreTotal ??
-    country.facts?.scoreTotal ??
-    0;
   const advisoryLevel = country.facts?.advisoryLevel ?? '—';
 
   const advisoryScore =
@@ -140,8 +180,25 @@ export default function CountryDetailScreen() {
     country.facts?.advisoryNormalized ??
     country.facts?.advisoryWeighted;
   const seasonalityScore = seasonalityScoreForMonth(country, selectedMonth);
+  const seasonalityLabel = seasonalityLabelForMonth(country, selectedMonth);
   const visaScore = country.facts?.visaEase;
   const affordabilityScore = country.facts?.affordability;
+  const displayedLanguageScore =
+    languageCompatibilityScore ??
+    country.facts?.languageCompatibilityScore ??
+    0;
+  const countryWithLanguageScore = {
+    ...country,
+    facts: {
+      ...country.facts,
+      languageCompatibilityScore: displayedLanguageScore,
+    },
+  };
+  const score =
+    scoreCountry(countryWithLanguageScore, weights, selectedMonth) ??
+    country.scoreTotal ??
+    country.facts?.scoreTotal ??
+    0;
   const flagEmoji =
     (country as any).flagEmoji ?? flagEmojiFromIso2(normalizedIso2);
   const selectedMonthDate = new Date(2026, selectedMonth - 1, 1);
@@ -250,10 +307,11 @@ export default function CountryDetailScreen() {
           score={seasonalityScore}
           bestMonths={country.facts?.fmSeasonalityBestMonths ?? []}
           description={country.facts?.fmSeasonalityNotes}
+          seasonalityLabel={seasonalityLabel}
           normalizedLabel={`Normalized: ${seasonalityScore}`}
           weightOnlyLabel={'Weight: 5%'}
           weightLabel={`${selectedMonthShortName} · 5%`}
-          title={`${selectedMonthName} Seasonality`}
+          title={`Seasonality in ${selectedMonthName}`}
         />
 
         {typeof visaScore === 'number' || country.facts?.visaType ? (
@@ -280,12 +338,10 @@ export default function CountryDetailScreen() {
           />
         ) : null}
 
-        {typeof country.facts?.languageCompatibilityScore === 'number' ? (
-          <LanguageCompatibilityCard
-            score={country.facts.languageCompatibilityScore}
-            weightLabel={`Your languages · ${Math.round(weights.language * 100)}%`}
-          />
-        ) : null}
+        <LanguageCompatibilityCard
+          score={displayedLanguageScore}
+          weightLabel={`Your languages · ${Math.round(weights.language * 100)}%`}
+        />
       </ScrollView>
     </ImageBackground>
   );
