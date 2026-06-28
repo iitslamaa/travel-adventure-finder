@@ -1831,6 +1831,16 @@ export default function TripPlannerScreen() {
     }
   };
 
+  const openFlightPathTool = (params?: { startDate?: string | null; endDate?: string | null }) => {
+    router.push({
+      pathname: '/flight-path-tool',
+      params: {
+        ...(params?.startDate ? { startDate: params.startDate } : {}),
+        ...(params?.endDate ? { endDate: params.endDate } : {}),
+      },
+    } as any);
+  };
+
   return (
     <ScrapbookBackground>
     <View style={{ flex: 1, backgroundColor: 'transparent' }}>
@@ -1906,6 +1916,18 @@ export default function TripPlannerScreen() {
                   </Text>
                 </View>
               </View>
+              <Pressable
+                onPress={() => openFlightPathTool()}
+                style={[
+                  styles.emptyFlightButton,
+                  { backgroundColor: colors.primary, borderColor: colors.primary },
+                ]}
+              >
+                <Ionicons name="airplane-outline" size={16} color={colors.primaryText} />
+                <Text style={[styles.emptyFlightButtonText, { color: colors.primaryText }]}>
+                  Flight Paths
+                </Text>
+              </Pressable>
             </ScrapbookCard>
           </Pressable>
         ) : (
@@ -2267,6 +2289,24 @@ export default function TripPlannerScreen() {
                         </Text>
                       </Pressable>
                     ) : null}
+
+                    <Pressable
+                      onPress={() =>
+                        openFlightPathTool({
+                          startDate: trip.startDate,
+                          endDate: trip.endDate,
+                        })
+                      }
+                      style={[
+                        styles.tripCalendarButton,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      <Ionicons name="airplane-outline" size={16} color={colors.textPrimary} />
+                      <Text style={[styles.tripCalendarButtonText, { color: colors.textPrimary }]}>
+                        Flights
+                      </Text>
+                    </Pressable>
                   </View>
                 </ScrapbookCard>
               );
@@ -2422,6 +2462,47 @@ export default function TripPlannerScreen() {
                 </View>
               </View>
             </ScrapbookCard>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.sectionEyebrow, { color: colors.textSecondary }]}>
+                Flight search
+              </Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                Flight Paths
+              </Text>
+              <View
+                style={[
+                  styles.helperCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.helperTitle, { color: colors.textPrimary }]}>
+                  Flexible route finder
+                </Text>
+                <Text style={[styles.helperCopy, { color: colors.textSecondary }]}>
+                  Compare multi-city order, trip length, stay ranges, and fixed-date constraints before checking live fares.
+                </Text>
+              </View>
+              <Pressable
+                onPress={() =>
+                  openFlightPathTool({
+                    startDate: draft.includeDates ? draft.startDate : null,
+                    endDate: draft.includeDates ? draft.endDate : null,
+                  })
+                }
+                style={[styles.flightToolButton, { backgroundColor: colors.primary }]}
+              >
+                <Ionicons name="airplane-outline" size={17} color={colors.primaryText} />
+                <Text style={[styles.submitText, { color: colors.primaryText }]}>
+                  Open Flight Paths
+                </Text>
+              </Pressable>
+            </View>
 
             <View
               style={[
@@ -3819,6 +3900,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 18,
   },
+  emptyFlightButton: {
+    minHeight: 46,
+    borderWidth: 1,
+    borderRadius: 18,
+    marginTop: 16,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  emptyFlightButtonText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
   tripStack: {
     gap: 14,
   },
@@ -4346,6 +4442,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 14,
+    shadowColor: '#8d7559',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  flightToolButton: {
+    minHeight: 46,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+    flexDirection: 'row',
+    gap: 8,
     shadowColor: '#8d7559',
     shadowOpacity: 0.12,
     shadowRadius: 10,

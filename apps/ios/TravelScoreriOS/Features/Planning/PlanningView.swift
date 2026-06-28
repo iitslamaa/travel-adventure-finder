@@ -91,6 +91,29 @@ private enum TripPlannerDebugLog {
     }
 }
 
+private enum FlightPathDebugLog {
+    nonisolated static func probe(_ name: String, _ detail: String = "") {
+        #if DEBUG
+        let suffix = detail.isEmpty ? "" : " \(detail)"
+        print("[FlightPath] \(stamp()) \(name)\(suffix)")
+        #endif
+    }
+
+    nonisolated static func durationText(since startTime: TimeInterval) -> String {
+        String(format: "%.0fms", (Date().timeIntervalSinceReferenceDate - startTime) * 1000)
+    }
+
+    nonisolated private static func stamp() -> String {
+        #if DEBUG
+        let now = Date().timeIntervalSinceReferenceDate
+        let thread = Thread.isMainThread ? "main" : "bg"
+        return String(format: "t=%.3f thread=%@", now, thread)
+        #else
+        return ""
+        #endif
+    }
+}
+
 extension Notification.Name {
     static let sharedTripsUpdated = Notification.Name("sharedTripsUpdated")
 }
@@ -473,6 +496,17 @@ struct ListsView: View {
                             )
                         })
 
+                        NavigationLink {
+                            FlightPathToolView()
+                        } label: {
+                            PlanningCard(
+                                title: "Flight Paths",
+                                subtitle: "Compare flexible multi-city flight routes",
+                                icon: "point.topleft.down.curvedto.point.bottomright.up"
+                            )
+                        }
+                        .buttonStyle(.plain)
+
                         Spacer(minLength: 20)
                     }
                     .id("planningListTop")
@@ -506,6 +540,1899 @@ struct PlanningCard: View {
             Image(systemName: "chevron.right")
                 .foregroundColor(.black)
         }
+    }
+}
+
+private struct FlightPathAirport: Identifiable, Hashable, Codable {
+    let iata: String
+    let cityName: String
+    let airportName: String
+    let countryCode: String
+    let latitude: Double
+    let longitude: Double
+
+    var id: String { iata }
+    var label: String { "\(iata) - \(cityName)" }
+}
+
+private struct FlightPathStopDraft: Identifiable, Equatable {
+    let id = UUID()
+    var query: String
+    var minNights: String
+    var maxNights: String
+    var fixedDate: String
+    var selectedAirportIATAs: Set<String> = []
+    var selectedAirports: [FlightPathAirport] = []
+}
+
+private struct FlightPathResolvedStop: Identifiable, Hashable {
+    let id: UUID
+    let airports: [FlightPathAirport]
+    let minNights: Int
+    let maxNights: Int
+    let fixedDate: Date?
+
+    var airport: FlightPathAirport { airports[0] }
+}
+
+private struct FlightPathAirportSuggestion: Identifiable, Hashable, Codable {
+    let cityName: String
+    let countryCode: String?
+    let airports: [FlightPathAirport]
+
+    var id: String {
+        "\(cityName)-\(countryCode ?? "")-\(airports.map(\.iata).joined(separator: "-"))"
+    }
+}
+
+private struct FlightPathAirportSearchResponse: Decodable {
+    let ok: Bool
+    let error: String?
+    let suggestions: [FlightPathAirportSuggestion]?
+}
+
+private struct FlightPathLeg: Identifiable, Hashable {
+    let from: FlightPathAirport
+    let to: FlightPathAirport
+    let date: Date
+    let distanceKm: Int
+
+    var id: String {
+        "\(from.iata)-\(to.iata)-\(FlightPathPlanner.format(date))"
+    }
+}
+
+private struct FlightPathCandidateStop: Identifiable, Hashable {
+    let stop: FlightPathResolvedStop
+    let arrivalDate: Date
+    let departureDate: Date
+    let nights: Int
+
+    var id: UUID { stop.id }
+}
+
+private struct FlightPathCandidate: Identifiable, Hashable {
+    let id: String
+    let startDate: Date
+    let endDate: Date
+    let tripDays: Int
+    let routeDistanceKm: Int
+    let score: Int
+    let stops: [FlightPathCandidateStop]
+    let legs: [FlightPathLeg]
+}
+
+private struct FlightPathSearchLegPayload: Encodable {
+    let from: String
+    let to: String
+    let date: String
+}
+
+private struct FlightPathSearchPathPayload: Encodable {
+    let id: String
+    let legs: [FlightPathSearchLegPayload]
+}
+
+private struct FlightPathSearchPayload: Encodable {
+    let market: String
+    let locale: String
+    let currency: String
+    let adults: Int
+    let cabinClass: String
+    let paths: [FlightPathSearchPathPayload]
+}
+
+private struct FlightPathPricedLeg: Decodable, Identifiable, Hashable {
+    let from: String
+    let to: String
+    let date: String
+    let price: Double?
+    let currency: String
+    let deepLink: String?
+    let provider: String?
+
+    var id: String { "\(from)-\(to)-\(date)" }
+}
+
+private struct FlightPathPricedPath: Decodable, Identifiable, Hashable {
+    let id: String
+    let totalPrice: Double?
+    let currency: String
+    let legs: [FlightPathPricedLeg]
+}
+
+private struct FlightPathSearchResponse: Decodable {
+    let ok: Bool
+    let error: String?
+    let pricedAt: String?
+    let currency: String?
+    let paths: [FlightPathPricedPath]?
+}
+
+private enum FlightPathSearchError: LocalizedError {
+    case missingSupabaseConfig
+    case server(String)
+    case invalidResponse
+
+    var errorDescription: String? {
+        switch self {
+        case .missingSupabaseConfig:
+            return "Flight search is not configured for this build."
+        case .server(let message):
+            if message.localizedCaseInsensitiveContains("NOT_FOUND")
+                || message.localizedCaseInsensitiveContains("function was not found")
+            {
+                return "Flight search is not deployed yet. Deploy the flight-path-search Supabase function, then try again."
+            }
+            if message.localizedCaseInsensitiveContains("Duffel access token")
+                || message.localizedCaseInsensitiveContains("DUFFEL_ACCESS_TOKEN")
+            {
+                return "Flight search needs a Duffel access token before live prices can load."
+            }
+            return message
+        case .invalidResponse:
+            return "Flight search returned an unexpected response."
+        }
+    }
+}
+
+private enum FlightPathPricingService {
+    static func search(paths: [FlightPathCandidate]) async throws -> [FlightPathPricedPath] {
+        let startTime = Date().timeIntervalSinceReferenceDate
+        guard
+            let supabaseURLString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
+            let supabaseURL = URL(string: supabaseURLString),
+            let anonKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String
+        else {
+            FlightPathDebugLog.probe("search.missing_config")
+            throw FlightPathSearchError.missingSupabaseConfig
+        }
+
+        let totalLegs = paths.reduce(0) { $0 + $1.legs.count }
+        let functionURL = supabaseURL.appendingPathComponent("functions/v1/flight-path-search")
+        FlightPathDebugLog.probe(
+            "search.start",
+            "url=\(functionURL.absoluteString) paths=\(paths.count) legs=\(totalLegs)"
+        )
+
+        let payload = FlightPathSearchPayload(
+            market: "US",
+            locale: "en-US",
+            currency: "USD",
+            adults: 1,
+            cabinClass: "CABIN_CLASS_ECONOMY",
+            paths: paths.map { candidate in
+                FlightPathSearchPathPayload(
+                    id: candidate.id,
+                    legs: candidate.legs.map { leg in
+                        FlightPathSearchLegPayload(
+                            from: leg.from.iata,
+                            to: leg.to.iata,
+                            date: FlightPathPlanner.format(leg.date)
+                        )
+                    }
+                )
+            }
+        )
+
+        var request = URLRequest(url: functionURL)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 90
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.setValue(anonKey, forHTTPHeaderField: "apikey")
+
+        if let session = try? await SupabaseManager.shared.client.auth.session {
+            request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "authorization")
+        } else {
+            request.setValue("Bearer \(anonKey)", forHTTPHeaderField: "authorization")
+        }
+
+        request.httpBody = try JSONEncoder().encode(payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+        let decoded = try? JSONDecoder().decode(FlightPathSearchResponse.self, from: data)
+        let bodyPreview = String(data: data, encoding: .utf8)?
+            .replacingOccurrences(of: "\n", with: " ")
+            .prefix(240) ?? "non-utf8 body"
+
+        FlightPathDebugLog.probe(
+            "search.response",
+            "status=\(status) duration=\(FlightPathDebugLog.durationText(since: startTime)) body=\(bodyPreview)"
+        )
+
+        guard (200..<300).contains(status), decoded?.ok == true else {
+            let fallback = String(data: data, encoding: .utf8) ?? "Flight search failed."
+            throw FlightPathSearchError.server(decoded?.error ?? fallback)
+        }
+
+        guard let paths = decoded?.paths else {
+            FlightPathDebugLog.probe("search.invalid_response")
+            throw FlightPathSearchError.invalidResponse
+        }
+
+        FlightPathDebugLog.probe(
+            "search.success",
+            "pricedPaths=\(paths.count) duration=\(FlightPathDebugLog.durationText(since: startTime))"
+        )
+        return paths
+    }
+}
+
+private enum FlightPathAirportLookupService {
+    static func search(query: String) async throws -> [FlightPathAirportSuggestion] {
+        guard
+            let supabaseURLString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
+            let supabaseURL = URL(string: supabaseURLString),
+            let anonKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String
+        else {
+            return []
+        }
+
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2 else { return [] }
+
+        var components = URLComponents(url: supabaseURL.appendingPathComponent("functions/v1/airport-search"), resolvingAgainstBaseURL: false)
+        components?.queryItems = [URLQueryItem(name: "query", value: trimmed)]
+        guard let url = components?.url else { return [] }
+
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 8
+        request.setValue(anonKey, forHTTPHeaderField: "apikey")
+
+        if let session = try? await SupabaseManager.shared.client.auth.session {
+            request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "authorization")
+        } else {
+            request.setValue("Bearer \(anonKey)", forHTTPHeaderField: "authorization")
+        }
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? -1
+        guard (200..<300).contains(status) else {
+            return []
+        }
+
+        let decoded = try JSONDecoder().decode(FlightPathAirportSearchResponse.self, from: data)
+        return decoded.ok ? (decoded.suggestions ?? []) : []
+    }
+}
+
+private enum FlightPathPlanner {
+    static let airports: [FlightPathAirport] = [
+        .init(iata: "JFK", cityName: "New York", airportName: "John F. Kennedy International Airport", countryCode: "US", latitude: 40.6413, longitude: -73.7781),
+        .init(iata: "LGA", cityName: "New York", airportName: "LaGuardia Airport", countryCode: "US", latitude: 40.7769, longitude: -73.8740),
+        .init(iata: "EWR", cityName: "Newark", airportName: "Newark Liberty International Airport", countryCode: "US", latitude: 40.6895, longitude: -74.1745),
+        .init(iata: "LAX", cityName: "Los Angeles", airportName: "Los Angeles International Airport", countryCode: "US", latitude: 33.9416, longitude: -118.4085),
+        .init(iata: "BUR", cityName: "Los Angeles", airportName: "Hollywood Burbank Airport", countryCode: "US", latitude: 34.2007, longitude: -118.3587),
+        .init(iata: "SFO", cityName: "San Francisco", airportName: "San Francisco International Airport", countryCode: "US", latitude: 37.6213, longitude: -122.3790),
+        .init(iata: "ORD", cityName: "Chicago", airportName: "Chicago O'Hare International Airport", countryCode: "US", latitude: 41.9742, longitude: -87.9073),
+        .init(iata: "MIA", cityName: "Miami", airportName: "Miami International Airport", countryCode: "US", latitude: 25.7959, longitude: -80.2870),
+        .init(iata: "BOS", cityName: "Boston", airportName: "Boston Logan International Airport", countryCode: "US", latitude: 42.3656, longitude: -71.0096),
+        .init(iata: "CDG", cityName: "Paris", airportName: "Charles de Gaulle Airport", countryCode: "FR", latitude: 49.0097, longitude: 2.5479),
+        .init(iata: "ORY", cityName: "Paris", airportName: "Paris Orly Airport", countryCode: "FR", latitude: 48.7262, longitude: 2.3652),
+        .init(iata: "LHR", cityName: "London", airportName: "Heathrow Airport", countryCode: "GB", latitude: 51.4700, longitude: -0.4543),
+        .init(iata: "LGW", cityName: "London", airportName: "Gatwick Airport", countryCode: "GB", latitude: 51.1537, longitude: -0.1821),
+        .init(iata: "STN", cityName: "London", airportName: "London Stansted Airport", countryCode: "GB", latitude: 51.8850, longitude: 0.2350),
+        .init(iata: "AMS", cityName: "Amsterdam", airportName: "Amsterdam Airport Schiphol", countryCode: "NL", latitude: 52.3105, longitude: 4.7683),
+        .init(iata: "MAD", cityName: "Madrid", airportName: "Adolfo Suarez Madrid-Barajas Airport", countryCode: "ES", latitude: 40.4983, longitude: -3.5676),
+        .init(iata: "BCN", cityName: "Barcelona", airportName: "Barcelona-El Prat Airport", countryCode: "ES", latitude: 41.2974, longitude: 2.0833),
+        .init(iata: "FCO", cityName: "Rome", airportName: "Leonardo da Vinci-Fiumicino Airport", countryCode: "IT", latitude: 41.8003, longitude: 12.2389),
+        .init(iata: "ATH", cityName: "Athens", airportName: "Athens International Airport", countryCode: "GR", latitude: 37.9364, longitude: 23.9445),
+        .init(iata: "IST", cityName: "Istanbul", airportName: "Istanbul Airport", countryCode: "TR", latitude: 41.2753, longitude: 28.7519),
+        .init(iata: "BEY", cityName: "Beirut", airportName: "Beirut-Rafic Hariri International Airport", countryCode: "LB", latitude: 33.8209, longitude: 35.4884),
+        .init(iata: "DXB", cityName: "Dubai", airportName: "Dubai International Airport", countryCode: "AE", latitude: 25.2532, longitude: 55.3657),
+        .init(iata: "DWC", cityName: "Dubai", airportName: "Al Maktoum International Airport", countryCode: "AE", latitude: 24.8964, longitude: 55.1614),
+        .init(iata: "HND", cityName: "Tokyo", airportName: "Tokyo Haneda Airport", countryCode: "JP", latitude: 35.5494, longitude: 139.7798),
+        .init(iata: "NRT", cityName: "Tokyo", airportName: "Narita International Airport", countryCode: "JP", latitude: 35.7720, longitude: 140.3929),
+        .init(iata: "ICN", cityName: "Seoul", airportName: "Incheon International Airport", countryCode: "KR", latitude: 37.4602, longitude: 126.4407),
+        .init(iata: "SIN", cityName: "Singapore", airportName: "Singapore Changi Airport", countryCode: "SG", latitude: 1.3644, longitude: 103.9915)
+    ]
+
+    private static let metroAirportCodes: [String: [String]] = [
+        "NEW YORK": ["JFK", "LGA", "EWR"],
+        "NYC": ["JFK", "LGA", "EWR"],
+        "NEWARK": ["EWR", "JFK", "LGA"],
+        "LOS ANGELES": ["LAX", "BUR"],
+        "LA": ["LAX", "BUR"],
+        "PARIS": ["CDG", "ORY"],
+        "LONDON": ["LHR", "LGW", "STN"],
+        "LON": ["LHR", "LGW", "STN"],
+        "DUBAI": ["DXB", "DWC"],
+        "TOKYO": ["HND", "NRT"]
+    ]
+
+    private static let formatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
+    static func parseDate(_ value: String) -> Date? {
+        formatter.date(from: value.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    static func format(_ date: Date) -> String {
+        formatter.string(from: date)
+    }
+
+    static func addDays(_ days: Int, to date: Date) -> Date {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+        return calendar.date(byAdding: .day, value: days, to: date) ?? date
+    }
+
+    static func daysBetween(_ startDate: Date, _ endDate: Date) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+        return calendar.dateComponents([.day], from: startDate, to: endDate).day ?? 0
+    }
+
+    static func airport(matching query: String) -> FlightPathAirport? {
+        let normalized = query.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        guard !normalized.isEmpty else { return nil }
+
+        return airports.first { $0.iata == normalized }
+            ?? airports.first { $0.cityName.uppercased() == normalized }
+            ?? airports.first { $0.cityName.uppercased().contains(normalized) }
+            ?? airports.first { $0.airportName.uppercased().contains(normalized) }
+    }
+
+    static func resolvedStops(from drafts: [FlightPathStopDraft]) -> [FlightPathResolvedStop] {
+        drafts.compactMap { draft in
+            let airports = airportOptions(for: draft)
+            guard !airports.isEmpty else { return nil }
+            let minNights = clampedInt(draft.minNights, fallback: 2, min: 1, max: 30)
+            let maxNights = max(minNights, clampedInt(draft.maxNights, fallback: minNights, min: 1, max: 30))
+
+            return FlightPathResolvedStop(
+                id: draft.id,
+                airports: airports,
+                minNights: minNights,
+                maxNights: maxNights,
+                fixedDate: parseDate(draft.fixedDate)
+            )
+        }
+    }
+
+    static func airportOptions(for draft: FlightPathStopDraft) -> [FlightPathAirport] {
+        if !draft.selectedAirports.isEmpty {
+            if draft.selectedAirportIATAs.isEmpty {
+                return draft.selectedAirports
+            }
+            let selected = draft.selectedAirports.filter { draft.selectedAirportIATAs.contains($0.iata) }
+            if !selected.isEmpty { return selected }
+        }
+
+        if !draft.selectedAirportIATAs.isEmpty {
+            let selected = airports.filter { draft.selectedAirportIATAs.contains($0.iata) }
+            if !selected.isEmpty { return selected }
+        }
+
+        let query = draft.query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return [] }
+        if let exactAirport = airports.first(where: { $0.iata == query.uppercased() }) {
+            return [exactAirport]
+        }
+
+        if let grouped = airportOptions(forMetroOrCity: query), !grouped.isEmpty {
+            return grouped
+        }
+
+        return airport(matching: query).map { [$0] } ?? []
+    }
+
+    static func airportDisplayOptions(for draft: FlightPathStopDraft) -> [FlightPathAirport] {
+        if !draft.selectedAirports.isEmpty {
+            return draft.selectedAirports
+        }
+
+        return airportOptions(for: draft)
+    }
+
+    static func airportOptions(forMetroOrCity query: String) -> [FlightPathAirport]? {
+        let normalized = query.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        if let codes = metroAirportCodes[normalized] {
+            return codes.compactMap { code in airports.first { $0.iata == code } }
+        }
+
+        let cityMatches = airports.filter { $0.cityName.uppercased() == normalized }
+        return cityMatches.isEmpty ? nil : cityMatches
+    }
+
+    static func airportOptions(forCityName cityName: String) -> [FlightPathAirport] {
+        airportOptions(forMetroOrCity: cityName) ?? airports.filter { $0.cityName == cityName }
+    }
+
+    static func candidates(
+        origin: FlightPathAirport?,
+        stops: [FlightPathResolvedStop],
+        startDate: Date?,
+        targetDays: Int,
+        dayFlex: Int,
+        startFlex: Int,
+        returnHome: Bool
+    ) -> [FlightPathCandidate] {
+        guard let origin, let startDate, stops.count >= 2 else { return [] }
+
+        var candidates: [FlightPathCandidate] = []
+        let routeOrders = permutations(stops, limit: 160)
+        let startDates = (-startFlex...startFlex).map { addDays($0, to: startDate) }
+        let minTripDays = max(1, targetDays - dayFlex)
+        let maxTripDays = targetDays + dayFlex
+
+        for route in routeOrders {
+            for candidateStart in startDates {
+                for nights in nightCombinations(route, limit: 260) {
+                    for selectedAirports in airportSelections(for: route, limit: 80) {
+                        var currentAirport = origin
+                        var currentDate = candidateStart
+                        var legs: [FlightPathLeg] = []
+                        var candidateStops: [FlightPathCandidateStop] = []
+                        var routeDistance = 0
+                        var fixedPenalty = 0
+
+                        for (index, stop) in route.enumerated() {
+                            let selectedAirport = selectedAirports[index]
+                            let activeStop = FlightPathResolvedStop(
+                                id: stop.id,
+                                airports: [selectedAirport],
+                                minNights: stop.minNights,
+                                maxNights: stop.maxNights,
+                                fixedDate: stop.fixedDate
+                            )
+
+                            let legDistance = distanceKm(from: currentAirport, to: selectedAirport)
+                            legs.append(FlightPathLeg(from: currentAirport, to: selectedAirport, date: currentDate, distanceKm: legDistance))
+                            routeDistance += legDistance
+
+                            let arrivalDate = currentDate
+                            let departureDate = addDays(nights[index], to: arrivalDate)
+                            if let fixedDate = stop.fixedDate, !(fixedDate >= arrivalDate && fixedDate < departureDate) {
+                                fixedPenalty += 80_000
+                            }
+
+                            candidateStops.append(
+                                FlightPathCandidateStop(
+                                    stop: activeStop,
+                                    arrivalDate: arrivalDate,
+                                    departureDate: departureDate,
+                                    nights: nights[index]
+                                )
+                            )
+
+                            currentAirport = selectedAirport
+                            currentDate = departureDate
+                        }
+
+                        if returnHome {
+                            let returnDistance = distanceKm(from: currentAirport, to: origin)
+                            legs.append(FlightPathLeg(from: currentAirport, to: origin, date: currentDate, distanceKm: returnDistance))
+                            routeDistance += returnDistance
+                        }
+
+                        let tripDays = max(1, daysBetween(candidateStart, currentDate))
+                        guard tripDays >= minTripDays && tripDays <= maxTripDays else { continue }
+
+                        let durationPenalty = abs(tripDays - targetDays) * 1200
+                        let longLegPenalty = legs.filter { $0.distanceKm > 7_000 }.count * 900
+                        let score = routeDistance + durationPenalty + longLegPenalty + fixedPenalty
+                        let routeCodes = selectedAirports.map(\.iata).joined(separator: "-")
+                        let id = "\(format(candidateStart))-\(routeCodes)-\(nights.map(String.init).joined(separator: "-"))"
+
+                        candidates.append(
+                            FlightPathCandidate(
+                                id: id,
+                                startDate: candidateStart,
+                                endDate: currentDate,
+                                tripDays: tripDays,
+                                routeDistanceKm: routeDistance,
+                                score: score,
+                                stops: candidateStops,
+                                legs: legs
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        return candidates
+            .sorted { lhs, rhs in
+                lhs.score == rhs.score
+                    ? lhs.routeDistanceKm < rhs.routeDistanceKm
+                    : lhs.score < rhs.score
+            }
+            .prefix(8)
+            .map { $0 }
+    }
+
+    private static func airportSelections(for stops: [FlightPathResolvedStop], limit: Int) -> [[FlightPathAirport]] {
+        var results: [[FlightPathAirport]] = []
+
+        func walk(index: Int, path: [FlightPathAirport]) {
+            guard results.count < limit else { return }
+            guard index < stops.count else {
+                results.append(path)
+                return
+            }
+
+            for airport in stops[index].airports {
+                walk(index: index + 1, path: path + [airport])
+            }
+        }
+
+        walk(index: 0, path: [])
+        return results
+    }
+
+    static func googleFlightsURL(for leg: FlightPathLeg) -> URL? {
+        let query = "Flights \(leg.from.iata) to \(leg.to.iata) on \(format(leg.date))"
+        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        return URL(string: "https://www.google.com/travel/flights?q=\(encoded)")
+    }
+
+    static func clampedInt(_ value: String, fallback: Int, min: Int, max: Int) -> Int {
+        guard let parsed = Int(value.trimmingCharacters(in: .whitespacesAndNewlines)) else { return fallback }
+        return Swift.min(Swift.max(parsed, min), max)
+    }
+
+    private static func permutations<T>(_ items: [T], limit: Int) -> [[T]] {
+        var results: [[T]] = []
+        var usedIndexes = Set<Int>()
+
+        func walk(_ path: [T]) {
+            guard results.count < limit else { return }
+            if path.count == items.count {
+                results.append(path)
+                return
+            }
+
+            for index in items.indices where !usedIndexes.contains(index) {
+                usedIndexes.insert(index)
+                walk(path + [items[index]])
+                usedIndexes.remove(index)
+            }
+        }
+
+        walk([])
+        return results
+    }
+
+    private static func nightCombinations(_ stops: [FlightPathResolvedStop], limit: Int) -> [[Int]] {
+        var results: [[Int]] = []
+
+        func walk(index: Int, path: [Int]) {
+            guard results.count < limit else { return }
+            guard index < stops.count else {
+                results.append(path)
+                return
+            }
+
+            let stop = stops[index]
+            for nights in stop.minNights...stop.maxNights {
+                walk(index: index + 1, path: path + [nights])
+            }
+        }
+
+        walk(index: 0, path: [])
+        return results
+    }
+
+    private static func distanceKm(from origin: FlightPathAirport, to destination: FlightPathAirport) -> Int {
+        let radiusKm = 6371.0
+        let deltaLatitude = degreesToRadians(destination.latitude - origin.latitude)
+        let deltaLongitude = degreesToRadians(destination.longitude - origin.longitude)
+        let originLatitude = degreesToRadians(origin.latitude)
+        let destinationLatitude = degreesToRadians(destination.latitude)
+        let a = sin(deltaLatitude / 2) * sin(deltaLatitude / 2)
+            + cos(originLatitude) * cos(destinationLatitude)
+            * sin(deltaLongitude / 2) * sin(deltaLongitude / 2)
+        return Int((radiusKm * 2 * atan2(sqrt(a), sqrt(1 - a))).rounded())
+    }
+
+    private static func degreesToRadians(_ degrees: Double) -> Double {
+        degrees * .pi / 180
+    }
+}
+
+private struct FlightPathToolView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+
+    @State private var originQuery = ""
+    @State private var startDate = "2026-09-01"
+    @State private var isStartCalendarOpen = false
+    @State private var targetDays = "12"
+    @State private var dayFlex = "2"
+    @State private var startFlex = "3"
+    @State private var returnHome = true
+    @State private var isSearchingPrices = false
+    @State private var searchError: String?
+    @State private var pricedPaths: [FlightPathPricedPath] = []
+    @State private var selectedPricedPathID: String?
+    @State private var expandedFixedDateStopIDs: Set<UUID> = []
+    @State private var airportSuggestionsByStopID: [UUID: [FlightPathAirportSuggestion]] = [:]
+    @State private var stops: [FlightPathStopDraft] = [
+        FlightPathStopDraft(query: "", minNights: "2", maxNights: "4", fixedDate: "")
+    ]
+
+    private var originAirport: FlightPathAirport? {
+        FlightPathPlanner.airport(matching: originQuery)
+    }
+
+    private var resolvedStops: [FlightPathResolvedStop] {
+        FlightPathPlanner.resolvedStops(from: stops)
+    }
+
+    private var candidates: [FlightPathCandidate] {
+        FlightPathPlanner.candidates(
+            origin: originAirport,
+            stops: resolvedStops,
+            startDate: FlightPathPlanner.parseDate(startDate),
+            targetDays: FlightPathPlanner.clampedInt(targetDays, fallback: 12, min: 2, max: 90),
+            dayFlex: FlightPathPlanner.clampedInt(dayFlex, fallback: 2, min: 0, max: 30),
+            startFlex: FlightPathPlanner.clampedInt(startFlex, fallback: 3, min: 0, max: 30),
+            returnHome: returnHome
+        )
+    }
+
+    var body: some View {
+        ZStack {
+            Theme.pageBackground("travel2")
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                Theme.titleBanner("Flight Paths")
+
+                ScrollView {
+                    VStack(spacing: 12) {
+                        tripShapeCard
+                        destinationCard
+                        if shouldShowResultsCard {
+                            resultsCard
+                        }
+                        Spacer(minLength: 30)
+                    }
+                    .padding(.horizontal, Theme.pageHorizontalInset)
+                    .padding(.top, 10)
+                    .padding(.bottom, 28)
+                }
+                .scrollContentBackground(.hidden)
+            }
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        .overlay(alignment: .topLeading) {
+            Button {
+                dismiss()
+            } label: {
+                ZStack {
+                    Theme.chromeIconButtonBackground(size: 40)
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.black)
+                }
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, Theme.pageHorizontalInset)
+            .padding(.top, 12)
+        }
+        .onChange(of: originQuery) { _, _ in clearPricedResults() }
+        .onChange(of: startDate) { _, _ in clearPricedResults() }
+        .onChange(of: targetDays) { _, _ in clearPricedResults() }
+        .onChange(of: dayFlex) { _, _ in clearPricedResults() }
+        .onChange(of: startFlex) { _, _ in clearPricedResults() }
+        .onChange(of: returnHome) { _, _ in clearPricedResults() }
+        .onChange(of: stops) { _, _ in clearPricedResults() }
+    }
+
+    private var introCard: some View {
+        flightSection {
+            Text("Flexible multi-city route finder")
+                .font(.system(size: 18, weight: .black))
+                .foregroundStyle(.black)
+
+            HStack(spacing: 10) {
+                statPill(label: "Stops", value: "\(resolvedStops.count)")
+                statPill(label: "Routes", value: "\(candidates.count)")
+                statPill(label: "Source", value: "Duffel")
+            }
+        }
+    }
+
+    private var tripShapeCard: some View {
+        flightSection {
+            HStack(alignment: .center, spacing: 10) {
+                compactSectionHeader("Search", detail: "")
+                Spacer(minLength: 0)
+                Button {
+                    returnHome.toggle()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: returnHome ? "arrow.2.circlepath" : "arrow.right")
+                            .font(.system(size: 10, weight: .black))
+                        Text(returnHome ? "Return" : "One-way")
+                            .font(.system(size: 11, weight: .black))
+                    }
+                    .foregroundStyle(returnHome ? flightGreen : flightMuted)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(returnModeBadgeBackground(isActive: returnHome))
+                }
+                .buttonStyle(.plain)
+            }
+
+            HStack(spacing: 8) {
+                inputField("Origin", text: $originQuery, placeholder: "Airport code or city")
+                startDateField
+            }
+
+            if isStartCalendarOpen {
+                startCalendar
+            }
+
+            HStack(spacing: 8) {
+                inputField("Days", text: $targetDays, placeholder: "12", keyboard: .numberPad)
+                inputField("Date +/-", text: $startFlex, placeholder: "3", keyboard: .numberPad)
+                inputField("Trip +/-", text: $dayFlex, placeholder: "2", keyboard: .numberPad)
+            }
+        }
+    }
+
+    private var startDateField: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Start")
+                .font(.system(size: 10, weight: .black))
+                .tracking(0.25)
+                .foregroundStyle(flightMuted.opacity(0.86))
+
+            Button {
+                withAnimation(.spring(response: 0.24, dampingFraction: 0.86)) {
+                    isStartCalendarOpen.toggle()
+                }
+            } label: {
+                HStack(spacing: 7) {
+                    Text(startDate)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(flightInk)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                    Spacer(minLength: 0)
+                    Image(systemName: "calendar")
+                        .font(.system(size: 12, weight: .black))
+                        .foregroundStyle(isStartCalendarOpen ? flightAccent : flightMuted)
+                }
+                .padding(.horizontal, 11)
+                .frame(minHeight: 40)
+                .background(inputBackground)
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var startCalendar: some View {
+        DatePicker("Start date", selection: startDateBinding, displayedComponents: .date)
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+            .tint(flightAccent)
+            .padding(8)
+            .background(startCalendarBackground)
+    }
+
+    private var startDateBinding: Binding<Date> {
+        Binding(
+            get: {
+                FlightPathPlanner.parseDate(startDate) ?? Date()
+            },
+            set: { newValue in
+                startDate = FlightPathPlanner.format(newValue)
+            }
+        )
+    }
+
+    private var destinationCard: some View {
+        flightSection {
+            HStack {
+                compactSectionHeader("Stops", detail: draftRoutePreview)
+                Spacer()
+                Button {
+                    guard stops.count < 5 else { return }
+                    stops.append(FlightPathStopDraft(query: "", minNights: "2", maxNights: "4", fixedDate: ""))
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 15, weight: .black))
+                        .foregroundStyle(flightInk)
+                        .frame(width: 34, height: 34)
+                        .background(iconButtonBackground)
+                }
+                .buttonStyle(.plain)
+            }
+
+            ForEach($stops) { $stop in
+                stopEditor(stop: $stop)
+            }
+
+            Button {
+                Task { await searchLivePrices() }
+            } label: {
+                HStack {
+                    if isSearchingPrices {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 15, weight: .black))
+                    }
+                    Text(isSearchingPrices ? "Searching live prices..." : "Find Cheapest Path")
+                        .font(.system(size: 14, weight: .black))
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .fill(canSearchPrices ? flightInk : Color.black.opacity(0.26))
+                )
+            }
+            .disabled(!canSearchPrices || isSearchingPrices)
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var resultsCard: some View {
+        flightSection {
+            compactSectionHeader("Cheapest paths", detail: pricedPaths.isEmpty ? "" : "Top 3")
+
+            if let searchError {
+                Text(searchError)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.red.opacity(0.78))
+                    .padding(12)
+                    .background(errorBackground)
+            } else {
+                VStack(spacing: 7) {
+                    ForEach(Array(pricedPaths.prefix(3).enumerated()), id: \.element.id) { index, pricedPath in
+                        pathOptionRow(
+                            pricedPath,
+                            index: index,
+                            isSelected: selectedPricedPathID == pricedPath.id
+                        )
+                    }
+                }
+
+                if let selectedPath = selectedPricedPath {
+                    selectedPathDetailsCard(selectedPath)
+                }
+            }
+        }
+    }
+
+    private var selectedPricedPath: FlightPathPricedPath? {
+        let visiblePaths = Array(pricedPaths.prefix(3))
+        return visiblePaths.first { $0.id == selectedPricedPathID } ?? visiblePaths.first
+    }
+
+    private var shouldShowResultsCard: Bool {
+        !pricedPaths.isEmpty || searchError != nil
+    }
+
+    private var isSearchInputIncomplete: Bool {
+        originAirport == nil
+            || resolvedStops.count < 2
+            || FlightPathPlanner.parseDate(startDate) == nil
+    }
+
+    private var canSearchPrices: Bool {
+        !isSearchInputIncomplete
+            && !candidates.isEmpty
+    }
+
+    private var draftRoutePreview: String {
+        var cityNames: [String] = []
+        if let originAirport {
+            cityNames.append(originAirport.cityName)
+        } else if !originQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            cityNames.append(originQuery.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+
+        let stopCityNames = stops.compactMap { stop -> String? in
+            let query = stop.query.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !query.isEmpty else { return nil }
+            if !stop.selectedAirports.isEmpty {
+                return query
+            }
+            let options = FlightPathPlanner.airportDisplayOptions(for: stop)
+            return options.first?.cityName ?? FlightPathPlanner.airport(matching: query)?.cityName ?? query
+        }
+
+        cityNames.append(contentsOf: stopCityNames)
+
+        if returnHome, let first = cityNames.first, cityNames.count > 1 {
+            cityNames.append(first)
+        }
+
+        return cityNames.isEmpty ? "Add cities" : cityNames.joined(separator: routeArrow)
+    }
+
+    @MainActor
+    private func searchLivePrices() async {
+        guard canSearchPrices else { return }
+
+        isSearchingPrices = true
+        searchError = nil
+
+        do {
+            pricedPaths = try await FlightPathPricingService.search(paths: Array(candidates.prefix(6)))
+            selectedPricedPathID = pricedPaths.first?.id
+        } catch {
+            pricedPaths = []
+            selectedPricedPathID = nil
+            searchError = error.localizedDescription
+        }
+
+        isSearchingPrices = false
+    }
+
+    @MainActor
+    private func clearPricedResults() {
+        guard !isSearchingPrices else { return }
+        pricedPaths = []
+        selectedPricedPathID = nil
+        searchError = nil
+    }
+
+    @MainActor
+    private func fetchAirportSuggestions(for stopID: UUID, query: String) async {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 2 else {
+            airportSuggestionsByStopID[stopID] = []
+            return
+        }
+
+        do {
+            let suggestions = try await FlightPathAirportLookupService.search(query: trimmed)
+            guard stops.contains(where: { $0.id == stopID && $0.query == query }) else { return }
+            airportSuggestionsByStopID[stopID] = suggestions
+        } catch {
+            airportSuggestionsByStopID[stopID] = []
+        }
+    }
+
+    private func stopEditor(stop: Binding<FlightPathStopDraft>) -> some View {
+        let queryBinding = Binding<String>(
+            get: { stop.wrappedValue.query },
+            set: { newValue in
+                if newValue != stop.wrappedValue.query {
+                    stop.wrappedValue.query = newValue
+                    stop.wrappedValue.selectedAirportIATAs = []
+                    stop.wrappedValue.selectedAirports = []
+                    Task { await fetchAirportSuggestions(for: stop.wrappedValue.id, query: newValue) }
+                }
+            }
+        )
+        let airportDisplayOptions = FlightPathPlanner.airportDisplayOptions(for: stop.wrappedValue)
+        let suggestions = stop.wrappedValue.selectedAirportIATAs.isEmpty
+            ? (airportSuggestionsByStopID[stop.wrappedValue.id] ?? [])
+            : []
+        let isFixedDateOpen = !stop.wrappedValue.fixedDate.isEmpty || expandedFixedDateStopIDs.contains(stop.wrappedValue.id)
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text("\(stopNumber(for: stop.wrappedValue.id))")
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundStyle(flightAccent)
+                    .frame(width: 26, height: 42)
+                    .background(stopNumberBackground)
+
+                inputField(stopInputLabel(for: stop.wrappedValue, airportOptions: airportDisplayOptions), text: queryBinding, placeholder: "Airport code or city")
+
+                if stops.count > 2 {
+                    Button {
+                        expandedFixedDateStopIDs.remove(stop.wrappedValue.id)
+                        airportSuggestionsByStopID.removeValue(forKey: stop.wrappedValue.id)
+                        stops.removeAll { $0.id == stop.wrappedValue.id }
+                    } label: {
+                        Image(systemName: "minus")
+                            .font(.system(size: 12, weight: .black))
+                            .foregroundStyle(flightCoral)
+                            .frame(width: 30, height: 42)
+                            .background(removeButtonBackground)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            if !suggestions.isEmpty {
+                VStack(spacing: 5) {
+                    ForEach(Array(suggestions.prefix(2))) { suggestion in
+                        Button {
+                            stop.wrappedValue.query = suggestion.cityName
+                            stop.wrappedValue.selectedAirportIATAs = Set(suggestion.airports.map(\.iata))
+                            stop.wrappedValue.selectedAirports = suggestion.airports
+                            airportSuggestionsByStopID[stop.wrappedValue.id] = []
+                        } label: {
+                            airportSuggestionRow(suggestion)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            if airportDisplayOptions.count > 1 || !stop.wrappedValue.selectedAirportIATAs.isEmpty {
+                airportSelectionChips(airports: airportDisplayOptions, stop: stop)
+            }
+
+            HStack(spacing: 8) {
+                compactInputField("Min", text: stop.minNights, placeholder: "2", keyboard: .numberPad)
+                compactInputField("Max", text: stop.maxNights, placeholder: "4", keyboard: .numberPad)
+
+                Button {
+                    withAnimation(.spring(response: 0.24, dampingFraction: 0.86)) {
+                        if isFixedDateOpen && stop.wrappedValue.fixedDate.isEmpty {
+                            _ = expandedFixedDateStopIDs.remove(stop.wrappedValue.id)
+                        } else {
+                            _ = expandedFixedDateStopIDs.insert(stop.wrappedValue.id)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 10, weight: .black))
+                        Text(stop.wrappedValue.fixedDate.isEmpty ? "Any date" : stop.wrappedValue.fixedDate)
+                            .font(.system(size: 11, weight: .black))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                    }
+                    .foregroundStyle(isFixedDateOpen ? flightAccent : flightMuted)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 34)
+                    .background(fixedDateButtonBackground(isActive: isFixedDateOpen))
+                }
+                .buttonStyle(.plain)
+            }
+
+            if isFixedDateOpen {
+                HStack(spacing: 8) {
+                    compactInputField("Must be there", text: stop.fixedDate, placeholder: "YYYY-MM-DD")
+                    Button {
+                        stop.wrappedValue.fixedDate = ""
+                        withAnimation(.spring(response: 0.24, dampingFraction: 0.86)) {
+                            _ = expandedFixedDateStopIDs.remove(stop.wrappedValue.id)
+                        }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundStyle(flightMuted)
+                            .frame(width: 34, height: 34)
+                            .background(iconButtonBackground)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(10)
+        .background(stopEditorBackground)
+    }
+
+    private func stopInputLabel(for draft: FlightPathStopDraft, airportOptions: [FlightPathAirport]) -> String {
+        let query = draft.query.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        guard !query.isEmpty, airportOptions.count == 1, let airport = airportOptions.first else {
+            return "City"
+        }
+
+        if airport.iata == query || airport.cityName.uppercased() == query {
+            return airport.cityName
+        }
+
+        return "City"
+    }
+
+    private func airportSuggestionRow(_ suggestion: FlightPathAirportSuggestion) -> some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(suggestion.countryCode.map { "\(suggestion.cityName), \($0)" } ?? suggestion.cityName)
+                    .font(.system(size: 12, weight: .black))
+                    .foregroundStyle(flightInk)
+                Text(suggestion.airports.map(\.iata).joined(separator: ", "))
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(flightMuted)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Text("All")
+                .font(.system(size: 10, weight: .black))
+                .foregroundStyle(flightGreen)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
+                .background(bestBadgeBackground)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(suggestionBackground)
+    }
+
+    private func airportSelectionChips(airports: [FlightPathAirport], stop: Binding<FlightPathStopDraft>) -> some View {
+        let selectedCodes = stop.wrappedValue.selectedAirportIATAs.isEmpty
+            ? Set(airports.map(\.iata))
+            : stop.wrappedValue.selectedAirportIATAs
+        let orderedAirports = airports.enumerated().sorted { lhs, rhs in
+            let lhsSelected = selectedCodes.contains(lhs.element.iata)
+            let rhsSelected = selectedCodes.contains(rhs.element.iata)
+            if lhsSelected != rhsSelected { return lhsSelected && !rhsSelected }
+            return lhs.offset < rhs.offset
+        }.map(\.element)
+
+        return HStack(spacing: 6) {
+            ForEach(orderedAirports) { airport in
+                let isSelected = selectedCodes.contains(airport.iata)
+                Button {
+                    var next = selectedCodes
+                    if next.contains(airport.iata), next.count > 1 {
+                        next.remove(airport.iata)
+                    } else {
+                        next.insert(airport.iata)
+                    }
+                    stop.wrappedValue.selectedAirportIATAs = next
+                } label: {
+                    Text(airport.iata)
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundStyle(isSelected ? flightAccent : flightMuted.opacity(0.58))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(airportChipBackground(isSelected: isSelected))
+                        .opacity(isSelected ? 1 : 0.52)
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func pathOptionRow(_ pricedPath: FlightPathPricedPath, index: Int, isSelected: Bool) -> some View {
+        let candidate = candidates.first { $0.id == pricedPath.id }
+        let isBest = index == 0
+        let routeCodes = pricedRouteCodes(pricedPath)
+
+        return Button {
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+                selectedPricedPathID = pricedPath.id
+            }
+        } label: {
+            HStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 2.5, style: .continuous)
+                    .fill(isSelected ? (isBest ? flightGreen : flightAccent) : Color.black.opacity(0.12))
+                    .frame(width: 4)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        if isBest {
+                            Text("Best")
+                                .font(.system(size: 10, weight: .black))
+                                .foregroundStyle(flightGreen)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 3)
+                                .background(bestBadgeBackground)
+                        } else {
+                            Text("#\(index + 1)")
+                                .font(.system(size: 11, weight: .black))
+                                .foregroundStyle(flightAccent)
+                        }
+
+                        Text(routeCodeLine(routeCodes))
+                            .font(.system(size: 13, weight: .black))
+                            .foregroundStyle(flightInk)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.82)
+                    }
+                    if let candidate {
+                        Text("\(compactTripDateRangeText(candidate)) • \(candidate.tripDays)d")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(flightMuted)
+                            .lineLimit(1)
+                    }
+                }
+
+                Spacer(minLength: 6)
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(priceText(pricedPath.totalPrice, currency: pricedPath.currency))
+                            .font(.system(size: 17, weight: .black))
+                            .foregroundStyle(isBest ? flightGreen : flightInk)
+                            .lineLimit(1)
+                        Image(systemName: isSelected ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 9, weight: .black))
+                            .foregroundStyle(flightMuted.opacity(0.72))
+                    }
+                }
+            }
+            .frame(minHeight: 50)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(pathOptionBackground(isSelected: isSelected, isBest: isBest))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func selectedPathDetailsCard(_ pricedPath: FlightPathPricedPath) -> some View {
+        let candidate = candidates.first { $0.id == pricedPath.id }
+
+        return VStack(alignment: .leading, spacing: 11) {
+            tripRouteSummary(codes: pricedRouteCodes(pricedPath))
+
+            if let candidate {
+                VStack(spacing: 0) {
+                    detailSectionHeader("Stays")
+                    VStack(spacing: 0) {
+                        ForEach(Array(candidate.stops.enumerated()), id: \.element.id) { index, item in
+                            staySummaryRow(item)
+                            if index < candidate.stops.count - 1 {
+                                detailDivider
+                            }
+                        }
+                    }
+                    .background(detailListBackground)
+                }
+            }
+
+            VStack(spacing: 0) {
+                detailSectionHeader("Flights")
+                VStack(spacing: 0) {
+                    ForEach(Array(pricedPath.legs.enumerated()), id: \.element.id) { index, leg in
+                        pricedLegRow(leg)
+                        if index < pricedPath.legs.count - 1 {
+                            detailDivider
+                        }
+                    }
+                }
+                .background(detailListBackground)
+            }
+        }
+        .padding(12)
+        .background(selectedDetailsBackground)
+    }
+
+    private func tripRouteSummary(codes: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(routeCodeLine(codes))
+                .font(.system(size: 16, weight: .black))
+                .foregroundStyle(flightInk)
+                .lineLimit(1)
+                .minimumScaleFactor(0.74)
+            Text(compactRouteCityLine(codes))
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(flightMuted)
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 2)
+    }
+
+    private func detailSectionHeader(_ title: String) -> some View {
+        HStack {
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .black))
+                .tracking(0.8)
+                .foregroundStyle(flightMuted.opacity(0.82))
+            Spacer()
+        }
+        .padding(.bottom, 5)
+    }
+
+    private var detailDivider: some View {
+        Rectangle()
+            .fill(Color.black.opacity(0.055))
+            .frame(height: 1)
+            .padding(.leading, 10)
+            .padding(.trailing, 10)
+    }
+
+    private func staySummaryRow(_ item: FlightPathCandidateStop) -> some View {
+        HStack(alignment: .center, spacing: 9) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.stop.airport.cityName)
+                    .font(.system(size: 13, weight: .black))
+                    .foregroundStyle(flightInk)
+                Text(stayDateRangeText(from: item.arrivalDate, to: item.departureDate))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(flightMuted)
+            }
+
+            Spacer()
+
+            Text("\(item.nights) night\(item.nights == 1 ? "" : "s")")
+                .font(.system(size: 11, weight: .black))
+                .foregroundStyle(flightAccent)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 5)
+                .background(stayBadgeBackground)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Color.clear)
+    }
+
+    private func pricedLegRow(_ leg: FlightPathPricedLeg) -> some View {
+        Button {
+            if let deepLink = leg.deepLink, let url = URL(string: deepLink) {
+                openURL(url)
+            }
+        } label: {
+            HStack(alignment: .center, spacing: 9) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text("\(leg.from)\(routeArrow)\(leg.to)")
+                            .font(.system(size: 13, weight: .black))
+                            .foregroundStyle(flightInk)
+                            .lineLimit(1)
+                        Text(isoDateText(leg.date))
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundStyle(flightCoral)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(dateBadgeBackground)
+                    }
+
+                    Text("\(airportCityName(leg.from)) to \(airportCityName(leg.to))")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(flightMuted)
+                        .lineLimit(1)
+
+                    Text(leg.provider ?? "Duffel")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(flightMuted.opacity(0.78))
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 8)
+
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text(priceText(leg.price, currency: leg.currency))
+                        .font(.system(size: 14, weight: .black))
+                        .foregroundStyle(flightInk)
+                        .lineLimit(1)
+
+                    if leg.deepLink != nil {
+                        Image(systemName: "arrow.up.forward")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundStyle(flightMuted.opacity(0.62))
+                    }
+                }
+            }
+            .foregroundStyle(flightInk)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 9)
+            .background(Color.clear)
+        }
+        .disabled(leg.deepLink == nil)
+        .buttonStyle(.plain)
+    }
+
+    private func candidateCard(_ candidate: FlightPathCandidate, index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Option \(index + 1)")
+                        .font(.system(size: 16, weight: .black))
+                        .foregroundStyle(.black)
+                    Text("\(FlightPathPlanner.format(candidate.startDate)) to \(FlightPathPlanner.format(candidate.endDate)) - \(candidate.tripDays) days")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.black.opacity(0.65))
+                }
+                Spacer()
+                Text("\(candidate.routeDistanceKm.formatted()) km")
+                    .font(.system(size: 12, weight: .black))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(inputBackground)
+            }
+
+            Text(routeSummary(candidate))
+                .font(.system(size: 14, weight: .black))
+                .foregroundStyle(.black)
+
+            ForEach(candidate.stops) { item in
+                Text("\(item.stop.airport.cityName): \(FlightPathPlanner.format(item.arrivalDate)) to \(FlightPathPlanner.format(item.departureDate)) - \(item.nights) nights")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.68))
+            }
+
+            ForEach(candidate.legs) { leg in
+                Button {
+                    if let url = FlightPathPlanner.googleFlightsURL(for: leg) {
+                        openURL(url)
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "airplane")
+                            .font(.system(size: 14, weight: .bold))
+                        Text("\(leg.from.iata) to \(leg.to.iata) - \(FlightPathPlanner.format(leg.date))")
+                            .font(.system(size: 13, weight: .bold))
+                        Spacer()
+                    }
+                    .foregroundStyle(.black)
+                    .padding(12)
+                    .background(inputBackground)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(15)
+        .background(inputBackground)
+    }
+
+    private func routeSummary(_ candidate: FlightPathCandidate) -> String {
+        let first = candidate.legs.first?.from.iata ?? ""
+        let stops = candidate.stops.map { $0.stop.airport.iata }.joined(separator: routeArrow)
+        let suffix = returnHome ? "\(routeArrow)\(candidate.legs.last?.to.iata ?? "")" : ""
+        return "\(first)\(routeArrow)\(stops)\(suffix)"
+    }
+
+    private func pricedRouteSummary(_ path: FlightPathPricedPath) -> String {
+        guard let first = path.legs.first else { return "" }
+        let destinations = path.legs.map(\.to).joined(separator: routeArrow)
+        return "\(first.from)\(routeArrow)\(destinations)"
+    }
+
+    private func pricedRouteCodes(_ path: FlightPathPricedPath) -> [String] {
+        guard let first = path.legs.first else { return [] }
+        return [first.from] + path.legs.map(\.to)
+    }
+
+    private func routeCityLine(_ codes: [String]) -> String {
+        codes.map { airportCityName($0) }.joined(separator: routeArrow)
+    }
+
+    private func compactRouteCityLine(_ codes: [String]) -> String {
+        codes.map { airportCityName($0) }.joined(separator: " • ")
+    }
+
+    private func routeCodeLine(_ codes: [String]) -> String {
+        codes.joined(separator: routeArrow)
+    }
+
+    private var routeArrow: String { " → " }
+
+    private func airportCityName(_ code: String) -> String {
+        FlightPathPlanner.airport(matching: code)?.cityName ?? code
+    }
+
+    private func stopNumber(for id: UUID) -> Int {
+        (stops.firstIndex { $0.id == id } ?? 0) + 1
+    }
+
+    private func tripDateRangeText(_ candidate: FlightPathCandidate) -> String {
+        "\(shortDateText(candidate.startDate)) - \(fullDateText(candidate.endDate))"
+    }
+
+    private func compactTripDateRangeText(_ candidate: FlightPathCandidate) -> String {
+        "\(shortDateText(candidate.startDate)) - \(shortDateText(candidate.endDate))"
+    }
+
+    private func stayDateRangeText(from arrivalDate: Date, to departureDate: Date) -> String {
+        "\(shortDateText(arrivalDate)) - \(shortDateText(departureDate))"
+    }
+
+    private func isoDateText(_ value: String) -> String {
+        guard let date = FlightPathPlanner.parseDate(value) else { return value }
+        return shortDateText(date)
+    }
+
+    private func shortDateText(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "MMM d"
+        return formatter.string(from: date)
+    }
+
+    private func fullDateText(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter.string(from: date)
+    }
+
+    private func priceText(_ price: Double?, currency: String) -> String {
+        guard let price else { return "No fare" }
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currency
+        formatter.maximumFractionDigits = price.rounded() == price ? 0 : 2
+        return formatter.string(from: NSNumber(value: price)) ?? "\(currency) \(Int(price.rounded()))"
+    }
+
+    private func sectionHeader(_ title: String, eyebrow: String) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(eyebrow.uppercased())
+                .font(.system(size: 11, weight: .black))
+                .tracking(0.6)
+                .foregroundStyle(.black.opacity(0.58))
+            Text(title)
+                .font(.system(size: 18, weight: .black))
+                .foregroundStyle(.black)
+        }
+    }
+
+    private func compactSectionHeader(_ title: String, detail: String) -> some View {
+        HStack(alignment: .lastTextBaseline, spacing: 8) {
+            Text(title)
+                .font(.system(size: 17, weight: .black))
+                .foregroundStyle(flightInk)
+            if !detail.isEmpty {
+                Text(detail)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(flightMuted.opacity(0.82))
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func inputField(
+        _ label: String,
+        text: Binding<String>,
+        placeholder: String,
+        keyboard: UIKeyboardType = .default
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.system(size: 10, weight: .black))
+                .tracking(0.25)
+                .foregroundStyle(flightMuted.opacity(0.86))
+
+            TextField(placeholder, text: text)
+                .textInputAutocapitalization(.characters)
+                .keyboardType(keyboard)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(flightInk)
+                .padding(.horizontal, 11)
+                .frame(minHeight: 40)
+                .background(inputBackground)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func compactInputField(
+        _ label: String,
+        text: Binding<String>,
+        placeholder: String,
+        keyboard: UIKeyboardType = .default
+    ) -> some View {
+        HStack(spacing: 7) {
+            Text(label)
+                .font(.system(size: 10, weight: .black))
+                .foregroundStyle(flightMuted.opacity(0.86))
+                .lineLimit(1)
+            TextField(placeholder, text: text)
+                .textInputAutocapitalization(.characters)
+                .keyboardType(keyboard)
+                .font(.system(size: 13, weight: .black))
+                .foregroundStyle(flightInk)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+        .padding(.horizontal, 10)
+        .frame(maxWidth: .infinity)
+        .frame(height: 34)
+        .background(inputBackground)
+    }
+
+    private func helperText(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.black.opacity(0.62))
+    }
+
+    private func statPill(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.system(size: 11, weight: .black))
+                .foregroundStyle(.black.opacity(0.58))
+            Text(value)
+                .font(.system(size: 16, weight: .black))
+                .foregroundStyle(.black)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(inputBackground)
+    }
+
+    private func flightSection<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            content()
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(red: 0.96, green: 0.93, blue: 0.87).opacity(0.90))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(Color.white.opacity(0.38), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.10), radius: 12, y: 7)
+        )
+    }
+
+    private var inputBackground: some View {
+        RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .fill(Color.white.opacity(0.58))
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(Color.black.opacity(0.055), lineWidth: 1)
+            )
+    }
+
+    private var startCalendarBackground: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(Color.white.opacity(0.58))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(flightAccent.opacity(0.10), lineWidth: 1)
+            )
+    }
+
+    private var modeToggleBackground: some View {
+        RoundedRectangle(cornerRadius: 15, style: .continuous)
+            .fill(Color.white.opacity(0.46))
+            .overlay(
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .stroke(Color.black.opacity(0.055), lineWidth: 1)
+            )
+    }
+
+    private func routeModeIconBackground(isActive: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(isActive ? flightGreen.opacity(0.10) : flightAccent.opacity(0.08))
+    }
+
+    private func returnModeBadgeBackground(isActive: Bool) -> some View {
+        Capsule()
+            .fill(isActive ? flightGreen.opacity(0.10) : Color.black.opacity(0.055))
+            .overlay(
+                Capsule()
+                    .stroke(isActive ? flightGreen.opacity(0.16) : Color.black.opacity(0.06), lineWidth: 1)
+            )
+    }
+
+    private var stopEditorBackground: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(Color.white.opacity(0.43))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.black.opacity(0.045), lineWidth: 1)
+            )
+    }
+
+    private var stopNumberBackground: some View {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(flightAccent.opacity(0.085))
+    }
+
+    private var iconButtonBackground: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(Color.white.opacity(0.54))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.black.opacity(0.055), lineWidth: 1)
+            )
+    }
+
+    private var suggestionBackground: some View {
+        RoundedRectangle(cornerRadius: 11, style: .continuous)
+            .fill(flightAccent.opacity(0.065))
+            .overlay(
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .stroke(flightAccent.opacity(0.10), lineWidth: 1)
+            )
+    }
+
+    private func airportChipBackground(isSelected: Bool) -> some View {
+        Capsule()
+            .fill(isSelected ? flightAccent.opacity(0.10) : Color.white.opacity(0.42))
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? flightAccent.opacity(0.16) : Color.black.opacity(0.045), lineWidth: 1)
+            )
+    }
+
+    private func fixedDateButtonBackground(isActive: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 11, style: .continuous)
+            .fill(isActive ? flightAccent.opacity(0.085) : Color.white.opacity(0.48))
+            .overlay(
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .stroke(isActive ? flightAccent.opacity(0.15) : Color.black.opacity(0.045), lineWidth: 1)
+            )
+    }
+
+    private var removeButtonBackground: some View {
+        Circle()
+            .fill(flightCoral.opacity(0.075))
+    }
+
+    private var noticeBackground: some View {
+        RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .fill(flightGold.opacity(0.12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(flightGold.opacity(0.14), lineWidth: 1)
+            )
+    }
+
+    private var errorBackground: some View {
+        RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .fill(flightCoral.opacity(0.09))
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(flightCoral.opacity(0.13), lineWidth: 1)
+            )
+    }
+
+    private var emptyStateBackground: some View {
+        RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .fill(Color.white.opacity(0.48))
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(flightAccent.opacity(0.08), lineWidth: 1)
+            )
+    }
+
+    private var flightInk: Color {
+        Color(red: 0.10, green: 0.11, blue: 0.12)
+    }
+
+    private var flightMuted: Color {
+        Color(red: 0.39, green: 0.38, blue: 0.36)
+    }
+
+    private var flightAccent: Color {
+        Color(red: 0.10, green: 0.39, blue: 0.56)
+    }
+
+    private var flightGreen: Color {
+        Color(red: 0.12, green: 0.47, blue: 0.33)
+    }
+
+    private var flightCoral: Color {
+        Color(red: 0.78, green: 0.30, blue: 0.23)
+    }
+
+    private var flightGold: Color {
+        Color(red: 0.74, green: 0.51, blue: 0.18)
+    }
+
+    private var resultCardBackground: some View {
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .fill(Color(red: 1.0, green: 0.985, blue: 0.945).opacity(0.94))
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(flightAccent.opacity(0.14), lineWidth: 1.2)
+            )
+    }
+
+    private func pathOptionBackground(isSelected: Bool, isBest: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(
+                isSelected
+                ? (isBest ? flightGreen.opacity(0.095) : flightAccent.opacity(0.075))
+                : Color.white.opacity(0.50)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(
+                        isSelected
+                        ? (isBest ? flightGreen.opacity(0.22) : flightAccent.opacity(0.18))
+                        : Color.black.opacity(0.045),
+                        lineWidth: isSelected ? 1.3 : 1
+                    )
+            )
+    }
+
+    private var selectedDetailsBackground: some View {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .fill(Color.white.opacity(0.34))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.black.opacity(0.045), lineWidth: 1)
+            )
+    }
+
+    private var detailListBackground: some View {
+        RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .fill(Color.white.opacity(0.48))
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(Color.black.opacity(0.045), lineWidth: 1)
+            )
+    }
+
+    private var bestBadgeBackground: some View {
+        Capsule()
+            .fill(flightGreen.opacity(0.10))
+            .overlay(
+                Capsule()
+                    .stroke(flightGreen.opacity(0.16), lineWidth: 1)
+            )
+    }
+
+    private var stayBadgeBackground: some View {
+        Capsule()
+            .fill(flightAccent.opacity(0.08))
+    }
+
+    private var dateBadgeBackground: some View {
+        Capsule()
+            .fill(flightCoral.opacity(0.09))
+    }
+
+    private var pricePillBackground: some View {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .fill(flightGreen.opacity(0.10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(flightGreen.opacity(0.18), lineWidth: 1)
+            )
+    }
+
+    private var routePillBackground: some View {
+        RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .fill(flightAccent.opacity(0.09))
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(flightAccent.opacity(0.16), lineWidth: 1)
+            )
+    }
+
+    private var routeSummaryBackground: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(flightAccent.opacity(0.075))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(flightAccent.opacity(0.13), lineWidth: 1)
+            )
+    }
+
+    private var summaryRowBackground: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(Color.white.opacity(0.42))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.black.opacity(0.04), lineWidth: 1)
+            )
+    }
+
+    private var legRowBackground: some View {
+        RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .fill(Color.white.opacity(0.56))
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(flightAccent.opacity(0.09), lineWidth: 1)
+            )
     }
 }
 
