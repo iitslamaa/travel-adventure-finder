@@ -40,9 +40,9 @@ struct ThemePreviewView: View {
                     header
                     
                     HStack(spacing: 8) {
-                        Text("Explore")
-                        Text("Adventure")
-                        Text("Destinations")
+                        Text("theme_preview.nav.explore")
+                        Text("theme_preview.nav.adventure")
+                        Text("theme_preview.nav.destinations")
                     }
                     .font(.system(size: 12, weight: .semibold))
                     .padding(.horizontal, 12)
@@ -84,11 +84,11 @@ struct ThemePreviewView: View {
                             .padding(16)
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("🇯🇵 Tokyo")
+                            Text("theme_preview.destination.tokyo")
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundStyle(.white)
 
-                            Text("Travel score: 92")
+                            Text("theme_preview.destination.score")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(.white.opacity(0.9))
                         }
@@ -109,23 +109,23 @@ struct ThemePreviewView: View {
 
                     surfaceCard {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Typography")
+                            Text("theme_preview.typography")
                                 .font(TAFTypography.section())
                                 .foregroundStyle(isDark ? .white : TAFColor.textPrimary)
 
-                            Text("Large Title — Discover the world")
+                            Text("theme_preview.large_title_sample")
                                 .font(TAFTypography.largeTitle())
                                 .foregroundStyle(isDark ? .white : TAFColor.textPrimary)
 
-                            Text("Title — Your next destination")
+                            Text("theme_preview.title_sample")
                                 .font(TAFTypography.title())
                                 .foregroundStyle(isDark ? .white : TAFColor.textPrimary)
 
-                            Text("Body — Clean, modern, data-driven travel discovery.")
+                            Text("theme_preview.body_sample")
                                 .font(TAFTypography.body())
                                 .foregroundStyle(isDark ? Color.white.opacity(0.85) : TAFColor.textSecondary)
 
-                            Text("Caption — Updated 2m ago")
+                            Text("theme_preview.caption_sample")
                                 .font(TAFTypography.caption())
                                 .foregroundStyle(isDark ? Color.white.opacity(0.7) : TAFColor.textSecondary)
                         }
@@ -133,19 +133,19 @@ struct ThemePreviewView: View {
 
                     surfaceCard {
                         VStack(spacing: 12) {
-                            Text("Buttons")
+                            Text("theme_preview.buttons")
                                 .font(TAFTypography.section())
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .foregroundStyle(isDark ? .white : TAFColor.textPrimary)
 
-                            Button("Explore Destinations ✈️") {}
+                            Button(String(localized: "theme_preview.button.explore_destinations")) {}
                                 .font(.system(size: 16, weight: .bold))
                                 .buttonStyle(TAFButtonStyle(variant: .primary))
 
-                            Button("See Score Breakdown") {}
+                            Button(String(localized: "theme_preview.button.score_breakdown")) {}
                                 .buttonStyle(TAFButtonStyle(variant: .secondary))
 
-                            Button("Skip for now") {}
+                            Button(String(localized: "theme_preview.button.skip")) {}
                                 .buttonStyle(TAFButtonStyle(variant: .ghost))
                         }
                     }
@@ -164,15 +164,15 @@ struct ThemePreviewView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("TravelAF Journal")
+                Text("theme_preview.header.title")
                     .font(TAFTypography.title())
                     .foregroundStyle(isDark ? .white : TAFColor.textPrimary)
                 Spacer()
-                Toggle("Dark", isOn: $isDark)
+                Toggle(String(localized: "theme_preview.dark_mode"), isOn: $isDark)
                     .labelsHidden()
             }
 
-            Text("This screen is the visual contract for the app’s look.")
+            Text("theme_preview.header.subtitle")
                 .font(TAFTypography.body())
                 .foregroundStyle(isDark ? Color.white.opacity(0.75) : TAFColor.textSecondary)
         }
@@ -240,7 +240,7 @@ private struct PassportStampScoreCard: View {
             // Big stamp + sticker collage
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text("PASSPORT STAMP")
+                    Text("theme_preview.passport_stamp")
                         .font(.system(size: 12, weight: .black, design: .rounded))
                         .tracking(1)
                         .foregroundStyle(Color.black.opacity(0.55))
@@ -250,7 +250,7 @@ private struct PassportStampScoreCard: View {
                     // Fake postage sticker
                     HStack(spacing: 6) {
                         Text("✉️")
-                        Text("AIR MAIL")
+                        Text("theme_preview.air_mail")
                     }
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .padding(.horizontal, 10)
@@ -269,17 +269,17 @@ private struct PassportStampScoreCard: View {
                         .rotationEffect(.degrees(-8))
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("🇯🇵 TOKYO")
+                        Text("theme_preview.destination.tokyo_all_caps")
                             .font(.system(size: 20, weight: .black, design: .rounded))
                             .foregroundStyle(TAFColor.textPrimary)
 
                         HStack(spacing: 6) {
-                            Chip(text: "Food")
-                            Chip(text: "Walkable")
-                            Chip(text: "Spring")
+                            Chip(text: String(localized: "theme_preview.chip.food"))
+                            Chip(text: String(localized: "theme_preview.chip.walkable"))
+                            Chip(text: String(localized: "theme_preview.chip.spring"))
                         }
 
-                        Text("Stamped in your journal — bold, messy, unforgettable.")
+                        Text("theme_preview.journal_caption")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(Color.black.opacity(0.55))
                     }
@@ -289,7 +289,7 @@ private struct PassportStampScoreCard: View {
 
                 // Ticket-style ruler slider
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Trip vibe")
+                    Text("theme_preview.trip_vibe")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.black.opacity(0.55))
 
@@ -344,14 +344,14 @@ private struct StampBadge: View {
                 Text("\(Int(score))")
                     .font(.system(size: 28, weight: .black, design: .rounded))
                     .foregroundStyle(ink)
-                Text("SCORE")
+                Text("theme_preview.score_label")
                     .font(.system(size: 11, weight: .black, design: .rounded))
                     .tracking(2)
                     .foregroundStyle(ink.opacity(0.75))
             }
 
             // diagonal stamp text
-            Text("APPROVED")
+            Text("theme_preview.approved")
                 .font(.system(size: 12, weight: .black, design: .rounded))
                 .tracking(2)
                 .foregroundStyle(ink.opacity(0.85))

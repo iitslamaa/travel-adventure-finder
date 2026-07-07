@@ -54,7 +54,7 @@ struct AddLanguageView: View {
         NavigationStack {
             List {
                 if !selectedLanguageEntries.isEmpty {
-                    Section("Selected") {
+                    Section(String(localized: "common.selected")) {
                         ForEach(selectedLanguageEntries) { entry in
                             HStack {
                                 Text(LanguageRepository.shared.localizedDisplayName(for: entry.canonicalCode))

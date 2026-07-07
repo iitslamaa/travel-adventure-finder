@@ -677,21 +677,21 @@ private enum FlightPathSearchError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingSupabaseConfig:
-            return "Flight search is not configured for this build."
+            return String(localized: "flight_paths.error.missing_config")
         case .server(let message):
             if message.localizedCaseInsensitiveContains("NOT_FOUND")
                 || message.localizedCaseInsensitiveContains("function was not found")
             {
-                return "Flight search is not deployed yet. Deploy the flight-path-search Supabase function, then try again."
+                return String(localized: "flight_paths.error.not_deployed")
             }
             if message.localizedCaseInsensitiveContains("Duffel access token")
                 || message.localizedCaseInsensitiveContains("DUFFEL_ACCESS_TOKEN")
             {
-                return "Flight search needs a Duffel access token before live prices can load."
+                return String(localized: "flight_paths.error.missing_duffel_token")
             }
             return message
         case .invalidResponse:
-            return "Flight search returned an unexpected response."
+            return String(localized: "flight_paths.error.invalid_response")
         }
     }
 }
@@ -1205,7 +1205,7 @@ private struct FlightPathToolView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                Theme.titleBanner("Flight Paths")
+                Theme.titleBanner(String(localized: "flight_paths.title"))
 
                 ScrollView {
                     VStack(spacing: 12) {
@@ -1250,14 +1250,14 @@ private struct FlightPathToolView: View {
 
     private var introCard: some View {
         flightSection {
-            Text("Flexible multi-city route finder")
+            Text("flight_paths.subtitle")
                 .font(.system(size: 18, weight: .black))
                 .foregroundStyle(.black)
 
             HStack(spacing: 10) {
-                statPill(label: "Stops", value: "\(resolvedStops.count)")
-                statPill(label: "Routes", value: "\(candidates.count)")
-                statPill(label: "Source", value: "Duffel")
+                statPill(label: String(localized: "flight_paths.stops.title"), value: "\(resolvedStops.count)")
+                statPill(label: String(localized: "flight_paths.routes"), value: "\(candidates.count)")
+                statPill(label: String(localized: "flight_paths.source"), value: "Duffel")
             }
         }
     }
@@ -1265,7 +1265,7 @@ private struct FlightPathToolView: View {
     private var tripShapeCard: some View {
         flightSection {
             HStack(alignment: .center, spacing: 10) {
-                compactSectionHeader("Search", detail: "")
+                compactSectionHeader(String(localized: "flight_paths.search.title"), detail: "")
                 Spacer(minLength: 0)
                 Button {
                     returnHome.toggle()
@@ -1273,7 +1273,7 @@ private struct FlightPathToolView: View {
                     HStack(spacing: 6) {
                         Image(systemName: returnHome ? "arrow.2.circlepath" : "arrow.right")
                             .font(.system(size: 10, weight: .black))
-                        Text(returnHome ? "Return" : "One-way")
+                        Text(returnHome ? String(localized: "flight_paths.return") : String(localized: "flight_paths.one_way"))
                             .font(.system(size: 11, weight: .black))
                     }
                     .foregroundStyle(returnHome ? flightGreen : flightMuted)
@@ -1285,7 +1285,11 @@ private struct FlightPathToolView: View {
             }
 
             HStack(spacing: 8) {
-                inputField("Origin", text: $originQuery, placeholder: "Airport code or city")
+                inputField(
+                    String(localized: "flight_paths.field.origin"),
+                    text: $originQuery,
+                    placeholder: String(localized: "flight_paths.field.airport_or_city_placeholder")
+                )
                 startDateField
             }
 
@@ -1294,16 +1298,16 @@ private struct FlightPathToolView: View {
             }
 
             HStack(spacing: 8) {
-                inputField("Days", text: $targetDays, placeholder: "12", keyboard: .numberPad)
-                inputField("Date +/-", text: $startFlex, placeholder: "3", keyboard: .numberPad)
-                inputField("Trip +/-", text: $dayFlex, placeholder: "2", keyboard: .numberPad)
+                inputField(String(localized: "flight_paths.field.days"), text: $targetDays, placeholder: "12", keyboard: .numberPad)
+                inputField(String(localized: "flight_paths.field.date_flex"), text: $startFlex, placeholder: "3", keyboard: .numberPad)
+                inputField(String(localized: "flight_paths.field.trip_flex"), text: $dayFlex, placeholder: "2", keyboard: .numberPad)
             }
         }
     }
 
     private var startDateField: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Start")
+            Text("flight_paths.field.start")
                 .font(.system(size: 10, weight: .black))
                 .tracking(0.25)
                 .foregroundStyle(flightMuted.opacity(0.86))
@@ -1334,7 +1338,7 @@ private struct FlightPathToolView: View {
     }
 
     private var startCalendar: some View {
-        DatePicker("Start date", selection: startDateBinding, displayedComponents: .date)
+        DatePicker(String(localized: "flight_paths.field.start_date"), selection: startDateBinding, displayedComponents: .date)
             .datePickerStyle(.graphical)
             .labelsHidden()
             .tint(flightAccent)
@@ -1356,7 +1360,7 @@ private struct FlightPathToolView: View {
     private var destinationCard: some View {
         flightSection {
             HStack {
-                compactSectionHeader("Stops", detail: draftRoutePreview)
+                compactSectionHeader(String(localized: "flight_paths.stops.title"), detail: draftRoutePreview)
                 Spacer()
                 Button {
                     guard stops.count < 5 else { return }
@@ -1386,7 +1390,7 @@ private struct FlightPathToolView: View {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 15, weight: .black))
                     }
-                    Text(isSearchingPrices ? "Searching live prices..." : "Find Cheapest Path")
+                    Text(isSearchingPrices ? String(localized: "flight_paths.searching_live_prices") : String(localized: "flight_paths.find_cheapest_path"))
                         .font(.system(size: 14, weight: .black))
                 }
                 .foregroundStyle(.white)
@@ -1404,7 +1408,10 @@ private struct FlightPathToolView: View {
 
     private var resultsCard: some View {
         flightSection {
-            compactSectionHeader("Cheapest paths", detail: pricedPaths.isEmpty ? "" : "Top 3")
+            compactSectionHeader(
+                String(localized: "flight_paths.results.cheapest_paths"),
+                detail: pricedPaths.isEmpty ? "" : String(localized: "flight_paths.results.top_three")
+            )
 
             if let searchError {
                 Text(searchError)
@@ -1474,7 +1481,7 @@ private struct FlightPathToolView: View {
             cityNames.append(first)
         }
 
-        return cityNames.isEmpty ? "Add cities" : cityNames.joined(separator: routeArrow)
+        return cityNames.isEmpty ? String(localized: "flight_paths.stops.add_cities") : cityNames.joined(separator: routeArrow)
     }
 
     @MainActor
@@ -1547,7 +1554,11 @@ private struct FlightPathToolView: View {
                     .frame(width: 26, height: 42)
                     .background(stopNumberBackground)
 
-                inputField(stopInputLabel(for: stop.wrappedValue, airportOptions: airportDisplayOptions), text: queryBinding, placeholder: "Airport code or city")
+                inputField(
+                    stopInputLabel(for: stop.wrappedValue, airportOptions: airportDisplayOptions),
+                    text: queryBinding,
+                    placeholder: String(localized: "flight_paths.field.airport_or_city_placeholder")
+                )
 
                 if stops.count > 2 {
                     Button {
@@ -1586,8 +1597,8 @@ private struct FlightPathToolView: View {
             }
 
             HStack(spacing: 8) {
-                compactInputField("Min", text: stop.minNights, placeholder: "2", keyboard: .numberPad)
-                compactInputField("Max", text: stop.maxNights, placeholder: "4", keyboard: .numberPad)
+                compactInputField(String(localized: "flight_paths.field.min"), text: stop.minNights, placeholder: "2", keyboard: .numberPad)
+                compactInputField(String(localized: "flight_paths.field.max"), text: stop.maxNights, placeholder: "4", keyboard: .numberPad)
 
                 Button {
                     withAnimation(.spring(response: 0.24, dampingFraction: 0.86)) {
@@ -1601,7 +1612,7 @@ private struct FlightPathToolView: View {
                     HStack(spacing: 5) {
                         Image(systemName: "calendar")
                             .font(.system(size: 10, weight: .black))
-                        Text(stop.wrappedValue.fixedDate.isEmpty ? "Any date" : stop.wrappedValue.fixedDate)
+                        Text(stop.wrappedValue.fixedDate.isEmpty ? String(localized: "flight_paths.field.any_date") : stop.wrappedValue.fixedDate)
                             .font(.system(size: 11, weight: .black))
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
@@ -1616,7 +1627,11 @@ private struct FlightPathToolView: View {
 
             if isFixedDateOpen {
                 HStack(spacing: 8) {
-                    compactInputField("Must be there", text: stop.fixedDate, placeholder: "YYYY-MM-DD")
+                    compactInputField(
+                        String(localized: "flight_paths.field.must_be_there"),
+                        text: stop.fixedDate,
+                        placeholder: String(localized: "flight_paths.field.date_placeholder")
+                    )
                     Button {
                         stop.wrappedValue.fixedDate = ""
                         withAnimation(.spring(response: 0.24, dampingFraction: 0.86)) {
@@ -1640,14 +1655,14 @@ private struct FlightPathToolView: View {
     private func stopInputLabel(for draft: FlightPathStopDraft, airportOptions: [FlightPathAirport]) -> String {
         let query = draft.query.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard !query.isEmpty, airportOptions.count == 1, let airport = airportOptions.first else {
-            return "City"
+            return String(localized: "flight_paths.field.city")
         }
 
         if airport.iata == query || airport.cityName.uppercased() == query {
             return airport.cityName
         }
 
-        return "City"
+        return String(localized: "flight_paths.field.city")
     }
 
     private func airportSuggestionRow(_ suggestion: FlightPathAirportSuggestion) -> some View {
@@ -1662,7 +1677,7 @@ private struct FlightPathToolView: View {
                     .lineLimit(1)
             }
             Spacer()
-            Text("All")
+            Text("flight_paths.airports.all")
                 .font(.system(size: 10, weight: .black))
                 .foregroundStyle(flightGreen)
                 .padding(.horizontal, 7)
@@ -1729,7 +1744,7 @@ private struct FlightPathToolView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         if isBest {
-                            Text("Best")
+                            Text("flight_paths.results.best")
                                 .font(.system(size: 10, weight: .black))
                                 .foregroundStyle(flightGreen)
                                 .padding(.horizontal, 7)
@@ -1748,7 +1763,7 @@ private struct FlightPathToolView: View {
                             .minimumScaleFactor(0.82)
                     }
                     if let candidate {
-                        Text("\(compactTripDateRangeText(candidate)) • \(candidate.tripDays)d")
+                        Text(String(format: String(localized: "flight_paths.results.date_range_days_short_format"), locale: AppDisplayLocale.current, compactTripDateRangeText(candidate), candidate.tripDays))
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(flightMuted)
                             .lineLimit(1)
@@ -1785,7 +1800,7 @@ private struct FlightPathToolView: View {
 
             if let candidate {
                 VStack(spacing: 0) {
-                    detailSectionHeader("Stays")
+                    detailSectionHeader(String(localized: "flight_paths.details.stays"))
                     VStack(spacing: 0) {
                         ForEach(Array(candidate.stops.enumerated()), id: \.element.id) { index, item in
                             staySummaryRow(item)
@@ -1799,7 +1814,7 @@ private struct FlightPathToolView: View {
             }
 
             VStack(spacing: 0) {
-                detailSectionHeader("Flights")
+                detailSectionHeader(String(localized: "flight_paths.details.flights"))
                 VStack(spacing: 0) {
                     ForEach(Array(pricedPath.legs.enumerated()), id: \.element.id) { index, leg in
                         pricedLegRow(leg)
@@ -1863,7 +1878,7 @@ private struct FlightPathToolView: View {
 
             Spacer()
 
-            Text("\(item.nights) night\(item.nights == 1 ? "" : "s")")
+            Text(String(format: String(localized: item.nights == 1 ? "flight_paths.details.night_count_singular" : "flight_paths.details.night_count_plural"), locale: AppDisplayLocale.current, item.nights))
                 .font(.system(size: 11, weight: .black))
                 .foregroundStyle(flightAccent)
                 .padding(.horizontal, 9)
@@ -1896,7 +1911,7 @@ private struct FlightPathToolView: View {
                             .background(dateBadgeBackground)
                     }
 
-                    Text("\(airportCityName(leg.from)) to \(airportCityName(leg.to))")
+                    Text(String(format: String(localized: "flight_paths.details.city_to_city_format"), locale: AppDisplayLocale.current, airportCityName(leg.from), airportCityName(leg.to)))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(flightMuted)
                         .lineLimit(1)
@@ -1935,10 +1950,10 @@ private struct FlightPathToolView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Option \(index + 1)")
+                    Text(String(format: String(localized: "flight_paths.results.option_format"), locale: AppDisplayLocale.current, index + 1))
                         .font(.system(size: 16, weight: .black))
                         .foregroundStyle(.black)
-                    Text("\(FlightPathPlanner.format(candidate.startDate)) to \(FlightPathPlanner.format(candidate.endDate)) - \(candidate.tripDays) days")
+                    Text(String(format: String(localized: "flight_paths.results.full_date_range_days_format"), locale: AppDisplayLocale.current, FlightPathPlanner.format(candidate.startDate), FlightPathPlanner.format(candidate.endDate), candidate.tripDays))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.black.opacity(0.65))
                 }
@@ -1956,7 +1971,7 @@ private struct FlightPathToolView: View {
                 .foregroundStyle(.black)
 
             ForEach(candidate.stops) { item in
-                Text("\(item.stop.airport.cityName): \(FlightPathPlanner.format(item.arrivalDate)) to \(FlightPathPlanner.format(item.departureDate)) - \(item.nights) nights")
+                Text(String(format: String(localized: item.nights == 1 ? "flight_paths.results.stop_nights_singular_format" : "flight_paths.results.stop_nights_plural_format"), locale: AppDisplayLocale.current, item.stop.airport.cityName, FlightPathPlanner.format(item.arrivalDate), FlightPathPlanner.format(item.departureDate), item.nights))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.black.opacity(0.68))
             }
@@ -1970,7 +1985,7 @@ private struct FlightPathToolView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "airplane")
                             .font(.system(size: 14, weight: .bold))
-                        Text("\(leg.from.iata) to \(leg.to.iata) - \(FlightPathPlanner.format(leg.date))")
+                        Text(String(format: String(localized: "flight_paths.results.leg_date_format"), locale: AppDisplayLocale.current, leg.from.iata, leg.to.iata, FlightPathPlanner.format(leg.date)))
                             .font(.system(size: 13, weight: .bold))
                         Spacer()
                     }
@@ -2043,21 +2058,15 @@ private struct FlightPathToolView: View {
     }
 
     private func shortDateText(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        AppDateFormatting.dateString(from: date, template: "MMMd")
     }
 
     private func fullDateText(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = "MMM d, yyyy"
-        return formatter.string(from: date)
+        AppDateFormatting.dateString(from: date, dateStyle: .medium)
     }
 
     private func priceText(_ price: Double?, currency: String) -> String {
-        guard let price else { return "No fare" }
+        guard let price else { return String(localized: "flight_paths.results.no_fare") }
 
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
@@ -17927,7 +17936,7 @@ private struct TripPlannerCurrencyInput: View {
                 if let currencySelection {
                     Menu {
                         if !normalizedSuggestedCurrencyCodes.isEmpty {
-                            Section("Suggested") {
+                            Section(String(localized: "common.suggested")) {
                                 ForEach(normalizedSuggestedCurrencyCodes, id: \.self) { code in
                                     currencyMenuButton(code: code, currencySelection: currencySelection)
                                 }
