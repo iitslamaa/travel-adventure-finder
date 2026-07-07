@@ -75,7 +75,7 @@ struct CountryMultiSelectView: View {
 
                 List {
                     if !selectedCountries.isEmpty {
-                        Section("Selected") {
+                        Section(String(localized: "common.selected")) {
                             ForEach(selectedCountries, id: \.code) { country in
                                 Button {
                                     toggleSelection(country.code)

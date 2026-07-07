@@ -68,7 +68,7 @@ struct CountrySingleSelectView: View {
 
                 List {
                     if let selectedCountry {
-                        Section("Selected") {
+                        Section(String(localized: "common.selected")) {
                             Button {
                                 toggleSelection(selectedCountry.code)
                             } label: {
