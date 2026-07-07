@@ -97,6 +97,13 @@ export default function PlanningScreen() {
             icon="airplane"
             onPress={() => router.push('/trip-planner' as any)}
           />
+
+          <PlanningCard
+            title="Flight Paths"
+            subtitle="Compare flexible multi-city flight routes"
+            icon="git-branch-outline"
+            onPress={() => router.push('/flight-path-tool' as any)}
+          />
         </View>
       </ScrollView>
       </ImageBackground>
